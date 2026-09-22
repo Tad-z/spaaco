@@ -27,7 +27,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
   - Use the real copy. Use placeholder image URLs of the form `https://placehold.co/1440x662?text=<label>`. Missing content gets `[PENDING FROM FIRM]` placeholders.
   - **Accept:** a test validates every response fixture against its schema in the spec (ajv + the spec's components).
 
-- [ ] **0.4 Mock server + frontend handoff**
+- [x] **0.4 Mock server + frontend handoff**
   - `npm run mock` runs Prism on port 4010, serving the spec examples.
   - Write `docs/FRONTEND_HANDOFF.md` covering the mock URL, how to run it, the conventions summary, the known placeholders, and the list of not-yet-designed endpoints.
   - **Accept:** `curl localhost:4010/api/v1/pages/home` returns the home fixture.

@@ -40,6 +40,12 @@ Append new entries at the bottom of each section. Never rewrite history; superse
 
 **ADR-018: Layered folder structure** (models, interfaces, validators, services, serializers, controllers, routes, middlewares, helpers, core, integrations), replacing the earlier per-feature `modules/` layout, at the project lead's request. Import direction between layers is enforced by ESLint so the layers stay clean as the codebase grows. Resources are named consistently across layers (`practice-area.model.ts`, `practice-area.service.ts`, …), so each resource is still easy to trace end to end.
 
+**ADR-019: The `/api/v1` prefix lives in the spec's path keys, not only in `servers`.** Prism ignores a base path in the server URL and mounts operations at the bare path, so `curl localhost:4010/api/v1/pages/home` returned 404 while `/pages/home` worked, and the mock URLs would not have matched the real ones. Prism has no base-path flag. Paths are therefore written `/api/v1/pages/{key}` and `servers` holds bare origins. The spec now documents absolute URLs, and contract tests refer to paths the same way the frontend calls them. Express still mounts one router at `/api/v1`.
+
+**ADR-020: Offices expose `coordinates: { lat, lng }`, not raw GeoJSON.** Stored as a GeoJSON Point with a `2dsphere` index, as DATA_MODEL says, but serialised to `{ lat, lng }` because that is what a map component takes; `[lng, lat]` ordering is a familiar source of frontend bugs. Null until the firm supplies real coordinates.
+
+**ADR-021: Multipart `consent` is the string `"true"`, not a boolean.** Multipart form fields have no types, so the job application form sends `"true"` and the server coerces it. The two JSON forms keep a real `consent: true` literal. The spec states this explicitly on the field rather than leaving the frontend to discover it.
+
 ## Known content conflicts (from the designs; the firm must resolve them)
 
 Seed them as designed. Don't silently "fix" them.

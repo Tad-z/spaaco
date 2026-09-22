@@ -26,11 +26,11 @@ info:
     identifier: LicenseRef-SPA-Ajibade-Proprietary
 
 servers:
-  - url: http://localhost:4000/api/v1
+  - url: http://localhost:4000
     description: Local development
-  - url: http://localhost:4010/api/v1
+  - url: http://localhost:4010
     description: Prism mock server
-  - url: https://api.spaajibade.com/api/v1
+  - url: https://api.spaajibade.com
     description: Production
 
 tags:
@@ -58,7 +58,7 @@ tags:
     description: Public form submissions. All are rate limited and captcha protected.
 
 paths:
-  /health:
+  /api/v1/health:
     get:
       tags: [System]
       operationId: getHealth
@@ -86,7 +86,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /site:
+  /api/v1/site:
     get:
       tags: [Site]
       operationId: getSite
@@ -123,7 +123,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /pages/{key}:
+  /api/v1/pages/{key}:
     get:
       tags: [Pages]
       operationId: getPage
@@ -194,7 +194,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /practice-areas:
+  /api/v1/practice-areas:
     get:
       tags: [Practice areas]
       operationId: listPracticeAreas
@@ -230,7 +230,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /practice-areas/{slug}:
+  /api/v1/practice-areas/{slug}:
     get:
       tags: [Practice areas]
       operationId: getPracticeArea
@@ -270,7 +270,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /people:
+  /api/v1/people:
     get:
       tags: [People]
       operationId: listPeople
@@ -314,7 +314,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /people/{slug}:
+  /api/v1/people/{slug}:
     get:
       tags: [People]
       operationId: getPerson
@@ -351,7 +351,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /insights:
+  /api/v1/insights:
     get:
       tags: [Insights]
       operationId: listInsights
@@ -394,7 +394,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /insights/{slug}:
+  /api/v1/insights/{slug}:
     get:
       tags: [Insights]
       operationId: getInsight
@@ -433,7 +433,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /offices:
+  /api/v1/offices:
     get:
       tags: [Offices]
       operationId: listOffices
@@ -470,7 +470,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /jobs:
+  /api/v1/jobs:
     get:
       tags: [Jobs]
       operationId: listJobs
@@ -506,7 +506,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /jobs/{id}:
+  /api/v1/jobs/{id}:
     get:
       tags: [Jobs]
       operationId: getJob
@@ -543,7 +543,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /faqs:
+  /api/v1/faqs:
     get:
       tags: [FAQs]
       operationId: listFaqs
@@ -579,7 +579,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /search:
+  /api/v1/search:
     get:
       tags: [Search]
       operationId: search
@@ -612,7 +612,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /enquiries:
+  /api/v1/enquiries:
     post:
       tags: [Forms]
       operationId: createEnquiry
@@ -652,7 +652,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /messages:
+  /api/v1/messages:
     post:
       tags: [Forms]
       operationId: createMessage
@@ -685,7 +685,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /jobs/{id}/applications:
+  /api/v1/jobs/{id}/applications:
     post:
       tags: [Forms]
       operationId: createApplication
