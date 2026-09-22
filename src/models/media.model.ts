@@ -15,6 +15,11 @@ const mediaSchema = new Schema<IMedia>(
     provider: { type: String, required: true, enum: ['local', 'cloudinary'] },
     storageKey: { type: String, required: true },
     url: { type: String, required: true },
+    sizes: {
+      sm: { type: String, required: true },
+      md: { type: String, required: true },
+      lg: { type: String, required: true },
+    },
     version: { type: Number, required: true, default: 1, min: 1 },
     width: { type: Number, required: true, min: 1 },
     height: { type: Number, required: true, min: 1 },

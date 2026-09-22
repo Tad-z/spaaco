@@ -20,6 +20,7 @@ import type { Model, Types } from 'mongoose';
 import { connectDatabase, disconnectDatabase } from '../src/core/db.js';
 import { logger } from '../src/core/logger.js';
 import { config } from '../src/config/env.js';
+import { IMAGE_SIZES } from '../src/config/constants.js';
 import { slugify } from '../src/helpers/slug.helper.js';
 import { Faq, Insight, Job, Media, Office, Page, Person, PracticeArea, Recognition, Settings } from '../src/models/index.js';
 
@@ -187,6 +188,11 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
       provider: 'local',
       storageKey,
       url: placeholderUrl(placeholder, placeholder.width),
+      sizes: {
+        sm: placeholderUrl(placeholder, IMAGE_SIZES.sm),
+        md: placeholderUrl(placeholder, IMAGE_SIZES.md),
+        lg: placeholderUrl(placeholder, IMAGE_SIZES.lg),
+      },
       version: 1,
       width: placeholder.width,
       height: placeholder.height,

@@ -16,6 +16,11 @@ export interface IMedia {
   /** Key in the storage backend. Never exposed publicly. */
   storageKey: string;
   url: string;
+  /**
+   * The three responsive widths. Stored rather than derived, because the rule
+   * differs per provider and a serializer cannot know which one applies.
+   */
+  sizes: { sm: string; md: string; lg: string };
   /** Incremented on every file replacement, so URLs stay cache-bustable. */
   version: number;
   width: number;

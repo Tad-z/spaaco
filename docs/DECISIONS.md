@@ -75,6 +75,8 @@ Mechanically, one mongod now starts in `globalSetup` for the whole run instead o
 
 **The risk we are accepting:** narrower coverage can miss a regression that duplicated tests would have caught twice. The mitigation is that the central tests must genuinely cover what the per-resource tests no longer do — so a role or draft check may only be deleted from a resource file once `roles.test.ts` or that resource's single draft test demonstrably covers it.
 
+**ADR-030: Responsive image `sizes` are stored on the Media record, not derived at read time.** How the three widths are formed depends on where the file lives: the local driver writes three files beside the original, Cloudinary expresses them as URL transformations, and the dev seed points all three at placehold.co. A serializer cannot tell which rule applies from the URL alone, so whatever creates the record writes the answer. `helpers/image-sizes.helper.ts` builds them per provider at upload time. The one consequence to remember: Cloudinary sizes embed the focal point as gravity, so changing `focalPoint` must rebuild them (handled with the media PATCH in Phase 5).
+
 ## Known content conflicts (from the designs; the firm must resolve them)
 
 Seed them as designed. Don't silently "fix" them.

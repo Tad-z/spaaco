@@ -21,6 +21,11 @@ const media = async (): Promise<mongoose.Types.ObjectId> => {
     provider: 'local',
     storageKey: 'test/image.jpg',
     url: 'https://placehold.co/1200x900',
+    sizes: {
+      sm: 'https://placehold.co/480x360',
+      md: 'https://placehold.co/960x720',
+      lg: 'https://placehold.co/1440x1080',
+    },
     width: 1200,
     height: 900,
     mimeType: 'image/jpeg',
