@@ -95,9 +95,11 @@ tests/
 | controllers | services, serializers, validators (types), core/errors | models, integrations |
 | services | models, core, integrations, helpers, constants, interfaces, other services | express types (req/res), serializers |
 | serializers | types, interfaces, helpers, constants | models, services, any I/O |
-| models | interfaces, constants, models/plugins, models/schemas | services |
+| models | interfaces, constants, helpers, models/plugins, models/schemas | services |
 | helpers | types, constants | anything with I/O |
 | middlewares | core, services (auth only), helpers, validators | models |
+
+`models` may import `helpers` so `models/plugins/content.plugin.ts` can call `helpers/slug.helper.ts` rather than keeping a second copy of slug generation (ADR-022). Helpers are pure, so this adds no I/O to the model layer.
 
 These are enforced by an ESLint boundaries rule (configured in task 0.1), so a violation fails `npm run lint`. **Why:** services stay testable without HTTP, serializers stay pure (so the contract is testable in isolation), and any layer can change without rippling through the others.
 

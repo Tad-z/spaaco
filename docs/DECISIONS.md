@@ -46,6 +46,20 @@ Append new entries at the bottom of each section. Never rewrite history; superse
 
 **ADR-021: Multipart `consent` is the string `"true"`, not a boolean.** Multipart form fields have no types, so the job application form sends `"true"` and the server coerces it. The two JSON forms keep a real `consent: true` literal. The spec states this explicitly on the field rather than leaving the frontend to discover it.
 
+**ADR-022: `models` may import `helpers`.** `models/plugins/content.plugin.ts` generates slugs on save, and `helpers/slug.helper.ts` owns slug generation (ROADMAP 2.1 asks for both). The layer table originally forbade the import, which would have forced a duplicate copy of the logic inside `models/`. Helpers are pure functions with no I/O, so allowing this adds no dependency the model layer shouldn't have. The table in ARCHITECTURE.md and the ESLint zone are updated together.
+
+**ADR-023: `seo` exists only where the data model has it.** Pages keep `seo { title, description, ogImage }`; practice areas keep `seo { title, description }` and get a `SeoBasic` schema without `ogImage`; people and insights carry no `seo` at all. The spec had briefly required a full `Seo` on `PersonDetail`, `InsightDetail` and `PracticeAreaDetail`, which DATA_MODEL.md does not define — the admin editable shape could never have round-tripped into it, and it would have added three more media-ID fields to register in `constants/media-refs.ts`.
+
+**ADR-024: `role` is a group filter, and `partner` includes the managing partner.** The designs give the directory a "Partners" tab and no Managing Partner tab, so filtering strictly by the stored role would drop the Managing Partner out of the tab that names him (DECISIONS Q3 says he belongs there). The query parameter takes its own `PersonRoleFilter` enum, documented as group semantics; each result still reports its own `role`, so a person returned under `partner` may come back as `managing_partner`.
+
+**ADR-025: `practiceAreas.homeOrder` is a real field.** The Home tab bar order (Corporate, Data Privacy, Energy, Dispute Resolution, …) differs from the Practice Areas page order, so `order` alone cannot express both. SEED_CONTENT.md allowed for this; it is now in DATA_MODEL.md so task 2.2 builds it.
+
+**ADR-026: `FILE_REJECTED` (422) is distinct from `VALIDATION_ERROR` (400).** A CV that fails the virus scan is not a field-level validation problem, and the frontend should be able to tell the two apart without inspecting the status code.
+
+**ADR-027: `Image.focalPoint` is always present.** The media model defaults it to `0.5/0.5`, so there is no case where it is absent. Making it required rather than optional is the only optionality difference this spec had, and it saves every consumer an optional-chain.
+
+**ADR-028: `home.aboutFirm` has no image.** It briefly carried one, which contradicted ADR-012 and the "Image ownership" section of DATA_MODEL.md: the world-map backdrop is a frontend asset. Shipping it would have given the firm a required upload slot for an asset they do not own, and removing it later would have been a breaking change.
+
 ## Known content conflicts (from the designs; the firm must resolve them)
 
 Seed them as designed. Don't silently "fix" them.

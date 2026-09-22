@@ -31,12 +31,6 @@
         "label": "Learn more about our history",
         "href": "/about",
         "kind": "internal"
-      },
-      "image": {
-        "placeholder": "World map",
-        "width": 1440,
-        "height": 662,
-        "alt": "Stylised world map marking the offices of the firm"
       }
     },
     "videoShowcase": {
@@ -144,7 +138,7 @@
       "eyebrow": "Our Story",
       "title": "Integrity And Commitment Build Client Trust.",
       "paragraphs": [
-        "The firm started in 1967, at a time when Nigerian businesses had few local options for the kind of legal counsel that large transactions and disputes required. Almost sixty years later, that gap has closed, but the reason clients still come to S. P. A. Ajibade & Co. hasn’t changed.",
+        "The firm started in 1967, at a time when Nigerian businesses had few local options for the kind of legal counsel that large transactions and disputes required. Almost sixty years later, that gap has closed, but the reason clients still come to S. P. A. Ajibade & Co. hasn't changed.",
         "We've handled disputes that took years to resolve and transactions that closed in weeks. We've advised on capital markets deals, aviation matters, energy projects, intellectual property disputes, data protection compliance, and everything in between. The work rarely looks the same twice.",
         "What's stayed constant is how we approach it: with judgment built over decades, not shortcuts learned from templates. Clients don't come to us because we're the oldest firm in the room, they come because when something is actually at stake, they want someone who's handled it before and will tell them the truth about it.",
         "Today, that means offices in Lagos, Abuja, and Ibadan, and a practice that spans far more ground than \"corporate and commercial law\" ever really captured."
@@ -321,11 +315,7 @@
         "height": 662,
         "alt": "Members of the firm at a community legal outreach event"
       },
-      "cta": {
-        "label": "Learn About Our CSR",
-        "href": "[PENDING FROM FIRM]",
-        "kind": "internal"
-      }
+      "cta": null
     },
     "seo": {
       "title": null,

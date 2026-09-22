@@ -586,7 +586,10 @@ paths:
       summary: Header search
       description: |
         Full-text search across practice areas, attorneys and insights, ranked by text score.
-        At most five results per group. Published content only.
+        At most five results per group.
+
+        Published content only: unlike the other public GETs, search has no preview mode, so
+        drafts never surface here even for an authenticated admin.
       parameters:
         - $ref: '#/components/parameters/SearchQuery'
       responses:
@@ -660,6 +663,9 @@ paths:
       description: |
         Backs the "Message the firm" action in the FAQ card and on the offices page. Rate limited
         to 5 requests per 10 minutes per IP.
+
+        A submission with a non-empty `website` honeypot receives a 201 with a reference, and
+        nothing is stored.
       requestBody:
         required: true
         content:
@@ -698,6 +704,9 @@ paths:
         and are only ever served through short-lived signed URLs from the admin API.
 
         Because multipart fields arrive as strings, `consent` is sent as the string `"true"`.
+
+        A submission with a non-empty `website` honeypot receives a 201 with a reference, and
+        nothing is stored.
       parameters:
         - $ref: '#/components/parameters/ObjectId'
       requestBody:
@@ -796,9 +805,17 @@ components:
       name: role
       in: query
       required: false
-      description: Filter the directory by role. Omit for every attorney.
+      description: |
+        Filter the directory by role. Omit for every attorney.
+
+        These are the directory's **tab groups**, not strictly the stored role:
+        `partner` also returns the managing partner, because the designs have a
+        "Partners" tab and no separate Managing Partner tab. Every other value
+        matches its role exactly. The `role` field on each result is always the
+        attorney's own role, so a person returned under `partner` may come back
+        with `role: "managing_partner"`.
       schema:
-        $ref: '#/components/schemas/PersonRole'
+        $ref: '#/components/schemas/PersonRoleFilter'
     PersonSort:
       name: sort
       in: query
@@ -886,14 +903,16 @@ components:
               code: UNSUPPORTED_MEDIA_TYPE
               message: Only PDF and DOCX files are accepted.
     UnprocessableEntity:
-      description: The uploaded file failed the virus scan and was discarded.
+      description: |
+        The uploaded file was rejected after inspection and nothing was stored. Today this
+        means it failed the virus scan. Distinct from 400, which means a field was invalid.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
           example:
             error:
-              code: VALIDATION_ERROR
+              code: FILE_REJECTED
               message: The uploaded file could not be accepted.
     RateLimited:
       description: Too many requests from this IP.
@@ -969,6 +988,7 @@ components:
         - CONFLICT
         - PAYLOAD_TOO_LARGE
         - UNSUPPORTED_MEDIA_TYPE
+        - FILE_REJECTED
         - RATE_LIMITED
         - INTERNAL
 
@@ -1036,7 +1056,7 @@ components:
     Image:
       type: object
       additionalProperties: false
-      required: [url, alt, width, height, sizes]
+      required: [url, alt, width, height, sizes, focalPoint]
       description: Images are always this shape, never a bare URL string.
       properties:
         url:
@@ -1139,6 +1159,19 @@ components:
         label:
           type: string
 
+    SeoBasic:
+      type: object
+      additionalProperties: false
+      required: [title, description]
+      description: |
+        Search metadata for a collection item. Unlike a page's `Seo`, there is no
+        `ogImage`: only pages carry an Open Graph image.
+      properties:
+        title:
+          type: [string, 'null']
+        description:
+          type: [string, 'null']
+
     Seo:
       type: object
       additionalProperties: false
@@ -1187,6 +1220,21 @@ components:
         - senior_associate
         - associate
         - nysc_associate
+
+    PersonRoleFilter:
+      type: string
+      enum:
+        - managing_partner
+        - partner
+        - associate_partner
+        - senior_associate
+        - associate
+        - nysc_associate
+      description: |
+        The accepted values of the `role` query parameter. Same values as `PersonRole`, but
+        `partner` behaves as a group and also matches `managing_partner`, mirroring the
+        "Partners" tab in the designs. `managing_partner` is accepted for an exact match even
+        though the directory shows no tab for it.
 
     InsightCategory:
       type: string
@@ -1290,7 +1338,7 @@ components:
           items:
             $ref: '#/components/schemas/InsightCard'
         seo:
-          $ref: '#/components/schemas/Seo'
+          $ref: '#/components/schemas/SeoBasic'
 
     PersonSummary:
       type: object
@@ -1337,7 +1385,6 @@ components:
         - practiceAreas
         - office
         - insights
-        - seo
       description: The attorney bio. Email is deliberately never exposed publicly.
       properties:
         id:
@@ -1380,8 +1427,6 @@ components:
           maxItems: 3
           items:
             $ref: '#/components/schemas/InsightCard'
-        seo:
-          $ref: '#/components/schemas/Seo'
 
     InsightAuthor:
       oneOf:
@@ -1517,7 +1562,6 @@ components:
         - body
         - videoUrl
         - related
-        - seo
       properties:
         id:
           $ref: '#/components/schemas/ObjectId'
@@ -1570,8 +1614,6 @@ components:
           maxItems: 3
           items:
             $ref: '#/components/schemas/InsightCard'
-        seo:
-          $ref: '#/components/schemas/Seo'
 
     Coordinates:
       type: object
@@ -1891,7 +1933,10 @@ components:
     HomeAboutFirm:
       type: object
       additionalProperties: false
-      required: [title, paragraphs, cta, image]
+      required: [title, paragraphs, cta]
+      description: |
+        The section's world-map backdrop is a frontend asset and is deliberately not
+        served here (see "Image ownership" in docs/DATA_MODEL.md and ADR-012).
       properties:
         title:
           type: string
@@ -1901,8 +1946,6 @@ components:
             type: string
         cta:
           $ref: '#/components/schemas/NullableLink'
-        image:
-          $ref: '#/components/schemas/NullableImage'
 
     HomeVideoShowcase:
       type: object

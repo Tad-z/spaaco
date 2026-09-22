@@ -47,10 +47,10 @@ const layerZones = [
       './src/serializers',
       './src/middlewares',
       './src/integrations',
-      './src/helpers',
       './src/validators',
     ],
-    message: 'models may only import interfaces, constants and models/plugins|schemas.',
+    message:
+      'models may only import interfaces, constants, helpers and models/plugins|schemas.',
   },
   {
     target: './src/helpers',
@@ -76,7 +76,7 @@ const layerZones = [
     // middlewares may reach one service (auth); everything else stays out.
     target: './src/middlewares',
     from: './src/services',
-    except: ['./auth.service.ts', './cache.service.ts'],
+    except: ['./auth.service.ts'],
     message: 'middlewares may only use the auth service.',
   },
   {
@@ -103,6 +103,34 @@ const layerZones = [
       './src/middlewares',
     ],
     message: 'integrations may only import core, config, constants, helpers and interfaces.',
+  },
+  {
+    target: './src/validators',
+    from: [
+      './src/models',
+      './src/services',
+      './src/controllers',
+      './src/routes',
+      './src/serializers',
+      './src/middlewares',
+      './src/integrations',
+    ],
+    message: 'validators hold Zod schemas only: types, constants and helpers.',
+  },
+  {
+    target: './src/config',
+    from: [
+      './src/models',
+      './src/services',
+      './src/controllers',
+      './src/routes',
+      './src/serializers',
+      './src/middlewares',
+      './src/integrations',
+      './src/helpers',
+      './src/core',
+    ],
+    message: 'config is read by every layer and must depend on none of them.',
   },
   {
     target: './src/constants',

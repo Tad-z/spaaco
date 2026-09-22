@@ -40,21 +40,6 @@
         "label": "Learn more about our history",
         "href": "/about",
         "kind": "internal"
-      },
-      "image": {
-        "url": "https://placehold.co/1440x662?text=World%20map",
-        "alt": "Stylised world map marking the offices of the firm",
-        "width": 1440,
-        "height": 662,
-        "sizes": {
-          "sm": "https://placehold.co/480x221?text=World%20map",
-          "md": "https://placehold.co/960x441?text=World%20map",
-          "lg": "https://placehold.co/1440x662?text=World%20map"
-        },
-        "focalPoint": {
-          "x": 0.5,
-          "y": 0.5
-        }
       }
     },
     "videoShowcase": {

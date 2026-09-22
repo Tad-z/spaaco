@@ -284,7 +284,10 @@ export interface paths {
         /**
          * Header search
          * @description Full-text search across practice areas, attorneys and insights, ranked by text score.
-         *     At most five results per group. Published content only.
+         *     At most five results per group.
+         *
+         *     Published content only: unlike the other public GETs, search has no preview mode, so
+         *     drafts never surface here even for an authenticated admin.
          */
         get: operations["search"];
         put?: never;
@@ -332,6 +335,9 @@ export interface paths {
          * Message the firm
          * @description Backs the "Message the firm" action in the FAQ card and on the offices page. Rate limited
          *     to 5 requests per 10 minutes per IP.
+         *
+         *     A submission with a non-empty `website` honeypot receives a 201 with a reference, and
+         *     nothing is stored.
          */
         post: operations["createMessage"];
         delete?: never;
@@ -358,6 +364,9 @@ export interface paths {
          *     and are only ever served through short-lived signed URLs from the admin API.
          *
          *     Because multipart fields arrive as strings, `consent` is sent as the string `"true"`.
+         *
+         *     A submission with a non-empty `website` honeypot receives a 201 with a reference, and
+         *     nothing is stored.
          */
         post: operations["createApplication"];
         delete?: never;
@@ -386,7 +395,7 @@ export interface components {
             version: string;
         };
         /** @enum {string} */
-        ErrorCode: "VALIDATION_ERROR" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "RATE_LIMITED" | "INTERNAL";
+        ErrorCode: "VALIDATION_ERROR" | "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "FILE_REJECTED" | "RATE_LIMITED" | "INTERNAL";
         ErrorDetail: {
             /** @description A dotted path to the offending field. */
             path: string;
@@ -420,7 +429,7 @@ export interface components {
             height: number;
             sizes: components["schemas"]["ImageSizes"];
             /** @description Relative focal point used for art-directed cropping. */
-            focalPoint?: {
+            focalPoint: {
                 x: number;
                 y: number;
             };
@@ -459,6 +468,14 @@ export interface components {
             caption: string;
             label: string;
         };
+        /**
+         * @description Search metadata for a collection item. Unlike a page's `Seo`, there is no
+         *     `ogImage`: only pages carry an Open Graph image.
+         */
+        SeoBasic: {
+            title: string | null;
+            description: string | null;
+        };
         Seo: {
             title: string | null;
             description: string | null;
@@ -478,6 +495,14 @@ export interface components {
         };
         /** @enum {string} */
         PersonRole: "managing_partner" | "partner" | "associate_partner" | "senior_associate" | "associate" | "nysc_associate";
+        /**
+         * @description The accepted values of the `role` query parameter. Same values as `PersonRole`, but
+         *     `partner` behaves as a group and also matches `managing_partner`, mirroring the
+         *     "Partners" tab in the designs. `managing_partner` is accepted for an exact match even
+         *     though the directory shows no tab for it.
+         * @enum {string}
+         */
+        PersonRoleFilter: "managing_partner" | "partner" | "associate_partner" | "senior_associate" | "associate" | "nysc_associate";
         /** @enum {string} */
         InsightCategory: "firm_news" | "articles" | "insights" | "regulatory_updates" | "news_updates" | "media_coverage" | "webinar_resources";
         /**
@@ -522,7 +547,7 @@ export interface components {
             /** @description The attorneys to contact about this practice area. */
             contacts: components["schemas"]["PersonSummary"][];
             relatedInsights: components["schemas"]["InsightCard"][];
-            seo: components["schemas"]["Seo"];
+            seo: components["schemas"]["SeoBasic"];
         };
         /**
          * @description Used on directory cards, author blocks and the leadership row. `displayName` includes the
@@ -558,7 +583,6 @@ export interface components {
             practiceAreas: components["schemas"]["PracticeAreaRef"][];
             office: components["schemas"]["OfficeRef"] | null;
             insights: components["schemas"]["InsightCard"][];
-            seo: components["schemas"]["Seo"];
         };
         /** @description An insight is written either by an attorney or by the firm itself. */
         InsightAuthor: components["schemas"]["InsightAuthorPerson"] | components["schemas"]["InsightAuthorFirm"];
@@ -630,7 +654,6 @@ export interface components {
             /** @description Set when `format` is `video`. */
             videoUrl: string | null;
             related: components["schemas"]["InsightCard"][];
-            seo: components["schemas"]["Seo"];
         };
         Coordinates: {
             lat: number;
@@ -759,11 +782,14 @@ export interface components {
             people: components["schemas"]["PersonSummary"][];
             insights: components["schemas"]["InsightCard"][];
         };
+        /**
+         * @description The section's world-map backdrop is a frontend asset and is deliberately not
+         *     served here (see "Image ownership" in docs/DATA_MODEL.md and ADR-012).
+         */
         HomeAboutFirm: {
             title: string;
             paragraphs: string[];
             cta: components["schemas"]["NullableLink"];
-            image: components["schemas"]["NullableImage"];
         };
         HomeVideoShowcase: {
             videoUrl: string | null;
@@ -1044,7 +1070,10 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description The uploaded file failed the virus scan and was discarded. */
+        /**
+         * @description The uploaded file was rejected after inspection and nothing was stored. Today this
+         *     means it failed the virus scan. Distinct from 400, which means a field was invalid.
+         */
         UnprocessableEntity: {
             headers: {
                 [name: string]: unknown;
@@ -1053,7 +1082,7 @@ export interface components {
                 /**
                  * @example {
                  *       "error": {
-                 *         "code": "VALIDATION_ERROR",
+                 *         "code": "FILE_REJECTED",
                  *         "message": "The uploaded file could not be accepted."
                  *       }
                  *     }
@@ -1122,8 +1151,17 @@ export interface components {
         Page: number;
         /** @description Items per page. */
         PageSize: number;
-        /** @description Filter the directory by role. Omit for every attorney. */
-        PersonRole: components["schemas"]["PersonRole"];
+        /**
+         * @description Filter the directory by role. Omit for every attorney.
+         *
+         *     These are the directory's **tab groups**, not strictly the stored role:
+         *     `partner` also returns the managing partner, because the designs have a
+         *     "Partners" tab and no separate Managing Partner tab. Every other value
+         *     matches its role exactly. The `role` field on each result is always the
+         *     attorney's own role, so a person returned under `partner` may come back
+         *     with `role: "managing_partner"`.
+         */
+        PersonRole: components["schemas"]["PersonRoleFilter"];
         /** @description Directory sort order. */
         PersonSort: "seniority" | "name_asc" | "name_desc";
         /** @description Filter by category. Omit for all categories. */
@@ -1303,7 +1341,16 @@ export interface operations {
     listPeople: {
         parameters: {
             query?: {
-                /** @description Filter the directory by role. Omit for every attorney. */
+                /**
+                 * @description Filter the directory by role. Omit for every attorney.
+                 *
+                 *     These are the directory's **tab groups**, not strictly the stored role:
+                 *     `partner` also returns the managing partner, because the designs have a
+                 *     "Partners" tab and no separate Managing Partner tab. Every other value
+                 *     matches its role exactly. The `role` field on each result is always the
+                 *     attorney's own role, so a person returned under `partner` may come back
+                 *     with `role: "managing_partner"`.
+                 */
                 role?: components["parameters"]["PersonRole"];
                 /** @description Directory sort order. */
                 sort?: components["parameters"]["PersonSort"];

@@ -253,11 +253,7 @@
           "y": 0.5
         }
       },
-      "cta": {
-        "label": "Learn About Our CSR",
-        "href": "[PENDING FROM FIRM]",
-        "kind": "internal"
-      }
+      "cta": null
     },
     "seo": {
       "title": null,

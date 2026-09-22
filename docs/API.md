@@ -23,13 +23,14 @@ Base path: `/api/v1`. JSON everywhere except the CV upload (multipart).
 ```json
 { "error": { "code": "VALIDATION_ERROR", "message": "Invalid request", "details": [{ "path": "email", "message": "Invalid email" }] } }
 ```
-The codes are `VALIDATION_ERROR` (400), `UNAUTHENTICATED` (401), `FORBIDDEN` (403), `NOT_FOUND` (404), `CONFLICT` (409), `PAYLOAD_TOO_LARGE` (413), `UNSUPPORTED_MEDIA_TYPE` (415), `RATE_LIMITED` (429) and `INTERNAL` (500). A 500 never leaks stack traces or messages.
+The codes are `VALIDATION_ERROR` (400), `UNAUTHENTICATED` (401), `FORBIDDEN` (403), `NOT_FOUND` (404), `CONFLICT` (409), `PAYLOAD_TOO_LARGE` (413), `UNSUPPORTED_MEDIA_TYPE` (415), `FILE_REJECTED` (422), `RATE_LIMITED` (429) and `INTERNAL` (500). `FILE_REJECTED` means an upload was inspected and refused (today: it failed the virus scan), as opposed to a field being invalid. A 500 never leaks stack traces or messages.
 
 **Shared shapes:**
 ```json
 // Image: always this shape, never a bare URL
 { "url": "https://...", "alt": "Lady Justice statue", "width": 1440, "height": 662,
-  "sizes": { "sm": "https://...w_480", "md": "https://...w_960", "lg": "https://...w_1440" } }
+  "sizes": { "sm": "https://...w_480", "md": "https://...w_960", "lg": "https://...w_1440" },
+  "focalPoint": { "x": 0.5, "y": 0.4 } }   // always present; the media model defaults it to 0.5/0.5
 
 // Link / CTA
 { "label": "Discuss a Mandate", "href": "action:mandate", "kind": "action" }
@@ -59,7 +60,7 @@ The codes are `VALIDATION_ERROR` (400), `UNAUTHENTICATED` (401), `FORBIDDEN` (40
 | GET `/pages/:key` | Composed page | `key` is one of the 8 page keys. Embeds all referenced data the page renders (below) |
 | GET `/practice-areas` | All published, ordered | |
 | GET `/practice-areas/:slug` | Detail | Includes contacts (PersonSummary[]) and related insights (latest 3) |
-| GET `/people` | Directory | `role` (one of the role enums, or omit for all), `sort` = `seniority` (default) / `name_asc` / `name_desc`, pagination (default pageSize 9) |
+| GET `/people` | Directory | `role` (a role enum, or omit for all; `partner` also matches `managing_partner`), `sort` = `seniority` (default) / `name_asc` / `name_desc`, pagination (default pageSize 9) |
 | GET `/people/:slug` | Profile/bio | Full person + practiceAreas + office + their latest 3 insights |
 | GET `/insights` | Listing | `category` (enum, or omit for all), `practiceArea` (slug), `sort` = `newest` (default) / `oldest`, pagination (default 9) |
 | GET `/insights/:slug` | Detail | Full body or videoUrl, author, practice areas, 3 related |

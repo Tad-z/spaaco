@@ -44,6 +44,10 @@ The mock needs no database, no credentials and no `.env`.
 
 To exercise error states, use `Prefer: code=404` (or `400`, `429`).
 
+One more thing about the `GET /insights` example: it shows nine cards so you can build a full
+page of the grid, but the firm has only supplied four insights. The other five are repeats
+carrying `-2` and `-3` slug suffixes. They exist to fill the mock; the seeded API has four.
+
 ### Types
 
 The repo generates TypeScript types from the same spec. Either copy
@@ -73,8 +77,12 @@ npx openapi-typescript openapi/openapi.yaml -o src/types/api.ts
 
 Error codes: `VALIDATION_ERROR` (400), `UNAUTHENTICATED` (401), `FORBIDDEN` (403),
 `NOT_FOUND` (404), `CONFLICT` (409), `PAYLOAD_TOO_LARGE` (413),
-`UNSUPPORTED_MEDIA_TYPE` (415), `RATE_LIMITED` (429), `INTERNAL` (500). A 500 never carries a
-stack trace or an internal message.
+`UNSUPPORTED_MEDIA_TYPE` (415), `FILE_REJECTED` (422), `RATE_LIMITED` (429),
+`INTERNAL` (500). A 500 never carries a stack trace or an internal message.
+
+`FILE_REJECTED` means a CV upload was inspected and refused — today, it failed the virus
+scan. It is deliberately not `VALIDATION_ERROR`, so you can tell "this file is not acceptable"
+apart from "this field is wrong" without reading the status code.
 
 **Images are always an object, never a bare URL.** Every image field has this shape, or is
 `null` until the firm uploads one:
@@ -83,7 +91,7 @@ stack trace or an internal message.
 {
   "url": "https://…", "alt": "…", "width": 1440, "height": 662,
   "sizes": { "sm": "…", "md": "…", "lg": "…" },   // roughly 480 / 960 / 1440 wide
-  "focalPoint": { "x": 0.5, "y": 0.4 }            // use for art-directed cropping
+  "focalPoint": { "x": 0.5, "y": 0.4 }            // always present; use for art-directed cropping
 }
 ```
 
@@ -162,6 +170,12 @@ Filter tabs (`roleFilters`, `categoryFilters`) are `{ value, label }`. An **empt
 means "no filter" — that's the "Our Attorneys" and "All insights & news" tab. Pass a non-empty
 `value` straight through as the `role` or `category` query parameter.
 
+One thing to know about `role`: these are **tab groups, not strictly the stored role**.
+`role=partner` also returns the managing partner, because the designs have a "Partners" tab
+and no Managing Partner tab. So a result returned under the Partners tab can come back with
+`role: "managing_partner"` — render `roleLabel` and don't assume it equals the filter you
+sent.
+
 ### Insight cards
 
 - `author` is a discriminated union on `type`:
@@ -211,8 +225,9 @@ be filled the same way. **Please design for both the filled and the empty state.
 | `pages/home` | `whyChooseUs.points[].text` | `null` — the design shows titles only |
 | `pages/about` | `missionSection.items[]` Vision, Values, Asset | `[PENDING FROM FIRM]` (Mission has real copy) |
 | `pages/about` | `awardsList.items[].url` | `null` |
-| `pages/practice-areas` | `csrBanner.cta.href` | `[PENDING FROM FIRM]` — the CSR page doesn't exist yet |
+| `pages/practice-areas` | `csrBanner.cta` | `null` — the CSR page doesn't exist, so there is no link to give. Render the banner without a button until it does |
 | Every page | `seo.title`, `seo.description`, `seo.ogImage` | `null` — no SEO copy supplied yet |
+| `/practice-areas/{slug}` | `seo.title`, `seo.description` | `null`. Note practice areas have no `ogImage`, and `/people/{slug}` and `/insights/{slug}` carry no `seo` object at all |
 | Jobs | `closingDate` | `null` |
 | Recognitions | `url`; the whole `recognizedBy` tab | `null` / empty — only the "achievements" tiles are designed |
 

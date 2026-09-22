@@ -39,8 +39,9 @@ IconItem = { icon: String /* icon key the frontend maps, e.g. 'shield-check' */,
 | keyServices | [String] | Detail page (speculative, optional) |
 | contacts | [→Person] | Detail page: attorneys to contact |
 | featuredOnHome | Boolean, default true | |
+| homeOrder | Number, nullable | Position in the Home tab bar, which differs from the Practice Areas page order. Null when not featured on Home. Home sorts by `homeOrder`, the page sorts by `order`. |
 | showInFooter | Boolean, default true | |
-| seo | { title, description } | |
+| seo | { title, description } | No `ogImage`: only pages carry one |
 
 Indexes: `{status:1, order:1}` and a text index on `title, summary, body`.
 
@@ -63,6 +64,8 @@ Indexes: `{status:1, order:1}` and a text index on `title, summary, body`.
 | featuredInLeadership | Boolean | The Home leadership row |
 
 **Seniority sort** is role rank (managing_partner = 0 … nysc_associate = 5), then `order`, then `lastName`.
+**Role filtering** treats `partner` as a group that also matches `managing_partner`, because the directory has a "Partners" tab and no Managing Partner tab (DECISIONS Q3).
+People carry no `seo` fields, so `/people/:slug` returns none.
 Indexes: `{status:1, role:1, order:1}` and a text index on `firstName, lastName, bio`.
 
 ### `insights`
@@ -81,6 +84,7 @@ Indexes: `{status:1, role:1, order:1}` and a text index on `firstName, lastName,
 | publishedAt | Date | Displayed as "June, 2026." by the frontend |
 
 Card chips = the first category label, then the first practice area title. If there's no practice area, show the second category.
+Insights carry no `seo` fields, so `/insights/:slug` returns none.
 Indexes: `{status:1, categories:1, publishedAt:-1}` and `{status:1, featured:1, publishedAt:-1}`, plus a text index on `title, excerpt, body`.
 
 ### `offices`
