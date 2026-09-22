@@ -15,7 +15,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
   - Create the full folder tree from ARCHITECTURE.md with `.gitkeep`s.
   - **Accept:** `npm run lint`, `npm run typecheck` and `npm test` all pass (an empty suite is allowed); a deliberately bad import (a controller importing a model) fails lint; `npm run build` produces `dist/`.
 
-- [ ] **0.2 Write `openapi/openapi.yaml` for all public endpoints and form POSTs**
+- [x] **0.2 Write `openapi/openapi.yaml` for all public endpoints and form POSTs**
   - OpenAPI 3.1. Shared schemas go in `components` (Image, Link, PersonSummary, InsightCard, Author, Pagination meta, Error). Every endpoint gets its query params, responses (200/400/404/429), and examples that `$ref` fixture files.
   - Follow `docs/API.md` exactly. Admin endpoints are NOT in scope yet.
   - Add the `types:gen` script (openapi-typescript → `src/types/api.generated.ts`) and `types:check`. Create `src/types/api.ts` with a named alias for every component schema.
