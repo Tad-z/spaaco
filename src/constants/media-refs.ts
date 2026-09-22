@@ -29,6 +29,17 @@ export const MEDIA_REFS: readonly MediaRef[] = [
   { model: 'Person', collection: 'people', path: 'photo', label: 'lastName' },
   { model: 'Insight', collection: 'insights', path: 'coverImage', label: 'title' },
   { model: 'Recognition', collection: 'recognitions', path: 'badge', label: 'organization' },
+
+  // Page documents. Each page key carries only some of these, but any of them
+  // can hold an id, so all are registered.
+  { model: 'Page', collection: 'pages', path: 'hero.image', label: 'key' },
+  { model: 'Page', collection: 'pages', path: 'seo.ogImage', label: 'key' },
+  { model: 'Page', collection: 'pages', path: 'videoShowcase.poster', label: 'key' },
+  { model: 'Page', collection: 'pages', path: 'whyChooseUs.image', label: 'key' },
+  { model: 'Page', collection: 'pages', path: 'missionSection.image', label: 'key' },
+  { model: 'Page', collection: 'pages', path: 'principles.image', label: 'key' },
+  { model: 'Page', collection: 'pages', path: 'awardsList.image', label: 'key' },
+  { model: 'Page', collection: 'pages', path: 'csrBanner.image', label: 'key' },
 ] as const;
 
 /** Media paths grouped by model, for building a `$or` query per collection. */

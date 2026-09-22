@@ -14,3 +14,5 @@ export { Insight } from './insight.model.js';
 export { Recognition } from './recognition.model.js';
 export { Faq } from './faq.model.js';
 export { Job } from './job.model.js';
+export { Page } from './page.model.js';
+export { Settings } from './settings.model.js';

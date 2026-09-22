@@ -183,15 +183,32 @@ describe('indexes', () => {
 });
 
 describe('media reference registry', () => {
-  /** Every ObjectId path in a schema that points at the Media model. */
-  const mediaPaths = (model: mongoose.Model<never>): string[] => {
+  /**
+   * Every path pointing at the Media model, including those inside embedded
+   * sub-schemas.
+   *
+   * `eachPath` does not descend into sub-documents, so a version of this that
+   * only walked the top level reported nothing for page sections like
+   * `hero.image` — and passed while they were unregistered. Page documents hold
+   * eight of the registry's twelve entries, so that gap covered most of it.
+   */
+  const mediaPaths = (schema: mongoose.Schema, prefix = ''): string[] => {
     const paths: string[] = [];
-    model.schema.eachPath((path, type) => {
-      // A ref sits on the path's own options, or on the caster's for an array.
+
+    schema.eachPath((path, type) => {
+      const full = prefix === '' ? path : `${prefix}.${path}`;
       const caster = (type as { caster?: { options?: { ref?: unknown } } }).caster;
       const ref: unknown = type.options.ref ?? caster?.options?.ref;
-      if (ref === 'Media') paths.push(path);
+
+      if (ref === 'Media') {
+        paths.push(full);
+        return;
+      }
+
+      const sub = (type as { schema?: mongoose.Schema }).schema;
+      if (sub) paths.push(...mediaPaths(sub, full));
     });
+
     return paths;
   };
 
@@ -200,8 +217,7 @@ describe('media reference registry', () => {
     const missing: string[] = [];
 
     for (const name of mongoose.modelNames()) {
-      const model = mongoose.model(name) as unknown as mongoose.Model<never>;
-      for (const path of mediaPaths(model)) {
+      for (const path of mediaPaths(mongoose.model(name).schema)) {
         if (!registered.has(`${name}.${path}`)) missing.push(`${name}.${path}`);
       }
     }
