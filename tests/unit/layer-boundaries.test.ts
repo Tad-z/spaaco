@@ -1,96 +1,145 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ESLint } from 'eslint';
 
 /**
  * The layer table in docs/ARCHITECTURE.md is only a rule if lint enforces it.
- * These probes write a deliberately illegal import, lint it, then delete it.
+ * These probes write deliberately illegal imports, lint them, then delete them.
+ *
+ * All probes are linted in a single ESLint run: creating the instance loads the
+ * flat config and the TypeScript program, which is by far the slowest thing in
+ * the suite, so it happens once rather than once per case.
  */
-const root = process.cwd();
-const probes: string[] = [];
 
-function writeProbe(relativePath: string, contents: string): string {
+const root = process.cwd();
+const RULE = 'import/no-restricted-paths';
+
+interface Probe {
+  /** The file whose imports are under test. */
+  readonly file: string;
+  /** Extra files it imports, written so the resolver can follow them. */
+  readonly supporting: readonly { path: string; contents: string }[];
+  readonly contents: string;
+  readonly shouldFail: boolean;
+  readonly description: string;
+}
+
+const probes: Probe[] = [
+  {
+    description: 'a controller importing a model',
+    shouldFail: true,
+    file: 'src/controllers/public/__probe-model.controller.ts',
+    supporting: [
+      {
+        path: 'src/models/__probe.model.ts',
+        contents: 'export const probeModel = { name: "probe" };\n',
+      },
+    ],
+    contents: [
+      "import { probeModel } from '../../models/__probe.model.js';",
+      '',
+      'export const probe = (): string => probeModel.name;',
+      '',
+    ].join('\n'),
+  },
+  {
+    description: 'a serializer importing a service',
+    shouldFail: true,
+    file: 'src/serializers/__probe.serializer.ts',
+    supporting: [
+      {
+        path: 'src/services/__probe.service.ts',
+        contents: 'export const probeService = { find: (): string => "probe" };\n',
+      },
+    ],
+    contents: [
+      "import { probeService } from '../services/__probe.service.js';",
+      '',
+      'export const probe = (): string => probeService.find();',
+      '',
+    ].join('\n'),
+  },
+  {
+    description: 'a service importing a controller',
+    shouldFail: true,
+    file: 'src/services/__probe-reverse.service.ts',
+    supporting: [
+      {
+        path: 'src/controllers/public/__probe-target.controller.ts',
+        contents: 'export const probeController = { handle: (): string => "probe" };\n',
+      },
+    ],
+    contents: [
+      "import { probeController } from '../controllers/public/__probe-target.controller.js';",
+      '',
+      'export const probe = (): string => probeController.handle();',
+      '',
+    ].join('\n'),
+  },
+  {
+    description: 'a controller importing a service',
+    shouldFail: false,
+    file: 'src/controllers/public/__probe-ok.controller.ts',
+    supporting: [
+      {
+        path: 'src/services/__probe-ok.service.ts',
+        contents: 'export const okService = { find: (): string => "probe" };\n',
+      },
+    ],
+    contents: [
+      "import { okService } from '../../services/__probe-ok.service.js';",
+      '',
+      'export const probe = (): string => okService.find();',
+      '',
+    ].join('\n'),
+  },
+];
+
+const written: string[] = [];
+const violationsByFile = new Map<string, number>();
+
+function write(relativePath: string, contents: string): string {
   const absolute = join(root, relativePath);
   mkdirSync(join(absolute, '..'), { recursive: true });
   writeFileSync(absolute, contents, 'utf8');
-  probes.push(absolute);
+  written.push(absolute);
   return absolute;
 }
 
-async function lintProbe(absolute: string): Promise<ESLint.LintResult> {
+beforeAll(async () => {
+  const targets = probes.map((probe) => {
+    for (const support of probe.supporting) write(support.path, support.contents);
+    return write(probe.file, probe.contents);
+  });
+
   const eslint = new ESLint({ cwd: root });
-  const [result] = await eslint.lintFiles([absolute]);
-  if (!result) throw new Error(`eslint returned no result for ${absolute}`);
-  return result;
-}
+  const results = await eslint.lintFiles(targets);
+
+  for (const result of results) {
+    violationsByFile.set(
+      result.filePath,
+      result.messages.filter((message) => message.ruleId === RULE).length
+    );
+  }
+});
 
 afterAll(() => {
-  for (const probe of probes) rmSync(probe, { force: true });
+  for (const path of written) rmSync(path, { force: true });
 });
 
 describe('eslint layer boundaries', () => {
-  it('rejects a controller importing a model', async () => {
-    writeProbe(
-      'src/models/__boundary-probe.model.ts',
-      'export const boundaryProbeModel = { name: "probe" };\n'
-    );
-    const controller = writeProbe(
-      'src/controllers/public/__boundary-probe.controller.ts',
-      [
-        "import { boundaryProbeModel } from '../../models/__boundary-probe.model.js';",
-        '',
-        'export const probe = (): string => boundaryProbeModel.name;',
-        '',
-      ].join('\n')
-    );
-
-    const result = await lintProbe(controller);
-    const messages = result.messages.filter((m) => m.ruleId === 'import/no-restricted-paths');
-
-    expect(messages.length).toBeGreaterThan(0);
-    expect(messages[0]?.severity).toBe(2);
+  it.each(probes.filter((probe) => probe.shouldFail))('rejects $description', ({ file }) => {
+    expect(violationsByFile.get(join(root, file))).toBeGreaterThan(0);
   });
 
-  it('rejects a serializer importing a service', async () => {
-    writeProbe(
-      'src/services/__boundary-probe.service.ts',
-      'export const boundaryProbeService = { find: (): string => "probe" };\n'
-    );
-    const serializer = writeProbe(
-      'src/serializers/__boundary-probe.serializer.ts',
-      [
-        "import { boundaryProbeService } from '../services/__boundary-probe.service.js';",
-        '',
-        'export const probe = (): string => boundaryProbeService.find();',
-        '',
-      ].join('\n')
-    );
-
-    const result = await lintProbe(serializer);
-    const messages = result.messages.filter((m) => m.ruleId === 'import/no-restricted-paths');
-
-    expect(messages.length).toBeGreaterThan(0);
+  it.each(probes.filter((probe) => !probe.shouldFail))('allows $description', ({ file }) => {
+    expect(violationsByFile.get(join(root, file))).toBe(0);
   });
 
-  it('allows a controller importing a service', async () => {
-    writeProbe(
-      'src/services/__boundary-probe-ok.service.ts',
-      'export const okService = { find: (): string => "probe" };\n'
-    );
-    const controller = writeProbe(
-      'src/controllers/public/__boundary-probe-ok.controller.ts',
-      [
-        "import { okService } from '../../services/__boundary-probe-ok.service.js';",
-        '',
-        'export const probe = (): string => okService.find();',
-        '',
-      ].join('\n')
-    );
-
-    const result = await lintProbe(controller);
-    const messages = result.messages.filter((m) => m.ruleId === 'import/no-restricted-paths');
-
-    expect(messages).toEqual([]);
+  it('linted every probe, so a resolver failure cannot pass as "no violations"', () => {
+    for (const probe of probes) {
+      expect(violationsByFile.has(join(root, probe.file))).toBe(true);
+    }
   });
 });

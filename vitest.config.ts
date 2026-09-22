@@ -7,8 +7,10 @@ export default defineConfig({
     // src/config/env.ts validates process.env at import time, so the test
     // environment has to exist before any test module loads.
     setupFiles: ['tests/support/setup-env.ts'],
-    // mongodb-memory-server needs room to start on a cold cache.
-    testTimeout: 30_000,
+    // One in-memory MongoDB for the whole run, rather than one per test file.
+    globalSetup: ['tests/support/global-setup.ts'],
+    // Only the first start pays for a cold binary cache; connections are fast.
+    testTimeout: 15_000,
     hookTimeout: 60_000,
     pool: 'forks',
     coverage: {

@@ -14,20 +14,16 @@ import { APP_VERSION } from '../../../src/config/constants.js';
 
 const app = buildTestApp();
 
-describe('GET /api/v1/health', () => {
-  it('returns 200 with the health payload', async () => {
+describe('the middleware chain', () => {
+  // The health endpoint's own happy path and contract assertion live in
+  // health.test.ts, which runs with a database. This case is the one thing that
+  // file cannot show: the endpoint degrading rather than throwing when the
+  // database is absent.
+  it('serves /health with db "down" when no database is connected', async () => {
     const res = await request(app).get('/api/v1/health');
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({
-      data: { status: 'ok', db: expect.stringMatching(/^(up|down)$/) as string, version: APP_VERSION },
-    });
-  });
-
-  it('reports db "down" when no database is connected', async () => {
-    const res = await request(app).get('/api/v1/health');
-
-    expect(res.body.data.db).toBe('down');
+    expect(res.body).toEqual({ data: { status: 'ok', db: 'down', version: APP_VERSION } });
   });
 
   it('echoes a client-supplied request id', async () => {

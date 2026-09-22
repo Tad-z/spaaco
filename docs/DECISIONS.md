@@ -60,6 +60,21 @@ Append new entries at the bottom of each section. Never rewrite history; superse
 
 **ADR-028: `home.aboutFirm` has no image.** It briefly carried one, which contradicted ADR-012 and the "Image ownership" section of DATA_MODEL.md: the world-map backdrop is a frontend asset. Shipping it would have given the firm a required upload slot for an asset they do not own, and removing it later would have been a breaking change.
 
+**ADR-029: Testing scope and speed.** *(Requested as ADR-019; that number was already used for the `/api/v1` path prefix and is referenced from commit messages and PROGRESS.md, so this takes the next free number rather than renumbering history.)*
+
+The suite was slowing every task, so coverage is now proved **once, in the cheapest place that proves it**:
+
+- **Per endpoint:** happy path with a contract assertion, one 400, and a 404 where applicable. Nothing more unless the endpoint has genuinely distinct logic.
+- **Draft exclusion:** once per public resource, not per endpoint.
+- **Role enforcement:** only in `tests/integration/admin/roles.test.ts`, one table-driven test over every admin route × role. Never repeated in a resource's own file.
+- **Generic CRUD factory:** tested thoroughly once; each collection then gets a single admin smoke test (create → update with `If-Match` → publish → public read).
+- **During a task** only the touched tests run, plus `lint` and `typecheck`. The full `npm run check` runs at the end of each phase.
+- **The `api-reviewer` agent** runs at the end of Phases 3, 5, 6 and 7 only.
+
+Mechanically, one mongod now starts in `globalSetup` for the whole run instead of one per test file, with each Vitest worker using its own database on it and `afterEach` clearing collections (never dropping, which would drop indexes). The layer-boundary probes were also folded into a single ESLint run, since constructing a type-aware ESLint instance was the slowest operation in the suite.
+
+**The risk we are accepting:** narrower coverage can miss a regression that duplicated tests would have caught twice. The mitigation is that the central tests must genuinely cover what the per-resource tests no longer do — so a role or draft check may only be deleted from a resource file once `roles.test.ts` or that resource's single draft test demonstrably covers it.
+
 ## Known content conflicts (from the designs; the firm must resolve them)
 
 Seed them as designed. Don't silently "fix" them.

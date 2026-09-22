@@ -99,15 +99,28 @@ Nothing imports from `routes/` or `controllers/`. There are no barrel files exce
 
 ## Testing
 
+Tests must stay fast enough to run constantly. Cover each behaviour **once, in the cheapest place that proves it** — breadth of duplicated coverage slows every future task without catching more.
+
 - Every endpoint gets an integration test (Supertest + in-memory MongoDB) with `expectToMatchContract(...)`.
-- Cover the happy path, 400, 404, draft exclusion, and 401/403 for admin routes.
-- A task isn't done until `npm run check` passes.
+- **Per endpoint, cover exactly:** the happy path with a contract assertion, one validation error (400), and not-found (404) where the endpoint can 404. Nothing more unless the endpoint has genuinely distinct logic worth pinning.
+- **Draft exclusion:** tested **once per public resource**, not per endpoint.
+- **Role enforcement:** tested **only** in the one table-driven test at `tests/integration/admin/roles.test.ts`, covering every admin route × role against the matrix in `docs/API.md`. Never re-test 401/403 in a resource's own test file.
+- **Generic CRUD factory:** tested thoroughly once, in its own test. Each content collection then needs a single admin smoke test: create → update with `If-Match` → publish → public read.
+- Unit-test helpers, serializers and anything with branching logic that an integration test would reach only indirectly.
+- **While working a task**, run only the tests for files you touched, plus `npm run lint` and `npm run typecheck`:
+  ```bash
+  npx vitest run tests/integration/public/people.test.ts
+  npm run lint && npm run typecheck
+  ```
+- Run the full `npm run check` **at the end of each phase**, not per task.
 
 ## Workflow
 
 - Start with `/next-task` (or read the next unchecked task in `docs/ROADMAP.md`). Use plan mode for changes touching more than 2 files.
 - For a new resource across all layers, use `/new-resource`. When ambiguous, check the open questions in `docs/DECISIONS.md`, then ask.
-- When done: tick the roadmap box, log any new decision, and commit with a Conventional Commit (`feat(people): add directory filters`). Never push.
+- While working: run only the touched tests plus `npm run lint` and `npm run typecheck`. Save the full `npm run check` for the end of the phase.
+- When done: tick the roadmap box, add a line to `docs/PROGRESS.md`, log any new decision, and commit with a Conventional Commit (`feat(people): add directory filters`). Never push.
+- **Reviews:** run the `api-reviewer` agent at the end of **Phases 3, 5, 6 and 7** only, over that phase's commits. Fix every blocker and major finding, re-run `npm run check`, and commit the fixes before starting the next phase.
 
 ## Docs map (read the one you need)
 
