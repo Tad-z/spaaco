@@ -45,7 +45,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
   - Route through all the layers even for `/health`; it becomes the reference example.
   - **Accept:** integration tests cover health 200, an unknown route returning the 404 error shape, and a malformed JSON body returning 400 `VALIDATION_ERROR`.
 
-- [ ] **1.3 Database + test harness**
+- [x] **1.3 Database + test harness**
   - `src/core/db.ts` (connect/disconnect, sensible pool options).
   - `tests/support/`: `setupTestDb()` using mongodb-memory-server, `buildTestApp()` with noop drivers, and `expectToMatchContract(res, method, path)`, which validates a response against `openapi.yaml` using ajv.
   - **Accept:** a sample contract test on `/health` passes, and the helper fails loudly on a deliberately wrong shape.

@@ -46,6 +46,47 @@ export const asObject = (value: unknown): JsonObject | undefined =>
     ? (value as JsonObject)
     : undefined;
 
+/** Decode one RFC 6901 pointer segment. */
+const decodePointer = (segment: string): string => segment.replace(/~1/g, '/').replace(/~0/g, '~');
+
+/** Walk the spec by a local JSON pointer such as `#/components/responses/NotFound`. */
+export function pointerGet(pointer: string): unknown {
+  const path = pointer.startsWith('#/') ? pointer.slice(2) : pointer.replace(/^#?\/?/, '');
+  if (path === '') return spec;
+
+  let node: unknown = spec;
+  for (const segment of path.split('/')) {
+    node = asObject(node)?.[decodePointer(segment)];
+    if (node === undefined) return undefined;
+  }
+  return node;
+}
+
+/**
+ * Follow `$ref` indirection to the node that actually holds the content.
+ *
+ * Every error response in the spec is a `$ref` into `components/responses`, so
+ * without this a caller walking to `.../responses/404/content` finds nothing
+ * and concludes the response has no body — which would make every error-status
+ * contract assertion pass without checking anything.
+ */
+export function resolveRef(
+  node: JsonObject | undefined,
+  base: string
+): { node: JsonObject | undefined; base: string } {
+  let current = node;
+  let currentBase = base;
+
+  for (let hops = 0; hops < 10; hops += 1) {
+    const ref = current?.$ref;
+    if (typeof ref !== 'string') break;
+    currentBase = `${SPEC_ID}${ref}`;
+    current = asObject(pointerGet(ref));
+  }
+
+  return { node: current, base: currentBase };
+}
+
 export const getValidator = (pointer: string): ValidateFunction | undefined =>
   ajv.getSchema(pointer) as ValidateFunction | undefined;
 
