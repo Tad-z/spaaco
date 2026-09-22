@@ -52,7 +52,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 
 ## Phase 2: Models and seed
 
-- [ ] **2.1 Shared interfaces, plugins and sub-schemas:** `interfaces/common.interface.ts` (IContentFields, ILink, IHero, IIconItem, IStat, ISeo), `models/plugins/content.plugin.ts` (slug/status/order/publishedAt/revision/audit fields/toJSON), `models/schemas/common.schemas.ts`, `constants/enums.ts`, and `helpers/slug.helper.ts`.
+- [x] **2.1 Shared interfaces, plugins and sub-schemas:** `interfaces/common.interface.ts` (IContentFields, ILink, IHero, IIconItem, IStat, ISeo), `models/plugins/content.plugin.ts` (slug/status/order/publishedAt/revision/audit fields/toJSON), `models/schemas/common.schemas.ts`, `constants/enums.ts`, and `helpers/slug.helper.ts`.
   - **Accept:** unit tests cover slug generation, collision handling, and toJSON output.
 - [ ] **2.2 Content interfaces + models:** practiceAreas, people, insights, offices, recognitions, faqs, jobs, and media (each with `interfaces/<resource>.interface.ts` + `models/<resource>.model.ts`), with all indexes from DATA_MODEL.md, plus `scripts/sync-indexes.ts` (`npm run db:sync-indexes`) and `constants/media-refs.ts`.
   - **Accept:** tests prove the validation rules (e.g. a video insight requires videoUrl; a person role must be a valid enum) and that indexes exist.
