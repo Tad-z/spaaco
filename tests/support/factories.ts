@@ -6,8 +6,8 @@ import type { IPracticeArea } from '../../src/interfaces/practice-area.interface
 import type { IOffice } from '../../src/interfaces/office.interface.js';
 import type { PopulatedPerson } from '../../src/serializers/person.serializer.js';
 import type { PopulatedInsight } from '../../src/serializers/insight.serializer.js';
-import type { PopulatedPracticeArea } from '../../src/serializers/practice-area.serializer.js';
-import type { PopulatedOffice } from '../../src/serializers/office.serializer.js';
+import type { PracticeAreaDetailSource } from '../../src/serializers/practice-area.serializer.js';
+import type { OfficeSource } from '../../src/serializers/office.serializer.js';
 
 /**
  * Builders for test data.
@@ -62,8 +62,8 @@ export function makeMedia(overrides: Partial<IMedia> = {}): IMedia & { _id: Type
 }
 
 export function makePracticeArea(
-  overrides: Partial<PopulatedPracticeArea> = {}
-): PopulatedPracticeArea {
+  overrides: Partial<PracticeAreaDetailSource> = {}
+): PracticeAreaDetailSource {
   return {
     _id: id(),
     ...contentFields({ slug: 'dispute-resolution-arbitration' }),
@@ -73,16 +73,12 @@ export function makePracticeArea(
     image: null,
     body: null,
     keyServices: [],
-    contacts: [],
-    featuredOnHome: true,
-    homeOrder: 3,
-    showInFooter: true,
     seo: { title: null, description: null },
     ...overrides,
   };
 }
 
-export function makeOffice(overrides: Partial<PopulatedOffice> = {}): PopulatedOffice {
+export function makeOffice(overrides: Partial<OfficeSource> = {}): OfficeSource {
   return {
     _id: id(),
     ...contentFields({ slug: 'lagos' }),

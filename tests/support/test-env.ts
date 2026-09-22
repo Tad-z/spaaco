@@ -8,6 +8,9 @@
  * Every driver is the credential-free one, so the suite never needs a secret,
  * a network call or a real service.
  */
+/** Exported separately so test helpers can sign tokens without an indexed lookup. */
+export const TEST_ACCESS_SECRET = 'test-access-secret-test-access-secret-32';
+
 export const TEST_ENV: Readonly<Record<string, string>> = Object.freeze({
   NODE_ENV: 'test',
   PORT: '4000',
@@ -17,7 +20,7 @@ export const TEST_ENV: Readonly<Record<string, string>> = Object.freeze({
   // Replaced per test file by setupTestDb() with the in-memory server's URI.
   MONGODB_URI: 'mongodb://127.0.0.1:27017/spa-ajibade-test',
 
-  JWT_ACCESS_SECRET: 'test-access-secret-test-access-secret-32',
+  JWT_ACCESS_SECRET: TEST_ACCESS_SECRET,
   JWT_ACCESS_TTL: '15m',
   REFRESH_TOKEN_TTL_DAYS: '14',
   ENCRYPTION_KEY: 'a'.repeat(64),

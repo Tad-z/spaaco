@@ -118,6 +118,18 @@ paths:
                     $ref: '../fixtures/responses/site.json'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '404':
+          description: |
+            The site has never been configured: there is no settings document.
+            Only reachable on an unseeded environment, never in production.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Site settings not found
         '429':
           $ref: '#/components/responses/RateLimited'
         '500':

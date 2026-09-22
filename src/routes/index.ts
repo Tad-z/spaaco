@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { healthRoutes } from './public/health.routes.js';
+import { siteRoutes } from './public/site.routes.js';
 
 /**
  * The one place routers are mounted.
@@ -12,3 +13,4 @@ export const API_PREFIX = '/api/v1';
 export const apiRoutes: Router = Router();
 
 apiRoutes.use(healthRoutes);
+apiRoutes.use(siteRoutes);

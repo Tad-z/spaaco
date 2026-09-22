@@ -5,9 +5,9 @@ import type { InsightCard } from '../types/api.js';
 import { PERSON_ROLES } from '../constants/enums.js';
 import { toNullableImage } from './image.serializer.js';
 import { toRef as practiceAreaRef } from './practice-area.serializer.js';
-import type { PopulatedPracticeArea } from './practice-area.serializer.js';
+import type { PracticeAreaRefSource } from './practice-area.serializer.js';
 import { toRef as officeRef } from './office.serializer.js';
-import type { PopulatedOffice } from './office.serializer.js';
+import type { OfficeRefSource } from './office.serializer.js';
 
 /**
  * Attorney payloads.
@@ -22,8 +22,8 @@ import type { PopulatedOffice } from './office.serializer.js';
 export type PopulatedPerson = Omit<IPerson, 'photo' | 'practiceAreas' | 'office'> & {
   _id: { toString: () => string };
   photo?: IMedia | null;
-  practiceAreas?: PopulatedPracticeArea[];
-  office?: PopulatedOffice | null;
+  practiceAreas?: PracticeAreaRefSource[];
+  office?: OfficeRefSource | null;
 };
 
 /**

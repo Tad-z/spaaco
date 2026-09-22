@@ -1,13 +1,26 @@
 import type { Office as OfficePayload, OfficeRef } from '../types/api.js';
-import type { IOffice } from '../interfaces/office.interface.js';
+import type { IGeoPoint } from '../interfaces/office.interface.js';
 
-export type PopulatedOffice = IOffice & { _id: { toString: () => string } };
+export interface OfficeRefSource {
+  _id: { toString: () => string };
+  slug: string;
+  name: string;
+}
 
-export function toRef(office: PopulatedOffice): OfficeRef {
+export interface OfficeSource extends OfficeRefSource {
+  address: string;
+  hours: string;
+  phone?: string | null;
+  email?: string | null;
+  location?: IGeoPoint | null;
+  directionsUrl?: string | null;
+}
+
+export function toRef(office: OfficeRefSource): OfficeRef {
   return { id: office._id.toString(), slug: office.slug, name: office.name };
 }
 
-export function toOffice(office: PopulatedOffice): OfficePayload {
+export function toOffice(office: OfficeSource): OfficePayload {
   return {
     ...toRef(office),
     address: office.address,

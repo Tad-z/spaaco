@@ -1239,6 +1239,26 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            /**
+             * @description The site has never been configured: there is no settings document.
+             *     Only reachable on an unseeded environment, never in production.
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "NOT_FOUND",
+                     *         "message": "Site settings not found"
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
         };

@@ -65,7 +65,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 
 - [x] **3.1 Serializers:** `serializers/image.serializer.ts` (sizes), person (PersonSummary), insight (InsightCard: chips + author block + CTA type), and enum labels. The return types are aliases from `types/api.ts`.
   - **Accept:** the serializers compile against the generated types; unit tests in `tests/unit/serializers/` validate their output with ajv.
-- [ ] **3.2 `/site`:** settings + nav + footer + FAQ section, cached.
+- [x] **3.2 `/site`:** settings + nav + footer + FAQ section, cached.
   - **Accept:** a contract test passes, and a draft FAQ is excluded.
 - [ ] **3.3 Collection endpoints:** practice-areas, offices, faqs, jobs (list + detail).
   - **Accept:** contract tests pass; 404 on an unknown slug; drafts excluded; closed/expired jobs excluded.

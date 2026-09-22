@@ -4,7 +4,7 @@ import type { IMedia } from '../interfaces/media.interface.js';
 import { INSIGHT_CATEGORIES } from '../constants/enums.js';
 import { toNullableImage } from './image.serializer.js';
 import { toRef as practiceAreaRef } from './practice-area.serializer.js';
-import type { PopulatedPracticeArea } from './practice-area.serializer.js';
+import type { PracticeAreaRefSource } from './practice-area.serializer.js';
 import { toSummary as personSummary } from './person.serializer.js';
 import type { PopulatedPerson } from './person.serializer.js';
 
@@ -19,7 +19,7 @@ import type { PopulatedPerson } from './person.serializer.js';
 export type PopulatedInsight = Omit<IInsight, 'coverImage' | 'practiceAreas' | 'author'> & {
   _id: { toString: () => string };
   coverImage?: IMedia | null;
-  practiceAreas?: PopulatedPracticeArea[];
+  practiceAreas?: PracticeAreaRefSource[];
   author?: PopulatedPerson | null;
 };
 
