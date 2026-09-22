@@ -34,7 +34,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 
 ## Phase 1: Foundation
 
-- [ ] **1.1 Config + logger + errors**
+- [x] **1.1 Config + logger + errors**
   - `src/config/env.ts` parses `process.env` with Zod and exports a frozen, typed `config`; it fails fast with a readable error. `src/config/constants.ts` holds limits and defaults.
   - `src/core/logger.ts` sets up pino, redacting authorization/cookie/password/cv fields.
   - `src/core/errors.ts` defines AppError plus its subclasses.
