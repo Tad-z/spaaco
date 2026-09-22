@@ -6,6 +6,15 @@
  * the frontend already depend on, so changing one is a contract change.
  */
 
+/**
+ * The deployed application version, reported by `/health`.
+ *
+ * Kept here rather than imported from package.json, which sits outside
+ * `rootDir` and would not resolve the same way in `dist/`. A unit test asserts
+ * the two stay in step.
+ */
+export const APP_VERSION = '0.1.0';
+
 export const PAGINATION = {
   /** The designs paginate the people and insights grids 9 per page. */
   defaultPageSize: 9,

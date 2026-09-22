@@ -200,6 +200,10 @@ export default tseslint.config(
       // TypeScript resolves identifiers itself; no-undef only produces noise here.
       'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrors: 'all' },
+      ],
       '@typescript-eslint/explicit-function-return-type': [
         'error',
         { allowExpressions: true, allowTypedFunctionExpressions: true },

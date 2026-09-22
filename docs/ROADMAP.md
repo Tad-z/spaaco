@@ -40,7 +40,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
   - `src/core/errors.ts` defines AppError plus its subclasses.
   - **Accept:** unit tests cover config parse success and failure, and error serialisation.
 
-- [ ] **1.2 App factory + middleware + health**
+- [x] **1.2 App factory + middleware + health**
   - `src/app.ts` exports `createApp`; `src/server.ts` is the entry point. Add the request-id, not-found, error-handler and validate middlewares, plus helmet, a cors allow-list (`CORS_ORIGINS`) and body limits. Create `src/types/express.d.ts` (the typed `req.validated`), `src/routes/index.ts`, and the health route/controller/service.
   - Route through all the layers even for `/health`; it becomes the reference example.
   - **Accept:** integration tests cover health 200, an unknown route returning the 404 error shape, and a malformed JSON body returning 400 `VALIDATION_ERROR`.
