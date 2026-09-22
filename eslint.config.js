@@ -202,7 +202,13 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrors: 'all' },
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrors: 'all',
+          // Omitting a field by destructuring it out is deliberate, not dead code.
+          ignoreRestSiblings: true,
+        },
       ],
       '@typescript-eslint/explicit-function-return-type': [
         'error',

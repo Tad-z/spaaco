@@ -1,0 +1,54 @@
+import { Schema, model } from 'mongoose';
+import type { Model } from 'mongoose';
+import type { IInsight } from '../interfaces/insight.interface.js';
+import { INSIGHT_CATEGORIES, INSIGHT_FORMATS } from '../constants/enums.js';
+import { contentPlugin } from './plugins/content.plugin.js';
+
+const insightSchema = new Schema<IInsight>(
+  {
+    title: { type: String, required: true, trim: true, maxlength: 300 },
+    excerpt: { type: String, default: null, trim: true, maxlength: 1000 },
+    body: { type: String, default: null },
+    format: { type: String, required: true, enum: INSIGHT_FORMATS.values, default: 'article' },
+    videoUrl: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 2048,
+      // A video insight renders a "Watch Video" button, so a missing URL would
+      // ship a dead control to the site.
+      required: [
+        function (this: IInsight): boolean {
+          return this.format === 'video';
+        },
+        'videoUrl is required when format is "video"',
+      ],
+    },
+    categories: {
+      type: [{ type: String, enum: INSIGHT_CATEGORIES.values }],
+      required: true,
+      validate: {
+        validator: (value: string[]): boolean => value.length > 0,
+        message: 'at least one category is required',
+      },
+    },
+    practiceAreas: [{ type: Schema.Types.ObjectId, ref: 'PracticeArea' }],
+    // Null means the firm is the author, not that the field is unset.
+    author: { type: Schema.Types.ObjectId, ref: 'Person', default: null },
+    coverImage: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
+    featured: { type: Boolean, default: false },
+  },
+  { timestamps: true, strict: 'throw' }
+);
+
+insightSchema.plugin(contentPlugin, { source: 'title' });
+
+// The listing, filtered by category, newest first.
+insightSchema.index({ status: 1, categories: 1, publishedAt: -1 });
+// The featured carousel.
+insightSchema.index({ status: 1, featured: 1, publishedAt: -1 });
+// The practice-area filter and a practice area's related insights.
+insightSchema.index({ status: 1, practiceAreas: 1, publishedAt: -1 });
+insightSchema.index({ title: 'text', excerpt: 'text', body: 'text' });
+
+export const Insight: Model<IInsight> = model<IInsight>('Insight', insightSchema);
