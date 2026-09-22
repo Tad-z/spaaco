@@ -21,7 +21,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
   - Add the `types:gen` script (openapi-typescript → `src/types/api.generated.ts`) and `types:check`. Create `src/types/api.ts` with a named alias for every component schema.
   - **Accept:** `npm run spec:lint` passes with zero errors; `npm run types:gen` then `npm run typecheck` pass.
 
-- [ ] **0.3 Create fixtures from `docs/SEED_CONTENT.md`**
+- [x] **0.3 Create fixtures from `docs/SEED_CONTENT.md`**
   - Create `fixtures/responses/*.json`: one per endpoint response, e.g. `site.json`, `pages.home.json`, `people.list.json`, `insights.list.json`, `practice-areas.detail.dispute-resolution.json`, `search.json`, `error.validation.json`.
   - Also create `fixtures/seed/*.json` holding the raw documents per collection (used by the seed in 2.x).
   - Use the real copy. Use placeholder image URLs of the form `https://placehold.co/1440x662?text=<label>`. Missing content gets `[PENDING FROM FIRM]` placeholders.
