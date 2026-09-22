@@ -58,7 +58,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
   - **Accept:** tests prove the validation rules (e.g. a video insight requires videoUrl; a person role must be a valid enum) and that indexes exist.
 - [x] **2.3 Singletons:** settings and page interfaces + models, plus one Zod schema per page key in `validators/pages/<key>.validator.ts` (with an index mapping key → schema).
   - **Accept:** an invalid page section is rejected with a precise error path.
-- [ ] **2.4 Seed script:** `npm run seed` loads `fixtures/seed/*`, upserting by slug/key. It's idempotent (running it twice changes nothing), refuses to run when `NODE_ENV=production`, and creates media docs for placeholder images (dev/staging only; real images are uploaded by the firm through the admin UI).
+- [x] **2.4 Seed script:** `npm run seed` loads `fixtures/seed/*`, upserting by slug/key. It's idempotent (running it twice changes nothing), refuses to run when `NODE_ENV=production`, and creates media docs for placeholder images (dev/staging only; real images are uploaded by the firm through the admin UI).
   - **Accept:** a test runs the seed twice against the memory DB and asserts the counts are stable.
 
 ## Phase 3: Public read API
