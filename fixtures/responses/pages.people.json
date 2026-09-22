@@ -1,0 +1,70 @@
+{
+  "data": {
+    "key": "people",
+    "hero": {
+      "title": "Get To Know Our Attorneys",
+      "subtitle": "Meet the attorneys behind our firm's trusted reputation for strong counsel, thoughtful representation, strategic advocacy, and unwavering commitment to every client we serve.",
+      "image": {
+        "url": "https://placehold.co/1440x662?text=People%20hero",
+        "alt": "Attorneys of the firm gathered in the atrium",
+        "width": 1440,
+        "height": 662,
+        "sizes": {
+          "sm": "https://placehold.co/480x221?text=People%20hero",
+          "md": "https://placehold.co/960x441?text=People%20hero",
+          "lg": "https://placehold.co/1440x662?text=People%20hero"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "About Us",
+        "href": "/about",
+        "kind": "internal"
+      }
+    },
+    "directorySection": {
+      "eyebrow": "Our People",
+      "title": "Behind Every Victory Is A Leadership You Can Trust",
+      "cta": null
+    },
+    "roleFilters": [
+      {
+        "value": "",
+        "label": "Our Attorneys"
+      },
+      {
+        "value": "partner",
+        "label": "Partners"
+      },
+      {
+        "value": "associate_partner",
+        "label": "Associate Partners"
+      },
+      {
+        "value": "senior_associate",
+        "label": "Senior Associates"
+      },
+      {
+        "value": "associate",
+        "label": "Associates"
+      },
+      {
+        "value": "nysc_associate",
+        "label": "NYSC Associates"
+      }
+    ],
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  }
+}

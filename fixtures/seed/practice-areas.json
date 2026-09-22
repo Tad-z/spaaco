@@ -1,0 +1,218 @@
+[
+  {
+    "slug": "company-secretarial",
+    "title": "Company Secretarial",
+    "shortLabel": "Company Secretarial",
+    "summary": "When a business must fulfill its statutory obligations, the firm expertly manages all company secretarial duties, including board and shareholder governance, comprehensive CAC filings, and ensuring full regulatory compliance with laws and standards.",
+    "image": {
+      "placeholder": "Company Secretarial",
+      "width": 1200,
+      "height": 900,
+      "alt": "Photograph representing the Company Secretarial practice"
+    },
+    "body": null,
+    "keyServices": [],
+    "contacts": [],
+    "featuredOnHome": false,
+    "showInFooter": false,
+    "homeOrder": null,
+    "order": 0,
+    "status": "published",
+    "seo": {
+      "title": null,
+      "description": null
+    }
+  },
+  {
+    "slug": "corporate-finance-capital-markets",
+    "title": "Corporate Finance & Capital Markets",
+    "shortLabel": "Corporate",
+    "summary": "When a business needs to raise capital, restructure, or meet regulatory requirements, the firm guides it through securities issuance, corporate restructuring, and filings with the Securities and Exchange Commission.",
+    "image": {
+      "placeholder": "Corporate",
+      "width": 1200,
+      "height": 900,
+      "alt": "Photograph representing the Corporate Finance & Capital Markets practice"
+    },
+    "body": null,
+    "keyServices": [],
+    "contacts": [],
+    "featuredOnHome": true,
+    "showInFooter": true,
+    "homeOrder": 0,
+    "order": 1,
+    "status": "published",
+    "seo": {
+      "title": null,
+      "description": null
+    }
+  },
+  {
+    "slug": "data-protection-privacy",
+    "title": "Data Protection & Privacy",
+    "shortLabel": "Data Privacy",
+    "summary": "When a company collects or manages personal data, it ensures compliance with the Nigeria Data Protection Act 2023 by providing comprehensive support, including conducting audits, drafting policies, and managing responses in the event of a data breach.",
+    "image": {
+      "placeholder": "Data Privacy",
+      "width": 1200,
+      "height": 900,
+      "alt": "Photograph representing the Data Protection & Privacy practice"
+    },
+    "body": null,
+    "keyServices": [],
+    "contacts": [],
+    "featuredOnHome": true,
+    "showInFooter": true,
+    "homeOrder": 1,
+    "order": 2,
+    "status": "published",
+    "seo": {
+      "title": null,
+      "description": null
+    }
+  },
+  {
+    "slug": "dispute-resolution-arbitration",
+    "title": "Dispute Resolution & Arbitration",
+    "shortLabel": "Dispute Resolution",
+    "summary": "When a disagreement threatens to disrupt a business, a contract, or a relationship, the firm steps in to resolve it, whether that means representing a client in court, before an arbitral tribunal, or through negotiated settlement, across commercial, shareholder, and regulatory disputes.",
+    "image": {
+      "placeholder": "Dispute Resolution",
+      "width": 1200,
+      "height": 900,
+      "alt": "Photograph representing the Dispute Resolution & Arbitration practice"
+    },
+    "body": null,
+    "keyServices": [],
+    "contacts": [],
+    "featuredOnHome": true,
+    "showInFooter": true,
+    "homeOrder": 3,
+    "order": 3,
+    "status": "published",
+    "seo": {
+      "title": null,
+      "description": null
+    }
+  },
+  {
+    "slug": "energy-natural-resources",
+    "title": "Energy & Natural Resources",
+    "shortLabel": "Energy",
+    "summary": "When a project involves power generation, distribution, or oil and gas, the firm advises on the regulatory approvals and compliance needed to get it built and keep it running, from electricity sector rules to mini-grid and rural electrification.",
+    "image": {
+      "placeholder": "Energy",
+      "width": 1200,
+      "height": 900,
+      "alt": "Photograph representing the Energy & Natural Resources practice"
+    },
+    "body": null,
+    "keyServices": [],
+    "contacts": [],
+    "featuredOnHome": true,
+    "showInFooter": true,
+    "homeOrder": 2,
+    "order": 4,
+    "status": "published",
+    "seo": {
+      "title": null,
+      "description": null
+    }
+  },
+  {
+    "slug": "intellectual-property",
+    "title": "Intellectual Property",
+    "shortLabel": "Intellectual Property",
+    "summary": "When a business wants to protect its creations such as a brand, invention, or original content, our firm expertly handles the full process of registration, licensing, and enforcement to keep ownership rights fully protected and secure.",
+    "image": {
+      "placeholder": "Intellectual Property",
+      "width": 1200,
+      "height": 900,
+      "alt": "Photograph representing the Intellectual Property practice"
+    },
+    "body": null,
+    "keyServices": [],
+    "contacts": [],
+    "featuredOnHome": true,
+    "showInFooter": true,
+    "homeOrder": 4,
+    "order": 5,
+    "status": "published",
+    "seo": {
+      "title": null,
+      "description": null
+    }
+  },
+  {
+    "slug": "real-estate-succession",
+    "title": "Real Estate & Succession",
+    "shortLabel": "Real Estate",
+    "summary": "When a client is buying property, resolving a landlord-tenant dispute, or planning what happens to their estate, the firm manages the legal work that makes the transaction or transition sound.",
+    "image": {
+      "placeholder": "Real Estate",
+      "width": 1200,
+      "height": 900,
+      "alt": "Photograph representing the Real Estate & Succession practice"
+    },
+    "body": null,
+    "keyServices": [],
+    "contacts": [],
+    "featuredOnHome": true,
+    "showInFooter": true,
+    "homeOrder": 5,
+    "order": 6,
+    "status": "published",
+    "seo": {
+      "title": null,
+      "description": null
+    }
+  },
+  {
+    "slug": "tax",
+    "title": "Tax",
+    "shortLabel": "Tax",
+    "summary": "When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.",
+    "image": {
+      "placeholder": "Tax",
+      "width": 1200,
+      "height": 900,
+      "alt": "Photograph representing the Tax practice"
+    },
+    "body": null,
+    "keyServices": [],
+    "contacts": [],
+    "featuredOnHome": true,
+    "showInFooter": true,
+    "homeOrder": 6,
+    "order": 7,
+    "status": "published",
+    "seo": {
+      "title": null,
+      "description": null
+    }
+  },
+  {
+    "slug": "telecommunications-regulatory",
+    "title": "Telecommunications Regulatory",
+    "shortLabel": "Telecoms",
+    "summary": "When a business operates in or enters the telecommunications sector, the firm advises on licensing, spectrum, and compliance with NCC regulations, from market entry to ongoing regulatory obligations.",
+    "image": {
+      "placeholder": "Telecoms",
+      "width": 1200,
+      "height": 900,
+      "alt": "Photograph representing the Telecommunications Regulatory practice"
+    },
+    "body": null,
+    "keyServices": [],
+    "contacts": [],
+    "featuredOnHome": false,
+    "showInFooter": false,
+    "homeOrder": null,
+    "order": 8,
+    "status": "published",
+    "seo": {
+      "title": null,
+      "description": null
+    }
+  }
+]

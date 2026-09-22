@@ -1,0 +1,43 @@
+{
+  "data": {
+    "id": "665f0000000000000000001f",
+    "slug": "babatunde-ajibade",
+    "displayName": "Dr. Babatunde Ajibade, SAN",
+    "role": "managing_partner",
+    "roleLabel": "Managing Partner",
+    "photo": {
+      "url": "https://placehold.co/800x1000?text=Babatunde%20Ajibade",
+      "alt": "Portrait of Dr. Babatunde Ajibade, SAN, Managing Partner",
+      "width": 800,
+      "height": 1000,
+      "sizes": {
+        "sm": "https://placehold.co/480x600?text=Babatunde%20Ajibade",
+        "md": "https://placehold.co/960x1200?text=Babatunde%20Ajibade",
+        "lg": "https://placehold.co/1440x1800?text=Babatunde%20Ajibade"
+      },
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "linkedinUrl": null,
+    "firstName": "Babatunde",
+    "lastName": "Ajibade",
+    "honorific": "Dr.",
+    "postNominals": "SAN",
+    "bio": null,
+    "quote": "law is a profession, not an occupation.",
+    "practiceAreas": [],
+    "office": {
+      "id": "665f00000000000000000013",
+      "slug": "lagos",
+      "name": "Lagos"
+    },
+    "insights": [],
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  }
+}

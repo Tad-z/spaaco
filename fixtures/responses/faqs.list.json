@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "id": "665f00000000000000000016",
+      "question": "How do I schedule a consultation?",
+      "answer": "<p>[PENDING FROM FIRM]</p>"
+    },
+    {
+      "id": "665f00000000000000000017",
+      "question": "What types of matters does the firm handle?",
+      "answer": "<p>The firm provides expert advice on a wide range of legal matters including dispute resolution and arbitration, corporate finance and capital markets, real estate and succession planning, energy and natural resources, intellectual property rights, data protection regulations, and tax law. Their comprehensive services are designed to support clients through complex legal challenges in these diverse areas.</p>"
+    },
+    {
+      "id": "665f00000000000000000018",
+      "question": "Does the firm work with international clients?",
+      "answer": "<p>[PENDING FROM FIRM]</p>"
+    },
+    {
+      "id": "665f00000000000000000019",
+      "question": "How is client confidentiality handled?",
+      "answer": "<p>[PENDING FROM FIRM]</p>"
+    },
+    {
+      "id": "665f0000000000000000001a",
+      "question": "How long does a typical matter take?",
+      "answer": "<p>[PENDING FROM FIRM]</p>"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "key": "site",
+  "firmName": "SPA Ajibade & Co.",
+  "legalDescriptor": "Legal Practitioners, Arbitrators and Notaries Public",
+  "tagline": "Counsel to the institutions building Nigeria's economy.",
+  "foundedYear": 1967,
+  "phone": "(+234) 80000000000",
+  "email": "frontoffice@spaajibade.com",
+  "socials": {
+    "instagram": null,
+    "facebook": null,
+    "x": null,
+    "linkedin": null,
+    "youtube": null
+  },
+  "copyright": "©2026 by SPA Ajibade & Co. All Rights Reserved.",
+  "faqSection": {
+    "eyebrow": "FAQ's",
+    "title": "Answers Before You Reach Out."
+  },
+  "stillHaveQuestions": {
+    "title": "Still have questions?",
+    "text": "Speak with someone directly, or start a conversation with our assistant for a quick answer.",
+    "actions": [
+      {
+        "label": "Chat with us",
+        "href": "action:chat",
+        "kind": "action"
+      },
+      {
+        "label": "Message the firm",
+        "href": "action:message",
+        "kind": "action"
+      },
+      {
+        "label": "Call the firm",
+        "href": "action:call",
+        "kind": "action"
+      }
+    ]
+  },
+  "contactCallout": {
+    "title": "Start With A Conversation, Not A Form.",
+    "text": "Speak with the firm directly, whether it's a new mandate, a question about an existing matter, or something you're not sure fits either.",
+    "primaryCta": {
+      "label": "Discuss a Mandate",
+      "href": "action:mandate",
+      "kind": "action"
+    },
+    "secondaryCta": {
+      "label": "View our offices",
+      "href": "/offices",
+      "kind": "internal"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+extends:
+  - recommended
+rules:
+  operation-operationId: error
+  operation-summary: error
+  operation-description: warn
+  operation-4xx-response: error
+  no-server-example.com: off
+  security-defined: off
+  no-unused-components: error
+  spec-components-invalid-map-name: error
+  # Response examples are `$ref`s into fixtures/responses/*.json so Prism serves
+  # real data and the fixtures stay a single source of truth. Redocly validates
+  # the literal `{ $ref: ... }` node rather than the file it points at, so this
+  # rule only produces false positives here. Fixtures are validated against the
+  # spec's schemas with ajv in tests/contract/fixtures.test.ts instead.
+  no-invalid-media-type-examples: off

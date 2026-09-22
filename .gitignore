@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.uploads/
+.private-uploads/
+.env*
+!.env.example
+CLAUDE.local.md
+*.log
+.DS_Store
+.vitest-cache/

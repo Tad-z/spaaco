@@ -1,0 +1,223 @@
+{
+  "data": {
+    "key": "about",
+    "hero": {
+      "title": "Who We Are",
+      "subtitle": "Integrity isn't a value we list, it's the reason clients keep coming back.",
+      "image": {
+        "url": "https://placehold.co/1440x662?text=About%20hero",
+        "alt": "The reception of the Lagos office of the firm",
+        "width": 1440,
+        "height": 662,
+        "sizes": {
+          "sm": "https://placehold.co/480x221?text=About%20hero",
+          "md": "https://placehold.co/960x441?text=About%20hero",
+          "lg": "https://placehold.co/1440x662?text=About%20hero"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Meet Our People",
+        "href": "/people",
+        "kind": "internal"
+      }
+    },
+    "story": {
+      "eyebrow": "Our Story",
+      "title": "Integrity And Commitment Build Client Trust.",
+      "paragraphs": [
+        "The firm started in 1967, at a time when Nigerian businesses had few local options for the kind of legal counsel that large transactions and disputes required. Almost sixty years later, that gap has closed, but the reason clients still come to S. P. A. Ajibade & Co. hasn’t changed.",
+        "We've handled disputes that took years to resolve and transactions that closed in weeks. We've advised on capital markets deals, aviation matters, energy projects, intellectual property disputes, data protection compliance, and everything in between. The work rarely looks the same twice.",
+        "What's stayed constant is how we approach it: with judgment built over decades, not shortcuts learned from templates. Clients don't come to us because we're the oldest firm in the room, they come because when something is actually at stake, they want someone who's handled it before and will tell them the truth about it.",
+        "Today, that means offices in Lagos, Abuja, and Ibadan, and a practice that spans far more ground than \"corporate and commercial law\" ever really captured."
+      ],
+      "quote": "law is a profession, not an occupation.",
+      "quotePerson": {
+        "id": "665f0000000000000000001f",
+        "slug": "babatunde-ajibade",
+        "displayName": "Dr. Babatunde Ajibade, SAN",
+        "role": "managing_partner",
+        "roleLabel": "Managing Partner",
+        "photo": {
+          "url": "https://placehold.co/800x1000?text=Babatunde%20Ajibade",
+          "alt": "Portrait of Dr. Babatunde Ajibade, SAN, Managing Partner",
+          "width": 800,
+          "height": 1000,
+          "sizes": {
+            "sm": "https://placehold.co/480x600?text=Babatunde%20Ajibade",
+            "md": "https://placehold.co/960x1200?text=Babatunde%20Ajibade",
+            "lg": "https://placehold.co/1440x1800?text=Babatunde%20Ajibade"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        "linkedinUrl": null
+      }
+    },
+    "stats": {
+      "title": "Decades Of Practice, Measured In Outcomes.",
+      "items": [
+        {
+          "value": "59+ Years",
+          "caption": "Advising across every major sector",
+          "label": "Advisory"
+        },
+        {
+          "value": "3 Offices",
+          "caption": "Lagos, Abuja, Ibadan",
+          "label": "Presence"
+        },
+        {
+          "value": "15+ Areas",
+          "caption": "Covering all commercial practice",
+          "label": "Practice"
+        },
+        {
+          "value": "700+ Matters",
+          "caption": "Cross-border and domestic",
+          "label": "Handled"
+        }
+      ]
+    },
+    "missionSection": {
+      "eyebrow": "Mission, Vision & Values",
+      "title": "What Drives Our Practice And Why Clients Trust Us.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Mission",
+        "alt": "Attorneys of the firm reviewing documents together",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Mission",
+          "md": "https://placehold.co/960x720?text=Mission",
+          "lg": "https://placehold.co/1440x1080?text=Mission"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "items": [
+        {
+          "title": "Our Mission",
+          "body": "Our mission is to provide legal counsel clients can trust, with clarity, integrity, and commitment. We measure success by outcomes that serve clients' interests, not transaction size or dispute complexity. As Nigeria's commercial landscape evolves, our guidance adapts, but our legal standards remain constant."
+        },
+        {
+          "title": "Our Vision",
+          "body": "[PENDING FROM FIRM]"
+        },
+        {
+          "title": "Our Values",
+          "body": "[PENDING FROM FIRM]"
+        },
+        {
+          "title": "Our Asset",
+          "body": "[PENDING FROM FIRM]"
+        }
+      ]
+    },
+    "principles": {
+      "eyebrow": "Principles That Guide Every Matter",
+      "title": "Built On Principle, Proven Over Nearly Six Decades Of Practice.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Principles",
+        "alt": "Cut-out of a statue of Lady Justice",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Principles",
+          "md": "https://placehold.co/960x720?text=Principles",
+          "lg": "https://placehold.co/1440x1080?text=Principles"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "items": [
+        {
+          "icon": "shield-check",
+          "title": "Integrity in practice",
+          "text": "Our clients trust us to act with responsibility, discretion, and respect for the law."
+        },
+        {
+          "icon": "handshake",
+          "title": "Commitment to clients",
+          "text": "Every client deserves focused attention, genuine care & strong representation."
+        },
+        {
+          "icon": "award",
+          "title": "Excellence in service",
+          "text": "We pursue excellence in every interaction and every outcome we work toward."
+        },
+        {
+          "icon": "eye",
+          "title": "Trust & transparency",
+          "text": "Setting realistic expectations, and building relationships grounded in confidence."
+        },
+        {
+          "icon": "gavel",
+          "title": "Strength in advocacy",
+          "text": "We represent our clients with confidence, resilience, and strategic determination."
+        },
+        {
+          "icon": "scale",
+          "title": "Justice with purpose",
+          "text": "Always focused on protecting rights and advancing our clients' best interests."
+        }
+      ]
+    },
+    "awardsList": {
+      "eyebrow": "Recognition",
+      "title": "Award-Winning Legal Services",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Awards",
+        "alt": "Award trophies displayed in the office of the firm",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Awards",
+          "md": "https://placehold.co/960x720?text=Awards",
+          "lg": "https://placehold.co/1440x1080?text=Awards"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "items": [
+        {
+          "name": "IFLR 1000",
+          "url": null
+        },
+        {
+          "name": "Chambers Global",
+          "url": null
+        },
+        {
+          "name": "Legal 500",
+          "url": null
+        },
+        {
+          "name": "Who's Who Legal",
+          "url": null
+        }
+      ]
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  }
+}

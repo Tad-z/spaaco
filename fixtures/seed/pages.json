@@ -1,0 +1,472 @@
+[
+  {
+    "key": "home",
+    "hero": {
+      "title": "Counsel To The Institutions Building Nigeria's Economy.",
+      "subtitle": "For over five decades, we have advised governments, financial institutions and multinational corporations on capital markets transactions, complex disputes and the regulatory frameworks that shape commerce in Nigeria.",
+      "image": {
+        "placeholder": "Home hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Lady Justice statue against the Lagos skyline"
+      },
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Explore Our Practice Areas",
+        "href": "/practice-areas",
+        "kind": "internal"
+      }
+    },
+    "aboutFirm": {
+      "title": "A Firm Built On Integrity, Proven In Outcomes.",
+      "paragraphs": [
+        "S. P. A. Ajibade & Co was founded in 1967. The Firm is managed by Dr. B. A. M. Ajibade, SAN as the Managing Partner together with six (6) other Partners, Dr. J. C. Onyido, Dr. K. Mayomi, Mrs. B. Gabari, Mr. P. O. Olalere and Dr. M. Ejelonu and Mr. M. Sowunmi. The Firm is focused on the following areas of practice: Dispute Resolution, Intellectual Property & Telecommunications, Corporate Finance & Capital Markets, Real Estate & Succession, Energy & Natural Resources.",
+        "At S. P. A. Ajibade & Co, maintaining the integrity of the legal profession by ethically satisfying every client's specific needs and interests, whilst ensuring the continuous growth and development of the Firm is the core of daily practice."
+      ],
+      "cta": {
+        "label": "Learn more about our history",
+        "href": "/about",
+        "kind": "internal"
+      },
+      "image": {
+        "placeholder": "World map",
+        "width": 1440,
+        "height": 662,
+        "alt": "Stylised world map marking the offices of the firm"
+      }
+    },
+    "videoShowcase": {
+      "videoUrl": null,
+      "poster": {
+        "placeholder": "Video poster",
+        "width": 1440,
+        "height": 662,
+        "alt": "Poster frame for the firm showcase video"
+      }
+    },
+    "recognitionTabs": {
+      "achievementsLabel": "Our Achievements",
+      "recognizedByLabel": "Independently Recognized By"
+    },
+    "practiceSection": {
+      "eyebrow": "Services",
+      "title": "Focused Practice Areas.",
+      "cta": {
+        "label": "Explore Our Practice Areas",
+        "href": "/practice-areas",
+        "kind": "internal"
+      }
+    },
+    "leadershipSection": {
+      "eyebrow": "Our People",
+      "title": "Behind Every Victory Is A Leadership You Can Trust",
+      "cta": {
+        "label": "View full directory",
+        "href": "/people",
+        "kind": "internal"
+      }
+    },
+    "whyChooseUs": {
+      "eyebrow": "Why Clients Choose SPA Ajibade",
+      "title": "Scale Hasn't Changed How We Treat A Matter.",
+      "text": "Across every office and every practice area, the standard stays the same, direct access to the advisor handling your matter, not a rotating team.",
+      "points": [
+        {
+          "icon": "award",
+          "title": "Proven Track Record",
+          "text": null
+        },
+        {
+          "icon": "shield-plus",
+          "title": "Trial-Tested Attorneys",
+          "text": null
+        },
+        {
+          "icon": "handshake",
+          "title": "Client-Centered Focus",
+          "text": null
+        },
+        {
+          "icon": "folder-lock",
+          "title": "Confidential Handling",
+          "text": null
+        }
+      ],
+      "image": {
+        "placeholder": "Why choose us",
+        "width": 1200,
+        "height": 900,
+        "alt": "Attorneys of the firm in discussion around a boardroom table"
+      }
+    },
+    "insightsSection": {
+      "eyebrow": "Insights and News",
+      "title": "Recent Publications",
+      "cta": {
+        "label": "View all insights",
+        "href": "/insights",
+        "kind": "internal"
+      }
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  },
+  {
+    "key": "about",
+    "hero": {
+      "title": "Who We Are",
+      "subtitle": "Integrity isn't a value we list, it's the reason clients keep coming back.",
+      "image": {
+        "placeholder": "About hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "The reception of the Lagos office of the firm"
+      },
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Meet Our People",
+        "href": "/people",
+        "kind": "internal"
+      }
+    },
+    "story": {
+      "eyebrow": "Our Story",
+      "title": "Integrity And Commitment Build Client Trust.",
+      "paragraphs": [
+        "The firm started in 1967, at a time when Nigerian businesses had few local options for the kind of legal counsel that large transactions and disputes required. Almost sixty years later, that gap has closed, but the reason clients still come to S. P. A. Ajibade & Co. hasn’t changed.",
+        "We've handled disputes that took years to resolve and transactions that closed in weeks. We've advised on capital markets deals, aviation matters, energy projects, intellectual property disputes, data protection compliance, and everything in between. The work rarely looks the same twice.",
+        "What's stayed constant is how we approach it: with judgment built over decades, not shortcuts learned from templates. Clients don't come to us because we're the oldest firm in the room, they come because when something is actually at stake, they want someone who's handled it before and will tell them the truth about it.",
+        "Today, that means offices in Lagos, Abuja, and Ibadan, and a practice that spans far more ground than \"corporate and commercial law\" ever really captured."
+      ],
+      "quote": "law is a profession, not an occupation.",
+      "quotePerson": "babatunde-ajibade"
+    },
+    "stats": {
+      "title": "Decades Of Practice, Measured In Outcomes.",
+      "items": [
+        {
+          "value": "59+ Years",
+          "caption": "Advising across every major sector",
+          "label": "Advisory",
+          "source": "computed:yearsSinceFounding"
+        },
+        {
+          "value": "3 Offices",
+          "caption": "Lagos, Abuja, Ibadan",
+          "label": "Presence",
+          "source": "computed:officeCount"
+        },
+        {
+          "value": "15+ Areas",
+          "caption": "Covering all commercial practice",
+          "label": "Practice",
+          "source": "manual"
+        },
+        {
+          "value": "700+ Matters",
+          "caption": "Cross-border and domestic",
+          "label": "Handled",
+          "source": "manual"
+        }
+      ]
+    },
+    "missionSection": {
+      "eyebrow": "Mission, Vision & Values",
+      "title": "What Drives Our Practice And Why Clients Trust Us.",
+      "image": {
+        "placeholder": "Mission",
+        "width": 1200,
+        "height": 900,
+        "alt": "Attorneys of the firm reviewing documents together"
+      },
+      "items": [
+        {
+          "title": "Our Mission",
+          "body": "Our mission is to provide legal counsel clients can trust, with clarity, integrity, and commitment. We measure success by outcomes that serve clients' interests, not transaction size or dispute complexity. As Nigeria's commercial landscape evolves, our guidance adapts, but our legal standards remain constant."
+        },
+        {
+          "title": "Our Vision",
+          "body": "[PENDING FROM FIRM]"
+        },
+        {
+          "title": "Our Values",
+          "body": "[PENDING FROM FIRM]"
+        },
+        {
+          "title": "Our Asset",
+          "body": "[PENDING FROM FIRM]"
+        }
+      ]
+    },
+    "principles": {
+      "eyebrow": "Principles That Guide Every Matter",
+      "title": "Built On Principle, Proven Over Nearly Six Decades Of Practice.",
+      "image": {
+        "placeholder": "Principles",
+        "width": 1200,
+        "height": 900,
+        "alt": "Cut-out of a statue of Lady Justice"
+      },
+      "items": [
+        {
+          "icon": "shield-check",
+          "title": "Integrity in practice",
+          "text": "Our clients trust us to act with responsibility, discretion, and respect for the law."
+        },
+        {
+          "icon": "handshake",
+          "title": "Commitment to clients",
+          "text": "Every client deserves focused attention, genuine care & strong representation."
+        },
+        {
+          "icon": "award",
+          "title": "Excellence in service",
+          "text": "We pursue excellence in every interaction and every outcome we work toward."
+        },
+        {
+          "icon": "eye",
+          "title": "Trust & transparency",
+          "text": "Setting realistic expectations, and building relationships grounded in confidence."
+        },
+        {
+          "icon": "gavel",
+          "title": "Strength in advocacy",
+          "text": "We represent our clients with confidence, resilience, and strategic determination."
+        },
+        {
+          "icon": "scale",
+          "title": "Justice with purpose",
+          "text": "Always focused on protecting rights and advancing our clients' best interests."
+        }
+      ]
+    },
+    "awardsList": {
+      "eyebrow": "Recognition",
+      "title": "Award-Winning Legal Services",
+      "image": {
+        "placeholder": "Awards",
+        "width": 1200,
+        "height": 900,
+        "alt": "Award trophies displayed in the office of the firm"
+      },
+      "items": [
+        {
+          "name": "IFLR 1000",
+          "url": null
+        },
+        {
+          "name": "Chambers Global",
+          "url": null
+        },
+        {
+          "name": "Legal 500",
+          "url": null
+        },
+        {
+          "name": "Who's Who Legal",
+          "url": null
+        }
+      ]
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  },
+  {
+    "key": "practice-areas",
+    "hero": {
+      "title": "Our Practice Areas",
+      "subtitle": "We've covered enough ground to know that no two matters are really the same.",
+      "image": {
+        "placeholder": "Practice areas hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Columns of a Nigerian courthouse"
+      },
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Meet Our People",
+        "href": "/people",
+        "kind": "internal"
+      }
+    },
+    "gridSection": {
+      "eyebrow": "Confidence, resilience, and strategic precision",
+      "title": "We Are Driven By A Clear Purpose To Protect Rights & Pursue Fair Outcomes.",
+      "cta": null
+    },
+    "csrBanner": {
+      "title": "Pro Bono & Community Commitment",
+      "text": "Beyond advising clients, we take an active role in strengthening the legal environment and supporting the communities we work in.",
+      "image": {
+        "placeholder": "CSR",
+        "width": 1440,
+        "height": 662,
+        "alt": "Members of the firm at a community legal outreach event"
+      },
+      "cta": {
+        "label": "Learn About Our CSR",
+        "href": "[PENDING FROM FIRM]",
+        "kind": "internal"
+      }
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  },
+  {
+    "key": "people",
+    "hero": {
+      "title": "Get To Know Our Attorneys",
+      "subtitle": "Meet the attorneys behind our firm's trusted reputation for strong counsel, thoughtful representation, strategic advocacy, and unwavering commitment to every client we serve.",
+      "image": {
+        "placeholder": "People hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Attorneys of the firm gathered in the atrium"
+      },
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "About Us",
+        "href": "/about",
+        "kind": "internal"
+      }
+    },
+    "directorySection": {
+      "eyebrow": "Our People",
+      "title": "Behind Every Victory Is A Leadership You Can Trust",
+      "cta": null
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  },
+  {
+    "key": "insights",
+    "hero": null,
+    "listingSection": {
+      "eyebrow": null,
+      "title": "Insights & News",
+      "cta": null
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  },
+  {
+    "key": "careers",
+    "hero": {
+      "title": "Practice Law, Not Just A Role.",
+      "subtitle": "At SPA Ajibade, associates work directly with partners on matters that matter, not behind layers of a rotating team.",
+      "image": {
+        "placeholder": "Careers hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "A junior associate working alongside a partner"
+      },
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Our People",
+        "href": "/people",
+        "kind": "internal"
+      }
+    },
+    "jobsSection": {
+      "eyebrow": null,
+      "title": "Careers",
+      "cta": null
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  },
+  {
+    "key": "faq",
+    "hero": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Straight answers to what people most often ask before reaching out, about the firm, how matters work, and what to expect.",
+      "image": {
+        "placeholder": "FAQ hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "A member of the front office team on a call"
+      },
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "View our offices",
+        "href": "/offices",
+        "kind": "internal"
+      }
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  },
+  {
+    "key": "offices",
+    "hero": {
+      "title": "Wherever You Find Us.",
+      "subtitle": "Three offices, one standard of counsel, direct access to the team handling your matter, no matter which door you walk through.",
+      "image": {
+        "placeholder": "Offices hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "The entrance to SPAACO House in Lagos"
+      },
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Chat with us",
+        "href": "action:chat",
+        "kind": "action"
+      }
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "data": [
+    {
+      "id": "665f00000000000000000013",
+      "slug": "lagos",
+      "name": "Lagos",
+      "address": "Suite 201, SPAACO House, 27A Macarthy Street, Onikan",
+      "hours": "8:00 AM to 4:00 PM, Monday to Friday",
+      "phone": null,
+      "email": null,
+      "coordinates": null,
+      "directionsUrl": null
+    },
+    {
+      "id": "665f00000000000000000014",
+      "slug": "abuja",
+      "name": "Abuja",
+      "address": "2nd Floor, Left Wing, Commercial Plaza, Gudu",
+      "hours": "8:00 AM to 4:00 PM, Monday to Friday",
+      "phone": null,
+      "email": null,
+      "coordinates": null,
+      "directionsUrl": null
+    },
+    {
+      "id": "665f00000000000000000015",
+      "slug": "ibadan",
+      "name": "Ibadan",
+      "address": "Top Floor Suite, SPAACO House, 138 Liberty Stadium Road",
+      "hours": "8:00 AM to 4:00 PM, Monday to Friday",
+      "phone": null,
+      "email": null,
+      "coordinates": null,
+      "directionsUrl": null
+    }
+  ]
+}

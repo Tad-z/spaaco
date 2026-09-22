@@ -1,0 +1,2421 @@
+openapi: 3.1.0
+info:
+  title: SPA Ajibade & Co. Website API
+  version: 1.0.0
+  description: |
+    Content API for the SPA Ajibade & Co. marketing website.
+
+    Almost every piece of copy, imagery and structured content on the public site is served
+    from here, so the frontend hard-codes only layout and styling.
+
+    ## Conventions
+    - Single resources return `{ "data": { ... } }`; lists return `{ "data": [ ... ], "meta": { ... } }`.
+    - Errors return `{ "error": { "code", "message", "details?" } }`.
+    - Dates are ISO 8601 strings. The frontend does all formatting.
+    - Rich text (`body`, `bio`, `answer`, `description`) is sanitised HTML.
+    - Enums are `snake_case`, with a sibling `…Label` field wherever the UI shows text.
+    - Only published content is returned, unless a request carries both `?preview=true`
+      and a valid admin bearer token.
+
+    Admin endpoints are documented separately and are added to this spec in later phases.
+  contact:
+    name: SPA Ajibade & Co. engineering
+    email: frontoffice@spaajibade.com
+  license:
+    name: Proprietary
+    identifier: LicenseRef-SPA-Ajibade-Proprietary
+
+servers:
+  - url: http://localhost:4000/api/v1
+    description: Local development
+  - url: http://localhost:4010/api/v1
+    description: Prism mock server
+  - url: https://api.spaajibade.com/api/v1
+    description: Production
+
+tags:
+  - name: System
+    description: Liveness and diagnostics.
+  - name: Site
+    description: The global shell shared by every page.
+  - name: Pages
+    description: Composed page payloads, one request per page.
+  - name: Practice areas
+    description: The firm's areas of practice.
+  - name: People
+    description: The attorney directory.
+  - name: Insights
+    description: Articles, firm news and video content.
+  - name: Offices
+    description: Lagos, Abuja and Ibadan.
+  - name: Jobs
+    description: Open vacancies.
+  - name: FAQs
+    description: The site-wide FAQ set.
+  - name: Search
+    description: Header search across the main collections.
+  - name: Forms
+    description: Public form submissions. All are rate limited and captcha protected.
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      operationId: getHealth
+      summary: Liveness probe
+      description: Reports process health and whether the database responds to a ping.
+      responses:
+        '200':
+          description: The service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Health'
+              example:
+                data:
+                  status: ok
+                  db: up
+                  version: 1.0.0
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /site:
+    get:
+      tags: [Site]
+      operationId: getSite
+      summary: Global site shell
+      description: |
+        Settings, navigation, the footer (including practice areas and offices), the shared FAQ
+        section and the contact callout. The frontend fetches this once and reuses it on every
+        page, so these sections are never repeated inside page payloads.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: The site shell.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Site'
+              examples:
+                site:
+                  value:
+                    $ref: '../fixtures/responses/site.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /pages/{key}:
+    get:
+      tags: [Pages]
+      operationId: getPage
+      summary: Composed page payload
+      description: |
+        Returns one page document with every referenced collection already embedded, so a page
+        renders from a single request. The response shape is discriminated by `key`.
+
+        The FAQ section, contact callout and footer are deliberately absent here; they come from
+        `GET /site`.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageKey'
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: The composed page.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Page'
+              examples:
+                home:
+                  summary: home
+                  value:
+                    $ref: '../fixtures/responses/pages.home.json'
+                about:
+                  summary: about
+                  value:
+                    $ref: '../fixtures/responses/pages.about.json'
+                practice-areas:
+                  summary: practice-areas
+                  value:
+                    $ref: '../fixtures/responses/pages.practice-areas.json'
+                people:
+                  summary: people
+                  value:
+                    $ref: '../fixtures/responses/pages.people.json'
+                insights:
+                  summary: insights
+                  value:
+                    $ref: '../fixtures/responses/pages.insights.json'
+                careers:
+                  summary: careers
+                  value:
+                    $ref: '../fixtures/responses/pages.careers.json'
+                faq:
+                  summary: faq
+                  value:
+                    $ref: '../fixtures/responses/pages.faq.json'
+                offices:
+                  summary: offices
+                  value:
+                    $ref: '../fixtures/responses/pages.offices.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /practice-areas:
+    get:
+      tags: [Practice areas]
+      operationId: listPracticeAreas
+      summary: List practice areas
+      description: Every published practice area, in the manual order set by the firm.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: All published practice areas.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PracticeAreaCard'
+              examples:
+                practiceAreas:
+                  value:
+                    $ref: '../fixtures/responses/practice-areas.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /practice-areas/{slug}:
+    get:
+      tags: [Practice areas]
+      operationId: getPracticeArea
+      summary: Practice area detail
+      description: |
+        Full practice area, including the attorneys to contact and the three most recent related
+        insights. This page is not designed yet, so the shape may gain fields once the design
+        lands.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: The practice area.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PracticeAreaDetail'
+              examples:
+                disputeResolution:
+                  value:
+                    $ref: '../fixtures/responses/practice-areas.detail.dispute-resolution.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /people:
+    get:
+      tags: [People]
+      operationId: listPeople
+      summary: Attorney directory
+      description: |
+        Paginated attorney directory. The default sort is `seniority`: role rank first
+        (managing partner through NYSC associate), then the manual order, then last name.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PersonRole'
+        - $ref: '#/components/parameters/PersonSort'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: A page of attorneys.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PersonSummary'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                people:
+                  value:
+                    $ref: '../fixtures/responses/people.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /people/{slug}:
+    get:
+      tags: [People]
+      operationId: getPerson
+      summary: Attorney profile
+      description: Full profile, practice areas, office and the three latest insights they wrote.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: The attorney.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PersonDetail'
+              examples:
+                babatundeAjibade:
+                  value:
+                    $ref: '../fixtures/responses/people.detail.babatunde-ajibade.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /insights:
+    get:
+      tags: [Insights]
+      operationId: listInsights
+      summary: Insights and news listing
+      description: Paginated insight cards, newest first by default.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/InsightCategory'
+        - $ref: '#/components/parameters/InsightPracticeArea'
+        - $ref: '#/components/parameters/InsightSort'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: A page of insights.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InsightCard'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                insights:
+                  value:
+                    $ref: '../fixtures/responses/insights.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /insights/{slug}:
+    get:
+      tags: [Insights]
+      operationId: getInsight
+      summary: Insight detail
+      description: |
+        The full article body, or the video URL for video content, plus the author block,
+        practice areas and three related insights.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: The insight.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/InsightDetail'
+              examples:
+                tradeSecrets:
+                  value:
+                    $ref: '../fixtures/responses/insights.detail.trade-secrets.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /offices:
+    get:
+      tags: [Offices]
+      operationId: listOffices
+      summary: List offices
+      description: >-
+        Every published office, in the order used across the site: Lagos, Abuja, Ibadan.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: All offices.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Office'
+              examples:
+                offices:
+                  value:
+                    $ref: '../fixtures/responses/offices.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /jobs:
+    get:
+      tags: [Jobs]
+      operationId: listJobs
+      summary: List open jobs
+      description: Open vacancies only. Closed roles and roles past their closing date are excluded.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: All open jobs.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Job'
+              examples:
+                jobs:
+                  value:
+                    $ref: '../fixtures/responses/jobs.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /jobs/{id}:
+    get:
+      tags: [Jobs]
+      operationId: getJob
+      summary: Job detail
+      description: One open vacancy.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: The job.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Job'
+              examples:
+                associate:
+                  value:
+                    $ref: '../fixtures/responses/jobs.detail.associate.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /faqs:
+    get:
+      tags: [FAQs]
+      operationId: listFaqs
+      summary: List FAQs
+      description: The site-wide FAQ set, in order. The same items are embedded in `GET /site`.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: All published FAQs.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Faq'
+              examples:
+                faqs:
+                  value:
+                    $ref: '../fixtures/responses/faqs.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /search:
+    get:
+      tags: [Search]
+      operationId: search
+      summary: Header search
+      description: |
+        Full-text search across practice areas, attorneys and insights, ranked by text score.
+        At most five results per group. Published content only.
+      parameters:
+        - $ref: '#/components/parameters/SearchQuery'
+      responses:
+        '200':
+          description: Grouped search results.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SearchResults'
+              examples:
+                search:
+                  value:
+                    $ref: '../fixtures/responses/search.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /enquiries:
+    post:
+      tags: [Forms]
+      operationId: createEnquiry
+      summary: Submit a mandate enquiry
+      description: |
+        Backs the "Discuss a Mandate" call to action. Rate limited to 5 requests per 10 minutes
+        per IP. The response carries only a reference; nothing personal is echoed back.
+
+        A submission with a non-empty `website` honeypot receives a 201 with a reference, and
+        nothing is stored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnquiryRequest'
+            example:
+              fullName: Adaeze Nwosu
+              email: adaeze.nwosu@example.com
+              phone: '+2348030000000'
+              organization: Meridian Capital Partners
+              practiceArea: corporate-finance-capital-markets
+              summary: >-
+                We are preparing a bond issuance and need counsel on the SEC filing timetable and
+                the related corporate restructuring.
+              consent: true
+              consentTextVersion: '2026-01'
+              turnstileToken: test
+              website: ''
+      responses:
+        '201':
+          $ref: '#/components/responses/SubmissionAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /messages:
+    post:
+      tags: [Forms]
+      operationId: createMessage
+      summary: Message the firm
+      description: |
+        Backs the "Message the firm" action in the FAQ card and on the offices page. Rate limited
+        to 5 requests per 10 minutes per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+            example:
+              fullName: Ibrahim Danladi
+              email: ibrahim.danladi@example.com
+              subject: Question about an existing matter
+              message: Could someone confirm who is handling our trademark renewal this quarter?
+              consent: true
+              consentTextVersion: '2026-01'
+              turnstileToken: test
+              website: ''
+      responses:
+        '201':
+          $ref: '#/components/responses/SubmissionAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /jobs/{id}/applications:
+    post:
+      tags: [Forms]
+      operationId: createApplication
+      summary: Apply for a job
+      description: |
+        Backs "Send your CV". Multipart, because it carries the CV file.
+
+        The CV must be a PDF or DOCX of at most 5 MB. The type is checked by magic bytes, not by
+        file extension, and the file is virus scanned before it is stored. Stored CVs are private
+        and are only ever served through short-lived signed URLs from the admin API.
+
+        Because multipart fields arrive as strings, `consent` is sent as the string `"true"`.
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApplicationRequest'
+            encoding:
+              cv:
+                contentType: >-
+                  application/pdf,
+                  application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      responses:
+        '201':
+          $ref: '#/components/responses/SubmissionAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        An admin access token. On public content endpoints it is optional and only meaningful
+        together with `?preview=true`, which includes draft content in the response.
+
+  parameters:
+    Preview:
+      name: preview
+      in: query
+      required: false
+      description: |
+        Include draft content. Ignored unless the request also carries a valid admin bearer token.
+      schema:
+        type: boolean
+        default: false
+    PageKey:
+      name: key
+      in: path
+      required: true
+      description: Which page to compose.
+      schema:
+        $ref: '#/components/schemas/PageKey'
+    Slug:
+      name: slug
+      in: path
+      required: true
+      description: The resource slug.
+      schema:
+        type: string
+        pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+        maxLength: 140
+      example: dispute-resolution-arbitration
+    ObjectId:
+      name: id
+      in: path
+      required: true
+      description: A 24-character hexadecimal identifier.
+      schema:
+        $ref: '#/components/schemas/ObjectId'
+    Page:
+      name: page
+      in: query
+      required: false
+      description: 1-based page number. Out-of-range pages return an empty list, not a 404.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      description: Items per page.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 9
+    PersonRole:
+      name: role
+      in: query
+      required: false
+      description: Filter the directory by role. Omit for every attorney.
+      schema:
+        $ref: '#/components/schemas/PersonRole'
+    PersonSort:
+      name: sort
+      in: query
+      required: false
+      description: Directory sort order.
+      schema:
+        type: string
+        enum: [seniority, name_asc, name_desc]
+        default: seniority
+    InsightCategory:
+      name: category
+      in: query
+      required: false
+      description: Filter by category. Omit for all categories.
+      schema:
+        $ref: '#/components/schemas/InsightCategory'
+    InsightPracticeArea:
+      name: practiceArea
+      in: query
+      required: false
+      description: Filter by practice area slug.
+      schema:
+        type: string
+        pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+        maxLength: 140
+    InsightSort:
+      name: sort
+      in: query
+      required: false
+      description: Listing sort order.
+      schema:
+        type: string
+        enum: [newest, oldest]
+        default: newest
+    SearchQuery:
+      name: q
+      in: query
+      required: true
+      description: The search term.
+      schema:
+        type: string
+        minLength: 2
+        maxLength: 100
+      example: arbitration
+
+  responses:
+    ValidationError:
+      description: The request failed validation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            validation:
+              value:
+                $ref: '../fixtures/responses/error.validation.json'
+    NotFound:
+      description: No published resource matches.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            notFound:
+              value:
+                $ref: '../fixtures/responses/error.not-found.json'
+    PayloadTooLarge:
+      description: The upload exceeds the 5 MB limit.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: PAYLOAD_TOO_LARGE
+              message: The uploaded file exceeds the 5 MB limit.
+    UnsupportedMediaType:
+      description: The uploaded file is not a PDF or DOCX.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: UNSUPPORTED_MEDIA_TYPE
+              message: Only PDF and DOCX files are accepted.
+    UnprocessableEntity:
+      description: The uploaded file failed the virus scan and was discarded.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: The uploaded file could not be accepted.
+    RateLimited:
+      description: Too many requests from this IP.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            rateLimited:
+              value:
+                $ref: '../fixtures/responses/error.rate-limited.json'
+    InternalError:
+      description: An unexpected error. The body never carries a stack trace or internal message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: INTERNAL
+              message: Something went wrong.
+    SubmissionAccepted:
+      description: The submission was accepted.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/SubmissionReceipt'
+          example:
+            data:
+              reference: ENQ-7F3K2A
+
+  schemas:
+    ObjectId:
+      type: string
+      pattern: '^[0-9a-f]{24}$'
+      description: A 24-character hexadecimal MongoDB identifier.
+      examples:
+        - 665f1a2b3c4d5e6f70819293
+
+    Slug:
+      type: string
+      pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+      maxLength: 140
+      description: A lowercase kebab-case identifier, unique within its collection.
+
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status, db, version]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        db:
+          type: string
+          enum: [up, down]
+        version:
+          type: string
+          description: The deployed API version.
+
+    ErrorCode:
+      type: string
+      enum:
+        - VALIDATION_ERROR
+        - UNAUTHENTICATED
+        - FORBIDDEN
+        - NOT_FOUND
+        - CONFLICT
+        - PAYLOAD_TOO_LARGE
+        - UNSUPPORTED_MEDIA_TYPE
+        - RATE_LIMITED
+        - INTERNAL
+
+    ErrorDetail:
+      type: object
+      additionalProperties: false
+      required: [path, message]
+      properties:
+        path:
+          type: string
+          description: A dotted path to the offending field.
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              $ref: '#/components/schemas/ErrorCode'
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                $ref: '#/components/schemas/ErrorDetail'
+
+    PaginationMeta:
+      type: object
+      additionalProperties: false
+      required: [page, pageSize, total, totalPages]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+
+    ImageSizes:
+      type: object
+      additionalProperties: false
+      required: [sm, md, lg]
+      description: Responsive variants, roughly 480, 960 and 1440 pixels wide.
+      properties:
+        sm:
+          type: string
+        md:
+          type: string
+        lg:
+          type: string
+
+    Image:
+      type: object
+      additionalProperties: false
+      required: [url, alt, width, height, sizes]
+      description: Images are always this shape, never a bare URL string.
+      properties:
+        url:
+          type: string
+        alt:
+          type: string
+          description: Required on every image. The admin UI enforces it on upload.
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+        sizes:
+          $ref: '#/components/schemas/ImageSizes'
+        focalPoint:
+          type: object
+          additionalProperties: false
+          required: [x, y]
+          description: Relative focal point used for art-directed cropping.
+          properties:
+            x:
+              type: number
+              minimum: 0
+              maximum: 1
+            y:
+              type: number
+              minimum: 0
+              maximum: 1
+
+    NullableImage:
+      oneOf:
+        - $ref: '#/components/schemas/Image'
+        - type: 'null'
+      description: Null until the firm uploads an image through the admin UI.
+
+    LinkKind:
+      type: string
+      enum: [internal, external, action]
+      description: |
+        `internal` is a path on the site, `external` an absolute URL, and `action` one of the
+        frontend-resolved actions: `action:mandate`, `action:chat`, `action:message`,
+        `action:call`.
+
+    Link:
+      type: object
+      additionalProperties: false
+      required: [label, href, kind]
+      properties:
+        label:
+          type: string
+        href:
+          type: string
+        kind:
+          $ref: '#/components/schemas/LinkKind'
+
+    NullableLink:
+      oneOf:
+        - $ref: '#/components/schemas/Link'
+        - type: 'null'
+
+    SectionHeader:
+      type: object
+      additionalProperties: false
+      required: [eyebrow, title, cta]
+      description: The eyebrow/title/CTA trio that opens most sections. Unused parts are null.
+      properties:
+        eyebrow:
+          type: [string, 'null']
+        title:
+          type: string
+        cta:
+          $ref: '#/components/schemas/NullableLink'
+
+    IconItem:
+      type: object
+      additionalProperties: false
+      required: [icon, title, text]
+      properties:
+        icon:
+          type: string
+          description: An icon key the frontend maps to its own icon set, such as `shield-plus`.
+        title:
+          type: string
+        text:
+          type: [string, 'null']
+
+    Stat:
+      type: object
+      additionalProperties: false
+      required: [value, caption, label]
+      description: |
+        Computed stats are already resolved here; the `source` field is admin-only.
+      properties:
+        value:
+          type: string
+          examples: ['59+ Years']
+        caption:
+          type: string
+        label:
+          type: string
+
+    Seo:
+      type: object
+      additionalProperties: false
+      required: [title, description, ogImage]
+      properties:
+        title:
+          type: [string, 'null']
+        description:
+          type: [string, 'null']
+        ogImage:
+          $ref: '#/components/schemas/NullableImage'
+
+    Hero:
+      type: object
+      additionalProperties: false
+      required: [title, subtitle, image, primaryCta, secondaryCta]
+      properties:
+        title:
+          type: string
+        subtitle:
+          type: [string, 'null']
+        image:
+          $ref: '#/components/schemas/NullableImage'
+        primaryCta:
+          $ref: '#/components/schemas/NullableLink'
+        secondaryCta:
+          $ref: '#/components/schemas/NullableLink'
+
+    FilterOption:
+      type: object
+      additionalProperties: false
+      required: [value, label]
+      description: A filter tab. An empty `value` means "no filter", such as "Our Attorneys".
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+
+    PersonRole:
+      type: string
+      enum:
+        - managing_partner
+        - partner
+        - associate_partner
+        - senior_associate
+        - associate
+        - nysc_associate
+
+    InsightCategory:
+      type: string
+      enum:
+        - firm_news
+        - articles
+        - insights
+        - regulatory_updates
+        - news_updates
+        - media_coverage
+        - webinar_resources
+
+    InsightFormat:
+      type: string
+      enum: [article, video]
+      description: Controls whether the card reads "Read More" or "Watch Video".
+
+    EmploymentType:
+      type: string
+      enum: [full_time, part_time, contract, internship, nysc]
+
+    WorkMode:
+      type: string
+      enum: [onsite, hybrid, remote]
+
+    RecognitionTab:
+      type: string
+      enum: [achievements, recognized_by]
+
+    PageKey:
+      type: string
+      enum: [home, about, practice-areas, people, insights, careers, faq, offices]
+
+    PracticeAreaRef:
+      type: object
+      additionalProperties: false
+      required: [id, slug, title, shortLabel]
+      description: A minimal practice area, used for chips and links.
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        title:
+          type: string
+        shortLabel:
+          type: string
+          description: The compact label used on the Home tab bar.
+
+    PracticeAreaCard:
+      type: object
+      additionalProperties: false
+      required: [id, slug, title, shortLabel, summary, image]
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        title:
+          type: string
+        shortLabel:
+          type: string
+        summary:
+          type: string
+        image:
+          $ref: '#/components/schemas/NullableImage'
+
+    PracticeAreaDetail:
+      type: object
+      additionalProperties: false
+      required:
+        [id, slug, title, shortLabel, summary, image, body, keyServices, contacts, relatedInsights, seo]
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        title:
+          type: string
+        shortLabel:
+          type: string
+        summary:
+          type: string
+        image:
+          $ref: '#/components/schemas/NullableImage'
+        body:
+          type: [string, 'null']
+          description: Sanitised HTML. Null until the firm supplies detail-page copy.
+        keyServices:
+          type: array
+          items:
+            type: string
+        contacts:
+          type: array
+          description: The attorneys to contact about this practice area.
+          items:
+            $ref: '#/components/schemas/PersonSummary'
+        relatedInsights:
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/InsightCard'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    PersonSummary:
+      type: object
+      additionalProperties: false
+      required: [id, slug, displayName, role, roleLabel, photo, linkedinUrl]
+      description: |
+        Used on directory cards, author blocks and the leadership row. `displayName` includes the
+        honorific only when it is "Dr.", matching the designs, and appends any post-nominals.
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        displayName:
+          type: string
+          examples: ['Dr. Babatunde Ajibade, SAN']
+        role:
+          $ref: '#/components/schemas/PersonRole'
+        roleLabel:
+          type: string
+          examples: ['Managing Partner']
+        photo:
+          $ref: '#/components/schemas/NullableImage'
+        linkedinUrl:
+          type: [string, 'null']
+
+    PersonDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - displayName
+        - firstName
+        - lastName
+        - honorific
+        - postNominals
+        - role
+        - roleLabel
+        - photo
+        - linkedinUrl
+        - bio
+        - quote
+        - practiceAreas
+        - office
+        - insights
+        - seo
+      description: The attorney bio. Email is deliberately never exposed publicly.
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        displayName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        honorific:
+          type: [string, 'null']
+        postNominals:
+          type: [string, 'null']
+        role:
+          $ref: '#/components/schemas/PersonRole'
+        roleLabel:
+          type: string
+        photo:
+          $ref: '#/components/schemas/NullableImage'
+        linkedinUrl:
+          type: [string, 'null']
+        bio:
+          type: [string, 'null']
+          description: Sanitised HTML.
+        quote:
+          type: [string, 'null']
+        practiceAreas:
+          type: array
+          items:
+            $ref: '#/components/schemas/PracticeAreaRef'
+        office:
+          oneOf:
+            - $ref: '#/components/schemas/OfficeRef'
+            - type: 'null'
+        insights:
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/InsightCard'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    InsightAuthor:
+      oneOf:
+        - $ref: '#/components/schemas/InsightAuthorPerson'
+        - $ref: '#/components/schemas/InsightAuthorFirm'
+      discriminator:
+        propertyName: type
+        mapping:
+          person: '#/components/schemas/InsightAuthorPerson'
+          firm: '#/components/schemas/InsightAuthorFirm'
+      description: An insight is written either by an attorney or by the firm itself.
+
+    InsightAuthorPerson:
+      type: object
+      additionalProperties: false
+      required: [type, person]
+      properties:
+        type:
+          type: string
+          enum: [person]
+        person:
+          $ref: '#/components/schemas/PersonSummary'
+
+    InsightAuthorFirm:
+      type: object
+      additionalProperties: false
+      required: [type, name, label]
+      description: The frontend renders its own logo mark alongside these strings.
+      properties:
+        type:
+          type: string
+          enum: [firm]
+        name:
+          type: string
+          examples: ['SPA AJIBADE & Co.']
+        label:
+          type: string
+          examples: ['Law Firm']
+
+    InsightCta:
+      type: object
+      additionalProperties: false
+      required: [label, kind]
+      properties:
+        label:
+          type: string
+          examples: ['Read More']
+        kind:
+          type: string
+          enum: [read_more, watch_video]
+
+    InsightCard:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - title
+        - excerpt
+        - format
+        - categories
+        - categoryLabels
+        - practiceAreas
+        - chips
+        - author
+        - coverImage
+        - publishedAt
+        - featured
+        - cta
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        title:
+          type: string
+        excerpt:
+          type: [string, 'null']
+        format:
+          $ref: '#/components/schemas/InsightFormat'
+        categories:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/InsightCategory'
+        categoryLabels:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        practiceAreas:
+          type: array
+          items:
+            $ref: '#/components/schemas/PracticeAreaRef'
+        chips:
+          type: array
+          maxItems: 2
+          description: |
+            The two labels the card shows: the first category, then the first practice area.
+            With no practice area, the second category is used instead.
+          items:
+            type: string
+        author:
+          $ref: '#/components/schemas/InsightAuthor'
+        coverImage:
+          $ref: '#/components/schemas/NullableImage'
+        publishedAt:
+          type: [string, 'null']
+          format: date-time
+        featured:
+          type: boolean
+        cta:
+          $ref: '#/components/schemas/InsightCta'
+
+    InsightDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - title
+        - excerpt
+        - format
+        - categories
+        - categoryLabels
+        - practiceAreas
+        - chips
+        - author
+        - coverImage
+        - publishedAt
+        - featured
+        - cta
+        - body
+        - videoUrl
+        - related
+        - seo
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        title:
+          type: string
+        excerpt:
+          type: [string, 'null']
+        format:
+          $ref: '#/components/schemas/InsightFormat'
+        categories:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/InsightCategory'
+        categoryLabels:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        practiceAreas:
+          type: array
+          items:
+            $ref: '#/components/schemas/PracticeAreaRef'
+        chips:
+          type: array
+          maxItems: 2
+          items:
+            type: string
+        author:
+          $ref: '#/components/schemas/InsightAuthor'
+        coverImage:
+          $ref: '#/components/schemas/NullableImage'
+        publishedAt:
+          type: [string, 'null']
+          format: date-time
+        featured:
+          type: boolean
+        cta:
+          $ref: '#/components/schemas/InsightCta'
+        body:
+          type: [string, 'null']
+          description: Sanitised HTML. Null for video insights.
+        videoUrl:
+          type: [string, 'null']
+          description: Set when `format` is `video`.
+        related:
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/InsightCard'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    Coordinates:
+      type: object
+      additionalProperties: false
+      required: [lat, lng]
+      properties:
+        lat:
+          type: number
+          minimum: -90
+          maximum: 90
+        lng:
+          type: number
+          minimum: -180
+          maximum: 180
+
+    OfficeRef:
+      type: object
+      additionalProperties: false
+      required: [id, slug, name]
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        name:
+          type: string
+          examples: ['Lagos']
+
+    Office:
+      type: object
+      additionalProperties: false
+      required: [id, slug, name, address, hours, phone, email, coordinates, directionsUrl]
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        name:
+          type: string
+          description: The bare city name. The UI renders it as "Lagos Office".
+        address:
+          type: string
+        hours:
+          type: string
+        phone:
+          type: [string, 'null']
+          description: Falls back to the site-wide phone number when the office has none.
+        email:
+          type: [string, 'null']
+        coordinates:
+          oneOf:
+            - $ref: '#/components/schemas/Coordinates'
+            - type: 'null'
+          description: Null until the firm supplies real coordinates for the map pin.
+        directionsUrl:
+          type: [string, 'null']
+
+    Recognition:
+      type: object
+      additionalProperties: false
+      required: [id, organization, title, year, badge, url, tab]
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        organization:
+          type: string
+          examples: ['IFLR1000']
+        title:
+          type: string
+          examples: ['Recommended Firm']
+        year:
+          type: [integer, 'null']
+        badge:
+          $ref: '#/components/schemas/NullableImage'
+        url:
+          type: [string, 'null']
+        tab:
+          $ref: '#/components/schemas/RecognitionTab'
+
+    Faq:
+      type: object
+      additionalProperties: false
+      required: [id, question, answer]
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        question:
+          type: string
+        answer:
+          type: string
+          description: Sanitised HTML.
+
+    Job:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - title
+        - practiceArea
+        - description
+        - experience
+        - employmentType
+        - employmentTypeLabel
+        - workMode
+        - workModeLabel
+        - office
+        - closingDate
+        - chips
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        title:
+          type: string
+        practiceArea:
+          oneOf:
+            - $ref: '#/components/schemas/PracticeAreaRef'
+            - type: 'null'
+        description:
+          type: string
+          description: Sanitised HTML.
+        experience:
+          type: [string, 'null']
+        employmentType:
+          $ref: '#/components/schemas/EmploymentType'
+        employmentTypeLabel:
+          type: string
+        workMode:
+          $ref: '#/components/schemas/WorkMode'
+        workModeLabel:
+          type: string
+        office:
+          oneOf:
+            - $ref: '#/components/schemas/OfficeRef'
+            - type: 'null'
+        closingDate:
+          type: [string, 'null']
+          format: date-time
+        chips:
+          type: array
+          description: >-
+            The card chips, in display order: experience, type, mode, location.
+          items:
+            type: string
+
+    Socials:
+      type: object
+      additionalProperties: false
+      required: [instagram, facebook, x, linkedin, youtube]
+      properties:
+        instagram:
+          type: [string, 'null']
+        facebook:
+          type: [string, 'null']
+        x:
+          type: [string, 'null']
+        linkedin:
+          type: [string, 'null']
+        youtube:
+          type: [string, 'null']
+
+    SiteSettings:
+      type: object
+      additionalProperties: false
+      required:
+        [firmName, legalDescriptor, tagline, foundedYear, phone, email, socials, copyright]
+      properties:
+        firmName:
+          type: string
+        legalDescriptor:
+          type: string
+          examples: ['Legal Practitioners, Arbitrators and Notaries Public']
+        tagline:
+          type: string
+        foundedYear:
+          type: integer
+        phone:
+          type: [string, 'null']
+        email:
+          type: [string, 'null']
+        socials:
+          $ref: '#/components/schemas/Socials'
+        copyright:
+          type: string
+
+    NavItem:
+      type: object
+      additionalProperties: false
+      required: [label, href, kind, children]
+      description: |
+        Dropdown contents are not designed yet. The Practice Areas dropdown is generated from the
+        practice areas collection; other dropdowns currently have an empty `children` array.
+      properties:
+        label:
+          type: string
+        href:
+          type: string
+        kind:
+          $ref: '#/components/schemas/LinkKind'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+
+    SiteFooter:
+      type: object
+      additionalProperties: false
+      required: [tagline, links, practiceAreas, offices, socials, copyright]
+      properties:
+        tagline:
+          type: string
+        links:
+          type: array
+          description: Mirrors the main nav.
+          items:
+            $ref: '#/components/schemas/Link'
+        practiceAreas:
+          type: array
+          description: Only practice areas flagged for the footer.
+          items:
+            $ref: '#/components/schemas/PracticeAreaRef'
+        offices:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfficeRef'
+        socials:
+          $ref: '#/components/schemas/Socials'
+        copyright:
+          type: string
+
+    StillHaveQuestions:
+      type: object
+      additionalProperties: false
+      required: [title, text, actions]
+      properties:
+        title:
+          type: string
+        text:
+          type: string
+        actions:
+          type: array
+          description: Chat with us, Message the firm, Call the firm.
+          items:
+            $ref: '#/components/schemas/Link'
+
+    SiteFaqSection:
+      type: object
+      additionalProperties: false
+      required: [eyebrow, title, items, stillHaveQuestions]
+      properties:
+        eyebrow:
+          type: [string, 'null']
+        title:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Faq'
+        stillHaveQuestions:
+          $ref: '#/components/schemas/StillHaveQuestions'
+
+    ContactCallout:
+      type: object
+      additionalProperties: false
+      required: [title, text, primaryCta, secondaryCta]
+      properties:
+        title:
+          type: string
+        text:
+          type: string
+        primaryCta:
+          $ref: '#/components/schemas/NullableLink'
+        secondaryCta:
+          $ref: '#/components/schemas/NullableLink'
+
+    Site:
+      type: object
+      additionalProperties: false
+      required: [settings, nav, footer, faqSection, contactCallout]
+      properties:
+        settings:
+          $ref: '#/components/schemas/SiteSettings'
+        nav:
+          type: array
+          items:
+            $ref: '#/components/schemas/NavItem'
+        footer:
+          $ref: '#/components/schemas/SiteFooter'
+        faqSection:
+          $ref: '#/components/schemas/SiteFaqSection'
+        contactCallout:
+          $ref: '#/components/schemas/ContactCallout'
+
+    SearchResults:
+      type: object
+      additionalProperties: false
+      required: [practiceAreas, people, insights]
+      properties:
+        practiceAreas:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/PracticeAreaCard'
+        people:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/PersonSummary'
+        insights:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/InsightCard'
+
+    HomeAboutFirm:
+      type: object
+      additionalProperties: false
+      required: [title, paragraphs, cta, image]
+      properties:
+        title:
+          type: string
+        paragraphs:
+          type: array
+          items:
+            type: string
+        cta:
+          $ref: '#/components/schemas/NullableLink'
+        image:
+          $ref: '#/components/schemas/NullableImage'
+
+    HomeVideoShowcase:
+      type: object
+      additionalProperties: false
+      required: [videoUrl, poster]
+      properties:
+        videoUrl:
+          type: [string, 'null']
+        poster:
+          $ref: '#/components/schemas/NullableImage'
+
+    HomeRecognitionTabs:
+      type: object
+      additionalProperties: false
+      required: [achievementsLabel, recognizedByLabel]
+      properties:
+        achievementsLabel:
+          type: string
+        recognizedByLabel:
+          type: string
+
+    HomeRecognitions:
+      type: object
+      additionalProperties: false
+      required: [achievements, recognizedBy]
+      properties:
+        achievements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recognition'
+        recognizedBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recognition'
+
+    HomeWhyChooseUs:
+      type: object
+      additionalProperties: false
+      required: [eyebrow, title, text, points, image]
+      properties:
+        eyebrow:
+          type: [string, 'null']
+        title:
+          type: string
+        text:
+          type: string
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/IconItem'
+        image:
+          $ref: '#/components/schemas/NullableImage'
+
+    HomePage:
+      type: object
+      additionalProperties: false
+      required:
+        - key
+        - hero
+        - aboutFirm
+        - videoShowcase
+        - recognitionTabs
+        - recognitions
+        - practiceSection
+        - practiceAreas
+        - leadershipSection
+        - leadership
+        - whyChooseUs
+        - insightsSection
+        - latestInsights
+        - seo
+      properties:
+        key:
+          type: string
+          enum: [home]
+        hero:
+          $ref: '#/components/schemas/Hero'
+        aboutFirm:
+          $ref: '#/components/schemas/HomeAboutFirm'
+        videoShowcase:
+          $ref: '#/components/schemas/HomeVideoShowcase'
+        recognitionTabs:
+          $ref: '#/components/schemas/HomeRecognitionTabs'
+        recognitions:
+          $ref: '#/components/schemas/HomeRecognitions'
+        practiceSection:
+          $ref: '#/components/schemas/SectionHeader'
+        practiceAreas:
+          type: array
+          description: Practice areas flagged for the Home tab bar, in order.
+          items:
+            $ref: '#/components/schemas/PracticeAreaCard'
+        leadershipSection:
+          $ref: '#/components/schemas/SectionHeader'
+        leadership:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonSummary'
+        whyChooseUs:
+          $ref: '#/components/schemas/HomeWhyChooseUs'
+        insightsSection:
+          $ref: '#/components/schemas/SectionHeader'
+        latestInsights:
+          type: array
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/InsightCard'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    AboutStory:
+      type: object
+      additionalProperties: false
+      required: [eyebrow, title, paragraphs, quote, quotePerson]
+      properties:
+        eyebrow:
+          type: [string, 'null']
+        title:
+          type: string
+        paragraphs:
+          type: array
+          items:
+            type: string
+        quote:
+          type: [string, 'null']
+        quotePerson:
+          oneOf:
+            - $ref: '#/components/schemas/PersonSummary'
+            - type: 'null'
+
+    AboutStats:
+      type: object
+      additionalProperties: false
+      required: [title, items]
+      properties:
+        title:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stat'
+
+    TitledBody:
+      type: object
+      additionalProperties: false
+      required: [title, body]
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+
+    AboutMissionSection:
+      type: object
+      additionalProperties: false
+      required: [eyebrow, title, image, items]
+      properties:
+        eyebrow:
+          type: [string, 'null']
+        title:
+          type: string
+        image:
+          $ref: '#/components/schemas/NullableImage'
+        items:
+          type: array
+          description: Mission, Vision, Values and Asset, as an accordion.
+          items:
+            $ref: '#/components/schemas/TitledBody'
+
+    AboutPrinciples:
+      type: object
+      additionalProperties: false
+      required: [eyebrow, title, image, items]
+      properties:
+        eyebrow:
+          type: [string, 'null']
+        title:
+          type: string
+        image:
+          $ref: '#/components/schemas/NullableImage'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/IconItem'
+
+    AwardListItem:
+      type: object
+      additionalProperties: false
+      required: [name, url]
+      properties:
+        name:
+          type: string
+        url:
+          type: [string, 'null']
+
+    AboutAwardsList:
+      type: object
+      additionalProperties: false
+      required: [eyebrow, title, image, items]
+      properties:
+        eyebrow:
+          type: [string, 'null']
+        title:
+          type: string
+        image:
+          $ref: '#/components/schemas/NullableImage'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AwardListItem'
+
+    AboutPage:
+      type: object
+      additionalProperties: false
+      required: [key, hero, story, stats, missionSection, principles, awardsList, seo]
+      properties:
+        key:
+          type: string
+          enum: [about]
+        hero:
+          $ref: '#/components/schemas/Hero'
+        story:
+          $ref: '#/components/schemas/AboutStory'
+        stats:
+          $ref: '#/components/schemas/AboutStats'
+        missionSection:
+          $ref: '#/components/schemas/AboutMissionSection'
+        principles:
+          $ref: '#/components/schemas/AboutPrinciples'
+        awardsList:
+          $ref: '#/components/schemas/AboutAwardsList'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    CsrBanner:
+      type: object
+      additionalProperties: false
+      required: [title, text, image, cta]
+      properties:
+        title:
+          type: string
+        text:
+          type: string
+        image:
+          $ref: '#/components/schemas/NullableImage'
+        cta:
+          $ref: '#/components/schemas/NullableLink'
+
+    PracticeAreasPage:
+      type: object
+      additionalProperties: false
+      required: [key, hero, gridSection, practiceAreas, csrBanner, seo]
+      properties:
+        key:
+          type: string
+          enum: [practice-areas]
+        hero:
+          $ref: '#/components/schemas/Hero'
+        gridSection:
+          $ref: '#/components/schemas/SectionHeader'
+        practiceAreas:
+          type: array
+          items:
+            $ref: '#/components/schemas/PracticeAreaCard'
+        csrBanner:
+          $ref: '#/components/schemas/CsrBanner'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    PeoplePage:
+      type: object
+      additionalProperties: false
+      required: [key, hero, directorySection, roleFilters, seo]
+      description: The attorney grid itself is fetched from `GET /people`.
+      properties:
+        key:
+          type: string
+          enum: [people]
+        hero:
+          $ref: '#/components/schemas/Hero'
+        directorySection:
+          $ref: '#/components/schemas/SectionHeader'
+        roleFilters:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilterOption'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    InsightsPage:
+      type: object
+      additionalProperties: false
+      required: [key, hero, featured, categoryFilters, listingSection, seo]
+      description: The listing grid itself is fetched from `GET /insights`.
+      properties:
+        key:
+          type: string
+          enum: [insights]
+        hero:
+          oneOf:
+            - $ref: '#/components/schemas/Hero'
+            - type: 'null'
+          description: >-
+            Null by design: the page opens with the featured carousel.
+        featured:
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/InsightCard'
+        categoryFilters:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilterOption'
+        listingSection:
+          $ref: '#/components/schemas/SectionHeader'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    CareersPage:
+      type: object
+      additionalProperties: false
+      required: [key, hero, jobsSection, jobs, seo]
+      properties:
+        key:
+          type: string
+          enum: [careers]
+        hero:
+          $ref: '#/components/schemas/Hero'
+        jobsSection:
+          $ref: '#/components/schemas/SectionHeader'
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    FaqPage:
+      type: object
+      additionalProperties: false
+      required: [key, hero, seo]
+      description: The FAQ items come from `GET /site`, not from here.
+      properties:
+        key:
+          type: string
+          enum: [faq]
+        hero:
+          $ref: '#/components/schemas/Hero'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    OfficesPage:
+      type: object
+      additionalProperties: false
+      required: [key, hero, offices, seo]
+      properties:
+        key:
+          type: string
+          enum: [offices]
+        hero:
+          $ref: '#/components/schemas/Hero'
+        offices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Office'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    Page:
+      oneOf:
+        - $ref: '#/components/schemas/HomePage'
+        - $ref: '#/components/schemas/AboutPage'
+        - $ref: '#/components/schemas/PracticeAreasPage'
+        - $ref: '#/components/schemas/PeoplePage'
+        - $ref: '#/components/schemas/InsightsPage'
+        - $ref: '#/components/schemas/CareersPage'
+        - $ref: '#/components/schemas/FaqPage'
+        - $ref: '#/components/schemas/OfficesPage'
+      discriminator:
+        propertyName: key
+        mapping:
+          home: '#/components/schemas/HomePage'
+          about: '#/components/schemas/AboutPage'
+          practice-areas: '#/components/schemas/PracticeAreasPage'
+          people: '#/components/schemas/PeoplePage'
+          insights: '#/components/schemas/InsightsPage'
+          careers: '#/components/schemas/CareersPage'
+          faq: '#/components/schemas/FaqPage'
+          offices: '#/components/schemas/OfficesPage'
+
+    SubmissionReceipt:
+      type: object
+      additionalProperties: false
+      required: [reference]
+      description: |
+        The only thing a form returns. Nothing the submitter typed is echoed back.
+      properties:
+        reference:
+          type: string
+          pattern: '^(ENQ|MSG|APP)-[0-9A-HJ-NP-Z]{6}$'
+          examples: ['ENQ-7F3K2A']
+
+    EnquiryRequest:
+      type: object
+      additionalProperties: false
+      required: [fullName, email, summary, consent, consentTextVersion, turnstileToken]
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 20
+          description: E.164, or a Nigerian local format such as `08030000000`.
+        organization:
+          type: string
+          maxLength: 160
+        practiceArea:
+          $ref: '#/components/schemas/Slug'
+        preferredOffice:
+          $ref: '#/components/schemas/ObjectId'
+        summary:
+          type: string
+          minLength: 20
+          maxLength: 2000
+        consent:
+          const: true
+        consentTextVersion:
+          type: string
+          maxLength: 40
+        turnstileToken:
+          type: string
+          maxLength: 2048
+        website:
+          type: string
+          maxLength: 200
+          description: Honeypot; leave empty.
+
+    MessageRequest:
+      type: object
+      additionalProperties: false
+      required: [fullName, email, message, consent, consentTextVersion, turnstileToken]
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 20
+        subject:
+          type: string
+          maxLength: 160
+        message:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        consent:
+          const: true
+        consentTextVersion:
+          type: string
+          maxLength: 40
+        turnstileToken:
+          type: string
+          maxLength: 2048
+        website:
+          type: string
+          maxLength: 200
+          description: Honeypot; leave empty.
+
+    ApplicationRequest:
+      type: object
+      additionalProperties: false
+      required: [fullName, email, phone, cv, consent, consentTextVersion, turnstileToken]
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 20
+        coverNote:
+          type: string
+          maxLength: 2000
+        cv:
+          type: string
+          format: binary
+          description: A PDF or DOCX file of at most 5 MB, verified by magic bytes.
+        consent:
+          type: string
+          enum: ['true']
+          description: Multipart fields arrive as strings, so this is the string `"true"`.
+        consentTextVersion:
+          type: string
+          maxLength: 40
+        turnstileToken:
+          type: string
+          maxLength: 2048
+        website:
+          type: string
+          maxLength: 200
+          description: Honeypot; leave empty.

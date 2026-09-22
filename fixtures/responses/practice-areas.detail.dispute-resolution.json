@@ -1,0 +1,85 @@
+{
+  "data": {
+    "id": "665f00000000000000000008",
+    "slug": "dispute-resolution-arbitration",
+    "title": "Dispute Resolution & Arbitration",
+    "shortLabel": "Dispute Resolution",
+    "summary": "When a disagreement threatens to disrupt a business, a contract, or a relationship, the firm steps in to resolve it, whether that means representing a client in court, before an arbitral tribunal, or through negotiated settlement, across commercial, shareholder, and regulatory disputes.",
+    "image": {
+      "url": "https://placehold.co/1200x900?text=Dispute%20Resolution",
+      "alt": "Photograph representing the Dispute Resolution & Arbitration practice",
+      "width": 1200,
+      "height": 900,
+      "sizes": {
+        "sm": "https://placehold.co/480x360?text=Dispute%20Resolution",
+        "md": "https://placehold.co/960x720?text=Dispute%20Resolution",
+        "lg": "https://placehold.co/1440x1080?text=Dispute%20Resolution"
+      },
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "body": null,
+    "keyServices": [],
+    "contacts": [],
+    "relatedInsights": [
+      {
+        "id": "665f00000000000000000007",
+        "slug": "regulatory-update-on-the-2026-supreme-court-practice-directions",
+        "title": "Regulatory Update On The 2026 Supreme Court Practice Directions",
+        "excerpt": null,
+        "format": "article",
+        "categories": [
+          "regulatory_updates"
+        ],
+        "categoryLabels": [
+          "Regulatory Updates"
+        ],
+        "practiceAreas": [
+          {
+            "id": "665f00000000000000000008",
+            "slug": "dispute-resolution-arbitration",
+            "title": "Dispute Resolution & Arbitration",
+            "shortLabel": "Dispute Resolution"
+          }
+        ],
+        "chips": [
+          "Regulatory Updates",
+          "Dispute Resolution & Arbitration"
+        ],
+        "author": {
+          "type": "firm",
+          "name": "SPA AJIBADE & Co.",
+          "label": "Law Firm"
+        },
+        "coverImage": {
+          "url": "https://placehold.co/1200x675?text=Regulatory%20Updates",
+          "alt": "Cover image for the insight titled Regulatory Update On The 2026 Supreme Court Practice Directions",
+          "width": 1200,
+          "height": 675,
+          "sizes": {
+            "sm": "https://placehold.co/480x270?text=Regulatory%20Updates",
+            "md": "https://placehold.co/960x540?text=Regulatory%20Updates",
+            "lg": "https://placehold.co/1440x810?text=Regulatory%20Updates"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        "publishedAt": "2026-05-01T00:00:00.000Z",
+        "featured": false,
+        "cta": {
+          "label": "Read More",
+          "kind": "read_more"
+        }
+      }
+    ],
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  }
+}

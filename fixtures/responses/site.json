@@ -1,0 +1,296 @@
+{
+  "data": {
+    "settings": {
+      "firmName": "SPA Ajibade & Co.",
+      "legalDescriptor": "Legal Practitioners, Arbitrators and Notaries Public",
+      "tagline": "Counsel to the institutions building Nigeria's economy.",
+      "foundedYear": 1967,
+      "phone": "(+234) 80000000000",
+      "email": "frontoffice@spaajibade.com",
+      "socials": {
+        "instagram": null,
+        "facebook": null,
+        "x": null,
+        "linkedin": null,
+        "youtube": null
+      },
+      "copyright": "©2026 by SPA Ajibade & Co. All Rights Reserved."
+    },
+    "nav": [
+      {
+        "label": "Home",
+        "href": "/",
+        "kind": "internal",
+        "children": []
+      },
+      {
+        "label": "About Us",
+        "href": "/about",
+        "kind": "internal",
+        "children": []
+      },
+      {
+        "label": "Practice Areas",
+        "href": "/practice-areas",
+        "kind": "internal",
+        "children": [
+          {
+            "label": "Company Secretarial",
+            "href": "/practice-areas/company-secretarial",
+            "kind": "internal"
+          },
+          {
+            "label": "Corporate Finance & Capital Markets",
+            "href": "/practice-areas/corporate-finance-capital-markets",
+            "kind": "internal"
+          },
+          {
+            "label": "Data Protection & Privacy",
+            "href": "/practice-areas/data-protection-privacy",
+            "kind": "internal"
+          },
+          {
+            "label": "Dispute Resolution & Arbitration",
+            "href": "/practice-areas/dispute-resolution-arbitration",
+            "kind": "internal"
+          },
+          {
+            "label": "Energy & Natural Resources",
+            "href": "/practice-areas/energy-natural-resources",
+            "kind": "internal"
+          },
+          {
+            "label": "Intellectual Property",
+            "href": "/practice-areas/intellectual-property",
+            "kind": "internal"
+          },
+          {
+            "label": "Real Estate & Succession",
+            "href": "/practice-areas/real-estate-succession",
+            "kind": "internal"
+          },
+          {
+            "label": "Tax",
+            "href": "/practice-areas/tax",
+            "kind": "internal"
+          },
+          {
+            "label": "Telecommunications Regulatory",
+            "href": "/practice-areas/telecommunications-regulatory",
+            "kind": "internal"
+          }
+        ]
+      },
+      {
+        "label": "Our People",
+        "href": "/people",
+        "kind": "internal",
+        "children": []
+      },
+      {
+        "label": "Insights & News",
+        "href": "/insights",
+        "kind": "internal",
+        "children": []
+      },
+      {
+        "label": "Careers",
+        "href": "/careers",
+        "kind": "internal",
+        "children": []
+      },
+      {
+        "label": "FAQ's",
+        "href": "/faq",
+        "kind": "internal",
+        "children": []
+      },
+      {
+        "label": "Our Offices",
+        "href": "/offices",
+        "kind": "internal",
+        "children": []
+      }
+    ],
+    "footer": {
+      "tagline": "Counsel to the institutions building Nigeria's economy.",
+      "links": [
+        {
+          "label": "Home",
+          "href": "/",
+          "kind": "internal"
+        },
+        {
+          "label": "About Us",
+          "href": "/about",
+          "kind": "internal"
+        },
+        {
+          "label": "Practice Areas",
+          "href": "/practice-areas",
+          "kind": "internal"
+        },
+        {
+          "label": "Our People",
+          "href": "/people",
+          "kind": "internal"
+        },
+        {
+          "label": "Insights & News",
+          "href": "/insights",
+          "kind": "internal"
+        },
+        {
+          "label": "Careers",
+          "href": "/careers",
+          "kind": "internal"
+        },
+        {
+          "label": "FAQ's",
+          "href": "/faq",
+          "kind": "internal"
+        },
+        {
+          "label": "Our Offices",
+          "href": "/offices",
+          "kind": "internal"
+        }
+      ],
+      "practiceAreas": [
+        {
+          "id": "665f0000000000000000000e",
+          "slug": "corporate-finance-capital-markets",
+          "title": "Corporate Finance & Capital Markets",
+          "shortLabel": "Corporate"
+        },
+        {
+          "id": "665f0000000000000000000f",
+          "slug": "data-protection-privacy",
+          "title": "Data Protection & Privacy",
+          "shortLabel": "Data Privacy"
+        },
+        {
+          "id": "665f00000000000000000008",
+          "slug": "dispute-resolution-arbitration",
+          "title": "Dispute Resolution & Arbitration",
+          "shortLabel": "Dispute Resolution"
+        },
+        {
+          "id": "665f00000000000000000002",
+          "slug": "energy-natural-resources",
+          "title": "Energy & Natural Resources",
+          "shortLabel": "Energy"
+        },
+        {
+          "id": "665f00000000000000000010",
+          "slug": "intellectual-property",
+          "title": "Intellectual Property",
+          "shortLabel": "Intellectual Property"
+        },
+        {
+          "id": "665f00000000000000000011",
+          "slug": "real-estate-succession",
+          "title": "Real Estate & Succession",
+          "shortLabel": "Real Estate"
+        },
+        {
+          "id": "665f00000000000000000012",
+          "slug": "tax",
+          "title": "Tax",
+          "shortLabel": "Tax"
+        }
+      ],
+      "offices": [
+        {
+          "id": "665f00000000000000000013",
+          "slug": "lagos",
+          "name": "Lagos"
+        },
+        {
+          "id": "665f00000000000000000014",
+          "slug": "abuja",
+          "name": "Abuja"
+        },
+        {
+          "id": "665f00000000000000000015",
+          "slug": "ibadan",
+          "name": "Ibadan"
+        }
+      ],
+      "socials": {
+        "instagram": null,
+        "facebook": null,
+        "x": null,
+        "linkedin": null,
+        "youtube": null
+      },
+      "copyright": "©2026 by SPA Ajibade & Co. All Rights Reserved."
+    },
+    "faqSection": {
+      "eyebrow": "FAQ's",
+      "title": "Answers Before You Reach Out.",
+      "items": [
+        {
+          "id": "665f00000000000000000016",
+          "question": "How do I schedule a consultation?",
+          "answer": "<p>[PENDING FROM FIRM]</p>"
+        },
+        {
+          "id": "665f00000000000000000017",
+          "question": "What types of matters does the firm handle?",
+          "answer": "<p>The firm provides expert advice on a wide range of legal matters including dispute resolution and arbitration, corporate finance and capital markets, real estate and succession planning, energy and natural resources, intellectual property rights, data protection regulations, and tax law. Their comprehensive services are designed to support clients through complex legal challenges in these diverse areas.</p>"
+        },
+        {
+          "id": "665f00000000000000000018",
+          "question": "Does the firm work with international clients?",
+          "answer": "<p>[PENDING FROM FIRM]</p>"
+        },
+        {
+          "id": "665f00000000000000000019",
+          "question": "How is client confidentiality handled?",
+          "answer": "<p>[PENDING FROM FIRM]</p>"
+        },
+        {
+          "id": "665f0000000000000000001a",
+          "question": "How long does a typical matter take?",
+          "answer": "<p>[PENDING FROM FIRM]</p>"
+        }
+      ],
+      "stillHaveQuestions": {
+        "title": "Still have questions?",
+        "text": "Speak with someone directly, or start a conversation with our assistant for a quick answer.",
+        "actions": [
+          {
+            "label": "Chat with us",
+            "href": "action:chat",
+            "kind": "action"
+          },
+          {
+            "label": "Message the firm",
+            "href": "action:message",
+            "kind": "action"
+          },
+          {
+            "label": "Call the firm",
+            "href": "action:call",
+            "kind": "action"
+          }
+        ]
+      }
+    },
+    "contactCallout": {
+      "title": "Start With A Conversation, Not A Form.",
+      "text": "Speak with the firm directly, whether it's a new mandate, a question about an existing matter, or something you're not sure fits either.",
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "View our offices",
+        "href": "/offices",
+        "kind": "internal"
+      }
+    }
+  }
+}

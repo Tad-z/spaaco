@@ -1,0 +1,104 @@
+{
+  "data": {
+    "key": "careers",
+    "hero": {
+      "title": "Practice Law, Not Just A Role.",
+      "subtitle": "At SPA Ajibade, associates work directly with partners on matters that matter, not behind layers of a rotating team.",
+      "image": {
+        "url": "https://placehold.co/1440x662?text=Careers%20hero",
+        "alt": "A junior associate working alongside a partner",
+        "width": 1440,
+        "height": 662,
+        "sizes": {
+          "sm": "https://placehold.co/480x221?text=Careers%20hero",
+          "md": "https://placehold.co/960x441?text=Careers%20hero",
+          "lg": "https://placehold.co/1440x662?text=Careers%20hero"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Our People",
+        "href": "/people",
+        "kind": "internal"
+      }
+    },
+    "jobsSection": {
+      "eyebrow": null,
+      "title": "Careers",
+      "cta": null
+    },
+    "jobs": [
+      {
+        "id": "665f00000000000000000023",
+        "slug": "associate",
+        "title": "Associate",
+        "practiceArea": {
+          "id": "665f0000000000000000000e",
+          "slug": "corporate-finance-capital-markets",
+          "title": "Corporate Finance & Capital Markets",
+          "shortLabel": "Corporate"
+        },
+        "description": "<p>We're looking for an Associate to join our Corporate Finance &amp; Capital Markets practice. You'll work directly with partners on securities offerings, corporate restructurings, and regulatory filings for clients across banking, energy, and infrastructure, supporting due diligence, drafting, and filings on live transactions, advising clients on compliance with SEC and CAMA requirements, and working directly with senior counsel rather than as part of a rotating pool.</p><p>We're looking for someone with 2 to 4 years post-call experience, ideally in corporate finance or capital markets, called to the Nigerian Bar, with strong drafting and analytical skills, and comfortable working directly with clients and partners from an early stage.</p>",
+        "experience": "2–4 years experience",
+        "employmentType": "full_time",
+        "employmentTypeLabel": "Full-time",
+        "workMode": "hybrid",
+        "workModeLabel": "Hybrid",
+        "office": {
+          "id": "665f00000000000000000013",
+          "slug": "lagos",
+          "name": "Lagos"
+        },
+        "closingDate": null,
+        "chips": [
+          "2–4 years experience",
+          "Full-time",
+          "Hybrid",
+          "Lagos"
+        ]
+      },
+      {
+        "id": "665f00000000000000000024",
+        "slug": "nysc-associate",
+        "title": "NYSC Associate",
+        "practiceArea": {
+          "id": "665f0000000000000000000e",
+          "slug": "corporate-finance-capital-markets",
+          "title": "Corporate Finance & Capital Markets",
+          "shortLabel": "Corporate"
+        },
+        "description": "<p>We're looking for an Associate to join our Corporate Finance &amp; Capital Markets practice. You'll work directly with partners on securities offerings, corporate restructurings, and regulatory filings for clients across banking, energy, and infrastructure, supporting due diligence, drafting, and filings on live transactions, advising clients on compliance with SEC and CAMA requirements, and working directly with senior counsel rather than as part of a rotating pool.</p><p>We're looking for someone with 2 to 4 years post-call experience, ideally in corporate finance or capital markets, called to the Nigerian Bar, with strong drafting and analytical skills, and comfortable working directly with clients and partners from an early stage.</p>",
+        "experience": "2–4 years experience",
+        "employmentType": "full_time",
+        "employmentTypeLabel": "Full-time",
+        "workMode": "hybrid",
+        "workModeLabel": "Hybrid",
+        "office": {
+          "id": "665f00000000000000000013",
+          "slug": "lagos",
+          "name": "Lagos"
+        },
+        "closingDate": null,
+        "chips": [
+          "2–4 years experience",
+          "Full-time",
+          "Hybrid",
+          "Lagos"
+        ]
+      }
+    ],
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  }
+}

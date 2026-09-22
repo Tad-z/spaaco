@@ -1,0 +1,202 @@
+{
+  "data": [
+    {
+      "id": "665f00000000000000000021",
+      "slug": "company-secretarial",
+      "title": "Company Secretarial",
+      "shortLabel": "Company Secretarial",
+      "summary": "When a business must fulfill its statutory obligations, the firm expertly manages all company secretarial duties, including board and shareholder governance, comprehensive CAC filings, and ensuring full regulatory compliance with laws and standards.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Company%20Secretarial",
+        "alt": "Photograph representing the Company Secretarial practice",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Company%20Secretarial",
+          "md": "https://placehold.co/960x720?text=Company%20Secretarial",
+          "lg": "https://placehold.co/1440x1080?text=Company%20Secretarial"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "665f0000000000000000000e",
+      "slug": "corporate-finance-capital-markets",
+      "title": "Corporate Finance & Capital Markets",
+      "shortLabel": "Corporate",
+      "summary": "When a business needs to raise capital, restructure, or meet regulatory requirements, the firm guides it through securities issuance, corporate restructuring, and filings with the Securities and Exchange Commission.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Corporate",
+        "alt": "Photograph representing the Corporate Finance & Capital Markets practice",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Corporate",
+          "md": "https://placehold.co/960x720?text=Corporate",
+          "lg": "https://placehold.co/1440x1080?text=Corporate"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "665f0000000000000000000f",
+      "slug": "data-protection-privacy",
+      "title": "Data Protection & Privacy",
+      "shortLabel": "Data Privacy",
+      "summary": "When a company collects or manages personal data, it ensures compliance with the Nigeria Data Protection Act 2023 by providing comprehensive support, including conducting audits, drafting policies, and managing responses in the event of a data breach.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Data%20Privacy",
+        "alt": "Photograph representing the Data Protection & Privacy practice",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Data%20Privacy",
+          "md": "https://placehold.co/960x720?text=Data%20Privacy",
+          "lg": "https://placehold.co/1440x1080?text=Data%20Privacy"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "665f00000000000000000008",
+      "slug": "dispute-resolution-arbitration",
+      "title": "Dispute Resolution & Arbitration",
+      "shortLabel": "Dispute Resolution",
+      "summary": "When a disagreement threatens to disrupt a business, a contract, or a relationship, the firm steps in to resolve it, whether that means representing a client in court, before an arbitral tribunal, or through negotiated settlement, across commercial, shareholder, and regulatory disputes.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Dispute%20Resolution",
+        "alt": "Photograph representing the Dispute Resolution & Arbitration practice",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Dispute%20Resolution",
+          "md": "https://placehold.co/960x720?text=Dispute%20Resolution",
+          "lg": "https://placehold.co/1440x1080?text=Dispute%20Resolution"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "665f00000000000000000002",
+      "slug": "energy-natural-resources",
+      "title": "Energy & Natural Resources",
+      "shortLabel": "Energy",
+      "summary": "When a project involves power generation, distribution, or oil and gas, the firm advises on the regulatory approvals and compliance needed to get it built and keep it running, from electricity sector rules to mini-grid and rural electrification.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Energy",
+        "alt": "Photograph representing the Energy & Natural Resources practice",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Energy",
+          "md": "https://placehold.co/960x720?text=Energy",
+          "lg": "https://placehold.co/1440x1080?text=Energy"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "665f00000000000000000010",
+      "slug": "intellectual-property",
+      "title": "Intellectual Property",
+      "shortLabel": "Intellectual Property",
+      "summary": "When a business wants to protect its creations such as a brand, invention, or original content, our firm expertly handles the full process of registration, licensing, and enforcement to keep ownership rights fully protected and secure.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Intellectual%20Property",
+        "alt": "Photograph representing the Intellectual Property practice",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Intellectual%20Property",
+          "md": "https://placehold.co/960x720?text=Intellectual%20Property",
+          "lg": "https://placehold.co/1440x1080?text=Intellectual%20Property"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "665f00000000000000000011",
+      "slug": "real-estate-succession",
+      "title": "Real Estate & Succession",
+      "shortLabel": "Real Estate",
+      "summary": "When a client is buying property, resolving a landlord-tenant dispute, or planning what happens to their estate, the firm manages the legal work that makes the transaction or transition sound.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Real%20Estate",
+        "alt": "Photograph representing the Real Estate & Succession practice",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Real%20Estate",
+          "md": "https://placehold.co/960x720?text=Real%20Estate",
+          "lg": "https://placehold.co/1440x1080?text=Real%20Estate"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "665f00000000000000000012",
+      "slug": "tax",
+      "title": "Tax",
+      "shortLabel": "Tax",
+      "summary": "When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Tax",
+        "alt": "Photograph representing the Tax practice",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Tax",
+          "md": "https://placehold.co/960x720?text=Tax",
+          "lg": "https://placehold.co/1440x1080?text=Tax"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "665f00000000000000000022",
+      "slug": "telecommunications-regulatory",
+      "title": "Telecommunications Regulatory",
+      "shortLabel": "Telecoms",
+      "summary": "When a business operates in or enters the telecommunications sector, the firm advises on licensing, spectrum, and compliance with NCC regulations, from market entry to ongoing regulatory obligations.",
+      "image": {
+        "url": "https://placehold.co/1200x900?text=Telecoms",
+        "alt": "Photograph representing the Telecommunications Regulatory practice",
+        "width": 1200,
+        "height": 900,
+        "sizes": {
+          "sm": "https://placehold.co/480x360?text=Telecoms",
+          "md": "https://placehold.co/960x720?text=Telecoms",
+          "lg": "https://placehold.co/1440x1080?text=Telecoms"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    }
+  ]
+}

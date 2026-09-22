@@ -1,0 +1,217 @@
+{
+  "data": [
+    {
+      "id": "665f0000000000000000001f",
+      "slug": "babatunde-ajibade",
+      "displayName": "Dr. Babatunde Ajibade, SAN",
+      "role": "managing_partner",
+      "roleLabel": "Managing Partner",
+      "photo": {
+        "url": "https://placehold.co/800x1000?text=Babatunde%20Ajibade",
+        "alt": "Portrait of Dr. Babatunde Ajibade, SAN, Managing Partner",
+        "width": 800,
+        "height": 1000,
+        "sizes": {
+          "sm": "https://placehold.co/480x600?text=Babatunde%20Ajibade",
+          "md": "https://placehold.co/960x1200?text=Babatunde%20Ajibade",
+          "lg": "https://placehold.co/1440x1800?text=Babatunde%20Ajibade"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "linkedinUrl": null
+    },
+    {
+      "id": "665f00000000000000000003",
+      "slug": "john-onyido",
+      "displayName": "Dr. John Onyido",
+      "role": "partner",
+      "roleLabel": "Partner",
+      "photo": {
+        "url": "https://placehold.co/800x1000?text=John%20Onyido",
+        "alt": "Portrait of Dr. John Onyido, Partner",
+        "width": 800,
+        "height": 1000,
+        "sizes": {
+          "sm": "https://placehold.co/480x600?text=John%20Onyido",
+          "md": "https://placehold.co/960x1200?text=John%20Onyido",
+          "lg": "https://placehold.co/1440x1800?text=John%20Onyido"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "linkedinUrl": null
+    },
+    {
+      "id": "665f00000000000000000020",
+      "slug": "kolawole-mayomi",
+      "displayName": "Dr. Kolawole Mayomi",
+      "role": "partner",
+      "roleLabel": "Partner",
+      "photo": {
+        "url": "https://placehold.co/800x1000?text=Kolawole%20Mayomi",
+        "alt": "Portrait of Dr. Kolawole Mayomi, Partner",
+        "width": 800,
+        "height": 1000,
+        "sizes": {
+          "sm": "https://placehold.co/480x600?text=Kolawole%20Mayomi",
+          "md": "https://placehold.co/960x1200?text=Kolawole%20Mayomi",
+          "lg": "https://placehold.co/1440x1800?text=Kolawole%20Mayomi"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "linkedinUrl": null
+    },
+    {
+      "id": "665f00000000000000000005",
+      "slug": "peter-olalere",
+      "displayName": "Peter Olalere",
+      "role": "associate_partner",
+      "roleLabel": "Associate Partner",
+      "photo": {
+        "url": "https://placehold.co/800x1000?text=Peter%20Olalere",
+        "alt": "Portrait of Peter Olalere, Associate Partner",
+        "width": 800,
+        "height": 1000,
+        "sizes": {
+          "sm": "https://placehold.co/480x600?text=Peter%20Olalere",
+          "md": "https://placehold.co/960x1200?text=Peter%20Olalere",
+          "lg": "https://placehold.co/1440x1800?text=Peter%20Olalere"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "linkedinUrl": null
+    },
+    {
+      "id": "665f00000000000000000025",
+      "slug": "bolaji-gabari",
+      "displayName": "Bolaji Gabari",
+      "role": "associate_partner",
+      "roleLabel": "Associate Partner",
+      "photo": {
+        "url": "https://placehold.co/800x1000?text=Bolaji%20Gabari",
+        "alt": "Portrait of Bolaji Gabari, Associate Partner",
+        "width": 800,
+        "height": 1000,
+        "sizes": {
+          "sm": "https://placehold.co/480x600?text=Bolaji%20Gabari",
+          "md": "https://placehold.co/960x1200?text=Bolaji%20Gabari",
+          "lg": "https://placehold.co/1440x1800?text=Bolaji%20Gabari"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "linkedinUrl": null
+    },
+    {
+      "id": "665f00000000000000000026",
+      "slug": "magnus-ejelonu",
+      "displayName": "Dr. Magnus Ejelonu",
+      "role": "associate_partner",
+      "roleLabel": "Associate Partner",
+      "photo": {
+        "url": "https://placehold.co/800x1000?text=Magnus%20Ejelonu",
+        "alt": "Portrait of Dr. Magnus Ejelonu, Associate Partner",
+        "width": 800,
+        "height": 1000,
+        "sizes": {
+          "sm": "https://placehold.co/480x600?text=Magnus%20Ejelonu",
+          "md": "https://placehold.co/960x1200?text=Magnus%20Ejelonu",
+          "lg": "https://placehold.co/1440x1800?text=Magnus%20Ejelonu"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "linkedinUrl": null
+    },
+    {
+      "id": "665f00000000000000000027",
+      "slug": "moruf-sowunmi",
+      "displayName": "Moruf Sowunmi",
+      "role": "associate_partner",
+      "roleLabel": "Associate Partner",
+      "photo": {
+        "url": "https://placehold.co/800x1000?text=Moruf%20Sowunmi",
+        "alt": "Portrait of Moruf Sowunmi, Associate Partner",
+        "width": 800,
+        "height": 1000,
+        "sizes": {
+          "sm": "https://placehold.co/480x600?text=Moruf%20Sowunmi",
+          "md": "https://placehold.co/960x1200?text=Moruf%20Sowunmi",
+          "lg": "https://placehold.co/1440x1800?text=Moruf%20Sowunmi"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "linkedinUrl": null
+    },
+    {
+      "id": "665f00000000000000000028",
+      "slug": "emmanuel-bassey",
+      "displayName": "Emmanuel Bassey",
+      "role": "senior_associate",
+      "roleLabel": "Senior Associate",
+      "photo": {
+        "url": "https://placehold.co/800x1000?text=Emmanuel%20Bassey",
+        "alt": "Portrait of Emmanuel Bassey, Senior Associate",
+        "width": 800,
+        "height": 1000,
+        "sizes": {
+          "sm": "https://placehold.co/480x600?text=Emmanuel%20Bassey",
+          "md": "https://placehold.co/960x1200?text=Emmanuel%20Bassey",
+          "lg": "https://placehold.co/1440x1800?text=Emmanuel%20Bassey"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "linkedinUrl": null
+    },
+    {
+      "id": "665f00000000000000000029",
+      "slug": "david-essien",
+      "displayName": "David Essien",
+      "role": "senior_associate",
+      "roleLabel": "Senior Associate",
+      "photo": {
+        "url": "https://placehold.co/800x1000?text=David%20Essien",
+        "alt": "Portrait of David Essien, Senior Associate",
+        "width": 800,
+        "height": 1000,
+        "sizes": {
+          "sm": "https://placehold.co/480x600?text=David%20Essien",
+          "md": "https://placehold.co/960x1200?text=David%20Essien",
+          "lg": "https://placehold.co/1440x1800?text=David%20Essien"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "linkedinUrl": null
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "pageSize": 9,
+    "total": 9,
+    "totalPages": 1
+  }
+}
