@@ -2,8 +2,8 @@ import type { PipelineStage, Types } from 'mongoose';
 import { Person } from '../models/index.js';
 import { NotFoundError } from '../core/errors.js';
 import { listInsightsByAuthor } from './insight.service.js';
-import type { InsightDoc } from './insight.service.js';
-import { publishedFilter } from '../helpers/published-filter.helper.js';
+import type { IInsightDoc } from '../interfaces/populated.interface.js';
+import { publishedFilter, publishedPopulate } from '../helpers/published-filter.helper.js';
 import type { PreviewOptions } from '../helpers/published-filter.helper.js';
 import { toSkip } from '../helpers/pagination.helper.js';
 import { PERSON_ROLES } from '../constants/enums.js';
@@ -83,11 +83,11 @@ export async function listPeople(
 export async function getPersonBySlug(
   slug: string,
   options: PreviewOptions = {}
-): Promise<{ person: PersonDetailDoc; insights: InsightDoc[] }> {
+): Promise<{ person: PersonDetailDoc; insights: IInsightDoc[] }> {
   const person = await Person.findOne({ slug, ...publishedFilter(options) })
     .populate('photo')
-    .populate('practiceAreas')
-    .populate('office')
+    .populate(publishedPopulate('practiceAreas', options))
+    .populate(publishedPopulate('office', options))
     .lean<PersonDetailDoc | null>();
 
   if (!person) throw new NotFoundError('Attorney');

@@ -77,6 +77,10 @@ Mechanically, one mongod now starts in `globalSetup` for the whole run instead o
 
 **ADR-030: Responsive image `sizes` are stored on the Media record, not derived at read time.** How the three widths are formed depends on where the file lives: the local driver writes three files beside the original, Cloudinary expresses them as URL transformations, and the dev seed points all three at placehold.co. A serializer cannot tell which rule applies from the URL alone, so whatever creates the record writes the answer. `helpers/image-sizes.helper.ts` builds them per provider at upload time. The one consequence to remember: Cloudinary sizes embed the focal point as gravity, so changing `focalPoint` must rebuild them (handled with the media PATCH in Phase 5).
 
+**ADR-031: Populated references are filtered to published documents too.** `publishedFilter` constrains only the document being fetched, so a published insight was pulling in its author and practice areas regardless of their status — a draft attorney's name, slug and photo were reachable on `/insights`, `/pages/home`, `/pages/insights` and `/search` with no token at all. `helpers/published-filter.helper.ts#publishedPopulate` now wraps every populate of a *content* collection (author, practiceAreas, contacts, office, practiceArea, story.quotePerson). Media is exempt, having no status. Mongoose nulls a non-matching single reference and drops it from an array, which the serializers already handle: a draft author falls back to the firm block rather than removing the card.
+
+**ADR-032: Cache tags err towards clearing too much.** The tag map originally listed only the surfaces where an entity is the *subject*. But a practice area also appears as a chip on insight cards and a job card, and is counted by an About stat; an attorney appears in every insight card's author block; an office appears in a job's location chip. Each write now clears every surface that embeds the entity. A stale page is a visible bug the firm reports; an extra cache miss costs milliseconds.
+
 ## Known content conflicts (from the designs; the firm must resolve them)
 
 Seed them as designed. Don't silently "fix" them.

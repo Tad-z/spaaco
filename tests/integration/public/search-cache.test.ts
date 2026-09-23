@@ -136,17 +136,37 @@ describe('caching', () => {
     expect(cache.size()).toBe(0);
   });
 
-  it('invalidates the shell and both pages a practice area appears on', async () => {
+  it('invalidates every surface a practice area appears on', async () => {
     await request(app).get('/api/v1/site');
     await request(app).get('/api/v1/pages/home');
     await request(app).get('/api/v1/pages/practice-areas');
     await request(app).get('/api/v1/pages/careers');
-    expect(cache.size()).toBe(4);
+    await request(app).get('/api/v1/pages/offices');
+    expect(cache.size()).toBe(5);
 
     invalidateEntity('practiceArea', 'tax');
 
-    // The careers page does not show practice areas, so it survives.
+    // Careers goes too: job cards carry a practice area. Offices survives,
+    // because nothing on it shows one.
     expect(cache.size()).toBe(1);
+  });
+
+  it('invalidates the careers page when an office changes, since job chips show it', async () => {
+    await request(app).get('/api/v1/pages/careers');
+    await request(app).get('/api/v1/pages/insights');
+    expect(cache.size()).toBe(2);
+
+    invalidateEntity('office');
+
+    expect(cache.size()).toBe(1);
+  });
+
+  it('invalidates the insights page when an attorney changes, since cards show the author', async () => {
+    await request(app).get('/api/v1/pages/insights');
+
+    invalidateEntity('person', 'john-onyido');
+
+    expect(cache.size()).toBe(0);
   });
 
   it('bypasses the cache for preview, so a draft cannot be served to the next visitor', async () => {

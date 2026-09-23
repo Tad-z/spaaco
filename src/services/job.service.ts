@@ -1,7 +1,7 @@
 import type { Types } from 'mongoose';
 import { Job } from '../models/index.js';
 import { NotFoundError } from '../core/errors.js';
-import { publishedFilter } from '../helpers/published-filter.helper.js';
+import { publishedFilter, publishedPopulate } from '../helpers/published-filter.helper.js';
 import type { PreviewOptions } from '../helpers/published-filter.helper.js';
 import type { IJob } from '../interfaces/job.interface.js';
 import type { IPracticeArea } from '../interfaces/practice-area.interface.js';
@@ -26,16 +26,16 @@ const openFilter = (options: PreviewOptions): Record<string, unknown> => ({
 
 export async function listJobs(options: PreviewOptions = {}): Promise<JobDoc[]> {
   return Job.find(openFilter(options))
-    .populate('practiceArea')
-    .populate('office')
+    .populate(publishedPopulate('practiceArea', options))
+    .populate(publishedPopulate('office', options))
     .sort({ order: 1, createdAt: -1 })
     .lean<JobDoc[]>();
 }
 
 export async function getJobById(id: string, options: PreviewOptions = {}): Promise<JobDoc> {
   const job = await Job.findOne({ _id: id, ...openFilter(options) })
-    .populate('practiceArea')
-    .populate('office')
+    .populate(publishedPopulate('practiceArea', options))
+    .populate(publishedPopulate('office', options))
     .lean<JobDoc | null>();
 
   if (!job) throw new NotFoundError('Job');

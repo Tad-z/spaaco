@@ -28,3 +28,6 @@ export const searchLimiter = build(RATE_LIMITS.search);
 
 /** 5 per 10 minutes, per form. */
 export const formLimiter = build(RATE_LIMITS.forms);
+
+/** 5 per 15 minutes, to slow credential stuffing against the admin login. */
+export const loginLimiter = build(RATE_LIMITS.login);

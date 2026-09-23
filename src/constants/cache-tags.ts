@@ -47,30 +47,52 @@ export function tagsFor(entity: CacheEntity, slugOrKey?: string): string[] {
       // Settings drive the shell, which every page renders.
       return [TAGS.site];
     case 'practiceArea':
+      // Insight cards carry practice-area chips, job cards carry a practice
+      // area, and the About stats can count them.
       return [
         TAGS.site,
         TAGS.practiceAreas,
         TAGS.page('home'),
         TAGS.page('practice-areas'),
+        TAGS.page('insights'),
+        TAGS.page('careers'),
+        TAGS.page('about'),
+        TAGS.insights,
+        TAGS.jobs,
         ...(slugOrKey === undefined ? [] : [TAGS.practiceArea(slugOrKey)]),
       ];
     case 'person':
+      // Insight cards embed the author summary, so a renamed attorney has to
+      // clear the insights surfaces too.
       return [
         TAGS.people,
+        TAGS.insights,
         TAGS.page('home'),
         TAGS.page('about'),
+        TAGS.page('insights'),
         ...(slugOrKey === undefined ? [] : [TAGS.person(slugOrKey)]),
       ];
     case 'insight':
+      // Practice area and attorney detail pages both embed insight cards.
       return [
         TAGS.insights,
+        TAGS.practiceAreas,
+        TAGS.people,
         TAGS.page('home'),
         TAGS.page('insights'),
         ...(slugOrKey === undefined ? [] : [TAGS.insight(slugOrKey)]),
       ];
     case 'office':
-      // Offices appear in the footer and are counted by an About stat.
-      return [TAGS.site, TAGS.offices, TAGS.page('offices'), TAGS.page('about')];
+      // The footer lists offices, an About stat counts them, and job cards
+      // show one as a location chip.
+      return [
+        TAGS.site,
+        TAGS.offices,
+        TAGS.jobs,
+        TAGS.page('offices'),
+        TAGS.page('about'),
+        TAGS.page('careers'),
+      ];
     case 'faq':
       return [TAGS.site, TAGS.faqs];
     case 'job':

@@ -52,8 +52,8 @@ export class UnauthenticatedError extends AppError {
   readonly statusCode = 401;
   readonly code = 'UNAUTHENTICATED';
 
-  constructor(message = 'Authentication required') {
-    super(message);
+  constructor(message = 'Authentication required', details?: readonly ErrorDetail[]) {
+    super(message, details);
   }
 }
 

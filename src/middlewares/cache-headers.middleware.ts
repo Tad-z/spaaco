@@ -24,7 +24,12 @@ export function cacheHeaders(req: Request, res: Response, next: NextFunction): v
   res.json = (body: unknown): Response => {
     // Preview shows unpublished content to one authenticated user; caching it
     // anywhere shared would leak drafts to the public.
-    if (req.preview) {
+    //
+    // The check is on the *query*, not on req.preview: a request that asked
+    // for preview but failed to authenticate still returns published content,
+    // and caching that under the ?preview=true URL would let a shared cache
+    // answer the dashboard's real preview request from it.
+    if (req.preview || req.query.preview === 'true') {
       res.setHeader('Cache-Control', 'no-store');
       return originalJson(body);
     }

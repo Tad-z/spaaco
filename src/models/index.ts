@@ -16,3 +16,6 @@ export { Faq } from './faq.model.js';
 export { Job } from './job.model.js';
 export { Page } from './page.model.js';
 export { Settings } from './settings.model.js';
+export { User } from './user.model.js';
+export { RefreshToken } from './refresh-token.model.js';
+export { AuditLog } from './audit-log.model.js';

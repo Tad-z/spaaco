@@ -1,5 +1,6 @@
 import { Insight, Person, PracticeArea } from '../models/index.js';
 import { SEARCH } from '../config/constants.js';
+import { publishedFilter, publishedPopulate } from '../helpers/published-filter.helper.js';
 import type {
   IInsightDoc,
   IPersonWithPhoto,
@@ -24,7 +25,8 @@ export interface SearchResultSources {
   insights: IInsightDoc[];
 }
 
-const PUBLISHED = { status: 'published' } as const;
+/** One definition of published, shared with every other read. */
+const PUBLISHED = publishedFilter();
 
 const byScore = { score: { $meta: 'textScore' } } as const;
 const scoreProjection = { score: { $meta: 'textScore' } } as const;
@@ -46,8 +48,8 @@ export async function search(query: string): Promise<SearchResultSources> {
       .lean<IPersonWithPhoto[]>(),
     Insight.find({ ...PUBLISHED, ...text }, scoreProjection)
       .populate('coverImage')
-      .populate('practiceAreas')
-      .populate({ path: 'author', populate: { path: 'photo' } })
+      .populate(publishedPopulate('practiceAreas'))
+      .populate({ ...publishedPopulate('author'), populate: { path: 'photo' } })
       .sort(byScore)
       .limit(limit)
       .lean<IInsightDoc[]>(),

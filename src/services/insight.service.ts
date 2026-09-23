@@ -1,22 +1,14 @@
 import type { Types } from 'mongoose';
 import { Insight, PracticeArea } from '../models/index.js';
 import { NotFoundError } from '../core/errors.js';
-import { publishedFilter } from '../helpers/published-filter.helper.js';
+import { publishedFilter, publishedPopulate } from '../helpers/published-filter.helper.js';
 import type { PreviewOptions } from '../helpers/published-filter.helper.js';
 import { toSkip } from '../helpers/pagination.helper.js';
 import { CONTENT_LIMITS } from '../config/constants.js';
-import type { IInsight } from '../interfaces/insight.interface.js';
-import type { IMedia } from '../interfaces/media.interface.js';
-import type { IPracticeArea } from '../interfaces/practice-area.interface.js';
-import type { IPerson } from '../interfaces/person.interface.js';
+import type { IInsightDoc } from '../interfaces/populated.interface.js';
 import type { InsightCategory } from '../types/api.js';
 
-export type InsightDoc = Omit<IInsight, 'coverImage' | 'practiceAreas' | 'author'> & {
-  _id: Types.ObjectId;
-  coverImage: IMedia | null;
-  practiceAreas: (IPracticeArea & { _id: Types.ObjectId })[];
-  author: (Omit<IPerson, 'photo'> & { _id: Types.ObjectId; photo: IMedia | null }) | null;
-};
+export type { IInsightDoc } from '../interfaces/populated.interface.js';
 
 export interface ListInsightsOptions extends PreviewOptions {
   readonly category?: InsightCategory;
@@ -26,24 +18,36 @@ export interface ListInsightsOptions extends PreviewOptions {
   readonly pageSize: number;
 }
 
-/** Every card renders the cover image, its practice areas and its author. */
+/** What a card renders. Notably not `body`: a card never shows one. */
+const CARD_FIELDS =
+  'slug title excerpt format videoUrl categories practiceAreas author coverImage featured publishedAt order';
+
+/**
+ * Every card renders the cover image, its practice areas and its author.
+ *
+ * The practice-area and author populates are filtered to published documents.
+ * `publishedFilter` constrains only the root query, so without this a
+ * published insight would expose a draft attorney or a draft practice area.
+ */
 function findCards(
   filter: Record<string, unknown>,
   sort: 1 | -1,
   skip: number,
-  limit: number
-): Promise<InsightDoc[]> {
+  limit: number,
+  options: PreviewOptions = {}
+): Promise<IInsightDoc[]> {
   return Insight.find(filter)
+    .select(CARD_FIELDS)
     .populate('coverImage')
-    .populate('practiceAreas')
-    .populate({ path: 'author', populate: { path: 'photo' } })
-    // Several insights share a publish month, so the sort needs a tiebreaker
-    // or the order varies between identical requests. `order` lets the firm
+    .populate(publishedPopulate('practiceAreas', options))
+    .populate({ ...publishedPopulate('author', options), populate: { path: 'photo' } })
+    // Several insights share a publish month, so the sort needs a tiebreaker or
+    // the order varies between identical requests. `order` lets the firm
     // decide; `_id` makes it total.
     .sort({ publishedAt: sort, order: 1, _id: 1 })
     .skip(skip)
     .limit(limit)
-    .lean<InsightDoc[]>();
+    .lean<IInsightDoc[]>();
 }
 
 async function resolvePracticeAreaId(slug: string): Promise<Types.ObjectId | null> {
@@ -55,7 +59,7 @@ async function resolvePracticeAreaId(slug: string): Promise<Types.ObjectId | nul
 
 export async function listInsights(
   options: ListInsightsOptions
-): Promise<{ items: InsightDoc[]; total: number }> {
+): Promise<{ items: IInsightDoc[]; total: number }> {
   const filter: Record<string, unknown> = { ...publishedFilter(options) };
 
   if (options.category !== undefined) filter.categories = options.category;
@@ -73,7 +77,8 @@ export async function listInsights(
       filter,
       options.sort === 'oldest' ? 1 : -1,
       toSkip(options.page, options.pageSize),
-      options.pageSize
+      options.pageSize,
+      options
     ),
     Insight.countDocuments(filter),
   ]);
@@ -84,12 +89,12 @@ export async function listInsights(
 export async function getInsightBySlug(
   slug: string,
   options: PreviewOptions = {}
-): Promise<{ insight: InsightDoc; related: InsightDoc[] }> {
+): Promise<{ insight: IInsightDoc; related: IInsightDoc[] }> {
   const insight = await Insight.findOne({ slug, ...publishedFilter(options) })
     .populate('coverImage')
-    .populate('practiceAreas')
-    .populate({ path: 'author', populate: { path: 'photo' } })
-    .lean<InsightDoc | null>();
+    .populate(publishedPopulate('practiceAreas', options))
+    .populate({ ...publishedPopulate('author', options), populate: { path: 'photo' } })
+    .lean<IInsightDoc | null>();
 
   if (!insight) throw new NotFoundError('Insight');
 
@@ -103,7 +108,7 @@ export async function getInsightBySlug(
       : { categories: { $in: insight.categories } }),
   };
 
-  const related = await findCards(relatedFilter, -1, 0, CONTENT_LIMITS.relatedInsights);
+  const related = await findCards(relatedFilter, -1, 0, CONTENT_LIMITS.relatedInsights, options);
 
   return { insight, related };
 }
@@ -111,32 +116,24 @@ export async function getInsightBySlug(
 export const listLatestInsights = (
   options: PreviewOptions = {},
   limit: number = CONTENT_LIMITS.homeLatestInsights
-): Promise<InsightDoc[]> => findCards(publishedFilter(options), -1, 0, limit);
+): Promise<IInsightDoc[]> => findCards(publishedFilter(options), -1, 0, limit, options);
 
 export const listFeaturedInsights = (
   options: PreviewOptions = {},
   limit: number = CONTENT_LIMITS.featuredInsights
-): Promise<InsightDoc[]> =>
-  findCards({ ...publishedFilter(options), featured: true }, -1, 0, limit);
+): Promise<IInsightDoc[]> =>
+  findCards({ ...publishedFilter(options), featured: true }, -1, 0, limit, options);
 
 export const listInsightsByAuthor = (
   authorId: Types.ObjectId,
   options: PreviewOptions = {},
   limit: number = CONTENT_LIMITS.personInsights
-): Promise<InsightDoc[]> =>
-  findCards({ ...publishedFilter(options), author: authorId }, -1, 0, limit);
+): Promise<IInsightDoc[]> =>
+  findCards({ ...publishedFilter(options), author: authorId }, -1, 0, limit, options);
 
 export const listInsightsByPracticeArea = (
   practiceAreaId: Types.ObjectId,
   options: PreviewOptions = {},
   limit: number = CONTENT_LIMITS.relatedInsights
-): Promise<InsightDoc[]> =>
-  findCards({ ...publishedFilter(options), practiceAreas: practiceAreaId }, -1, 0, limit);
-
-export const listInsightsByIds = (
-  ids: Types.ObjectId[],
-  options: PreviewOptions = {}
-): Promise<InsightDoc[]> =>
-  ids.length === 0
-    ? Promise.resolve([])
-    : findCards({ ...publishedFilter(options), _id: { $in: ids } }, -1, 0, ids.length);
+): Promise<IInsightDoc[]> =>
+  findCards({ ...publishedFilter(options), practiceAreas: practiceAreaId }, -1, 0, limit, options);

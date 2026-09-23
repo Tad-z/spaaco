@@ -1,6 +1,6 @@
-import { Page } from '../../models/index.js';
+import { Office, Page, PracticeArea, Recognition } from '../../models/index.js';
 import { NotFoundError } from '../../core/errors.js';
-import { publishedFilter } from '../../helpers/published-filter.helper.js';
+import { publishedFilter, publishedPopulate } from '../../helpers/published-filter.helper.js';
 import type { PreviewOptions } from '../../helpers/published-filter.helper.js';
 import type { PageKey } from '../../types/api.js';
 import { listFeaturedOnHome, listPracticeAreas } from '../practice-area.service.js';
@@ -8,7 +8,6 @@ import { listLeadership } from '../person.service.js';
 import { listFeaturedInsights, listLatestInsights } from '../insight.service.js';
 import { listOffices } from '../office.service.js';
 import { listJobs } from '../job.service.js';
-import { Office, PracticeArea, Recognition } from '../../models/index.js';
 import type {
   IInsightDoc,
   IJobDoc,
@@ -96,7 +95,10 @@ export async function getPageSources(
   let query = Page.findOne({ key });
 
   for (const path of POPULATE_PATHS) query = query.populate(path);
-  query = query.populate({ path: 'story.quotePerson', populate: { path: 'photo' } });
+  query = query.populate({
+    ...publishedPopulate('story.quotePerson', options),
+    populate: { path: 'photo' },
+  });
 
   const page = await query.lean<IPageDoc | null>();
   if (!page) throw new NotFoundError('Page');

@@ -2,6 +2,7 @@ import express from 'express';
 import type { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { config } from './config/env.js';
 import { UPLOAD_LIMITS } from './config/constants.js';
 import { API_PREFIX, apiRoutes } from './routes/index.js';
@@ -59,6 +60,8 @@ export function createApp(options: CreateAppOptions = {}): Express {
     })
   );
   app.use(express.json({ limit: UPLOAD_LIMITS.jsonBodyLimit }));
+  // Only the admin refresh token is a cookie; nothing else reads one.
+  app.use(cookieParser());
 
   if (options.rateLimit !== false) app.use(API_PREFIX, publicReadLimiter);
   app.use(API_PREFIX, cacheHeaders);

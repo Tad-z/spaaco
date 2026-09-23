@@ -2,7 +2,7 @@ import { PracticeArea } from '../models/index.js';
 import { NotFoundError } from '../core/errors.js';
 import { listInsightsByPracticeArea } from './insight.service.js';
 import type { IInsightDoc } from '../interfaces/populated.interface.js';
-import { publishedFilter } from '../helpers/published-filter.helper.js';
+import { publishedFilter, publishedPopulate } from '../helpers/published-filter.helper.js';
 import type { PreviewOptions } from '../helpers/published-filter.helper.js';
 import type {
   IPracticeAreaWithContacts,
@@ -34,7 +34,7 @@ export async function getPracticeAreaBySlug(
 ): Promise<{ area: IPracticeAreaWithContacts; related: IInsightDoc[] }> {
   const area = await PracticeArea.findOne({ slug, ...publishedFilter(options) })
     .populate('image')
-    .populate({ path: 'contacts', populate: { path: 'photo' } })
+    .populate({ ...publishedPopulate('contacts', options), populate: { path: 'photo' } })
     .lean<IPracticeAreaWithContacts | null>();
 
   if (!area) throw new NotFoundError('Practice area');
