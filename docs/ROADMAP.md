@@ -67,11 +67,11 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
   - **Accept:** the serializers compile against the generated types; unit tests in `tests/unit/serializers/` validate their output with ajv.
 - [x] **3.2 `/site`:** settings + nav + footer + FAQ section, cached.
   - **Accept:** a contract test passes, and a draft FAQ is excluded.
-- [ ] **3.3 Collection endpoints:** practice-areas, offices, faqs, jobs (list + detail).
+- [x] **3.3 Collection endpoints:** practice-areas, offices, faqs, jobs (list + detail).
   - **Accept:** contract tests pass; 404 on an unknown slug; drafts excluded; closed/expired jobs excluded.
-- [ ] **3.4 `/people`:** role filter, sorts, pagination, and the detail endpoint with related insights.
+- [x] **3.4 `/people`:** role filter, sorts, pagination, and the detail endpoint with related insights.
   - **Accept:** seniority order is correct; filter + pagination meta is correct; an invalid role returns 400.
-- [ ] **3.5 `/insights`:** category and practiceArea filters, sorts, pagination, and the detail endpoint. The author is either the firm or a person.
+- [x] **3.5 `/insights`:** category and practiceArea filters, sorts, pagination, and the detail endpoint. The author is either the firm or a person.
   - **Accept:** a firm-authored insight returns the firm author block; a video insight carries `cta.kind` for Watch Video.
 - [ ] **3.6 `/pages/:key`:** all 8 composers, computed stats, preview mode.
   - **Accept:** the seeded output of every page deep-equals its fixture (ignoring ids/timestamps); preview shows drafts only with a valid admin token.

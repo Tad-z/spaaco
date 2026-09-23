@@ -1,4 +1,10 @@
-import type { PracticeAreaCard, PracticeAreaRef } from '../types/api.js';
+import type {
+  InsightCard,
+  PersonSummary,
+  PracticeAreaCard,
+  PracticeAreaDetail,
+  PracticeAreaRef,
+} from '../types/api.js';
 import type { IPracticeArea } from '../interfaces/practice-area.interface.js';
 import type { IMedia } from '../interfaces/media.interface.js';
 import { toNullableImage } from './image.serializer.js';
@@ -42,5 +48,27 @@ export function toCard(area: PracticeAreaCardSource): PracticeAreaCard {
     ...toRef(area),
     summary: area.summary,
     image: toNullableImage(area.image),
+  };
+}
+
+/**
+ * The detail payload. Contacts and related insights are passed in already
+ * serialized, because fetching them is the service's job, not this one's.
+ */
+export function toDetail(
+  area: PracticeAreaDetailSource & { contacts?: unknown },
+  contacts: PersonSummary[],
+  relatedInsights: InsightCard[]
+): PracticeAreaDetail {
+  return {
+    ...toCard(area),
+    body: area.body ?? null,
+    keyServices: area.keyServices ?? [],
+    contacts,
+    relatedInsights,
+    seo: {
+      title: area.seo?.title ?? null,
+      description: area.seo?.description ?? null,
+    },
   };
 }

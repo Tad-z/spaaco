@@ -82,7 +82,10 @@ describe('person serializer', () => {
   });
 
   it('never returns the attorney email, which is not public', () => {
-    const person = makePerson({ email: 'private@spaajibade.com' });
+    // The serializer's input type has no `email` field at all, so a leak is
+    // unrepresentable. This guards the case where someone widens that type
+    // later and a document carrying an email flows straight through.
+    const person = { ...makePerson(), email: 'private@spaajibade.com' };
 
     expect(JSON.stringify(toSummary(person))).not.toContain('private@spaajibade.com');
     expect(JSON.stringify(personDetail(person))).not.toContain('private@spaajibade.com');

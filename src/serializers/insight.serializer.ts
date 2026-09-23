@@ -6,7 +6,7 @@ import { toNullableImage } from './image.serializer.js';
 import { toRef as practiceAreaRef } from './practice-area.serializer.js';
 import type { PracticeAreaRefSource } from './practice-area.serializer.js';
 import { toSummary as personSummary } from './person.serializer.js';
-import type { PopulatedPerson } from './person.serializer.js';
+import type { PersonSummarySource } from './person.serializer.js';
 
 /**
  * Insight cards.
@@ -16,12 +16,26 @@ import type { PopulatedPerson } from './person.serializer.js';
  * otherwise be re-implemented — and drift — in the UI.
  */
 
-export type PopulatedInsight = Omit<IInsight, 'coverImage' | 'practiceAreas' | 'author'> & {
+/** Structural minimum: exactly the fields a card renders. */
+export interface InsightCardSource {
   _id: { toString: () => string };
-  coverImage?: IMedia | null;
+  slug: string;
+  title: string;
+  excerpt?: string | null;
+  format: IInsight['format'];
+  categories: IInsight['categories'];
+  publishedAt?: Date | null;
+  featured: boolean;
   practiceAreas?: PracticeAreaRefSource[];
-  author?: PopulatedPerson | null;
-};
+  /** Null means the firm is the author, not that the field is unset. */
+  author?: PersonSummarySource | null;
+  coverImage?: IMedia | null;
+}
+
+export interface InsightDetailSource extends InsightCardSource {
+  body?: string | null;
+  videoUrl?: string | null;
+}
 
 /** The firm as author. The frontend supplies the logo mark; it is its asset. */
 export const FIRM_AUTHOR: InsightAuthor = {
@@ -31,7 +45,7 @@ export const FIRM_AUTHOR: InsightAuthor = {
 };
 
 /** A null author means the firm wrote it, not that the field is unset. */
-export function toAuthor(author: PopulatedPerson | null | undefined): InsightAuthor {
+export function toAuthor(author: PersonSummarySource | null | undefined): InsightAuthor {
   if (author === null || author === undefined || typeof author.firstName !== 'string') {
     return FIRM_AUTHOR;
   }
@@ -49,7 +63,7 @@ export function toCta(format: IInsight['format']): InsightCta {
  * The two labels a card shows: the first category, then the first practice
  * area. With no practice area, the second category is used instead.
  */
-export function toChips(insight: PopulatedInsight): string[] {
+export function toChips(insight: InsightCardSource): string[] {
   const [firstCategory, secondCategory] = insight.categories;
   if (firstCategory === undefined) return [];
 
@@ -65,7 +79,7 @@ export function toChips(insight: PopulatedInsight): string[] {
   return chips;
 }
 
-export function toCard(insight: PopulatedInsight): InsightCard {
+export function toCard(insight: InsightCardSource): InsightCard {
   return {
     id: insight._id.toString(),
     slug: insight.slug,
@@ -84,7 +98,7 @@ export function toCard(insight: PopulatedInsight): InsightCard {
   };
 }
 
-export function toDetail(insight: PopulatedInsight, related: InsightCard[] = []): InsightDetail {
+export function toDetail(insight: InsightDetailSource, related: InsightCard[] = []): InsightDetail {
   return {
     ...toCard(insight),
     body: insight.body ?? null,

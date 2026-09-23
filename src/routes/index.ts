@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { healthRoutes } from './public/health.routes.js';
 import { siteRoutes } from './public/site.routes.js';
+import { contentRoutes } from './public/content.routes.js';
+import { personRoutes } from './public/person.routes.js';
+import { insightRoutes } from './public/insight.routes.js';
 
 /**
  * The one place routers are mounted.
@@ -14,3 +17,6 @@ export const apiRoutes: Router = Router();
 
 apiRoutes.use(healthRoutes);
 apiRoutes.use(siteRoutes);
+apiRoutes.use(contentRoutes);
+apiRoutes.use(personRoutes);
+apiRoutes.use(insightRoutes);

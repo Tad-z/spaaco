@@ -4,8 +4,8 @@ import type { IPerson } from '../../src/interfaces/person.interface.js';
 import type { IInsight } from '../../src/interfaces/insight.interface.js';
 import type { IPracticeArea } from '../../src/interfaces/practice-area.interface.js';
 import type { IOffice } from '../../src/interfaces/office.interface.js';
-import type { PopulatedPerson } from '../../src/serializers/person.serializer.js';
-import type { PopulatedInsight } from '../../src/serializers/insight.serializer.js';
+import type { PersonDetailSource } from '../../src/serializers/person.serializer.js';
+import type { InsightDetailSource } from '../../src/serializers/insight.serializer.js';
 import type { PracticeAreaDetailSource } from '../../src/serializers/practice-area.serializer.js';
 import type { OfficeSource } from '../../src/serializers/office.serializer.js';
 
@@ -93,7 +93,7 @@ export function makeOffice(overrides: Partial<OfficeSource> = {}): OfficeSource 
   };
 }
 
-export function makePerson(overrides: Partial<PopulatedPerson> = {}): PopulatedPerson {
+export function makePerson(overrides: Partial<PersonDetailSource> = {}): PersonDetailSource {
   return {
     _id: id(),
     ...contentFields({ slug: 'babatunde-ajibade' }),
@@ -104,17 +104,15 @@ export function makePerson(overrides: Partial<PopulatedPerson> = {}): PopulatedP
     role: 'managing_partner',
     photo: null,
     linkedinUrl: null,
-    email: null,
     bio: null,
     quote: null,
     practiceAreas: [],
     office: null,
-    featuredInLeadership: true,
     ...overrides,
   };
 }
 
-export function makeInsight(overrides: Partial<PopulatedInsight> = {}): PopulatedInsight {
+export function makeInsight(overrides: Partial<InsightDetailSource> = {}): InsightDetailSource {
   return {
     _id: id(),
     ...contentFields({ slug: 'an-insight' }),

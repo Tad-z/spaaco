@@ -19,12 +19,29 @@ import type { OfficeRefSource } from './office.serializer.js';
  * to publish it (DECISIONS Q9), and until they do it must not leak.
  */
 
-export type PopulatedPerson = Omit<IPerson, 'photo' | 'practiceAreas' | 'office'> & {
+/**
+ * Structural minimums, not `Omit<IPerson, ...>`: a serializer should declare
+ * exactly what it reads, so any query that supplies those fields satisfies it
+ * regardless of how the rest of the document is shaped.
+ */
+export interface PersonSummarySource {
   _id: { toString: () => string };
+  slug: string;
+  honorific?: string | null;
+  firstName: string;
+  lastName: string;
+  postNominals?: string | null;
+  role: IPerson['role'];
   photo?: IMedia | null;
+  linkedinUrl?: string | null;
+}
+
+export interface PersonDetailSource extends PersonSummarySource {
+  bio?: string | null;
+  quote?: string | null;
   practiceAreas?: PracticeAreaRefSource[];
   office?: OfficeRefSource | null;
-};
+}
 
 /**
  * The designs show no honorific except "Dr.", so Mr./Mrs. are stored for the
@@ -38,7 +55,7 @@ export function toDisplayName(person: Pick<IPerson, 'honorific' | 'firstName' | 
 
 export const toRoleLabel = (role: IPerson['role']): string => PERSON_ROLES.labels[role];
 
-export function toSummary(person: PopulatedPerson): PersonSummary {
+export function toSummary(person: PersonSummarySource): PersonSummary {
   return {
     id: person._id.toString(),
     slug: person.slug,
@@ -50,7 +67,7 @@ export function toSummary(person: PopulatedPerson): PersonSummary {
   };
 }
 
-export function toDetail(person: PopulatedPerson, insights: InsightCard[] = []): PersonDetail {
+export function toDetail(person: PersonDetailSource, insights: InsightCard[] = []): PersonDetail {
   return {
     ...toSummary(person),
     firstName: person.firstName,
