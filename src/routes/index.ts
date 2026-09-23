@@ -4,6 +4,8 @@ import { siteRoutes } from './public/site.routes.js';
 import { contentRoutes } from './public/content.routes.js';
 import { personRoutes } from './public/person.routes.js';
 import { insightRoutes } from './public/insight.routes.js';
+import { pageRoutes } from './public/page.routes.js';
+import { searchRoutes } from './public/search.routes.js';
 
 /**
  * The one place routers are mounted.
@@ -20,3 +22,5 @@ apiRoutes.use(siteRoutes);
 apiRoutes.use(contentRoutes);
 apiRoutes.use(personRoutes);
 apiRoutes.use(insightRoutes);
+apiRoutes.use(pageRoutes);
+apiRoutes.use(searchRoutes);

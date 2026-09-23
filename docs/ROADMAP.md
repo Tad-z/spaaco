@@ -73,11 +73,11 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
   - **Accept:** seniority order is correct; filter + pagination meta is correct; an invalid role returns 400.
 - [x] **3.5 `/insights`:** category and practiceArea filters, sorts, pagination, and the detail endpoint. The author is either the firm or a person.
   - **Accept:** a firm-authored insight returns the firm author block; a video insight carries `cta.kind` for Watch Video.
-- [ ] **3.6 `/pages/:key`:** all 8 composers, computed stats, preview mode.
+- [x] **3.6 `/pages/:key`:** all 8 composers, computed stats, preview mode.
   - **Accept:** the seeded output of every page deep-equals its fixture (ignoring ids/timestamps); preview shows drafts only with a valid admin token.
-- [ ] **3.7 `/search`:** text indexes across 3 collections, 5 results per group, published only.
+- [x] **3.7 `/search`:** text indexes across 3 collections, 5 results per group, published only.
   - **Accept:** a query of fewer than 2 chars returns 400; results are ranked by text score.
-- [ ] **3.8 Caching:** `core/cache.ts` (LRU), `middlewares/cache-headers.middleware.ts` (Cache-Control + ETag), `constants/cache-tags.ts`, and `services/cache.service.ts` (invalidate + revalidate).
+- [x] **3.8 Caching:** `core/cache.ts` (LRU), `middlewares/cache-headers.middleware.ts` (Cache-Control + ETag), `constants/cache-tags.ts`, and `services/cache.service.ts` (invalidate + revalidate).
   - **Accept:** a second request hits the cache (asserted via a spy), and `If-None-Match` returns 304.
 
 ## Phase 4: Admin auth and RBAC

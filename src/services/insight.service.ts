@@ -37,7 +37,10 @@ function findCards(
     .populate('coverImage')
     .populate('practiceAreas')
     .populate({ path: 'author', populate: { path: 'photo' } })
-    .sort({ publishedAt: sort })
+    // Several insights share a publish month, so the sort needs a tiebreaker
+    // or the order varies between identical requests. `order` lets the firm
+    // decide; `_id` makes it total.
+    .sort({ publishedAt: sort, order: 1, _id: 1 })
     .skip(skip)
     .limit(limit)
     .lean<InsightDoc[]>();

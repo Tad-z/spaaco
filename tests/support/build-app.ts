@@ -13,6 +13,9 @@ import type { CreateAppOptions } from '../../src/app.js';
 export function buildTestApp(options: CreateAppOptions = {}): Express {
   return createApp({
     corsOrigins: ['http://localhost:3000', 'http://localhost:3001'],
+    // A test file makes far more requests in a second than a real visitor
+    // makes in a minute, so the limiter is off unless a test is about it.
+    rateLimit: false,
     ...options,
   });
 }

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { afterEach, beforeAll } from 'vitest';
 import { connectDatabase } from '../../src/core/db.js';
+import { clear as clearCache } from '../../src/core/cache.js';
 
 /**
  * Connects a test file to the shared in-memory MongoDB.
@@ -51,5 +52,8 @@ export function setupTestDb(): void {
 
   afterEach(async () => {
     await clearCollections();
+    // The LRU is module-level and outlives a test, so a cached page would
+    // otherwise be served to the next one and hide the change it just made.
+    clearCache();
   });
 }

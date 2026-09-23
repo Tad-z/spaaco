@@ -8,6 +8,8 @@ import { API_PREFIX, apiRoutes } from './routes/index.js';
 import { requestId } from './middlewares/request-id.middleware.js';
 import { notFound } from './middlewares/not-found.middleware.js';
 import { errorHandler } from './middlewares/error-handler.middleware.js';
+import { cacheHeaders } from './middlewares/cache-headers.middleware.js';
+import { publicReadLimiter } from './middlewares/rate-limit.middleware.js';
 
 /**
  * Builds the Express app. It never listens — `server.ts` does that — so tests
@@ -20,6 +22,11 @@ export interface CreateAppOptions {
    * it rather than reaching into config.
    */
   readonly corsOrigins?: readonly string[];
+  /**
+   * Rate limiting, on by default. Tests turn it off so a file of requests does
+   * not trip a limit meant for a whole minute of real traffic.
+   */
+  readonly rateLimit?: boolean;
 }
 
 export function createApp(options: CreateAppOptions = {}): Express {
@@ -53,6 +60,8 @@ export function createApp(options: CreateAppOptions = {}): Express {
   );
   app.use(express.json({ limit: UPLOAD_LIMITS.jsonBodyLimit }));
 
+  if (options.rateLimit !== false) app.use(API_PREFIX, publicReadLimiter);
+  app.use(API_PREFIX, cacheHeaders);
   app.use(API_PREFIX, apiRoutes);
 
   app.use(notFound);

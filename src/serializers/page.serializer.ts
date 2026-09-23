@@ -1,0 +1,102 @@
+import type { FilterOption, Hero, IconItem, Link, SectionHeader, Seo, Stat } from '../types/api.js';
+import type { IIconItem, ILink } from '../interfaces/common.interface.js';
+import type { IMedia } from '../interfaces/media.interface.js';
+import { INSIGHT_CATEGORIES, PERSON_ROLES } from '../constants/enums.js';
+import { resolveStatValue } from '../helpers/computed-stats.helper.js';
+import type { StatCounts } from '../helpers/computed-stats.helper.js';
+import { toNullableImage } from './image.serializer.js';
+
+/**
+ * The building blocks every page composer shares.
+ *
+ * Nullable fields are emitted as explicit `null` rather than omitted, because
+ * the contract marks them required-and-nullable: a missing key and a null
+ * value are different things to a typed client.
+ */
+
+export const toLink = (link: ILink | null | undefined): Link | null =>
+  link ? { label: link.label, href: link.href, kind: link.kind } : null;
+
+export interface HeroSource {
+  title: string;
+  subtitle?: string | null;
+  image?: IMedia | null;
+  primaryCta?: ILink | null;
+  secondaryCta?: ILink | null;
+}
+
+export const toHero = (hero: HeroSource | null | undefined): Hero | null =>
+  hero
+    ? {
+        title: hero.title,
+        subtitle: hero.subtitle ?? null,
+        image: toNullableImage(hero.image),
+        primaryCta: toLink(hero.primaryCta),
+        secondaryCta: toLink(hero.secondaryCta),
+      }
+    : null;
+
+export interface SeoSource {
+  title?: string | null;
+  description?: string | null;
+  ogImage?: IMedia | null;
+}
+
+export const toSeo = (seo: SeoSource | null | undefined): Seo => ({
+  title: seo?.title ?? null,
+  description: seo?.description ?? null,
+  ogImage: toNullableImage(seo?.ogImage),
+});
+
+export interface SectionHeaderSource {
+  eyebrow?: string | null;
+  title: string;
+  cta?: ILink | null;
+}
+
+export const toSectionHeader = (section: SectionHeaderSource): SectionHeader => ({
+  eyebrow: section.eyebrow ?? null,
+  title: section.title,
+  cta: toLink(section.cta),
+});
+
+export const toIconItem = (item: IIconItem): IconItem => ({
+  icon: item.icon,
+  title: item.title,
+  text: item.text ?? null,
+});
+
+export interface StatSource {
+  value: string;
+  caption: string;
+  label: string;
+  source: string;
+}
+
+/** `source` is admin-only; the public payload carries the resolved value. */
+export const toStat = (stat: StatSource, counts: StatCounts): Stat => ({
+  value: resolveStatValue(stat.source, stat.value, counts),
+  caption: stat.caption,
+  label: stat.label,
+});
+
+/**
+ * Filter tabs. An empty `value` means "no filter", which is how the designs'
+ * "Our Attorneys" and "All insights & news" tabs behave.
+ */
+export const ROLE_FILTERS: readonly FilterOption[] = [
+  { value: '', label: 'Our Attorneys' },
+  { value: 'partner', label: 'Partners' },
+  { value: 'associate_partner', label: PERSON_ROLES.labels.associate_partner + 's' },
+  { value: 'senior_associate', label: PERSON_ROLES.labels.senior_associate + 's' },
+  { value: 'associate', label: PERSON_ROLES.labels.associate + 's' },
+  { value: 'nysc_associate', label: PERSON_ROLES.labels.nysc_associate + 's' },
+];
+
+export const CATEGORY_FILTERS: readonly FilterOption[] = [
+  { value: '', label: 'All insights & news' },
+  ...INSIGHT_CATEGORIES.values.map((value) => ({
+    value,
+    label: INSIGHT_CATEGORIES.labels[value],
+  })),
+];

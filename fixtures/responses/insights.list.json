@@ -1,78 +1,6 @@
 {
   "data": [
     {
-      "id": "665f0000000000000000000a",
-      "slug": "the-rural-electrification-agency-renewable-electricity-and-the-mini-grid-regulation-2026-updates-and-prospects-for-investors-2",
-      "title": "The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors.",
-      "excerpt": null,
-      "format": "article",
-      "categories": [
-        "articles"
-      ],
-      "categoryLabels": [
-        "Articles"
-      ],
-      "practiceAreas": [
-        {
-          "id": "665f00000000000000000002",
-          "slug": "energy-natural-resources",
-          "title": "Energy & Natural Resources",
-          "shortLabel": "Energy"
-        }
-      ],
-      "chips": [
-        "Articles",
-        "Energy & Natural Resources"
-      ],
-      "author": {
-        "type": "person",
-        "person": {
-          "id": "665f00000000000000000005",
-          "slug": "peter-olalere",
-          "displayName": "Peter Olalere",
-          "role": "associate_partner",
-          "roleLabel": "Associate Partner",
-          "photo": {
-            "url": "https://placehold.co/800x1000?text=Peter%20Olalere",
-            "alt": "Portrait of Peter Olalere, Associate Partner",
-            "width": 800,
-            "height": 1000,
-            "sizes": {
-              "sm": "https://placehold.co/480x600?text=Peter%20Olalere",
-              "md": "https://placehold.co/960x1200?text=Peter%20Olalere",
-              "lg": "https://placehold.co/1440x1800?text=Peter%20Olalere"
-            },
-            "focalPoint": {
-              "x": 0.5,
-              "y": 0.5
-            }
-          },
-          "linkedinUrl": null
-        }
-      },
-      "coverImage": {
-        "url": "https://placehold.co/1200x675?text=Article",
-        "alt": "Cover image for the insight titled The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors.",
-        "width": 1200,
-        "height": 675,
-        "sizes": {
-          "sm": "https://placehold.co/480x270?text=Article",
-          "md": "https://placehold.co/960x540?text=Article",
-          "lg": "https://placehold.co/1440x810?text=Article"
-        },
-        "focalPoint": {
-          "x": 0.5,
-          "y": 0.5
-        }
-      },
-      "publishedAt": "2026-07-01T00:00:00.000Z",
-      "featured": false,
-      "cta": {
-        "label": "Read More",
-        "kind": "read_more"
-      }
-    },
-    {
       "id": "665f00000000000000000004",
       "slug": "the-rural-electrification-agency-renewable-electricity-and-the-mini-grid-regulation-2026-updates-and-prospects-for-investors",
       "title": "The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors.",
@@ -123,14 +51,14 @@
         }
       },
       "coverImage": {
-        "url": "https://placehold.co/1200x675?text=Article",
+        "url": "https://placehold.co/1200x675?text=Mini-Grid%20Regulation",
         "alt": "Cover image for the insight titled The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors.",
         "width": 1200,
         "height": 675,
         "sizes": {
-          "sm": "https://placehold.co/480x270?text=Article",
-          "md": "https://placehold.co/960x540?text=Article",
-          "lg": "https://placehold.co/1440x810?text=Article"
+          "sm": "https://placehold.co/480x270?text=Mini-Grid%20Regulation",
+          "md": "https://placehold.co/960x540?text=Mini-Grid%20Regulation",
+          "lg": "https://placehold.co/1440x810?text=Mini-Grid%20Regulation"
         },
         "focalPoint": {
           "x": 0.5,
@@ -145,8 +73,80 @@
       }
     },
     {
-      "id": "665f0000000000000000000d",
-      "slug": "repositioning-and-promoting-energy-investments-between-south-africa-and-nigeria-a-perspective-on-trade-secrets-3",
+      "id": "665f0000000000000000000a",
+      "slug": "the-rural-electrification-agency-renewable-electricity-and-the-mini-grid-regulation-2026-updates-and-prospects-for-investors-2",
+      "title": "The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors.",
+      "excerpt": null,
+      "format": "article",
+      "categories": [
+        "articles"
+      ],
+      "categoryLabels": [
+        "Articles"
+      ],
+      "practiceAreas": [
+        {
+          "id": "665f00000000000000000002",
+          "slug": "energy-natural-resources",
+          "title": "Energy & Natural Resources",
+          "shortLabel": "Energy"
+        }
+      ],
+      "chips": [
+        "Articles",
+        "Energy & Natural Resources"
+      ],
+      "author": {
+        "type": "person",
+        "person": {
+          "id": "665f00000000000000000005",
+          "slug": "peter-olalere",
+          "displayName": "Peter Olalere",
+          "role": "associate_partner",
+          "roleLabel": "Associate Partner",
+          "photo": {
+            "url": "https://placehold.co/800x1000?text=Peter%20Olalere",
+            "alt": "Portrait of Peter Olalere, Associate Partner",
+            "width": 800,
+            "height": 1000,
+            "sizes": {
+              "sm": "https://placehold.co/480x600?text=Peter%20Olalere",
+              "md": "https://placehold.co/960x1200?text=Peter%20Olalere",
+              "lg": "https://placehold.co/1440x1800?text=Peter%20Olalere"
+            },
+            "focalPoint": {
+              "x": 0.5,
+              "y": 0.5
+            }
+          },
+          "linkedinUrl": null
+        }
+      },
+      "coverImage": {
+        "url": "https://placehold.co/1200x675?text=Mini-Grid%20Regulation",
+        "alt": "Cover image for the insight titled The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors.",
+        "width": 1200,
+        "height": 675,
+        "sizes": {
+          "sm": "https://placehold.co/480x270?text=Mini-Grid%20Regulation",
+          "md": "https://placehold.co/960x540?text=Mini-Grid%20Regulation",
+          "lg": "https://placehold.co/1440x810?text=Mini-Grid%20Regulation"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "publishedAt": "2026-07-01T00:00:00.000Z",
+      "featured": false,
+      "cta": {
+        "label": "Read More",
+        "kind": "read_more"
+      }
+    },
+    {
+      "id": "665f00000000000000000001",
+      "slug": "repositioning-and-promoting-energy-investments-between-south-africa-and-nigeria-a-perspective-on-trade-secrets",
       "title": "Repositioning and Promoting Energy Investments Between South Africa and Nigeria: A Perspective on Trade Secrets.",
       "excerpt": "The focus of this brief is specifically on a bilateral energy investment relationship between Nigeria and South Africa: two nations that represent, by any objective commercial assessment, the most logical and most strategically significant energy partnership on the African continent…",
       "format": "article",
@@ -195,14 +195,14 @@
         }
       },
       "coverImage": {
-        "url": "https://placehold.co/1200x675?text=Article",
+        "url": "https://placehold.co/1200x675?text=Trade%20Secrets",
         "alt": "Cover image for the insight titled Repositioning and Promoting Energy Investments Between South Africa and Nigeria: A Perspective on Trade Secrets.",
         "width": 1200,
         "height": 675,
         "sizes": {
-          "sm": "https://placehold.co/480x270?text=Article",
-          "md": "https://placehold.co/960x540?text=Article",
-          "lg": "https://placehold.co/1440x810?text=Article"
+          "sm": "https://placehold.co/480x270?text=Trade%20Secrets",
+          "md": "https://placehold.co/960x540?text=Trade%20Secrets",
+          "lg": "https://placehold.co/1440x810?text=Trade%20Secrets"
         },
         "focalPoint": {
           "x": 0.5,
@@ -210,15 +210,15 @@
         }
       },
       "publishedAt": "2026-06-01T00:00:00.000Z",
-      "featured": false,
+      "featured": true,
       "cta": {
         "label": "Read More",
         "kind": "read_more"
       }
     },
     {
-      "id": "665f0000000000000000000b",
-      "slug": "inside-the-2025-annual-business-luncheon-what-industry-leaders-are-saying-about-nigerias-economy-2",
+      "id": "665f00000000000000000006",
+      "slug": "inside-the-2025-annual-business-luncheon-what-industry-leaders-are-saying-about-nigerias-economy",
       "title": "Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy",
       "excerpt": null,
       "format": "video",
@@ -241,14 +241,14 @@
         "label": "Law Firm"
       },
       "coverImage": {
-        "url": "https://placehold.co/1200x675?text=Webinar%20Resources",
+        "url": "https://placehold.co/1200x675?text=Business%20Luncheon",
         "alt": "Cover image for the insight titled Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy",
         "width": 1200,
         "height": 675,
         "sizes": {
-          "sm": "https://placehold.co/480x270?text=Webinar%20Resources",
-          "md": "https://placehold.co/960x540?text=Webinar%20Resources",
-          "lg": "https://placehold.co/1440x810?text=Webinar%20Resources"
+          "sm": "https://placehold.co/480x270?text=Business%20Luncheon",
+          "md": "https://placehold.co/960x540?text=Business%20Luncheon",
+          "lg": "https://placehold.co/1440x810?text=Business%20Luncheon"
         },
         "focalPoint": {
           "x": 0.5,
@@ -256,7 +256,7 @@
         }
       },
       "publishedAt": "2026-06-01T00:00:00.000Z",
-      "featured": false,
+      "featured": true,
       "cta": {
         "label": "Watch Video",
         "kind": "watch_video"
@@ -313,14 +313,14 @@
         }
       },
       "coverImage": {
-        "url": "https://placehold.co/1200x675?text=Article",
+        "url": "https://placehold.co/1200x675?text=Trade%20Secrets",
         "alt": "Cover image for the insight titled Repositioning and Promoting Energy Investments Between South Africa and Nigeria: A Perspective on Trade Secrets.",
         "width": 1200,
         "height": 675,
         "sizes": {
-          "sm": "https://placehold.co/480x270?text=Article",
-          "md": "https://placehold.co/960x540?text=Article",
-          "lg": "https://placehold.co/1440x810?text=Article"
+          "sm": "https://placehold.co/480x270?text=Trade%20Secrets",
+          "md": "https://placehold.co/960x540?text=Trade%20Secrets",
+          "lg": "https://placehold.co/1440x810?text=Trade%20Secrets"
         },
         "focalPoint": {
           "x": 0.5,
@@ -335,8 +335,8 @@
       }
     },
     {
-      "id": "665f00000000000000000006",
-      "slug": "inside-the-2025-annual-business-luncheon-what-industry-leaders-are-saying-about-nigerias-economy",
+      "id": "665f0000000000000000000b",
+      "slug": "inside-the-2025-annual-business-luncheon-what-industry-leaders-are-saying-about-nigerias-economy-2",
       "title": "Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy",
       "excerpt": null,
       "format": "video",
@@ -359,14 +359,14 @@
         "label": "Law Firm"
       },
       "coverImage": {
-        "url": "https://placehold.co/1200x675?text=Webinar%20Resources",
+        "url": "https://placehold.co/1200x675?text=Business%20Luncheon",
         "alt": "Cover image for the insight titled Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy",
         "width": 1200,
         "height": 675,
         "sizes": {
-          "sm": "https://placehold.co/480x270?text=Webinar%20Resources",
-          "md": "https://placehold.co/960x540?text=Webinar%20Resources",
-          "lg": "https://placehold.co/1440x810?text=Webinar%20Resources"
+          "sm": "https://placehold.co/480x270?text=Business%20Luncheon",
+          "md": "https://placehold.co/960x540?text=Business%20Luncheon",
+          "lg": "https://placehold.co/1440x810?text=Business%20Luncheon"
         },
         "focalPoint": {
           "x": 0.5,
@@ -374,15 +374,15 @@
         }
       },
       "publishedAt": "2026-06-01T00:00:00.000Z",
-      "featured": true,
+      "featured": false,
       "cta": {
         "label": "Watch Video",
         "kind": "watch_video"
       }
     },
     {
-      "id": "665f00000000000000000001",
-      "slug": "repositioning-and-promoting-energy-investments-between-south-africa-and-nigeria-a-perspective-on-trade-secrets",
+      "id": "665f0000000000000000000d",
+      "slug": "repositioning-and-promoting-energy-investments-between-south-africa-and-nigeria-a-perspective-on-trade-secrets-3",
       "title": "Repositioning and Promoting Energy Investments Between South Africa and Nigeria: A Perspective on Trade Secrets.",
       "excerpt": "The focus of this brief is specifically on a bilateral energy investment relationship between Nigeria and South Africa: two nations that represent, by any objective commercial assessment, the most logical and most strategically significant energy partnership on the African continent…",
       "format": "article",
@@ -431,14 +431,14 @@
         }
       },
       "coverImage": {
-        "url": "https://placehold.co/1200x675?text=Article",
+        "url": "https://placehold.co/1200x675?text=Trade%20Secrets",
         "alt": "Cover image for the insight titled Repositioning and Promoting Energy Investments Between South Africa and Nigeria: A Perspective on Trade Secrets.",
         "width": 1200,
         "height": 675,
         "sizes": {
-          "sm": "https://placehold.co/480x270?text=Article",
-          "md": "https://placehold.co/960x540?text=Article",
-          "lg": "https://placehold.co/1440x810?text=Article"
+          "sm": "https://placehold.co/480x270?text=Trade%20Secrets",
+          "md": "https://placehold.co/960x540?text=Trade%20Secrets",
+          "lg": "https://placehold.co/1440x810?text=Trade%20Secrets"
         },
         "focalPoint": {
           "x": 0.5,
@@ -446,57 +446,6 @@
         }
       },
       "publishedAt": "2026-06-01T00:00:00.000Z",
-      "featured": true,
-      "cta": {
-        "label": "Read More",
-        "kind": "read_more"
-      }
-    },
-    {
-      "id": "665f0000000000000000000c",
-      "slug": "regulatory-update-on-the-2026-supreme-court-practice-directions-2",
-      "title": "Regulatory Update On The 2026 Supreme Court Practice Directions",
-      "excerpt": null,
-      "format": "article",
-      "categories": [
-        "regulatory_updates"
-      ],
-      "categoryLabels": [
-        "Regulatory Updates"
-      ],
-      "practiceAreas": [
-        {
-          "id": "665f00000000000000000008",
-          "slug": "dispute-resolution-arbitration",
-          "title": "Dispute Resolution & Arbitration",
-          "shortLabel": "Dispute Resolution"
-        }
-      ],
-      "chips": [
-        "Regulatory Updates",
-        "Dispute Resolution & Arbitration"
-      ],
-      "author": {
-        "type": "firm",
-        "name": "SPA AJIBADE & Co.",
-        "label": "Law Firm"
-      },
-      "coverImage": {
-        "url": "https://placehold.co/1200x675?text=Regulatory%20Updates",
-        "alt": "Cover image for the insight titled Regulatory Update On The 2026 Supreme Court Practice Directions",
-        "width": 1200,
-        "height": 675,
-        "sizes": {
-          "sm": "https://placehold.co/480x270?text=Regulatory%20Updates",
-          "md": "https://placehold.co/960x540?text=Regulatory%20Updates",
-          "lg": "https://placehold.co/1440x810?text=Regulatory%20Updates"
-        },
-        "focalPoint": {
-          "x": 0.5,
-          "y": 0.5
-        }
-      },
-      "publishedAt": "2026-05-01T00:00:00.000Z",
       "featured": false,
       "cta": {
         "label": "Read More",
@@ -533,14 +482,65 @@
         "label": "Law Firm"
       },
       "coverImage": {
-        "url": "https://placehold.co/1200x675?text=Regulatory%20Updates",
+        "url": "https://placehold.co/1200x675?text=Practice%20Directions",
         "alt": "Cover image for the insight titled Regulatory Update On The 2026 Supreme Court Practice Directions",
         "width": 1200,
         "height": 675,
         "sizes": {
-          "sm": "https://placehold.co/480x270?text=Regulatory%20Updates",
-          "md": "https://placehold.co/960x540?text=Regulatory%20Updates",
-          "lg": "https://placehold.co/1440x810?text=Regulatory%20Updates"
+          "sm": "https://placehold.co/480x270?text=Practice%20Directions",
+          "md": "https://placehold.co/960x540?text=Practice%20Directions",
+          "lg": "https://placehold.co/1440x810?text=Practice%20Directions"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "publishedAt": "2026-05-01T00:00:00.000Z",
+      "featured": false,
+      "cta": {
+        "label": "Read More",
+        "kind": "read_more"
+      }
+    },
+    {
+      "id": "665f0000000000000000000c",
+      "slug": "regulatory-update-on-the-2026-supreme-court-practice-directions-2",
+      "title": "Regulatory Update On The 2026 Supreme Court Practice Directions",
+      "excerpt": null,
+      "format": "article",
+      "categories": [
+        "regulatory_updates"
+      ],
+      "categoryLabels": [
+        "Regulatory Updates"
+      ],
+      "practiceAreas": [
+        {
+          "id": "665f00000000000000000008",
+          "slug": "dispute-resolution-arbitration",
+          "title": "Dispute Resolution & Arbitration",
+          "shortLabel": "Dispute Resolution"
+        }
+      ],
+      "chips": [
+        "Regulatory Updates",
+        "Dispute Resolution & Arbitration"
+      ],
+      "author": {
+        "type": "firm",
+        "name": "SPA AJIBADE & Co.",
+        "label": "Law Firm"
+      },
+      "coverImage": {
+        "url": "https://placehold.co/1200x675?text=Practice%20Directions",
+        "alt": "Cover image for the insight titled Regulatory Update On The 2026 Supreme Court Practice Directions",
+        "width": 1200,
+        "height": 675,
+        "sizes": {
+          "sm": "https://placehold.co/480x270?text=Practice%20Directions",
+          "md": "https://placehold.co/960x540?text=Practice%20Directions",
+          "lg": "https://placehold.co/1440x810?text=Practice%20Directions"
         },
         "focalPoint": {
           "x": 0.5,
