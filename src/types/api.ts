@@ -113,3 +113,16 @@ export type SubmissionReceipt = Schemas['SubmissionReceipt'];
 export type EnquiryRequest = Schemas['EnquiryRequest'];
 export type MessageRequest = Schemas['MessageRequest'];
 export type ApplicationRequest = Schemas['ApplicationRequest'];
+
+// --- admin auth and users (Phase 4) ---
+export type UserRole = Schemas['UserRole'];
+export type AdminUser = Schemas['AdminUser'];
+export type LoginRequest = Schemas['LoginRequest'];
+export type LoginResult = Schemas['LoginResult'];
+export type TotpSetup = Schemas['TotpSetup'];
+export type TotpEnableRequest = Schemas['TotpEnableRequest'];
+export type PasswordChangeRequest = Schemas['PasswordChangeRequest'];
+export type CreateUserRequest = Schemas['CreateUserRequest'];
+export type UpdateUserRequest = Schemas['UpdateUserRequest'];
+export type AuditActor = Schemas['AuditActor'];
+export type AuditLogEntry = Schemas['AuditLogEntry'];

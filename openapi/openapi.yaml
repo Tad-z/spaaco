@@ -56,6 +56,10 @@ tags:
     description: Header search across the main collections.
   - name: Forms
     description: Public form submissions. All are rate limited and captcha protected.
+  - name: Admin auth
+    description: Sign-in, token rotation and two-factor enrolment for the admin dashboard.
+  - name: Admin users
+    description: Managing admin accounts and reading the audit log. Administrators only.
 
 paths:
   /api/v1/health:
@@ -750,6 +754,462 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/v1/admin/auth/login:
+    post:
+      tags: [Admin auth]
+      operationId: adminLogin
+      summary: Sign in
+      description: |
+        Returns a short-lived access token in the body and sets a rotating
+        refresh token as an httpOnly cookie.
+
+        Accounts with 2FA enabled must send `totp`; without it the response is a
+        401 whose `details` carry `TOTP_REQUIRED`, which is the signal to prompt
+        for a code rather than to treat the password as wrong.
+
+        Rate limited to 5 attempts per 15 minutes per IP and email, and the
+        account locks after 10 consecutive failures.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: editor@spaajibade.com
+              password: a-correct-horse-battery-staple
+              totp: '123456'
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LoginResult'
+              example:
+                data:
+                  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  expiresIn: 900
+                  user:
+                    id: 665f1a2b3c4d5e6f70819293
+                    name: Ada Nwosu
+                    email: editor@spaajibade.com
+                    roles: [editor]
+                    totpEnabled: true
+                    isActive: true
+                    lastLoginAt: '2026-09-23T09:12:00.000Z'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/auth/refresh:
+    post:
+      tags: [Admin auth]
+      operationId: adminRefresh
+      summary: Exchange the refresh cookie for a new access token
+      description: |
+        Rotates the refresh token: the presented one is revoked and a new cookie
+        is issued.
+
+        Presenting an already-revoked token means it has been replayed, so the
+        entire token chain for that session is revoked and the response is 401.
+        Signing in again is the only way back.
+      responses:
+        '200':
+          description: A new access token.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LoginResult'
+              example:
+                data:
+                  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  expiresIn: 900
+                  user:
+                    id: 665f1a2b3c4d5e6f70819293
+                    name: Ada Nwosu
+                    email: editor@spaajibade.com
+                    roles: [editor]
+                    totpEnabled: true
+                    isActive: true
+                    lastLoginAt: '2026-09-23T09:12:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/auth/logout:
+    post:
+      tags: [Admin auth]
+      operationId: adminLogout
+      summary: Sign out
+      description: Revokes the refresh token and clears the cookie. Always succeeds.
+      responses:
+        '204':
+          description: Signed out.
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/auth/me:
+    get:
+      tags: [Admin auth]
+      operationId: adminMe
+      summary: The signed-in user
+      description: Who the access token belongs to, and what they may do.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The current user.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminUser'
+              example:
+                data:
+                  id: 665f1a2b3c4d5e6f70819293
+                  name: Ada Nwosu
+                  email: editor@spaajibade.com
+                  roles: [editor]
+                  totpEnabled: true
+                  isActive: true
+                  lastLoginAt: '2026-09-23T09:12:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/auth/2fa/setup:
+    post:
+      tags: [Admin auth]
+      operationId: adminTotpSetup
+      summary: Begin two-factor setup
+      description: |
+        Generates a TOTP secret and returns it with an `otpauth://` URI for the
+        authenticator app. The secret is stored encrypted and is not active
+        until confirmed by `2fa/enable`, so an abandoned setup cannot lock
+        anyone out.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A secret to enrol.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TotpSetup'
+              example:
+                data:
+                  secret: JBSWY3DPEHPK3PXP
+                  otpauthUrl: otpauth://totp/SPA%20Ajibade%20&%20Co.:editor@spaajibade.com?secret=JBSWY3DPEHPK3PXP&issuer=SPA%20Ajibade%20%26%20Co.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/auth/2fa/enable:
+    post:
+      tags: [Admin auth]
+      operationId: adminTotpEnable
+      summary: Confirm two-factor setup
+      description: Activates the pending secret once a valid code proves the app is enrolled.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TotpEnableRequest'
+            example:
+              code: '123456'
+      responses:
+        '204':
+          description: Two-factor authentication is now required for this account.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/auth/password:
+    post:
+      tags: [Admin auth]
+      operationId: adminChangePassword
+      summary: Change your own password
+      description: |
+        Requires the current password. Every refresh token for the account is
+        revoked, so a session opened with the old password cannot continue.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+            example:
+              currentPassword: a-correct-horse-battery-staple
+              newPassword: an-even-longer-passphrase-than-before
+      responses:
+        '204':
+          description: Password changed and all sessions revoked.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/users:
+    get:
+      tags: [Admin users]
+      operationId: listAdminUsers
+      summary: List admin users
+      description: Administrators only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of users.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminUser'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              example:
+                data:
+                  - id: 665f1a2b3c4d5e6f70819293
+                    name: Ada Nwosu
+                    email: editor@spaajibade.com
+                    roles: [editor]
+                    totpEnabled: true
+                    isActive: true
+                    lastLoginAt: '2026-09-23T09:12:00.000Z'
+                meta: { page: 1, pageSize: 9, total: 1, totalPages: 1 }
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Admin users]
+      operationId: createAdminUser
+      summary: Create an admin user
+      description: Administrators only. The new user enrols their own authenticator on first sign-in.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+            example:
+              name: Ada Nwosu
+              email: editor@spaajibade.com
+              password: a-correct-horse-battery-staple
+              roles: [editor]
+      responses:
+        '201':
+          description: The created user.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminUser'
+              example:
+                data:
+                  id: 665f1a2b3c4d5e6f70819293
+                  name: Ada Nwosu
+                  email: editor@spaajibade.com
+                  roles: [editor]
+                  totpEnabled: false
+                  isActive: true
+                  lastLoginAt: null
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/users/{id}:
+    patch:
+      tags: [Admin users]
+      operationId: updateAdminUser
+      summary: Update an admin user
+      description: |
+        Administrators only. Used to change roles or deactivate an account.
+        Deactivating revokes every refresh token the user holds.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+            example:
+              roles: [editor, hr]
+              isActive: false
+      responses:
+        '200':
+          description: The updated user.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminUser'
+              example:
+                data:
+                  id: 665f1a2b3c4d5e6f70819293
+                  name: Ada Nwosu
+                  email: editor@spaajibade.com
+                  roles: [editor, hr]
+                  totpEnabled: true
+                  isActive: false
+                  lastLoginAt: '2026-09-23T09:12:00.000Z'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/audit-logs:
+    get:
+      tags: [Admin users]
+      operationId: listAuditLogs
+      summary: Read the audit log
+      description: |
+        Administrators only. Records privileged actions: publishing, deletes,
+        media replacement, and every view of a submission or a CV.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: action
+          in: query
+          required: false
+          description: Filter to one action, such as `application.cv.view`.
+          schema:
+            type: string
+            maxLength: 80
+        - name: actor
+          in: query
+          required: false
+          description: Filter to one user.
+          schema:
+            $ref: '#/components/schemas/ObjectId'
+      responses:
+        '200':
+          description: A page of audit entries, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLogEntry'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              example:
+                data:
+                  - id: 665f1a2b3c4d5e6f70819293
+                    actor:
+                      id: 665f1a2b3c4d5e6f70819294
+                      name: Ada Nwosu
+                      email: editor@spaajibade.com
+                    action: insight.publish
+                    entity: Insight
+                    entityId: 665f1a2b3c4d5e6f70819295
+                    meta: { slug: regulatory-update }
+                    at: '2026-09-23T09:12:00.000Z'
+                meta: { page: 1, pageSize: 9, total: 1, totalPages: 1 }
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+
 components:
   securitySchemes:
     bearerAuth:
@@ -926,6 +1386,38 @@ components:
             error:
               code: FILE_REJECTED
               message: The uploaded file could not be accepted.
+    Unauthenticated:
+      description: |
+        No valid credentials. On login, `details` may carry `TOTP_REQUIRED`,
+        which means the password was right and a code is needed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: UNAUTHENTICATED
+              message: Invalid email or password
+    Forbidden:
+      description: Authenticated, but not permitted to act in this area.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: FORBIDDEN
+              message: You do not have access to this resource
+    Conflict:
+      description: The request conflicts with the current state of the resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: CONFLICT
+              message: An account with that email already exists
     RateLimited:
       description: Too many requests from this IP.
       content:
@@ -2474,3 +2966,192 @@ components:
           type: string
           maxLength: 200
           description: Honeypot; leave empty.
+
+    UserRole:
+      type: string
+      enum: [admin, editor, hr, business_dev]
+      description: |
+        Which areas a user may work in. See the role matrix in docs/API.md:
+        `admin` everything, `editor` content, `hr` jobs and applications,
+        `business_dev` enquiries and messages.
+
+    AdminUser:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, roles, totpEnabled, isActive, lastLoginAt]
+      description: An admin account. Password hashes and TOTP secrets are never returned.
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/UserRole'
+        totpEnabled:
+          type: boolean
+          description: False until the user confirms their authenticator.
+        isActive:
+          type: boolean
+        lastLoginAt:
+          type: [string, 'null']
+          format: date-time
+
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 12
+          maxLength: 200
+        totp:
+          type: string
+          pattern: '^[0-9]{6}$'
+          description: Required once the account has two-factor enabled.
+
+    LoginResult:
+      type: object
+      additionalProperties: false
+      required: [accessToken, expiresIn, user]
+      description: |
+        The refresh token is not in this body: it is set as an httpOnly,
+        SameSite=Strict cookie scoped to the auth path, so script on the admin
+        dashboard cannot read it.
+      properties:
+        accessToken:
+          type: string
+          description: A short-lived JWT. Keep it in memory, never in storage.
+        expiresIn:
+          type: integer
+          description: Lifetime of the access token, in seconds.
+        user:
+          $ref: '#/components/schemas/AdminUser'
+
+    TotpSetup:
+      type: object
+      additionalProperties: false
+      required: [secret, otpauthUrl]
+      properties:
+        secret:
+          type: string
+          description: Base32 secret, for manual entry.
+        otpauthUrl:
+          type: string
+          description: Render as a QR code for the authenticator app.
+
+    TotpEnableRequest:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code:
+          type: string
+          pattern: '^[0-9]{6}$'
+
+    PasswordChangeRequest:
+      type: object
+      additionalProperties: false
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          maxLength: 200
+        newPassword:
+          type: string
+          minLength: 12
+          maxLength: 200
+
+    CreateUserRequest:
+      type: object
+      additionalProperties: false
+      required: [name, email, password, roles]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 12
+          maxLength: 200
+        roles:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/UserRole'
+
+    UpdateUserRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: At least one field. Email and password are changed by the user themselves.
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        roles:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/UserRole'
+        isActive:
+          type: boolean
+
+    AuditActor:
+      type: object
+      additionalProperties: false
+      required: [id, name, email]
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+
+    AuditLogEntry:
+      type: object
+      additionalProperties: false
+      required: [id, actor, action, entity, entityId, meta, at]
+      description: |
+        `meta` never carries personal data: a submission entry records the
+        reference, not the submitter (ADR-010 and the NDPA rules).
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        actor:
+          oneOf:
+            - $ref: '#/components/schemas/AuditActor'
+            - type: 'null'
+          description: Null when the actor has since been deleted.
+        action:
+          type: string
+          examples: ['application.cv.view']
+        entity:
+          type: string
+        entityId:
+          type: [string, 'null']
+        meta:
+          type: object
+          additionalProperties: true
+        at:
+          type: string
+          format: date-time
+

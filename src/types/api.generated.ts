@@ -375,6 +375,229 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in
+         * @description Returns a short-lived access token in the body and sets a rotating
+         *     refresh token as an httpOnly cookie.
+         *
+         *     Accounts with 2FA enabled must send `totp`; without it the response is a
+         *     401 whose `details` carry `TOTP_REQUIRED`, which is the signal to prompt
+         *     for a code rather than to treat the password as wrong.
+         *
+         *     Rate limited to 5 attempts per 15 minutes per IP and email, and the
+         *     account locks after 10 consecutive failures.
+         */
+        post: operations["adminLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchange the refresh cookie for a new access token
+         * @description Rotates the refresh token: the presented one is revoked and a new cookie
+         *     is issued.
+         *
+         *     Presenting an already-revoked token means it has been replayed, so the
+         *     entire token chain for that session is revoked and the response is 401.
+         *     Signing in again is the only way back.
+         */
+        post: operations["adminRefresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign out
+         * @description Revokes the refresh token and clears the cookie. Always succeeds.
+         */
+        post: operations["adminLogout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The signed-in user
+         * @description Who the access token belongs to, and what they may do.
+         */
+        get: operations["adminMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/2fa/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Begin two-factor setup
+         * @description Generates a TOTP secret and returns it with an `otpauth://` URI for the
+         *     authenticator app. The secret is stored encrypted and is not active
+         *     until confirmed by `2fa/enable`, so an abandoned setup cannot lock
+         *     anyone out.
+         */
+        post: operations["adminTotpSetup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/2fa/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm two-factor setup
+         * @description Activates the pending secret once a valid code proves the app is enrolled.
+         */
+        post: operations["adminTotpEnable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change your own password
+         * @description Requires the current password. Every refresh token for the account is
+         *     revoked, so a session opened with the old password cannot continue.
+         */
+        post: operations["adminChangePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List admin users
+         * @description Administrators only.
+         */
+        get: operations["listAdminUsers"];
+        put?: never;
+        /**
+         * Create an admin user
+         * @description Administrators only. The new user enrols their own authenticator on first sign-in.
+         */
+        post: operations["createAdminUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update an admin user
+         * @description Administrators only. Used to change roles or deactivate an account.
+         *     Deactivating revokes every refresh token the user holds.
+         */
+        patch: operations["updateAdminUser"];
+        trace?: never;
+    };
+    "/api/v1/admin/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the audit log
+         * @description Administrators only. Records privileged actions: publishing, deletes,
+         *     media replacement, and every view of a submission or a CV.
+         */
+        get: operations["listAuditLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1016,6 +1239,95 @@ export interface components {
             /** @description Honeypot; leave empty. */
             website?: string;
         };
+        /**
+         * @description Which areas a user may work in. See the role matrix in docs/API.md:
+         *     `admin` everything, `editor` content, `hr` jobs and applications,
+         *     `business_dev` enquiries and messages.
+         * @enum {string}
+         */
+        UserRole: "admin" | "editor" | "hr" | "business_dev";
+        /** @description An admin account. Password hashes and TOTP secrets are never returned. */
+        AdminUser: {
+            id: components["schemas"]["ObjectId"];
+            name: string;
+            /** Format: email */
+            email: string;
+            roles: components["schemas"]["UserRole"][];
+            /** @description False until the user confirms their authenticator. */
+            totpEnabled: boolean;
+            isActive: boolean;
+            /** Format: date-time */
+            lastLoginAt: string | null;
+        };
+        LoginRequest: {
+            /** Format: email */
+            email: string;
+            password: string;
+            /** @description Required once the account has two-factor enabled. */
+            totp?: string;
+        };
+        /**
+         * @description The refresh token is not in this body: it is set as an httpOnly,
+         *     SameSite=Strict cookie scoped to the auth path, so script on the admin
+         *     dashboard cannot read it.
+         */
+        LoginResult: {
+            /** @description A short-lived JWT. Keep it in memory, never in storage. */
+            accessToken: string;
+            /** @description Lifetime of the access token, in seconds. */
+            expiresIn: number;
+            user: components["schemas"]["AdminUser"];
+        };
+        TotpSetup: {
+            /** @description Base32 secret, for manual entry. */
+            secret: string;
+            /** @description Render as a QR code for the authenticator app. */
+            otpauthUrl: string;
+        };
+        TotpEnableRequest: {
+            code: string;
+        };
+        PasswordChangeRequest: {
+            currentPassword: string;
+            newPassword: string;
+        };
+        CreateUserRequest: {
+            name: string;
+            /** Format: email */
+            email: string;
+            password: string;
+            roles: components["schemas"]["UserRole"][];
+        };
+        /** @description At least one field. Email and password are changed by the user themselves. */
+        UpdateUserRequest: {
+            name?: string;
+            roles?: components["schemas"]["UserRole"][];
+            isActive?: boolean;
+        };
+        AuditActor: {
+            id: components["schemas"]["ObjectId"];
+            name: string;
+            /** Format: email */
+            email: string;
+        };
+        /**
+         * @description `meta` never carries personal data: a submission entry records the
+         *     reference, not the submitter (ADR-010 and the NDPA rules).
+         */
+        AuditLogEntry: {
+            id: components["schemas"]["ObjectId"];
+            /** @description Null when the actor has since been deleted. */
+            actor: components["schemas"]["AuditActor"] | null;
+            /** @example application.cv.view */
+            action: string;
+            entity: string;
+            entityId: string | null;
+            meta: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            at: string;
+        };
     };
     responses: {
         /** @description The request failed validation. */
@@ -1084,6 +1396,60 @@ export interface components {
                  *       "error": {
                  *         "code": "FILE_REJECTED",
                  *         "message": "The uploaded file could not be accepted."
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /**
+         * @description No valid credentials. On login, `details` may carry `TOTP_REQUIRED`,
+         *     which means the password was right and a code is needed.
+         */
+        Unauthenticated: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "UNAUTHENTICATED",
+                 *         "message": "Invalid email or password"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description Authenticated, but not permitted to act in this area. */
+        Forbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "FORBIDDEN",
+                 *         "message": "You do not have access to this resource"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description The request conflicts with the current state of the resource. */
+        Conflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "CONFLICT",
+                 *         "message": "An account with that email already exists"
                  *       }
                  *     }
                  */
@@ -1747,6 +2113,494 @@ export interface operations {
             415: components["responses"]["UnsupportedMediaType"];
             422: components["responses"]["UnprocessableEntity"];
             429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "email": "editor@spaajibade.com",
+                 *       "password": "a-correct-horse-battery-staple",
+                 *       "totp": "123456"
+                 *     }
+                 */
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Signed in. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                     *         "expiresIn": 900,
+                     *         "user": {
+                     *           "id": "665f1a2b3c4d5e6f70819293",
+                     *           "name": "Ada Nwosu",
+                     *           "email": "editor@spaajibade.com",
+                     *           "roles": [
+                     *             "editor"
+                     *           ],
+                     *           "totpEnabled": true,
+                     *           "isActive": true,
+                     *           "lastLoginAt": "2026-09-23T09:12:00.000Z"
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["LoginResult"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminRefresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A new access token. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                     *         "expiresIn": 900,
+                     *         "user": {
+                     *           "id": "665f1a2b3c4d5e6f70819293",
+                     *           "name": "Ada Nwosu",
+                     *           "email": "editor@spaajibade.com",
+                     *           "roles": [
+                     *             "editor"
+                     *           ],
+                     *           "totpEnabled": true,
+                     *           "isActive": true,
+                     *           "lastLoginAt": "2026-09-23T09:12:00.000Z"
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["LoginResult"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminLogout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The current user. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "id": "665f1a2b3c4d5e6f70819293",
+                     *         "name": "Ada Nwosu",
+                     *         "email": "editor@spaajibade.com",
+                     *         "roles": [
+                     *           "editor"
+                     *         ],
+                     *         "totpEnabled": true,
+                     *         "isActive": true,
+                     *         "lastLoginAt": "2026-09-23T09:12:00.000Z"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["AdminUser"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminTotpSetup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A secret to enrol. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "secret": "JBSWY3DPEHPK3PXP",
+                     *         "otpauthUrl": "otpauth://totp/SPA%20Ajibade%20&%20Co.:editor@spaajibade.com?secret=JBSWY3DPEHPK3PXP&issuer=SPA%20Ajibade%20%26%20Co."
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["TotpSetup"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminTotpEnable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "code": "123456"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TotpEnableRequest"];
+            };
+        };
+        responses: {
+            /** @description Two-factor authentication is now required for this account. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminChangePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "currentPassword": "a-correct-horse-battery-staple",
+                 *       "newPassword": "an-even-longer-passphrase-than-before"
+                 *     }
+                 */
+                "application/json": components["schemas"]["PasswordChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Password changed and all sessions revoked. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listAdminUsers: {
+        parameters: {
+            query?: {
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of users. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "id": "665f1a2b3c4d5e6f70819293",
+                     *           "name": "Ada Nwosu",
+                     *           "email": "editor@spaajibade.com",
+                     *           "roles": [
+                     *             "editor"
+                     *           ],
+                     *           "totpEnabled": true,
+                     *           "isActive": true,
+                     *           "lastLoginAt": "2026-09-23T09:12:00.000Z"
+                     *         }
+                     *       ],
+                     *       "meta": {
+                     *         "page": 1,
+                     *         "pageSize": 9,
+                     *         "total": 1,
+                     *         "totalPages": 1
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["AdminUser"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createAdminUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "name": "Ada Nwosu",
+                 *       "email": "editor@spaajibade.com",
+                 *       "password": "a-correct-horse-battery-staple",
+                 *       "roles": [
+                 *         "editor"
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["CreateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description The created user. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "id": "665f1a2b3c4d5e6f70819293",
+                     *         "name": "Ada Nwosu",
+                     *         "email": "editor@spaajibade.com",
+                     *         "roles": [
+                     *           "editor"
+                     *         ],
+                     *         "totpEnabled": false,
+                     *         "isActive": true,
+                     *         "lastLoginAt": null
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["AdminUser"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateAdminUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "roles": [
+                 *         "editor",
+                 *         "hr"
+                 *       ],
+                 *       "isActive": false
+                 *     }
+                 */
+                "application/json": components["schemas"]["UpdateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description The updated user. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "id": "665f1a2b3c4d5e6f70819293",
+                     *         "name": "Ada Nwosu",
+                     *         "email": "editor@spaajibade.com",
+                     *         "roles": [
+                     *           "editor",
+                     *           "hr"
+                     *         ],
+                     *         "totpEnabled": true,
+                     *         "isActive": false,
+                     *         "lastLoginAt": "2026-09-23T09:12:00.000Z"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["AdminUser"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listAuditLogs: {
+        parameters: {
+            query?: {
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+                /** @description Filter to one action, such as `application.cv.view`. */
+                action?: string;
+                /** @description Filter to one user. */
+                actor?: components["schemas"]["ObjectId"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of audit entries, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "id": "665f1a2b3c4d5e6f70819293",
+                     *           "actor": {
+                     *             "id": "665f1a2b3c4d5e6f70819294",
+                     *             "name": "Ada Nwosu",
+                     *             "email": "editor@spaajibade.com"
+                     *           },
+                     *           "action": "insight.publish",
+                     *           "entity": "Insight",
+                     *           "entityId": "665f1a2b3c4d5e6f70819295",
+                     *           "meta": {
+                     *             "slug": "regulatory-update"
+                     *           },
+                     *           "at": "2026-09-23T09:12:00.000Z"
+                     *         }
+                     *       ],
+                     *       "meta": {
+                     *         "page": 1,
+                     *         "pageSize": 9,
+                     *         "total": 1,
+                     *         "totalPages": 1
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["AuditLogEntry"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             500: components["responses"]["InternalError"];
         };
     };

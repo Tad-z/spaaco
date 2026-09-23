@@ -82,7 +82,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 
 ## Phase 4: Admin auth and RBAC
 
-- [ ] **4.1 Spec first:** add the admin auth + users + audit endpoints to `openapi.yaml`.
+- [x] **4.1 Spec first:** add the admin auth + users + audit endpoints to `openapi.yaml`.
 - [ ] **4.2 Users + `scripts/create-admin.ts`:** a CLI that prompts for email/password and creates the first admin.
 - [ ] **4.3 Login/refresh/logout/me:** rotating refresh tokens, lockout, rate limits.
   - **Accept:** tests cover rotation, reuse detection revoking the chain, and lockout after 10 failures.
