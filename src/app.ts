@@ -36,6 +36,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
 
   // Behind a load balancer, so rate limiting and IP hashing see the real client.
   app.set('trust proxy', 1);
+  app.set('rateLimitEnabled', options.rateLimit !== false);
   app.disable('x-powered-by');
   app.disable('etag');
 
@@ -63,7 +64,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
   // Only the admin refresh token is a cookie; nothing else reads one.
   app.use(cookieParser());
 
-  if (options.rateLimit !== false) app.use(API_PREFIX, publicReadLimiter);
+  app.use(API_PREFIX, publicReadLimiter);
   app.use(API_PREFIX, cacheHeaders);
   app.use(API_PREFIX, apiRoutes);
 

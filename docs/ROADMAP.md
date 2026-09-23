@@ -83,12 +83,12 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 ## Phase 4: Admin auth and RBAC
 
 - [x] **4.1 Spec first:** add the admin auth + users + audit endpoints to `openapi.yaml`.
-- [ ] **4.2 Users + `scripts/create-admin.ts`:** a CLI that prompts for email/password and creates the first admin.
-- [ ] **4.3 Login/refresh/logout/me:** rotating refresh tokens, lockout, rate limits.
+- [x] **4.2 Users + `scripts/create-admin.ts`:** a CLI that prompts for email/password and creates the first admin.
+- [x] **4.3 Login/refresh/logout/me:** rotating refresh tokens, lockout, rate limits.
   - **Accept:** tests cover rotation, reuse detection revoking the chain, and lockout after 10 failures.
-- [ ] **4.4 TOTP 2FA:** setup/enable, and enforced on all admin routes.
+- [x] **4.4 TOTP 2FA:** setup/enable, and enforced on all admin routes.
   - **Accept:** an admin route without 2FA enabled returns 403 `FORBIDDEN` with code detail `TOTP_REQUIRED`.
-- [ ] **4.5 `requireRole` + audit log service:** implements the role matrix from API.md.
+- [x] **4.5 `requireRole` + audit log service:** implements the role matrix from API.md.
   - **Accept:** a table-driven test covers every role × area combination.
 
 ## Phase 5: Admin content API

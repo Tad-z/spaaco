@@ -1,6 +1,10 @@
 import jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
 import { TEST_ACCESS_SECRET } from './test-env.js';
+import { User } from '../../src/models/index.js';
+import { hashPassword } from '../../src/services/auth.service.js';
+import type { IUser } from '../../src/interfaces/user.interface.js';
+import type { UserRole } from '../../src/types/api.js';
 
 /**
  * Signs access tokens for tests.
@@ -11,7 +15,7 @@ import { TEST_ACCESS_SECRET } from './test-env.js';
  */
 export interface TokenClaims {
   readonly sub?: string;
-  readonly roles?: string[];
+  readonly roles?: UserRole[];
   /** Taken from jsonwebtoken, which types its duration strings precisely. */
   readonly expiresIn?: jwt.SignOptions['expiresIn'];
 }
@@ -35,3 +39,36 @@ export const expiredToken = (): string =>
   jwt.sign({ sub: new Types.ObjectId().toString(), roles: ['admin'] }, TEST_ACCESS_SECRET, {
     expiresIn: '-1s',
   });
+
+/**
+ * Creates a real admin user and returns a real token for it.
+ *
+ * Two-factor is enabled by default, because `requireAuth` refuses any admin
+ * route without it — a helper that left it off would make every test look like
+ * a 403 bug.
+ */
+export interface TestUserOptions {
+  readonly roles?: UserRole[];
+  readonly totpEnabled?: boolean;
+  readonly isActive?: boolean;
+  readonly email?: string;
+  readonly password?: string;
+}
+
+export const TEST_PASSWORD = 'a-correct-horse-battery-staple';
+
+export async function createTestUser(
+  options: TestUserOptions = {}
+): Promise<{ user: IUser; token: string }> {
+  const created = await User.create({
+    name: 'Test User',
+    email: options.email ?? `user-${new Types.ObjectId().toString()}@spaajibade.test`,
+    passwordHash: await hashPassword(options.password ?? TEST_PASSWORD),
+    roles: options.roles ?? ['admin'],
+    isActive: options.isActive ?? true,
+    totp: { enabled: options.totpEnabled ?? true, secretEncrypted: null },
+  });
+
+  const user = created.toObject<IUser>();
+  return { user, token: signAccessToken({ sub: user._id.toString(), roles: user.roles }) };
+}

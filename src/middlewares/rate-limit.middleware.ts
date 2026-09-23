@@ -15,6 +15,10 @@ const build = (config: { windowMs: number; max: number }): RateLimitRequestHandl
     limit: config.max,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
+    // One switch for every limiter, set by createApp. A test file makes more
+    // requests in a second than a real client makes in a window, so the suite
+    // turns them off — except in the test that is about the limiter itself.
+    skip: (req) => req.app.get('rateLimitEnabled') === false,
     handler: (_req, _res, next) => {
       next(new RateLimitedError());
     },
