@@ -2,6 +2,7 @@ import type { Server } from 'node:http';
 import { createApp } from './app.js';
 import { config } from './config/env.js';
 import { logger } from './core/logger.js';
+import { startRetentionSweep } from './jobs/retention.job.js';
 
 /**
  * Process entry point: connect, listen, and shut down cleanly.
@@ -24,6 +25,11 @@ async function start(): Promise<void> {
   const server: Server = app.listen(config.PORT, () => {
     logger.info({ port: config.PORT, env: config.NODE_ENV }, 'api listening');
   });
+
+  // Housekeeping: TTL expiry removes an application record but knows nothing
+  // about the CV beside it (ROADMAP 6.5). The timer is unref'd, so it never
+  // delays a shutdown.
+  startRetentionSweep();
 
   let shuttingDown = false;
 

@@ -1,11 +1,12 @@
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
-import { mkdir, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { logger } from '../../../core/logger.js';
 import type {
   IPrivateStorage,
   PutPrivateFile,
   SignedUrl,
+  StoredObject,
 } from '../../../interfaces/integrations/private-storage.interface.js';
 
 /**
@@ -59,14 +60,24 @@ export function createLocalPrivateStorage(
       }
     },
 
-    async list(): Promise<string[]> {
+    async list(): Promise<StoredObject[]> {
+      let entries;
+
       try {
-        const entries = await readdir(directory, { withFileTypes: true });
-        return entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
+        entries = await readdir(directory, { withFileTypes: true });
       } catch {
         // No directory yet means nothing has been uploaded.
         return [];
       }
+
+      return Promise.all(
+        entries
+          .filter((entry) => entry.isFile())
+          .map(async (entry) => ({
+            key: entry.name,
+            lastModified: (await stat(pathFor(entry.name))).mtime,
+          }))
+      );
     },
   };
 }

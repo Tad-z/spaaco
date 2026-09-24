@@ -5,6 +5,7 @@ import type {
   IPrivateStorage,
   PutPrivateFile,
   SignedUrl,
+  StoredObject,
 } from '../../../interfaces/integrations/private-storage.interface.js';
 
 /**
@@ -202,9 +203,9 @@ export function createS3PrivateStorage(
       }
     },
 
-    async list(): Promise<string[]> {
+    async list(): Promise<StoredObject[]> {
       const { amzDate, dateStamp } = timestamps(now());
-      const keys: string[] = [];
+      const objects: StoredObject[] = [];
       let continuation: string | undefined;
 
       // Paginated: a firm with years of applications will exceed one page, and
@@ -254,14 +255,25 @@ export function createS3PrivateStorage(
 
         const body = await response.text();
 
-        for (const match of body.matchAll(/<Key>([^<]+)<\/Key>/g)) {
-          if (match[1] !== undefined) keys.push(match[1]);
+        // Each <Contents> holds the key and when it was last written; the
+        // sweep needs both, so they are read as a pair rather than separately.
+        for (const entry of body.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
+          const block = entry[1] ?? '';
+          const key = /<Key>([^<]+)<\/Key>/.exec(block)?.[1];
+          const modified = /<LastModified>([^<]+)<\/LastModified>/.exec(block)?.[1];
+
+          if (key !== undefined) {
+            objects.push({
+              key,
+              lastModified: modified === undefined ? new Date(0) : new Date(modified),
+            });
+          }
         }
 
         continuation = /<NextContinuationToken>([^<]+)</.exec(body)?.[1];
       } while (continuation !== undefined);
 
-      return keys;
+      return objects;
     },
   };
 }

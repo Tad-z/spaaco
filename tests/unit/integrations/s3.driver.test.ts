@@ -152,25 +152,45 @@ describe('the signed download link', () => {
 });
 
 describe('listing, for the orphan sweep', () => {
-  it('follows the continuation token to the end', async () => {
-    const page = (keys: string[], next?: string): Partial<Response> =>
-      okResponse(
-        `<ListBucketResult>${keys.map((key) => `<Key>${key}</Key>`).join('')}` +
-          (next === undefined ? '' : `<NextContinuationToken>${next}</NextContinuationToken>`) +
-          `</ListBucketResult>`
-      );
+  const contents = (key: string, modified: string): string =>
+    `<Contents><Key>${key}</Key><LastModified>${modified}</LastModified></Contents>`;
 
+  const page = (entries: [string, string][], next?: string): Partial<Response> =>
+    okResponse(
+      `<ListBucketResult>${entries.map(([key, at]) => contents(key, at)).join('')}` +
+        (next === undefined ? '' : `<NextContinuationToken>${next}</NextContinuationToken>`) +
+        `</ListBucketResult>`
+    );
+
+  it('follows the continuation token to the end', async () => {
     const fetchImpl = vi
       .fn()
-      .mockResolvedValueOnce(page(['cv/a.pdf', 'cv/b.pdf'], 'more'))
-      .mockResolvedValueOnce(page(['cv/c.pdf']));
+      .mockResolvedValueOnce(
+        page(
+          [
+            ['cv/a.pdf', '2026-05-01T00:00:00.000Z'],
+            ['cv/b.pdf', '2026-05-02T00:00:00.000Z'],
+          ],
+          'more'
+        )
+      )
+      .mockResolvedValueOnce(page([['cv/c.pdf', '2026-05-03T00:00:00.000Z']]));
 
-    const keys = await driverWith(fetchImpl).list();
+    const objects = await driverWith(fetchImpl).list();
 
     // Stopping at the first page would make the sweep silently partial.
-    expect(keys).toEqual(['cv/a.pdf', 'cv/b.pdf', 'cv/c.pdf']);
+    expect(objects.map((object) => object.key)).toEqual(['cv/a.pdf', 'cv/b.pdf', 'cv/c.pdf']);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
     expect((fetchImpl.mock.calls[1] as [string])[0]).toContain('continuation-token=more');
+  });
+
+  it('reads each object modification time, which the sweep needs', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(page([['cv/a.pdf', '2026-05-01T09:30:00.000Z']]));
+
+    const [object] = await driverWith(fetchImpl).list();
+
+    // Without it the sweep cannot tell an orphan from an upload in flight.
+    expect(object?.lastModified.toISOString()).toBe('2026-05-01T09:30:00.000Z');
   });
 });
 
