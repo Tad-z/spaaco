@@ -4,6 +4,7 @@ import { config } from '../config/env.js';
 import { Types } from 'mongoose';
 import { logger } from '../core/logger.js';
 import { getUserById } from '../services/auth.service.js';
+import { issuedBefore } from './require-auth.middleware.js';
 import type { UserRole } from '../types/api.js';
 
 /**
@@ -101,6 +102,11 @@ export function optionalPreviewAuth(req: Request, _res: Response, next: NextFunc
         user !== null &&
         user.isActive &&
         user.totp.enabled &&
+        // The same rule `requireAuth` applies: without it, a password changed
+        // because of a compromise ended the compromise for the admin API and
+        // left every draft readable for the rest of the token's fifteen
+        // minutes.
+        !issuedBefore(claims.iat, user.credentialsChangedAt) &&
         user.roles.some((role) => PREVIEW_ROLES.has(role));
 
       if (permitted) {

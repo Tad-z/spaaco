@@ -10,7 +10,6 @@ import {
 } from '../core/errors.js';
 import { toErrorDetails } from './validate.middleware.js';
 import { logger } from '../core/logger.js';
-import { captureError } from '../core/error-tracking.js';
 
 /**
  * The only place an error becomes an HTTP response.
@@ -138,7 +137,6 @@ export function errorHandler(
   if (appError) {
     if (appError.statusCode >= 500) {
       logger.error({ err: appError, requestId: req.requestId }, 'request failed');
-      report(error, req);
     } else {
       logger.debug(
         { code: appError.code, status: appError.statusCode, requestId: req.requestId },
@@ -156,29 +154,6 @@ export function errorHandler(
   }
 
   logger.error({ err: error, requestId: req.requestId }, 'unhandled error');
-  report(error, req);
 
   res.status(500).json(GENERIC_INTERNAL_RESPONSE);
-}
-
-/**
- * Send a genuine fault to the error tracker.
- *
- * Only 5xx: a 400 or a 404 is the API working correctly, and reporting those
- * would bury the one thing worth waking somebody for. The route *pattern* is
- * tagged rather than the path, because a concrete path carries ids — and an
- * application id identifies a person's CV.
- */
-function report(error: unknown, req: Request): void {
-  // `req.route` is only set once a route has matched; on a 404 or a failure in
-  // an earlier middleware there is none, and the mount path is the most that
-  // can be said without quoting the concrete URL.
-  const route = (req.route as { path?: string } | undefined)?.path;
-
-  captureError({
-    error,
-    requestId: req.requestId,
-    route: route ?? req.baseUrl,
-    method: req.method,
-  });
 }

@@ -57,13 +57,43 @@ describe('loading the launch content', () => {
     expect(tax?.title).toBe('Tax');
   });
 
-  it('creates everything as a draft, so nothing reaches the site unreviewed', async () => {
+  it('creates every collection item as a draft', async () => {
     await loadLaunchContent();
 
     for (const model of [PracticeArea, Person, Office, Insight, Recognition, Faq, Job]) {
       const published = await model.countDocuments({ status: 'published' });
       expect(published, model.modelName).toBe(0);
     }
+  });
+
+  it('creates pages and settings that are live immediately, which the CLI warns about', async () => {
+    await loadLaunchContent();
+
+    // Not a draft rule that is being broken — pages and settings have no
+    // publish state, because the site has no shell without them. Pinned here
+    // so the behaviour is deliberate and documented rather than assumed: the
+    // loader must run before the domain points at the site.
+    expect(await Page.countDocuments()).toBe(8);
+    expect(await Settings.countDocuments()).toBe(1);
+
+    const home = await Page.findOne({ key: 'home' }).lean();
+    expect(home?.hero).toBeTruthy();
+  });
+
+  it('leaves nothing behind when a run fails partway', async () => {
+    // A half-loaded database is the worst outcome: the guard then refuses to
+    // run again and there is no --force, so the operator would be dropping
+    // collections by hand in production.
+    const original = Settings.create.bind(Settings);
+    // Settings is created last, so failing it proves the earlier writes undo.
+    (Settings as unknown as { create: () => Promise<never> }).create = () =>
+      Promise.reject(new Error('Atlas went away'));
+
+    await expect(loadLaunchContent()).rejects.toThrow('Atlas went away');
+
+    expect(await existingContent()).toEqual([]);
+
+    (Settings as unknown as { create: typeof original }).create = original;
   });
 
   it('leaves no publication date to be mistaken for a real one', async () => {

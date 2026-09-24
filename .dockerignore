@@ -25,9 +25,12 @@ coverage
 # Nothing here runs in production.
 tests
 docs
-fixtures
 openapi
 scripts
+
+# The seed copy is the exception: `load-launch-content` reads it in production
+# to load the firm's website text once, at launch.
+fixtures/responses
 .claude
 eslint.config.js
 redocly.yaml

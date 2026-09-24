@@ -27,16 +27,16 @@ horizontally and any instance can be replaced at any time.
 
 The API will not start in production without these. Gather them first.
 
-| What                  | Where it goes                                         | Notes                                                   |
-| --------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
-| MongoDB Atlas cluster | `MONGODB_URI`                                         | A dedicated database, not shared with another product.  |
-| Cloudinary account    | `CLOUDINARY_URL`                                      | Serves every image on the site.                         |
-| S3 bucket (private)   | `S3_*`                                                | CVs only. Must not be public — see 2.3.                 |
-| Resend account        | `RESEND_API_KEY`, `MAIL_FROM`                         | Acknowledgements and notifications.                     |
-| Cloudflare Turnstile  | `TURNSTILE_SECRET_KEY`                                | Bot check on the three public forms.                    |
-| A ClamAV endpoint     | `CLAMAV_HOST`, `CLAMAV_PORT`                          | Scans CVs. See 2.4 if the firm has no appetite for one. |
-| Firm mailboxes        | `NOTIFY_ENQUIRIES_TO`, `NOTIFY_APPLICATIONS_TO`       | Where "a new enquiry arrived" goes.                     |
-| Frontend URLs         | `CORS_ORIGINS`, `ADMIN_DASHBOARD_URL`, `API_BASE_URL` | Exact origins, comma-separated for CORS.                |
+| What                  | Where it goes                                         | Notes                                                             |
+| --------------------- | ----------------------------------------------------- | ----------------------------------------------------------------- |
+| MongoDB Atlas cluster | `MONGODB_URI`                                         | A dedicated database, not shared with another product.            |
+| Cloudinary account    | `CLOUDINARY_URL`                                      | Serves every image on the site.                                   |
+| S3 bucket (private)   | `S3_*`                                                | CVs only. Must not be public — see 2.3.                           |
+| Resend account        | `RESEND_API_KEY`, `MAIL_FROM`                         | Acknowledgements and notifications.                               |
+| Cloudflare Turnstile  | `TURNSTILE_SECRET_KEY`                                | Optional — see 2.4. The honeypot and rate limit apply regardless. |
+| A ClamAV endpoint     | `CLAMAV_HOST`, `CLAMAV_PORT`                          | Optional — see 2.4. Needs a second always-on service.             |
+| Firm mailboxes        | `NOTIFY_ENQUIRIES_TO`, `NOTIFY_APPLICATIONS_TO`       | Where "a new enquiry arrived" goes.                               |
+| Frontend URLs         | `CORS_ORIGINS`, `ADMIN_DASHBOARD_URL`, `API_BASE_URL` | Exact origins, comma-separated for CORS.                          |
 
 ### 2.2 Secrets to generate
 
@@ -80,16 +80,28 @@ CVs are the most sensitive thing this API holds. The bucket must:
 The API only ever issues five-minute presigned links, so nothing else needs
 read access.
 
-### 2.4 If there is no ClamAV
+### 2.4 The two optional protections
 
-`VIRUS_SCAN_DRIVER=noop` marks every CV `clean` without looking at it, and the
-dashboard then tells HR the file was scanned. **The API refuses to start in
-production with the noop scanner** for that reason.
+Both defend the public forms, and both cost money or a second service, so both
+are opt-outs rather than requirements. Neither is on by default.
 
-If the firm will not run a scanner, that is a decision for them to take
-knowingly — scan at the storage layer instead (S3 malware scanning, or a
-GuardDuty equivalent) and only then relax the check in `src/config/env.ts`, with
-an ADR recording who decided and why.
+**Malware scanning (`VIRUS_SCAN_DRIVER`).** With `clamav`, every CV is scanned
+before it is stored, and an infected one is refused with a 422. With `noop`,
+nothing is scanned and the dashboard still shows HR a CV as clean — so the API
+**refuses to start in production** unless you also set
+`ALLOW_UNSCANNED_UPLOADS=true`, and it logs a warning on every start while that
+is in force. Running ClamAV means an always-on container, which small hosting
+plans do not have; the alternative worth considering is scanning at the storage
+layer.
+
+**Bot checking (`CAPTCHA_DRIVER`).** With `turnstile`, each form submission is
+verified with Cloudflare before anything is written. With `noop`, any non-empty
+token passes. This one does **not** block startup: the firm has chosen to run
+without it for now (DECISIONS, ADR-041). Two defences still apply either way —
+the hidden honeypot field, which answers a bot with a plausible reference and
+stores nothing, and the per-form rate limit of five submissions per ten minutes
+per IP. Turn Turnstile on if spam becomes a problem; it is one environment
+variable.
 
 ### 2.5 Production environment checklist
 
@@ -98,11 +110,13 @@ a bad configuration fails in seconds rather than on the first upload. In
 production it additionally refuses:
 
 - `STORAGE_PUBLIC_DRIVER=local` — writes images nothing serves,
-- `STORAGE_PRIVATE_DRIVER=local` — keeps CVs on the container disk and exposes
-  a file route,
-- `VIRUS_SCAN_DRIVER=noop` — see 2.4,
+- `STORAGE_PRIVATE_DRIVER=local` — keeps CVs on the container's disk, which on
+  most platforms is wiped on every restart, and exposes a file route,
+- `VIRUS_SCAN_DRIVER=noop` **unless** `ALLOW_UNSCANNED_UPLOADS=true` (2.4),
 - `MAILER_DRIVER=log` — sends nothing at all,
 - any of the three secrets still holding its example value.
+
+It does **not** refuse `CAPTCHA_DRIVER=noop`; see 2.4.
 
 `TRUST_PROXY_HOPS` must equal the number of reverse proxies in front of the
 API. Get it wrong and `req.ip` becomes whatever the caller puts in
@@ -113,40 +127,81 @@ abuse investigation is worthless. One load balancer means `1`.
 
 ## 3. Deploying
 
-### 3.1 The image
+### 3.1 On Render (the current plan)
+
+Render builds from the repository. The service is a **Web Service** on the Node
+runtime:
+
+| Setting       | Value                     |
+| ------------- | ------------------------- |
+| Build command | `npm ci && npm run build` |
+| Start command | `npm start`               |
+| Health check  | `/api/v1/health`          |
+
+Set every variable from §2 in Render's environment settings, and
+`TRUST_PROXY_HOPS=1` — Render puts one proxy in front of the service.
+
+Two things about the free plan are worth knowing before they surprise you:
+
+- **The disk is ephemeral.** Anything written to it is lost on every deploy and
+  every restart. That is why `STORAGE_PUBLIC_DRIVER` and
+  `STORAGE_PRIVATE_DRIVER` must be `cloudinary` and `s3` in production — with
+  the local drivers, images and CVs would vanish silently.
+- **The service sleeps after inactivity** and takes ~30 seconds to wake. The
+  first visitor after a quiet night waits. The retention sweep runs a minute
+  after each start, so it still runs; it simply runs more often than daily.
+
+### 3.2 The container image
+
+Also supported, and what CI builds. Two stages: the toolchain stays in the
+build stage, and the runtime is `node:24-alpine` running as the non-root `node`
+user.
 
 ```bash
 docker build -t spa-ajibade-api:<git-sha> .
+docker run -p 4000:4000 --env-file .env spa-ajibade-api:<git-sha>
 ```
 
-Two stages: the toolchain stays in the build stage, and the runtime is
-`node:24-alpine` running as the non-root `node` user. CI builds it on every push
-to `main`.
+### 3.3 Running the operational scripts
 
-### 3.2 Rolling out
+Three things are done from a shell, not over HTTP. They are compiled into the
+build, so they run with plain `node` and need no dev dependencies.
 
-1. **Apply indexes first.** New indexes are declared in the models but not
-   created automatically in production.
+| Task                    | Command                                              |
+| ----------------------- | ---------------------------------------------------- |
+| Apply database indexes  | `node dist/scripts/sync-indexes.js`                  |
+| Create the first admin  | `node dist/scripts/create-admin.js`                  |
+| Load the launch content | `node dist/scripts/load-launch-content.js --confirm` |
+
+On Render, use the **Shell** tab of the service (it runs in the deployed
+environment, so the variables are already set). With Docker:
+
+```bash
+docker run --rm -it --env-file .env spa-ajibade-api:<sha>   node dist/scripts/create-admin.js
+```
+
+### 3.4 Rolling out
+
+1. **Apply indexes first.** They are declared in the models but not created
+   automatically in production.
    ```bash
-   docker run --rm --env-file <(platform env) spa-ajibade-api:<sha> \
-     node --import tsx scripts/sync-indexes.ts
+   node dist/scripts/sync-indexes.js
    ```
    Safe to run repeatedly; it creates what is missing and leaves the rest.
-2. **Deploy the image** with `RELEASE=<git-sha>` set, so error reports name the
-   deploy they came from.
-3. **Watch the health check.** `GET /api/v1/health` answers without touching the
-   database, so a slow Atlas connection does not read as a dead container.
+2. **Deploy.**
+3. **Watch the health check.** `GET /api/v1/health` answers without touching
+   the database, so a slow Atlas connection does not read as a dead service.
 4. **Confirm.** `GET /api/v1/site` should return the firm's settings, and
    `GET /api/v1/pages/home` the composed home page.
 
-### 3.3 Rolling back
+### 3.5 Rolling back
 
-Redeploy the previous image tag. The API makes no destructive schema changes on
-startup, so a rollback needs no database step — with one exception: if the
-deploy you are rolling back from added a field the dashboard has already
+Redeploy the previous commit or image tag. The API makes no destructive schema
+changes on startup, so a rollback needs no database step — with one exception:
+if the deploy you are rolling back from added a field the dashboard has already
 written, that data stays and is ignored.
 
-### 3.4 Zero-downtime notes
+### 3.6 Zero-downtime notes
 
 On `SIGTERM` the API stops accepting connections, lets in-flight requests
 finish, closes the database and exits — up to ten seconds, then it exits
@@ -161,8 +216,7 @@ There is no way to create an account over HTTP without an existing admin. This
 is deliberate.
 
 ```bash
-docker run --rm -it --env-file <(platform env) spa-ajibade-api:<sha> \
-  node --import tsx scripts/create-admin.ts
+node dist/scripts/create-admin.js
 ```
 
 It asks for a name, email, password (12 characters minimum) and roles. The new
@@ -194,13 +248,23 @@ read a CV and `hr` cannot read a client enquiry, which is the point.
 Once, into an empty database, so nobody retypes the website copy.
 
 ```bash
-docker run --rm --env-file <(platform env) spa-ajibade-api:<sha> \
-  node --import tsx scripts/load-launch-content.ts --confirm
+node dist/scripts/load-launch-content.js --confirm
 ```
 
 It refuses to run if any content already exists, so it cannot overwrite the
-firm's work. Everything is created as **draft** with **no images**: the firm
-reviews each item in the dashboard, uploads the real photographs, and publishes.
+firm's work, and a run that fails partway undoes itself rather than leaving a
+half-loaded database the guard would then refuse to fix.
+
+**Collections** — practice areas, people, offices, insights, recognitions, FAQs
+and jobs — are created as **drafts** with **no images**, and vacancies are
+created closed. The firm reviews each item, uploads the real photographs, and
+publishes.
+
+**Pages and settings are the exception, and it matters.** They are singletons
+with no draft state — the site has no shell without them — so the page copy is
+**live the moment the loader runs**, including any `[PENDING FROM FIRM]`
+markers left by the transcription. Run this _before_ the domain points at the
+site, and review the page text early. The script says so when it finishes.
 
 ---
 
@@ -259,12 +323,17 @@ record so nobody later reads the discontinuity as tampering.
 
 ### 7.1 A compromised administrator account
 
-1. **Deactivate the account.** `PATCH /admin/users/:id` with
-   `{ "isActive": false }`, or in the database. This takes effect on the very
-   next request: the API reloads the user on every authenticated call.
-2. **Change the password**, which also invalidates every access token already
-   issued and revokes the refresh chain.
-3. **Clear their TOTP secret** (6.3) in case the authenticator was also taken.
+1. **End their sessions.** `POST /admin/users/:id/revoke-sessions`, as an
+   administrator. It revokes the refresh chain _and_ invalidates the access
+   tokens already issued, so a stolen bearer token stops working on its next
+   request rather than at the end of its fifteen minutes. It needs no password
+   and is audit-logged.
+2. **Deactivate the account.** `PATCH /admin/users/:id` with
+   `{ "isActive": false }`. This also takes effect on the next request: the API
+   reloads the user on every authenticated call. Do this if you are not yet
+   sure the account is safe to keep open.
+3. **Clear their TOTP secret** (6.3) in case the authenticator was also taken,
+   and have them set a new password once they are back in.
 4. **Read the audit log.** `GET /admin/audit-logs?actor=<id>` shows what they
    reached. Every read of a single submission, and every CV link issued, is
    recorded there with a timestamp.

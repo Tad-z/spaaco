@@ -42,7 +42,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/mongodb-binaries
-          key: mongodb-binaries-${{ runner.os }}
+          # Keyed on the lockfile: a bare OS key would silently pin whatever
+          # version was cached first, so a dependency bump would keep testing
+          # against the old server.
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - run: npm run check
 
@@ -74,12 +77,15 @@ jobs:
         run: npm audit || true
 
   image:
-    name: Build the container image
+    name: Build and smoke-test the container image
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Only on main: a pull request has already had its build proved by `check`,
     # and the image adds several minutes for no extra signal.
     if: github.event_name == 'push'
+    # No image from a red build. Without this, a failing test suite still
+    # produces something that looks deployable.
+    needs: check
 
     steps:
       - uses: actions/checkout@v4
@@ -92,6 +98,41 @@ jobs:
           # Built and cached, not pushed: publishing to a registry needs
           # credentials the firm has not supplied yet (see docs/RUNBOOK.md).
           push: false
+          load: true
           tags: spa-ajibade-api:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Actually run it. The build proves it compiles; this proves the two
+      # native modules resolved a musl prebuild under `--ignore-scripts`, which
+      # would otherwise surface at the first login or the first image upload.
+      - name: Start the image and hit the health endpoint
+        run: |
+          docker run -d --name api -p 4000:4000 \
+            -e NODE_ENV=development \
+            -e MONGODB_URI=mongodb://127.0.0.1:27017/unused \
+            -e JWT_ACCESS_SECRET="$(openssl rand -base64 48)" \
+            -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
+            -e IP_HASH_SALT="$(openssl rand -base64 32)" \
+            spa-ajibade-api:${{ github.sha }}
+
+          for attempt in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:4000/api/v1/health; then
+              echo "healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "the container never became healthy"
+          docker logs api
+          exit 1
+
+      - name: Prove the native modules loaded
+        run: |
+          docker run --rm --entrypoint node spa-ajibade-api:${{ github.sha }} \
+            --input-type=module \
+            -e "await import('argon2'); await import('sharp'); console.log('native modules ok')"
+
+      - if: always()
+        run: docker rm -f api || true

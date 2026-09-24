@@ -36,7 +36,24 @@ export function createServerLifecycle(
   timeoutMs: number = DEFAULT_TIMEOUT_MS
 ): ServerLifecycle {
   let shuttingDown = false;
+  let exited = false;
   let settle: () => void = () => undefined;
+
+  /**
+   * Exit once, whichever path gets there first.
+   *
+   * The drain and the deadline both end in an exit, and they are not mutually
+   * exclusive — a connection that finishes draining just as the timer fires
+   * would otherwise exit twice. Harmless against `process.exit`, but this
+   * module exists to be injectable and tested.
+   */
+  const finish = (code: number): void => {
+    if (exited) return;
+    exited = true;
+
+    hooks.exit(code);
+    settle();
+  };
 
   const finished = new Promise<void>((resolve) => {
     settle = resolve;
@@ -58,18 +75,18 @@ export function createServerLifecycle(
           logger.error({ err: error }, 'error releasing resources during shutdown');
         })
         .finally(() => {
-          hooks.exit(closeError ? 1 : 0);
-          settle();
+          finish(closeError ? 1 : 0);
         });
     });
 
     // A connection that refuses to drain must not hold the process open for
-    // ever: the platform will eventually SIGKILL, and exiting deliberately is
-    // tidier than being killed.
+    // ever. This path deliberately skips `onClose`: whatever is hanging may be
+    // the database call itself, so waiting on it again would turn a
+    // ten-second shutdown into an indefinite one. The platform is about to
+    // SIGKILL us regardless; exiting on our own terms is tidier.
     setTimeout(() => {
       logger.error({ timeoutMs }, 'forced shutdown after timeout');
-      hooks.exit(1);
-      settle();
+      finish(1);
     }, timeoutMs).unref();
   };
 

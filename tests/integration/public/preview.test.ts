@@ -108,6 +108,16 @@ describe('preview', () => {
     expect(sees(await listing(token))).toBe(false);
   });
 
+  it('refuses a token from before the account changed its password', async () => {
+    const { user, token } = await createTestUser({ roles: ['editor'] });
+
+    // Exactly the compromise the `credentialsChangedAt` rule exists for: the
+    // admin API refuses this token, and drafts must not be the exception.
+    await User.updateOne({ _id: user._id }, { credentialsChangedAt: new Date(Date.now() + 1000) });
+
+    expect(sees(await listing(token))).toBe(false);
+  });
+
   it('never caches a preview response, whoever asked for it', async () => {
     const { token } = await createTestUser({ roles: ['editor'] });
 

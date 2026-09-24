@@ -54,7 +54,7 @@ export const safeUrl = z
         return false;
       }
     },
-    { message: 'must be an http(s), mailto or tel URL, or a path beginning with /' }
+    { message: 'must be an http(s), mailto or tel URL' }
   );
 
 /**

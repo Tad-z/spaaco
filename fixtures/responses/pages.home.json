@@ -593,7 +593,7 @@
         "slug": "inside-the-2025-annual-business-luncheon-what-industry-leaders-are-saying-about-nigerias-economy",
         "title": "Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy",
         "excerpt": null,
-        "format": "video",
+        "format": "article",
         "categories": ["webinar_resources", "firm_news"],
         "categoryLabels": ["Webinar Resources", "Firm News"],
         "practiceAreas": [],
@@ -621,8 +621,8 @@
         "publishedAt": "2026-06-01T00:00:00.000Z",
         "featured": true,
         "cta": {
-          "label": "Watch Video",
-          "kind": "watch_video"
+          "label": "Read More",
+          "kind": "read_more"
         }
       },
       {

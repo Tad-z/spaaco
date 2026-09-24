@@ -1,10 +1,11 @@
 import mongoose from 'mongoose';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { createTestUser } from '../../support/auth.js';
 import { registeredAdminRoutes } from '../../support/routes.js';
+import { runSeed } from '../../../scripts/seed.js';
 import { USER_ROLES } from '../../../src/constants/enums.js';
 import type { UserRole } from '../../../src/types/api.js';
 
@@ -29,6 +30,7 @@ type Method = 'get' | 'post' | 'patch' | 'delete' | 'put';
 const MATRIX: Record<string, readonly UserRole[]> = {
   '/api/v1/admin/users': [],
   '/api/v1/admin/users/:id': [],
+  '/api/v1/admin/users/:id/revoke-sessions': [],
   '/api/v1/admin/audit-logs': [],
 
   '/api/v1/admin/content/:collection': ['editor', 'hr'],
@@ -230,6 +232,12 @@ describe('collection-level access', () => {
 });
 
 describe('admin responses are never cacheable', () => {
+  // Seeded, so the singleton routes answer 200 rather than 404 — the whole
+  // point of the assertion below is that it runs against a real payload.
+  beforeEach(async () => {
+    await runSeed();
+  });
+
   /**
    * `noStore` is first in every admin guard chain, but it sets a header and
    * the cache middleware rewrites headers at `res.json()` time — so the guard
@@ -242,14 +250,20 @@ describe('admin responses are never cacheable', () => {
    */
   it.each(
     roleGoverned
-      .filter((route) => route.method === 'get')
+      // List routes only: a detail route is called with an id that does not
+      // exist, so it answers 404 and would not exercise the guard.
+      .filter((route) => route.method === 'get' && !route.path.includes(':'))
       .map((route) => ({ name: `${route.method.toUpperCase()} ${route.path}`, route }))
   )('$name answers no-store', async ({ route }) => {
     const { token } = await createTestUser({ roles: ['admin'] });
 
     const res = await send(route, token);
 
-    expect(res.headers['cache-control'], `${route.path} sent ${res.status}`).toBe('no-store');
+    // A 4xx gets `no-store` from the error branch of the cache middleware, so
+    // asserting the header on one would pass with `noStore` deleted from the
+    // route. Only a real success exercises the guard.
+    expect(res.status, `${route.path} sent ${String(res.status)}`).toBeLessThan(400);
+    expect(res.headers['cache-control']).toBe('no-store');
     expect(res.headers.etag, 'an ETag invites a conditional cache').toBeUndefined();
   });
 });

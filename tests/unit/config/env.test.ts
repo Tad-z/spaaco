@@ -77,10 +77,10 @@ describe('parseEnv', () => {
     });
 
     it('treats a blank optional variable as absent rather than an empty string', () => {
-      const config = parseEnv(withEnv({ SENTRY_DSN: '', CLOUDINARY_URL: '  ' }));
+      const config = parseEnv(withEnv({ CLOUDINARY_URL: '  ', RESEND_API_KEY: '' }));
 
-      expect(config.SENTRY_DSN).toBeUndefined();
       expect(config.CLOUDINARY_URL).toBeUndefined();
+      expect(config.RESEND_API_KEY).toBeUndefined();
     });
 
     it('returns a frozen object, so nothing can mutate config at runtime', () => {
@@ -224,6 +224,29 @@ describe('parseEnv', () => {
       const error = expectConfigError({ ...productionEnv, [field]: value });
 
       expect(error.issues.join('\n')).toContain(field);
+    });
+
+    it('accepts an unscanned deployment only when it is opted into explicitly', () => {
+      // Running ClamAV means a second always-on service, which a small hosting
+      // plan may not have. The risk is the firm's to accept — but it has to be
+      // said out loud, not arrived at by leaving a variable unset.
+      const config = parseEnv({
+        ...productionEnv,
+        VIRUS_SCAN_DRIVER: 'noop',
+        CLAMAV_HOST: undefined,
+        ALLOW_UNSCANNED_UPLOADS: 'true',
+      });
+
+      expect(config.VIRUS_SCAN_DRIVER).toBe('noop');
+      expect(config.ALLOW_UNSCANNED_UPLOADS).toBe(true);
+    });
+
+    it('does not let the captcha block a deployment', () => {
+      // The firm has chosen not to run Turnstile for now; the honeypot and the
+      // per-form rate limit still apply. Recorded in DECISIONS, not enforced.
+      const config = parseEnv({ ...productionEnv, CAPTCHA_DRIVER: 'noop' });
+
+      expect(config.CAPTCHA_DRIVER).toBe('noop');
     });
 
     it('refuses the .env.example placeholder secret in production', () => {

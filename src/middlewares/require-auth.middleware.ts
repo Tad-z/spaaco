@@ -98,8 +98,12 @@ export function requireAuth(options: RequireAuthOptions = {}): RequestHandler {
  * `iat` is in whole seconds, so a token issued in the same second as the
  * change is treated as older — erring towards refusing a token that might be
  * valid rather than accepting one that might not be.
+ *
+ * Exported because preview needs the same rule: a password changed because of
+ * a compromise must end the compromise for drafts as well as for the admin
+ * API, and having two copies of this check is how one of them gets forgotten.
  */
-function issuedBefore(iat: number | undefined, changedAt: Date | null | undefined): boolean {
+export function issuedBefore(iat: number | undefined, changedAt: Date | null | undefined): boolean {
   if (changedAt === null || changedAt === undefined) return false;
   if (iat === undefined) return true;
 

@@ -92,15 +92,27 @@ async function issueSession(user: IUser): Promise<SessionTokens> {
 const invalidCredentials = (): UnauthenticatedError =>
   new UnauthenticatedError('Invalid email or password');
 
+/**
+ * Count a failed attempt, and lock the account once there are enough.
+ *
+ * The count resets when a previous lockout has expired, which makes a lockout
+ * a fifteen-minute event rather than a latch. Without that reset the counter
+ * stayed at ten for ever, so one wrong password every fifteen minutes kept an
+ * account locked indefinitely — a denial of service anybody could run against
+ * a named partner, using an address format guessed from the website.
+ */
 async function registerFailure(user: IUser): Promise<void> {
-  const failedLoginCount = user.failedLoginCount + 1;
+  const lockExpired = user.lockedUntil !== null && (user.lockedUntil?.getTime() ?? 0) <= Date.now();
+  const previous = lockExpired ? 0 : user.failedLoginCount;
+
+  const failedLoginCount = previous + 1;
   const locked = failedLoginCount >= AUTH.maxFailedLogins;
 
   await User.updateOne(
     { _id: user._id },
     {
       failedLoginCount,
-      ...(locked ? { lockedUntil: new Date(Date.now() + AUTH.lockoutMs) } : {}),
+      lockedUntil: locked ? new Date(Date.now() + AUTH.lockoutMs) : null,
     }
   );
 
@@ -345,5 +357,13 @@ export async function changePassword(
   await revokeAllSessions(userId);
 }
 
+/**
+ * Reload a user for an authenticated request.
+ *
+ * Projected rather than whole: this runs on every admin call and every
+ * preview, and the callers need five fields between them.
+ */
 export const getUserById = (userId: Types.ObjectId): Promise<IUser | null> =>
-  User.findById(userId).lean<IUser | null>();
+  User.findById(userId)
+    .select('_id name email roles isActive totp.enabled credentialsChangedAt')
+    .lean<IUser | null>();

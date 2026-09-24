@@ -189,6 +189,20 @@ describe('GET /api/v1/insights', () => {
   });
 
   it('gives a video insight the Watch Video call to action', async () => {
+    // Built here rather than taken from the seed: the seed is the firm's real
+    // copy, and the one video article in it became an article when it turned
+    // out the firm has not supplied the URL yet. A feature test should not
+    // depend on which format their content happens to be in this week.
+    await Insight.create({
+      title: 'A Recorded Webinar On The New Practice Directions',
+      slug: 'a-recorded-webinar',
+      format: 'video',
+      videoUrl: 'https://www.youtube.com/watch?v=spaajibade',
+      categories: ['webinar_resources'],
+      status: 'published',
+      publishedAt: new Date('2026-07-01T00:00:00.000Z'),
+    });
+
     const res = await request(app).get('/api/v1/insights?category=webinar_resources');
 
     expect(res.body.data[0].format).toBe('video');
@@ -223,10 +237,20 @@ describe('GET /api/v1/insights/{slug}', () => {
   });
 
   it('returns the video URL for a video insight', async () => {
-    const insight = await Insight.findOne({ format: 'video' }).lean();
-    const res = await request(app).get(`/api/v1/insights/${insight?.slug ?? ''}`);
+    // Built here, for the same reason as the card test above.
+    await Insight.create({
+      title: 'A Recorded Webinar On The New Practice Directions',
+      slug: 'a-recorded-webinar',
+      format: 'video',
+      videoUrl: 'https://www.youtube.com/watch?v=spaajibade',
+      categories: ['webinar_resources'],
+      status: 'published',
+      publishedAt: new Date('2026-07-01T00:00:00.000Z'),
+    });
 
-    expect(res.body.data.videoUrl).toBeTruthy();
+    const res = await request(app).get('/api/v1/insights/a-recorded-webinar');
+
+    expect(res.body.data.videoUrl).toBe('https://www.youtube.com/watch?v=spaajibade');
   });
 
   it('returns 404 for an unknown insight', async () => {

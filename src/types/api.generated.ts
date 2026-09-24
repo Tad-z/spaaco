@@ -1785,6 +1785,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users/{id}/revoke-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End every session a user holds
+         * @description Signs an account out everywhere, without needing their password. This
+         *     is what an administrator uses when an account is compromised: it
+         *     revokes the refresh chain *and* invalidates the access tokens already
+         *     issued, so a stolen bearer token stops working on its next request
+         *     rather than at the end of its fifteen minutes.
+         *
+         *     Does not change the password and does not deactivate the account —
+         *     both are separate, deliberate steps (see `docs/RUNBOOK.md`).
+         */
+        post: operations["revokeUserSessions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6979,6 +7006,32 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    revokeUserSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every session ended. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             500: components["responses"]["InternalError"];
         };

@@ -1,6 +1,11 @@
 import type { Request, Response } from 'express';
-import { createUser, listUsers, updateUser } from '../../services/user.service.js';
-import { listAuditLogs } from '../../services/audit.service.js';
+import {
+  createUser,
+  listUsers,
+  revokeUserSessions,
+  updateUser,
+} from '../../services/user.service.js';
+import { listAuditLogs, record } from '../../services/audit.service.js';
 import { toAdminUser, toAuditLogEntry } from '../../serializers/user.serializer.js';
 import { toMeta } from '../../helpers/pagination.helper.js';
 import { readBody, readParams, readQuery } from '../../middlewares/validate.middleware.js';
@@ -35,4 +40,19 @@ export async function listAuditLogsHandler(req: Request, res: Response): Promise
     data: items.map(toAuditLogEntry),
     meta: toMeta(query.page, query.pageSize, total),
   });
+}
+
+export async function revokeUserSessionsHandler(req: Request, res: Response): Promise<void> {
+  const { id } = readParams(req, idParams);
+
+  const user = await revokeUserSessions(id);
+
+  await record({
+    action: 'user.sessions.revoke',
+    entity: 'user',
+    entityId: user._id,
+    actor: req.user?.id ?? null,
+  });
+
+  res.status(204).end();
 }

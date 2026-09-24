@@ -1,12 +1,17 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
+    // `.` rather than `src`, so the operational scripts compile alongside the
+    // application. They are how an operator applies indexes, creates the first
+    // administrator and loads the launch content — none of which is reachable
+    // over HTTP — and shipping only `src` left the runbook telling people to
+    // run files that were not in the image.
+    "rootDir": ".",
     "outDir": "dist",
     "noEmit": false,
     "sourceMap": true,
     "declaration": false
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["tests/**/*", "src/**/*.test.ts"]
+  "include": ["src/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["tests/**/*", "src/**/*.test.ts", "scripts/generate-admin-content-spec.ts"]
 }

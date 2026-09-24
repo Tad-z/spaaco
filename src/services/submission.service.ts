@@ -54,10 +54,10 @@ export interface SubmissionResult {
   readonly reference: string;
 }
 
-/** A bot filled the hidden field. */
 /** The column width in every submission model. */
 const USER_AGENT_MAX = 400;
 
+/** A bot filled the hidden field. */
 const isBot = (website: string | undefined): boolean =>
   website !== undefined && website.trim() !== '';
 

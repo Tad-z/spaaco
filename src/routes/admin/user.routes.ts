@@ -3,6 +3,7 @@ import {
   createUserHandler,
   listAuditLogsHandler,
   listUsersHandler,
+  revokeUserSessionsHandler,
   updateUserHandler,
 } from '../../controllers/admin/user.controller.js';
 import { requireAuth } from '../../middlewares/require-auth.middleware.js';
@@ -25,6 +26,15 @@ export const adminUserRoutes: Router = Router();
 const adminOnly = [noStore, requireAuth(), requireRole('admin')] as const;
 
 adminUserRoutes.get('/users', ...adminOnly, validate({ query: pagination }), listUsersHandler);
+
+// The step the compromised-account procedure in docs/RUNBOOK.md depends on:
+// ending somebody else's sessions without knowing their password.
+adminUserRoutes.post(
+  '/users/:id/revoke-sessions',
+  ...adminOnly,
+  validate({ params: idParams }),
+  revokeUserSessionsHandler
+);
 adminUserRoutes.post('/users', ...adminOnly, validate({ body: createUserBody }), createUserHandler);
 adminUserRoutes.patch(
   '/users/:id',

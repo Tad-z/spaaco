@@ -6,7 +6,7 @@ import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { createTestUser, TEST_PASSWORD } from '../../support/auth.js';
-import { RefreshToken, User } from '../../../src/models/index.js';
+import { AuditLog, RefreshToken, User } from '../../../src/models/index.js';
 import { AUTH } from '../../../src/config/constants.js';
 import { hashPassword } from '../../../src/services/auth.service.js';
 import { decryptSecret } from '../../../src/helpers/crypto.helper.js';
@@ -138,7 +138,10 @@ describe('POST /api/v1/admin/auth/login', () => {
     // Failures only count against an account whose password was actually
     // wrong *and* which is active — so a lockout cannot be driven by somebody
     // who has never held the password, using a name from the website.
-    for (let attempt = 0; attempt < AUTH.maxFailedLogins + 5; attempt += 1) {
+    // Three is enough to show the counter is untouched; each attempt runs a
+    // real argon2 verify against the dummy hash, so fifteen of them would push
+    // this past the test timeout for no extra signal.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
       await request(app)
         .post('/api/v1/admin/auth/login')
         .send({ email: 'not-a-user@spaajibade.test', password: 'wrong' });
@@ -171,6 +174,31 @@ describe('POST /api/v1/admin/auth/login', () => {
 
     expect(res.status).toBe(403);
     expect(res.body.error.message).toMatch(/locked/i);
+  });
+
+  it('releases the lock when its window has passed, rather than latching', async () => {
+    for (let attempt = 0; attempt < AUTH.maxFailedLogins; attempt += 1) {
+      await request(app)
+        .post('/api/v1/admin/auth/login')
+        .send({ email: 'editor@spaajibade.test', password: 'wrong' });
+    }
+
+    // Wind the lock back into the past, as fifteen minutes would.
+    await User.updateOne(
+      { email: 'editor@spaajibade.test' },
+      { lockedUntil: new Date(Date.now() - 1000) }
+    );
+
+    // One more wrong password must not re-lock immediately. The counter used
+    // to stay at ten for ever, so a wrong guess every fifteen minutes kept an
+    // account locked out indefinitely.
+    await request(app)
+      .post('/api/v1/admin/auth/login')
+      .send({ email: 'editor@spaajibade.test', password: 'wrong' });
+
+    const after = await User.findOne({ email: 'editor@spaajibade.test' }).lean();
+    expect(after?.failedLoginCount).toBe(1);
+    expect(after?.lockedUntil).toBeNull();
   });
 
   it('clears the failure count on a successful sign-in', async () => {
@@ -472,5 +500,45 @@ describe('a password change ends the sessions it was meant to end', () => {
       .get('/api/v1/admin/auth/me')
       .set('Authorization', `Bearer ${token}`);
     expect(after.status).toBe(401);
+  });
+});
+
+describe('an administrator ending the sessions of another account', () => {
+  it('stops their access token on the very next request', async () => {
+    const admin = await createTestUser({ roles: ['admin'], email: 'boss@spaajibade.test' });
+    const victim = await createTestUser({ roles: ['editor'], email: 'victim@spaajibade.test' });
+
+    const before = await request(app)
+      .get('/api/v1/admin/auth/me')
+      .set('Authorization', `Bearer ${victim.token}`);
+    expect(before.status).toBe(200);
+
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+
+    const revoked = await request(app)
+      .post(`/api/v1/admin/users/${victim.user._id.toString()}/revoke-sessions`)
+      .set('Authorization', `Bearer ${admin.token}`);
+
+    expect(revoked.status, JSON.stringify(revoked.body)).toBe(204);
+    expectToMatchContract(revoked, 'post', '/api/v1/admin/users/{id}/revoke-sessions');
+
+    // The point: a responder can end a compromise without knowing the
+    // compromised account's password, and without waiting fifteen minutes.
+    const after = await request(app)
+      .get('/api/v1/admin/auth/me')
+      .set('Authorization', `Bearer ${victim.token}`);
+    expect(after.status).toBe(401);
+  });
+
+  it('records who did it', async () => {
+    const admin = await createTestUser({ roles: ['admin'], email: 'boss2@spaajibade.test' });
+    const victim = await createTestUser({ roles: ['editor'], email: 'victim2@spaajibade.test' });
+
+    await request(app)
+      .post(`/api/v1/admin/users/${victim.user._id.toString()}/revoke-sessions`)
+      .set('Authorization', `Bearer ${admin.token}`);
+
+    const entry = await AuditLog.findOne({ action: 'user.sessions.revoke' }).lean();
+    expect(entry?.actor?.toString()).toBe(admin.user._id.toString());
   });
 });

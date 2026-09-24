@@ -2,7 +2,6 @@ import type { Server } from 'node:http';
 import { createApp } from './app.js';
 import { config } from './config/env.js';
 import { logger } from './core/logger.js';
-import { captureError } from './core/error-tracking.js';
 import { createServerLifecycle } from './core/lifecycle.js';
 import { startRetentionSweep } from './jobs/retention.job.js';
 
@@ -20,6 +19,15 @@ async function start(): Promise<void> {
   const { connectDatabase, disconnectDatabase } = await import('./core/db.js');
 
   await connectDatabase();
+
+  // Said on every start, not once at deploy: an accepted risk that nobody is
+  // reminded of stops being an accepted risk and becomes an oversight.
+  if (config.NODE_ENV === 'production' && config.VIRUS_SCAN_DRIVER === 'noop') {
+    logger.warn(
+      'CV uploads are NOT being scanned for malware (ALLOW_UNSCANNED_UPLOADS=true). ' +
+        'Set VIRUS_SCAN_DRIVER=clamav when a scanner is available.'
+    );
+  }
 
   const app = createApp();
   const server: Server = app.listen(config.PORT, () => {
@@ -46,24 +54,21 @@ async function start(): Promise<void> {
 
   /**
    * A rejection nobody handled is a bug, and one that reaches here has already
-   * escaped every route's error handling — so it is reported and the process
-   * is brought down deliberately rather than left in an unknown state.
+   * escaped every route's error handling — so the process is brought down
+   * deliberately rather than left in an unknown state.
    */
   process.on('unhandledRejection', (reason: unknown) => {
     logger.fatal({ err: reason }, 'unhandled rejection');
-    captureError({ error: reason });
     lifecycle.shutdown('unhandledRejection');
   });
 
   process.on('uncaughtException', (error: Error) => {
     logger.fatal({ err: error }, 'uncaught exception');
-    captureError({ error });
     lifecycle.shutdown('uncaughtException');
   });
 }
 
 start().catch((error: unknown) => {
   logger.fatal({ err: error }, 'failed to start');
-  captureError({ error });
   process.exit(1);
 });

@@ -4,12 +4,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { config } from './config/env.js';
-import type { IErrorTracker } from './interfaces/integrations/error-tracking.interface.js';
 import { UPLOAD_LIMITS } from './config/constants.js';
 import { API_PREFIX, apiRoutes } from './routes/index.js';
 import { requestId } from './middlewares/request-id.middleware.js';
-import { setErrorTracker } from './core/error-tracking.js';
-import { createErrorTracker } from './integrations/error-tracking/index.js';
 import { notFound } from './middlewares/not-found.middleware.js';
 import { errorHandler } from './middlewares/error-handler.middleware.js';
 import { cacheHeaders } from './middlewares/cache-headers.middleware.js';
@@ -31,17 +28,9 @@ export interface CreateAppOptions {
    * not trip a limit meant for a whole minute of real traffic.
    */
   readonly rateLimit?: boolean;
-  /** Overrides the configured error tracker; tests assert on what it captures. */
-  readonly errorTracker?: IErrorTracker;
 }
 
 export function createApp(options: CreateAppOptions = {}): Express {
-  // Wired here rather than inside the middleware: `core` must not depend on
-  // `integrations`, and this is the outermost place that knows both. With no
-  // `SENTRY_DSN` the factory returns the noop driver, so nothing about running
-  // this API depends on having an account.
-  setErrorTracker(options.errorTracker ?? createErrorTracker());
-
   const app = express();
   const corsOrigins = options.corsOrigins ?? config.CORS_ORIGINS;
 

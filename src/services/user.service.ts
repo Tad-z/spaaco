@@ -103,3 +103,30 @@ export async function updateUser(id: string, input: UpdateUserInput): Promise<IU
 
   return updated;
 }
+
+/**
+ * End every session a user holds, without changing their password.
+ *
+ * The procedure for a compromised account said "change the password", which
+ * no administrator could actually do — `POST /admin/auth/password` needs the
+ * current password and only ever acts on the caller's own account. So the one
+ * step that ended the compromise was unavailable to the person responding to
+ * it, and unavailable to the victim if the attacker had already changed it.
+ *
+ * This revokes the refresh chain and stamps `credentialsChangedAt`, which is
+ * what makes the access token already in the attacker's hands stop working on
+ * its next request rather than in fifteen minutes.
+ */
+export async function revokeUserSessions(id: string): Promise<IUser> {
+  const user = await User.findByIdAndUpdate(
+    id,
+    { credentialsChangedAt: new Date() },
+    { new: true }
+  ).lean<IUser | null>();
+
+  if (!user) throw new NotFoundError('User');
+
+  await revokeAllSessions(user._id);
+
+  return user;
+}

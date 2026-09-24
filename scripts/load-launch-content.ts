@@ -12,9 +12,14 @@
  * week of the firm's edits — there is no `--force`, because the recovery from
  * getting that wrong is a database restore.
  *
- * It creates **everything as a draft**. The firm reviews each item, uploads the
- * real photographs, and publishes deliberately. Nothing appears on the public
- * site because a script ran.
+ * It creates **every collection item as a draft**. The firm reviews each one,
+ * uploads the real photographs, and publishes deliberately.
+ *
+ * Pages and settings are the exception, and it is worth being plain about it:
+ * they are singletons with no publish state — the site has no shell without
+ * them — so their content *is* live the moment this runs, including the
+ * `[PENDING FROM FIRM]` markers the transcription left behind. Run this before
+ * the domain points at the site, and review the page copy first.
  *
  * It creates **no images**. `scripts/seed.ts` invents placehold.co pictures,
  * which is right for development and wrong here: a placeholder that reaches
@@ -24,7 +29,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Model, Types } from 'mongoose';
+import type { Types } from 'mongoose';
 import { connectDatabase, disconnectDatabase } from '../src/core/db.js';
 import { logger } from '../src/core/logger.js';
 import {
@@ -84,17 +89,29 @@ function withoutImages(value: unknown): unknown {
 
 const asJson = (value: unknown): Json => withoutImages(value) as Json;
 
-/** Every content collection, and whether it holds anything. */
-const COLLECTIONS: readonly { name: string; model: Model<never> }[] = [
-  { name: 'practice areas', model: PracticeArea as unknown as Model<never> },
-  { name: 'people', model: Person as unknown as Model<never> },
-  { name: 'offices', model: Office as unknown as Model<never> },
-  { name: 'insights', model: Insight as unknown as Model<never> },
-  { name: 'recognitions', model: Recognition as unknown as Model<never> },
-  { name: 'FAQs', model: Faq as unknown as Model<never> },
-  { name: 'jobs', model: Job as unknown as Model<never> },
-  { name: 'pages', model: Page as unknown as Model<never> },
-  { name: 'settings', model: Settings as unknown as Model<never> },
+/**
+ * Every collection this loader writes, and the two operations it needs from
+ * each: counting, for the emptiness guard, and clearing, for the rollback.
+ *
+ * A structural type rather than `Model<never>`: the models have different
+ * document types, so a shared Mongoose generic would need a cast per entry,
+ * and what is actually required here is two methods.
+ */
+interface Countable {
+  countDocuments(): Promise<number>;
+  deleteMany(filter: Record<string, never>): Promise<unknown>;
+}
+
+const COLLECTIONS: readonly { name: string; model: Countable }[] = [
+  { name: 'practice areas', model: PracticeArea },
+  { name: 'people', model: Person },
+  { name: 'offices', model: Office },
+  { name: 'insights', model: Insight },
+  { name: 'recognitions', model: Recognition },
+  { name: 'FAQs', model: Faq },
+  { name: 'jobs', model: Job },
+  { name: 'pages', model: Page },
+  { name: 'settings', model: Settings },
 ];
 
 /** What is already there, so the refusal can say what it found. */
@@ -136,6 +153,23 @@ const toIds = (map: SlugMap, slugs: unknown): Types.ObjectId[] =>
 export async function loadLaunchContent(): Promise<LoadResult> {
   const draft = { status: 'draft' as const, publishedAt: null };
 
+  try {
+    return await write(draft);
+  } catch (error: unknown) {
+    // A half-loaded database is the worst outcome: the guard refuses to run
+    // again, there is no --force, and the operator's only recovery would be
+    // dropping collections by hand in production. So a failure undoes itself.
+    await rollback();
+    throw error;
+  }
+}
+
+/** Remove everything the loader creates, for a run that failed partway. */
+async function rollback(): Promise<void> {
+  for (const { model } of COLLECTIONS) await model.deleteMany({});
+}
+
+async function write(draft: { status: 'draft'; publishedAt: null }): Promise<LoadResult> {
   // Offices and practice areas first: people, jobs and insights point at them.
   const officeIds: SlugMap = new Map();
   for (const doc of readDocs('offices.json')) {
@@ -201,9 +235,8 @@ export async function loadLaunchContent(): Promise<LoadResult> {
     });
   }
 
-  // Pages and settings are singletons with no publish state: they exist or the
-  // site has no shell. Their *content* is still reviewed before anyone sees it,
-  // because every collection above is draft.
+  // Pages and settings have no publish state, so unlike everything above,
+  // their content is public as soon as it exists. The CLI says so.
   for (const doc of readDocs('pages.json')) {
     const { key, story, ...rest } = asJson(doc);
     const sections: Json = { ...rest };
@@ -261,7 +294,12 @@ async function main(): Promise<void> {
 
     const result = await loadLaunchContent();
 
-    logger.info(result, 'launch content loaded as drafts, with no images');
+    logger.info(result, 'launch content loaded, with no images');
+    logger.warn(
+      'Pages and settings have no draft state, so the page copy — including ' +
+        'any [PENDING FROM FIRM] markers — is live NOW. Review it before the ' +
+        'domain points at the site.'
+    );
     logger.info(
       'Next: sign in to the dashboard, review each item, upload the real ' +
         'photographs, and publish what is ready.'

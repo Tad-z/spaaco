@@ -80,6 +80,17 @@ const envSchema = z.object({
   MAILER_DRIVER: z.enum(['log', 'resend']).default('log'),
   CAPTCHA_DRIVER: z.enum(['noop', 'turnstile']).default('noop'),
   VIRUS_SCAN_DRIVER: z.enum(['noop', 'clamav']).default('noop'),
+  /**
+   * Accept CV uploads with no malware scan in production.
+   *
+   * Off by default, because the dashboard reports a CV as clean and somebody
+   * at the firm opens it on their own machine. Turning it on is a decision the
+   * firm takes knowingly; the API says so on every start.
+   */
+  ALLOW_UNSCANNED_UPLOADS: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
   REVALIDATE_DRIVER: z.enum(['noop', 'http']).default('noop'),
 
   // --- integration credentials (each required only by its own driver) ---
@@ -109,9 +120,6 @@ const envSchema = z.object({
 
   // --- observability ---
   LOG_LEVEL: z.enum(LOG_LEVELS).default('info'),
-  SENTRY_DSN: optionalString,
-  /** Tags error reports, so an issue can be traced to a deploy. */
-  RELEASE: optionalString,
 });
 
 /** Each driver that needs credentials, and the variables it cannot run without. */
@@ -180,14 +188,18 @@ const refinedSchema = envSchema.superRefine((value, ctx) => {
     });
   }
 
-  // `noop` reports every file clean, and the API then records `scanStatus:
-  // "clean"` and hands out download links on the strength of it. In production
-  // that would be a lie told by the dashboard.
-  if (value.VIRUS_SCAN_DRIVER === 'noop') {
+  // `noop` reports every file clean, and the dashboard then tells HR the CV
+  // was scanned. Running ClamAV means a second always-on service, which is not
+  // available on every hosting plan — so this is an opt-out rather than a
+  // refusal, and it has to be taken deliberately. `server.ts` logs a warning on
+  // every start while it is in force, so it cannot be forgotten quietly.
+  if (value.VIRUS_SCAN_DRIVER === 'noop' && !value.ALLOW_UNSCANNED_UPLOADS) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['VIRUS_SCAN_DRIVER'],
-      message: 'VIRUS_SCAN_DRIVER must be "clamav" in production; "noop" reports every file clean',
+      message:
+        'VIRUS_SCAN_DRIVER is "noop", which marks every CV clean without looking at it. ' +
+        'Set VIRUS_SCAN_DRIVER=clamav, or set ALLOW_UNSCANNED_UPLOADS=true to accept the risk.',
     });
   }
 
