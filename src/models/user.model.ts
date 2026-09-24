@@ -5,15 +5,18 @@ import { USER_ROLES } from '../constants/enums.js';
 
 const userSchema = new Schema<IUser>(
   {
-    name: { type: String, required: true, trim: true, maxlength: 120 },
-    email: {
+    username: {
       type: String,
       required: true,
       unique: true,
       trim: true,
       lowercase: true,
-      maxlength: 254,
+      maxlength: 40,
     },
+    name: { type: String, required: true, trim: true, maxlength: 120 },
+    // Not unique and not required: it is a notification address the holder
+    // sets, not the credential, and two roles may legitimately share an inbox.
+    email: { type: String, default: null, trim: true, lowercase: true, maxlength: 254 },
     // select: false, so a stray query cannot pull the hash into a payload.
     passwordHash: { type: String, required: true, select: false },
     roles: {
@@ -23,10 +26,6 @@ const userSchema = new Schema<IUser>(
         validator: (value: string[]): boolean => value.length > 0,
         message: 'a user needs at least one role',
       },
-    },
-    totp: {
-      secretEncrypted: { type: String, default: null, select: false },
-      enabled: { type: Boolean, default: false },
     },
     isActive: { type: Boolean, default: true },
     lastLoginAt: { type: Date, default: null },
@@ -40,8 +39,8 @@ const userSchema = new Schema<IUser>(
 userSchema.set('toJSON', {
   versionKey: false,
   transform: (_doc, ret) => {
-    const { _id, __v, passwordHash, totp, ...rest } = ret;
-    return { ...rest, id: _id.toHexString(), totpEnabled: totp.enabled };
+    const { _id, __v, passwordHash, ...rest } = ret;
+    return { ...rest, id: _id.toHexString() };
   },
 });
 

@@ -4,6 +4,7 @@ import { config } from './config/env.js';
 import { logger } from './core/logger.js';
 import { createServerLifecycle } from './core/lifecycle.js';
 import { startRetentionSweep } from './jobs/retention.job.js';
+import { ensureRoleAccounts } from './services/bootstrap.service.js';
 
 /**
  * Process entry point: connect, listen, and shut down cleanly.
@@ -19,6 +20,11 @@ async function start(): Promise<void> {
   const { connectDatabase, disconnectDatabase } = await import('./core/db.js');
 
   await connectDatabase();
+
+  // One account per role, created from the environment if they are not there
+  // yet (ADR-043). Existing accounts are never touched, so a restart cannot
+  // reset a password the firm has changed.
+  await ensureRoleAccounts();
 
   // Said on every start, not once at deploy: an accepted risk that nobody is
   // reminded of stops being an accepted risk and becomes an oversight.

@@ -11,6 +11,7 @@ import { setCaptcha } from '../../../src/services/captcha.service.js';
 import { setVirusScanner } from '../../../src/services/virus-scan.service.js';
 import { privateStorage } from '../../../src/integrations/storage/private/index.js';
 import { captureLogs } from '../../support/logs.js';
+import { createTestUser } from '../../support/auth.js';
 import type { SentMail } from '../../../src/interfaces/integrations/mailer.interface.js';
 
 /**
@@ -32,8 +33,15 @@ beforeAll(async () => {
   await Promise.all(mongoose.modelNames().map((name) => mongoose.model(name).syncIndexes()));
 });
 
+/** HR's inbox: where application alerts go, read from the hr account. */
+const HR_INBOX = 'hr@spaajibade.test';
+
 beforeEach(async () => {
   await runSeed();
+
+  // An application's notification goes to whatever address the hr account
+  // carries, so one has to exist with an email on it (ADR-043).
+  await createTestUser({ roles: ['hr'], username: 'hr', email: HR_INBOX });
 
   sent.length = 0;
   setMailer({
@@ -250,7 +258,7 @@ describe('the honeypot and the emails', () => {
     const res = await apply(await openJobId());
     const reference: string = res.body.data.reference;
 
-    const notification = sent.find((mail) => !mail.to.includes('temitope'));
+    const notification = sent.find((mail) => mail.to === HR_INBOX);
     const body = `${notification?.subject ?? ''} ${notification?.text ?? ''}`;
 
     expect(body).toContain(reference);

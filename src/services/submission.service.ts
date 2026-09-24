@@ -18,6 +18,7 @@ import {
   Office,
   PracticeArea,
   Settings,
+  User,
 } from '../models/index.js';
 import { privateStorage } from '../integrations/storage/private/index.js';
 import { scanFile } from './virus-scan.service.js';
@@ -29,6 +30,7 @@ import {
   notificationEmail,
 } from '../templates/emails/submission.template.js';
 import type { SubmissionKind } from '../templates/emails/submission.template.js';
+import type { UserRole } from '../types/api.js';
 import type {
   ApplicationBody,
   EnquiryBody,
@@ -94,6 +96,27 @@ async function requireHuman(token: string, ip: string): Promise<void> {
 }
 
 /**
+ * Where a form's notification goes: the inbox of the role that handles it.
+ *
+ * Enquiries and messages are business development's work, applications are
+ * HR's — the same split the role matrix enforces on reading them. The address
+ * comes from that account's profile rather than an environment variable, so
+ * whoever holds the role can redirect their own notifications without a deploy
+ * (ADR-043).
+ *
+ * `undefined` when nobody has set one yet. The caller logs it and carries on:
+ * the submission is already stored, and losing an enquiry because nobody
+ * filled in a profile field would be a far worse failure than a missed email.
+ */
+async function recipientFor(role: UserRole): Promise<string | undefined> {
+  const account = await User.findOne({ roles: role, isActive: true })
+    .select('email')
+    .lean<{ email?: string | null } | null>();
+
+  return account?.email ?? undefined;
+}
+
+/**
  * Tell the firm, then the submitter.
  *
  * Awaited so a test can observe it, but every failure inside `sendMail` is
@@ -104,9 +127,20 @@ async function notify(
   kind: SubmissionKind,
   reference: string,
   submitter: { email: string; fullName: string },
-  notifyTo: string
+  notifyRole: UserRole
 ): Promise<void> {
-  await sendMail({ to: notifyTo, ...notificationEmail(kind, reference) });
+  const notifyTo = await recipientFor(notifyRole);
+
+  if (notifyTo === undefined) {
+    // The reference only: the point of this branch is that somebody notices
+    // the gap, not that the log becomes a copy of the submission.
+    logger.warn(
+      { reference, role: notifyRole },
+      'no notification address is set for this role; nobody was told'
+    );
+  } else {
+    await sendMail({ to: notifyTo, ...notificationEmail(kind, reference) });
+  }
 
   await sendMail({
     to: submitter.email,
@@ -193,7 +227,7 @@ export async function submitEnquiry(
 
   logger.info({ reference: created.reference, form: 'enquiry' }, 'submission received');
 
-  await notify('enquiry', created.reference, body, config.NOTIFY_ENQUIRIES_TO);
+  await notify('enquiry', created.reference, body, 'business_dev');
 
   return { reference: created.reference };
 }
@@ -219,7 +253,7 @@ export async function submitMessage(
 
   logger.info({ reference: created.reference, form: 'message' }, 'submission received');
 
-  await notify('message', created.reference, body, config.NOTIFY_ENQUIRIES_TO);
+  await notify('message', created.reference, body, 'business_dev');
 
   return { reference: created.reference };
 }
@@ -296,12 +330,7 @@ export async function submitApplication(
 
   logger.info({ reference: created.reference, form: 'application' }, 'submission received');
 
-  await notify(
-    'application',
-    created.reference,
-    body,
-    config.NOTIFY_APPLICATIONS_TO ?? config.NOTIFY_ENQUIRIES_TO
-  );
+  await notify('application', created.reference, body, 'hr');
 
   return { reference: created.reference };
 }

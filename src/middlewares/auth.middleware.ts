@@ -101,7 +101,6 @@ export function optionalPreviewAuth(req: Request, _res: Response, next: NextFunc
       const permitted =
         user !== null &&
         user.isActive &&
-        user.totp.enabled &&
         // The same rule `requireAuth` applies: without it, a password changed
         // because of a compromise ended the compromise for the admin API and
         // left every draft readable for the rest of the token's fifteen

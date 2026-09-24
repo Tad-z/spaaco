@@ -36,7 +36,6 @@ export const TEST_ENV: Readonly<Record<string, string>> = Object.freeze({
   VIRUS_SCAN_DRIVER: 'noop',
   REVALIDATE_DRIVER: 'noop',
 
-  NOTIFY_ENQUIRIES_TO: 'frontoffice@example.test',
   ADMIN_DASHBOARD_URL: 'http://localhost:3001',
   RETENTION_ENQUIRY_DAYS: '730',
   RETENTION_APPLICATION_DAYS: '365',

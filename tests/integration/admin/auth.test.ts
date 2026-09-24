@@ -1,4 +1,3 @@
-import { authenticator } from 'otplib';
 import mongoose from 'mongoose';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
@@ -9,8 +8,6 @@ import { createTestUser, TEST_PASSWORD } from '../../support/auth.js';
 import { AuditLog, RefreshToken, User } from '../../../src/models/index.js';
 import { AUTH } from '../../../src/config/constants.js';
 import { hashPassword } from '../../../src/services/auth.service.js';
-import { decryptSecret } from '../../../src/helpers/crypto.helper.js';
-import { TEST_ENV } from '../../support/test-env.js';
 
 /**
  * Admin authentication.
@@ -40,35 +37,35 @@ beforeAll(async () => {
 
 describe('POST /api/v1/admin/auth/login', () => {
   beforeEach(async () => {
-    await createTestUser({ email: 'editor@spaajibade.test', totpEnabled: false });
+    await createTestUser({ username: 'editor', roles: ['editor'] });
   });
 
   it('signs in and returns an access token with the user', async () => {
     const res = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'editor@spaajibade.test', password: TEST_PASSWORD });
+      .send({ username: 'editor', password: TEST_PASSWORD });
 
     expect(res.status).toBe(200);
     expectToMatchContract(res, 'post', '/api/v1/admin/auth/login');
     expect(res.body.data.accessToken).toBeTruthy();
-    expect(res.body.data.user.email).toBe('editor@spaajibade.test');
+    expect(res.body.data.user.username).toBe('editor');
   });
 
-  it('never returns the password hash or the TOTP secret', async () => {
+  it('never returns the password hash', async () => {
     const res = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'editor@spaajibade.test', password: TEST_PASSWORD });
+      .send({ username: 'editor', password: TEST_PASSWORD });
 
     const body = JSON.stringify(res.body);
     expect(body).not.toContain('passwordHash');
     expect(body).not.toContain('argon2');
-    expect(body).not.toContain('secretEncrypted');
+    expect(body).not.toContain('passwordHash');
   });
 
   it('sets the refresh token as an httpOnly cookie, not in the body', async () => {
     const res = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'editor@spaajibade.test', password: TEST_PASSWORD });
+      .send({ username: 'editor', password: TEST_PASSWORD });
 
     const cookie = cookieFrom(res);
     expect(cookie).toContain('HttpOnly');
@@ -80,11 +77,11 @@ describe('POST /api/v1/admin/auth/login', () => {
   it('gives the same answer for a wrong password and an unknown email', async () => {
     const wrongPassword = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'editor@spaajibade.test', password: 'not-the-right-password' });
+      .send({ username: 'editor', password: 'not-the-right-password' });
 
     const unknownEmail = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'nobody@spaajibade.test', password: TEST_PASSWORD });
+      .send({ username: 'nobody', password: TEST_PASSWORD });
 
     // Otherwise the login form tells an attacker who works at the firm.
     expect(wrongPassword.status).toBe(401);
@@ -93,10 +90,12 @@ describe('POST /api/v1/admin/auth/login', () => {
     expectToMatchContract(wrongPassword, 'post', '/api/v1/admin/auth/login');
   });
 
-  it('returns 400 for a malformed email', async () => {
+  it('returns 400 for an email where a username belongs', async () => {
+    // A frequent mistake while the dashboard is being built, and a confusing
+    // one if it answered a bare 401 instead.
     const res = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'not-an-email', password: TEST_PASSWORD });
+      .send({ username: 'editor@spaajibade.test', password: TEST_PASSWORD });
 
     expect(res.status).toBe(400);
     expectToMatchContract(res, 'post', '/api/v1/admin/auth/login');
@@ -106,28 +105,27 @@ describe('POST /api/v1/admin/auth/login', () => {
     // The login form must not be a directory of who works at the firm. The
     // staff are named on the public site, so an address format is easy to
     // guess; distinguishable answers would turn that into a list of accounts.
-    const attempt = async (email: string): Promise<{ status: number; body: string }> => {
+    const attempt = async (username: string): Promise<{ status: number; body: string }> => {
       const res = await request(app)
         .post('/api/v1/admin/auth/login')
-        .send({ email, password: 'definitely-not-the-password' });
+        .send({ username, password: 'definitely-not-the-password' });
 
       return { status: res.status, body: JSON.stringify(res.body) };
     };
 
-    await User.updateOne({ email: 'editor@spaajibade.test' }, { isActive: false });
+    await User.updateOne({ username: 'editor' }, { isActive: false });
     await User.create({
+      username: 'locked',
       name: 'Locked Out',
-      email: 'locked@spaajibade.test',
       passwordHash: await hashPassword(TEST_PASSWORD),
       roles: ['editor'],
       isActive: true,
       lockedUntil: new Date(Date.now() + 60_000),
-      totp: { enabled: true, secretEncrypted: null },
     });
 
-    const unknown = await attempt('nobody-here@spaajibade.test');
-    const disabled = await attempt('editor@spaajibade.test');
-    const locked = await attempt('locked@spaajibade.test');
+    const unknown = await attempt('nobody-here');
+    const disabled = await attempt('editor');
+    const locked = await attempt('locked');
 
     expect(unknown.status).toBe(401);
     expect(disabled).toEqual(unknown);
@@ -144,19 +142,19 @@ describe('POST /api/v1/admin/auth/login', () => {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await request(app)
         .post('/api/v1/admin/auth/login')
-        .send({ email: 'not-a-user@spaajibade.test', password: 'wrong' });
+        .send({ username: 'not-a-user', password: 'wrong' });
     }
 
-    const stored = await User.findOne({ email: 'editor@spaajibade.test' }).lean();
+    const stored = await User.findOne({ username: 'editor' }).lean();
     expect(stored?.failedLoginCount ?? 0).toBe(0);
   });
 
   it('refuses a disabled account', async () => {
-    await User.updateOne({ email: 'editor@spaajibade.test' }, { isActive: false });
+    await User.updateOne({ username: 'editor' }, { isActive: false });
 
     const res = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'editor@spaajibade.test', password: TEST_PASSWORD });
+      .send({ username: 'editor', password: TEST_PASSWORD });
 
     expect(res.status).toBe(403);
   });
@@ -165,12 +163,12 @@ describe('POST /api/v1/admin/auth/login', () => {
     for (let attempt = 0; attempt < AUTH.maxFailedLogins; attempt += 1) {
       await request(app)
         .post('/api/v1/admin/auth/login')
-        .send({ email: 'editor@spaajibade.test', password: 'wrong' });
+        .send({ username: 'editor', password: 'wrong' });
     }
 
     const res = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'editor@spaajibade.test', password: TEST_PASSWORD });
+      .send({ username: 'editor', password: TEST_PASSWORD });
 
     expect(res.status).toBe(403);
     expect(res.body.error.message).toMatch(/locked/i);
@@ -180,23 +178,20 @@ describe('POST /api/v1/admin/auth/login', () => {
     for (let attempt = 0; attempt < AUTH.maxFailedLogins; attempt += 1) {
       await request(app)
         .post('/api/v1/admin/auth/login')
-        .send({ email: 'editor@spaajibade.test', password: 'wrong' });
+        .send({ username: 'editor', password: 'wrong' });
     }
 
     // Wind the lock back into the past, as fifteen minutes would.
-    await User.updateOne(
-      { email: 'editor@spaajibade.test' },
-      { lockedUntil: new Date(Date.now() - 1000) }
-    );
+    await User.updateOne({ username: 'editor' }, { lockedUntil: new Date(Date.now() - 1000) });
 
     // One more wrong password must not re-lock immediately. The counter used
     // to stay at ten for ever, so a wrong guess every fifteen minutes kept an
     // account locked out indefinitely.
     await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'editor@spaajibade.test', password: 'wrong' });
+      .send({ username: 'editor', password: 'wrong' });
 
-    const after = await User.findOne({ email: 'editor@spaajibade.test' }).lean();
+    const after = await User.findOne({ username: 'editor' }).lean();
     expect(after?.failedLoginCount).toBe(1);
     expect(after?.lockedUntil).toBeNull();
   });
@@ -204,109 +199,23 @@ describe('POST /api/v1/admin/auth/login', () => {
   it('clears the failure count on a successful sign-in', async () => {
     await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'editor@spaajibade.test', password: 'wrong' });
+      .send({ username: 'editor', password: 'wrong' });
 
     await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'editor@spaajibade.test', password: TEST_PASSWORD });
+      .send({ username: 'editor', password: TEST_PASSWORD });
 
-    const user = await User.findOne({ email: 'editor@spaajibade.test' }).lean();
+    const user = await User.findOne({ username: 'editor' }).lean();
     expect(user?.failedLoginCount).toBe(0);
-  });
-});
-
-describe('two-factor at sign-in', () => {
-  it('asks for a code with a distinct signal rather than rejecting the password', async () => {
-    await createTestUser({ email: 'mfa@spaajibade.test', totpEnabled: true });
-
-    const res = await request(app)
-      .post('/api/v1/admin/auth/login')
-      .send({ email: 'mfa@spaajibade.test', password: TEST_PASSWORD });
-
-    expect(res.status).toBe(401);
-    // The dashboard needs to tell "prompt for a code" from "wrong password".
-    expect(res.body.error.details).toEqual([{ path: 'totp', message: 'TOTP_REQUIRED' }]);
-    expectToMatchContract(res, 'post', '/api/v1/admin/auth/login');
-  });
-
-  it('accepts a valid code once the authenticator is enrolled', async () => {
-    const { token } = await createTestUser({ email: 'mfa3@spaajibade.test', totpEnabled: false });
-
-    const setup = await request(app)
-      .post('/api/v1/admin/auth/2fa/setup')
-      .set('Authorization', `Bearer ${token}`);
-    expect(setup.status).toBe(200);
-    expectToMatchContract(setup, 'post', '/api/v1/admin/auth/2fa/setup');
-
-    const enabled = await request(app)
-      .post('/api/v1/admin/auth/2fa/enable')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ code: authenticator.generate(setup.body.data.secret) });
-    expect(enabled.status).toBe(204);
-    expectToMatchContract(enabled, 'post', '/api/v1/admin/auth/2fa/enable');
-
-    const login = await request(app)
-      .post('/api/v1/admin/auth/login')
-      .send({
-        email: 'mfa3@spaajibade.test',
-        password: TEST_PASSWORD,
-        totp: authenticator.generate(setup.body.data.secret),
-      });
-
-    expect(login.status).toBe(200);
-  });
-
-  it('stores the TOTP secret encrypted, not in the clear', async () => {
-    const { token, user } = await createTestUser({
-      email: 'enc@spaajibade.test',
-      totpEnabled: false,
-    });
-
-    const setup = await request(app)
-      .post('/api/v1/admin/auth/2fa/setup')
-      .set('Authorization', `Bearer ${token}`);
-
-    const stored = await User.findById(user._id).select('+totp.secretEncrypted').lean();
-    const encrypted = stored?.totp.secretEncrypted ?? '';
-
-    expect(encrypted).not.toContain(setup.body.data.secret);
-    expect(decryptSecret(encrypted, TEST_ENV.ENCRYPTION_KEY ?? '')).toBe(setup.body.data.secret);
-  });
-
-  it('rejects a wrong code when enabling', async () => {
-    const { token } = await createTestUser({ email: 'bad@spaajibade.test', totpEnabled: false });
-
-    await request(app).post('/api/v1/admin/auth/2fa/setup').set('Authorization', `Bearer ${token}`);
-
-    const res = await request(app)
-      .post('/api/v1/admin/auth/2fa/enable')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ code: '000000' });
-
-    expect(res.status).toBe(401);
-  });
-
-  it('refuses to enable before setup has run', async () => {
-    const { token } = await createTestUser({
-      email: 'nosetup@spaajibade.test',
-      totpEnabled: false,
-    });
-
-    const res = await request(app)
-      .post('/api/v1/admin/auth/2fa/enable')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ code: '123456' });
-
-    expect(res.status).toBe(409);
   });
 });
 
 describe('refresh rotation', () => {
   const signIn = async (): Promise<string> => {
-    await createTestUser({ email: 'rot@spaajibade.test', totpEnabled: false });
+    await createTestUser({ username: 'rot' });
     const res = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'rot@spaajibade.test', password: TEST_PASSWORD });
+      .send({ username: 'rot', password: TEST_PASSWORD });
     return cookieFrom(res);
   };
 
@@ -371,7 +280,7 @@ describe('refresh rotation', () => {
 
 describe('GET /api/v1/admin/auth/me', () => {
   it('returns the signed-in user', async () => {
-    const { token } = await createTestUser({ email: 'me@spaajibade.test' });
+    const { token } = await createTestUser({ username: 'me', email: 'me@spaajibade.test' });
 
     const res = await request(app)
       .get('/api/v1/admin/auth/me')
@@ -379,6 +288,7 @@ describe('GET /api/v1/admin/auth/me', () => {
 
     expect(res.status).toBe(200);
     expectToMatchContract(res, 'get', '/api/v1/admin/auth/me');
+    expect(res.body.data.username).toBe('me');
     expect(res.body.data.email).toBe('me@spaajibade.test');
   });
 
@@ -390,7 +300,7 @@ describe('GET /api/v1/admin/auth/me', () => {
   });
 
   it('stops working the moment the account is deactivated', async () => {
-    const { token, user } = await createTestUser({ email: 'gone@spaajibade.test' });
+    const { token, user } = await createTestUser({ username: 'gone' });
 
     await User.updateOne({ _id: user._id }, { isActive: false });
 
@@ -404,10 +314,10 @@ describe('GET /api/v1/admin/auth/me', () => {
 
 describe('POST /api/v1/admin/auth/password', () => {
   it('changes the password and revokes every existing session', async () => {
-    await createTestUser({ email: 'pw@spaajibade.test', totpEnabled: false });
+    await createTestUser({ username: 'pw' });
     const login = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'pw@spaajibade.test', password: TEST_PASSWORD });
+      .send({ username: 'pw', password: TEST_PASSWORD });
 
     const res = await request(app)
       .post('/api/v1/admin/auth/password')
@@ -425,12 +335,12 @@ describe('POST /api/v1/admin/auth/password', () => {
 
     const relogin = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'pw@spaajibade.test', password: 'a-brand-new-long-passphrase' });
+      .send({ username: 'pw', password: 'a-brand-new-long-passphrase' });
     expect(relogin.status).toBe(200);
   });
 
   it('refuses without the current password', async () => {
-    const { token } = await createTestUser({ email: 'pw2@spaajibade.test' });
+    const { token } = await createTestUser({ username: 'pw2' });
 
     const res = await request(app)
       .post('/api/v1/admin/auth/password')
@@ -441,7 +351,7 @@ describe('POST /api/v1/admin/auth/password', () => {
   });
 
   it('refuses a new password shorter than the minimum', async () => {
-    const { token } = await createTestUser({ email: 'pw3@spaajibade.test' });
+    const { token } = await createTestUser({ username: 'pw3' });
 
     const res = await request(app)
       .post('/api/v1/admin/auth/password')
@@ -452,32 +362,9 @@ describe('POST /api/v1/admin/auth/password', () => {
   });
 });
 
-describe('two-factor enforcement', () => {
-  it('blocks an admin route until two-factor is enabled', async () => {
-    const { token } = await createTestUser({ roles: ['admin'], totpEnabled: false });
-
-    const res = await request(app)
-      .get('/api/v1/admin/users')
-      .set('Authorization', `Bearer ${token}`);
-
-    expect(res.status).toBe(403);
-    expect(res.body.error.details).toEqual([{ path: 'totp', message: 'TOTP_REQUIRED' }]);
-  });
-
-  it('still allows the auth routes, or nobody could ever enrol', async () => {
-    const { token } = await createTestUser({ totpEnabled: false });
-
-    const res = await request(app)
-      .get('/api/v1/admin/auth/me')
-      .set('Authorization', `Bearer ${token}`);
-
-    expect(res.status).toBe(200);
-  });
-});
-
 describe('a password change ends the sessions it was meant to end', () => {
   it('stops an access token that was issued before it', async () => {
-    const { token } = await createTestUser({ roles: ['admin'], email: 'rotate@spaajibade.test' });
+    const { token } = await createTestUser({ roles: ['admin'], username: 'rotate' });
 
     const before = await request(app)
       .get('/api/v1/admin/auth/me')
@@ -505,8 +392,8 @@ describe('a password change ends the sessions it was meant to end', () => {
 
 describe('an administrator ending the sessions of another account', () => {
   it('stops their access token on the very next request', async () => {
-    const admin = await createTestUser({ roles: ['admin'], email: 'boss@spaajibade.test' });
-    const victim = await createTestUser({ roles: ['editor'], email: 'victim@spaajibade.test' });
+    const admin = await createTestUser({ roles: ['admin'], username: 'boss' });
+    const victim = await createTestUser({ roles: ['editor'], username: 'victim' });
 
     const before = await request(app)
       .get('/api/v1/admin/auth/me')
@@ -531,8 +418,8 @@ describe('an administrator ending the sessions of another account', () => {
   });
 
   it('records who did it', async () => {
-    const admin = await createTestUser({ roles: ['admin'], email: 'boss2@spaajibade.test' });
-    const victim = await createTestUser({ roles: ['editor'], email: 'victim2@spaajibade.test' });
+    const admin = await createTestUser({ roles: ['admin'], username: 'boss2' });
+    const victim = await createTestUser({ roles: ['editor'], username: 'victim2' });
 
     await request(app)
       .post(`/api/v1/admin/users/${victim.user._id.toString()}/revoke-sessions`)

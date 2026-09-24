@@ -1,6 +1,6 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { Types } from 'mongoose';
-import { ForbiddenError, UnauthenticatedError } from '../core/errors.js';
+import { UnauthenticatedError } from '../core/errors.js';
 import { getUserById } from '../services/auth.service.js';
 import { bearerToken, verifyAccessToken } from './auth.middleware.js';
 import { namedHandler } from '../helpers/named-handler.helper.js';
@@ -20,7 +20,6 @@ import type { UserRole } from '../types/api.js';
 export interface AuthenticatedUser {
   readonly id: Types.ObjectId;
   readonly roles: readonly UserRole[];
-  readonly totpEnabled: boolean;
 }
 
 declare global {
@@ -32,15 +31,7 @@ declare global {
   }
 }
 
-export interface RequireAuthOptions {
-  /**
-   * Allow a user who has not yet enrolled in two-factor. Only the auth routes
-   * set this, so somebody can complete setup.
-   */
-  readonly allowWithoutTotp?: boolean;
-}
-
-export function requireAuth(options: RequireAuthOptions = {}): RequestHandler {
+export function requireAuth(): RequestHandler {
   const handler: RequestHandler = (req: Request, _res: Response, next: NextFunction): void => {
     const token = bearerToken(req);
     if (token === undefined) {
@@ -73,16 +64,7 @@ export function requireAuth(options: RequireAuthOptions = {}): RequestHandler {
           return;
         }
 
-        if (!user.totp.enabled && options.allowWithoutTotp !== true) {
-          next(
-            new ForbiddenError('Two-factor authentication must be enabled to use the admin API', [
-              { path: 'totp', message: 'TOTP_REQUIRED' },
-            ])
-          );
-          return;
-        }
-
-        req.user = { id: user._id, roles: user.roles, totpEnabled: user.totp.enabled };
+        req.user = { id: user._id, roles: user.roles };
         next();
       })
       .catch(next);

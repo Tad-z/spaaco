@@ -784,9 +784,8 @@ paths:
             schema:
               $ref: '#/components/schemas/LoginRequest'
             example:
-              email: editor@spaajibade.com
+              username: editor
               password: a-correct-horse-battery-staple
-              totp: '123456'
       responses:
         '200':
           description: Signed in.
@@ -805,10 +804,10 @@ paths:
                   expiresIn: 900
                   user:
                     id: 665f1a2b3c4d5e6f70819293
+                    username: editor
                     name: Ada Nwosu
                     email: editor@spaajibade.com
                     roles: [editor]
-                    totpEnabled: true
                     isActive: true
                     lastLoginAt: '2026-09-23T09:12:00.000Z'
         '400':
@@ -850,10 +849,10 @@ paths:
                   expiresIn: 900
                   user:
                     id: 665f1a2b3c4d5e6f70819293
+                    username: editor
                     name: Ada Nwosu
                     email: editor@spaajibade.com
                     roles: [editor]
-                    totpEnabled: true
                     isActive: true
                     lastLoginAt: '2026-09-23T09:12:00.000Z'
         '401':
@@ -900,32 +899,39 @@ paths:
               example:
                 data:
                   id: 665f1a2b3c4d5e6f70819293
+                  username: editor
                   name: Ada Nwosu
                   email: editor@spaajibade.com
                   roles: [editor]
-                  totpEnabled: true
                   isActive: true
                   lastLoginAt: '2026-09-23T09:12:00.000Z'
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '500':
           $ref: '#/components/responses/InternalError'
-
-  /api/v1/admin/auth/2fa/setup:
-    post:
+    patch:
       tags: [Admin auth]
-      operationId: adminTotpSetup
-      summary: Begin two-factor setup
+      operationId: updateOwnProfile
+      summary: Change your own display name and notification address
       description: |
-        Generates a TOTP secret and returns it with an `otpauth://` URI for the
-        authenticator app. The secret is stored encrypted and is not active
-        until confirmed by `2fa/enable`, so an abandoned setup cannot lock
-        anyone out.
+        The email set here is where this role's notifications go — enquiries
+        and messages for `business_dev`, job applications for `hr` — so the
+        person holding the account sets it themselves rather than an
+        administrator setting it for them (ADR-043).
+
+        It is not a credential: sign-in is by username and password.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfileUpdateRequest' }
+            example:
+              email: chinelo@spaajibade.com
       responses:
         '200':
-          description: A secret to enrol.
+          description: The updated account.
           content:
             application/json:
               schema:
@@ -933,44 +939,20 @@ paths:
                 additionalProperties: false
                 required: [data]
                 properties:
-                  data:
-                    $ref: '#/components/schemas/TotpSetup'
+                  data: { $ref: '#/components/schemas/AdminUser' }
               example:
                 data:
-                  secret: JBSWY3DPEHPK3PXP
-                  otpauthUrl: otpauth://totp/SPA%20Ajibade%20&%20Co.:editor@spaajibade.com?secret=JBSWY3DPEHPK3PXP&issuer=SPA%20Ajibade%20%26%20Co.
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
-  /api/v1/admin/auth/2fa/enable:
-    post:
-      tags: [Admin auth]
-      operationId: adminTotpEnable
-      summary: Confirm two-factor setup
-      description: Activates the pending secret once a valid code proves the app is enrolled.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TotpEnableRequest'
-            example:
-              code: '123456'
-      responses:
-        '204':
-          description: Two-factor authentication is now required for this account.
+                  id: 665f1a2b3c4d5e6f70819293
+                  username: business_dev
+                  name: Chinelo Okafor
+                  email: chinelo@spaajibade.com
+                  roles: [business_dev]
+                  isActive: true
+                  lastLoginAt: '2026-09-23T09:12:00.000Z'
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthenticated'
-        '409':
-          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -1033,10 +1015,10 @@ paths:
               example:
                 data:
                   - id: 665f1a2b3c4d5e6f70819293
+                    username: editor
                     name: Ada Nwosu
                     email: editor@spaajibade.com
                     roles: [editor]
-                    totpEnabled: true
                     isActive: true
                     lastLoginAt: '2026-09-23T09:12:00.000Z'
                 meta: { page: 1, pageSize: 9, total: 1, totalPages: 1 }
@@ -1062,6 +1044,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateUserRequest'
             example:
+              username: editor
               name: Ada Nwosu
               email: editor@spaajibade.com
               password: a-correct-horse-battery-staple
@@ -1081,10 +1064,10 @@ paths:
               example:
                 data:
                   id: 665f1a2b3c4d5e6f70819293
+                  username: editor
                   name: Ada Nwosu
                   email: editor@spaajibade.com
                   roles: [editor]
-                  totpEnabled: false
                   isActive: true
                   lastLoginAt: null
         '400':
@@ -1134,10 +1117,10 @@ paths:
               example:
                 data:
                   id: 665f1a2b3c4d5e6f70819293
+                  username: editor
                   name: Ada Nwosu
                   email: editor@spaajibade.com
                   roles: [editor, hr]
-                  totpEnabled: true
                   isActive: false
                   lastLoginAt: '2026-09-23T09:12:00.000Z'
         '400':
@@ -1200,8 +1183,8 @@ paths:
                   - id: 665f1a2b3c4d5e6f70819293
                     actor:
                       id: 665f1a2b3c4d5e6f70819294
+                      username: editor
                       name: Ada Nwosu
-                      email: editor@spaajibade.com
                     action: insight.publish
                     entity: Insight
                     entityId: 665f1a2b3c4d5e6f70819295
@@ -4340,7 +4323,7 @@ components:
               message: The uploaded file could not be accepted.
     Unauthenticated:
       description: |
-        No valid credentials. On login, `details` may carry `TOTP_REQUIRED`,
+        No valid credentials.
         which means the password was right and a code is needed.
       content:
         application/json:
@@ -6041,24 +6024,32 @@ components:
     AdminUser:
       type: object
       additionalProperties: false
-      required: [id, name, email, roles, totpEnabled, isActive, lastLoginAt]
-      description: An admin account. Password hashes and TOTP secrets are never returned.
+      required: [id, username, name, email, roles, isActive, lastLoginAt]
+      description: |
+        An admin account, one per role (ADR-043). Password hashes are never
+        returned.
       properties:
         id:
           $ref: '#/components/schemas/ObjectId'
+        username:
+          type: string
+          description: |
+            The login identifier, and the role name — `admin`, `editor`, `hr`
+            or `business_dev`.
         name:
           type: string
+          description: Display name, editable by the holder.
         email:
-          type: string
+          type: [string, 'null']
           format: email
+          description: |
+            Where this role's notifications go. Null until the holder sets it
+            from the dashboard; it is not a credential.
         roles:
           type: array
           minItems: 1
           items:
             $ref: '#/components/schemas/UserRole'
-        totpEnabled:
-          type: boolean
-          description: False until the user confirms their authenticator.
         isActive:
           type: boolean
         lastLoginAt:
@@ -6068,20 +6059,36 @@ components:
     LoginRequest:
       type: object
       additionalProperties: false
-      required: [email, password]
+      required: [username, password]
       properties:
-        email:
+        username:
           type: string
-          format: email
-          maxLength: 254
+          minLength: 2
+          maxLength: 40
+          description: |
+            The role name: `admin`, `editor`, `hr` or `business_dev`.
         password:
           type: string
           minLength: 12
           maxLength: 200
-        totp:
+
+    ProfileUpdateRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: |
+        Your own display name and notification address. Nothing else about an
+        account is self-editable — roles and activation belong to an admin.
+      properties:
+        name:
           type: string
-          pattern: '^[0-9]{6}$'
-          description: Required once the account has two-factor enabled.
+          minLength: 2
+          maxLength: 120
+        email:
+          type: [string, 'null']
+          format: email
+          maxLength: 254
+          description: Null clears it, which stops this role's notifications.
 
     LoginResult:
       type: object
@@ -6101,27 +6108,6 @@ components:
         user:
           $ref: '#/components/schemas/AdminUser'
 
-    TotpSetup:
-      type: object
-      additionalProperties: false
-      required: [secret, otpauthUrl]
-      properties:
-        secret:
-          type: string
-          description: Base32 secret, for manual entry.
-        otpauthUrl:
-          type: string
-          description: Render as a QR code for the authenticator app.
-
-    TotpEnableRequest:
-      type: object
-      additionalProperties: false
-      required: [code]
-      properties:
-        code:
-          type: string
-          pattern: '^[0-9]{6}$'
-
     PasswordChangeRequest:
       type: object
       additionalProperties: false
@@ -6138,16 +6124,26 @@ components:
     CreateUserRequest:
       type: object
       additionalProperties: false
-      required: [name, email, password, roles]
+      required: [username, name, password, roles]
+      description: |
+        The four role accounts are created at first boot from the environment
+        (ADR-043); this exists for the rarer case of an extra account.
       properties:
+        username:
+          type: string
+          minLength: 2
+          maxLength: 40
+          pattern: '^[a-z][a-z0-9_-]*$'
+          description: The login identifier. Lowercase, no spaces.
         name:
           type: string
           minLength: 2
           maxLength: 120
         email:
-          type: string
+          type: [string, 'null']
           format: email
           maxLength: 254
+          description: Optional. Where this account's notifications go.
         password:
           type: string
           minLength: 12
@@ -6179,15 +6175,18 @@ components:
     AuditActor:
       type: object
       additionalProperties: false
-      required: [id, name, email]
+      required: [id, username, name]
+      description: |
+        Identified by username rather than email: the username is the stable
+        account identity, while the email is a notification address the holder
+        can change or clear.
       properties:
         id:
           $ref: '#/components/schemas/ObjectId'
+        username:
+          type: string
         name:
           type: string
-        email:
-          type: string
-          format: email
 
     AuditLogEntry:
       type: object

@@ -111,8 +111,6 @@ Rate limits per IP: 5 per 10 minutes on each form, 60 per minute on search, and 
 
 The admin spec sections are written in Phase 4/5, before those phases' code.
 
-**Auth:** POST `/auth/login` (email, password, totp? → access token in the body, refresh token as an httpOnly cookie), POST `/auth/refresh`, POST `/auth/logout`, GET `/auth/me`, POST `/auth/2fa/setup`, POST `/auth/2fa/enable`, POST `/auth/password`.
-
 **Content CRUD:** the same pattern under `/content/<collection>`, for `practice-areas, people, insights, offices, recognitions, faqs, jobs`:
 `GET /content/:collection` (all statuses, `?status=&q=&page=`), `GET /content/:collection/:id`, `POST /content/:collection`, `PATCH /content/:collection/:id`, `DELETE /content/:collection/:id`, `POST /content/:collection/:id/publish`, `POST /content/:collection/:id/unpublish`, `PATCH /content/:collection/reorder` (body: ordered id list).
 
@@ -153,7 +151,18 @@ Rule of thumb: whatever an admin GET returns, minus the fields the server owns, 
 
 **Submissions:** `GET /enquiries`, `GET /enquiries/:id`, `PATCH /enquiries/:id` (status, assignedTo). The same for `/messages` and `/applications`, plus `GET /applications/:id/cv`, which returns `{ url, expiresAt }` (a signed URL with a 5-minute TTL; this access is audited).
 
-**Users & audit (admin role):** `GET|POST /users`, `PATCH /users/:id`, `GET /audit-logs`.
+**Users & audit (admin role):** `GET|POST /users`, `PATCH /users/:id`, `POST /users/:id/revoke-sessions`, `GET /audit-logs`.
+
+**Signing in.** There is no sign-up. Four accounts exist, one per role, created at first boot from the deployment's environment (ADR-043):
+
+| Username       | Role           | Sees                            |
+| -------------- | -------------- | ------------------------------- |
+| `admin`        | `admin`        | Everything                      |
+| `editor`       | `editor`       | Content, pages, settings, media |
+| `hr`           | `hr`           | Jobs, applications and CVs      |
+| `business_dev` | `business_dev` | Enquiries and messages          |
+
+`POST /admin/auth/login` takes `{ username, password }` and returns a 15-minute access token in the body plus a rotating refresh token as an httpOnly cookie. There is no second factor. `PATCH /admin/auth/me` lets the holder set their own display name and notification address — and that address is where their role's form notifications go: enquiries and messages to `business_dev`, job applications to `hr`.
 
 ### Role matrix
 

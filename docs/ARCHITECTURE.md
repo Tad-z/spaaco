@@ -79,7 +79,7 @@ src/
 └── jobs/
     ├── scheduler.ts
     └── retention-sweep.job.ts
-scripts/        seed.ts, create-admin.ts, sync-indexes.ts, load-launch-content.ts
+scripts/        seed.ts, sync-indexes.ts, load-launch-content.ts
 tests/
 ├── support/    setup-db.ts, build-app.ts, contract.ts (expectToMatchContract), factories.ts, auth.ts
 ├── unit/       mirrors src/ (unit/helpers/slug.helper.test.ts)
@@ -169,7 +169,7 @@ Each integration exports a factory (`index.ts`) that returns a driver implementi
 - **Passwords:** hashed with argon2id (fall back to bcrypt if argon2 fails to build).
 - **Access token:** a JWT (HS256, 15 minutes) returned in the JSON body. The frontend keeps it in memory.
 - **Refresh token:** random 256-bit, stored hashed in `refreshTokens`, sent as a cookie (`httpOnly`, `Secure`, `SameSite=Strict`, path `/api/v1/admin/auth`). Each refresh rotates the token. Reusing a revoked token revokes the whole chain.
-- **TOTP 2FA:** required for all admin users before any non-auth admin route works. Secrets are encrypted at rest with `ENCRYPTION_KEY`.
+- **No second factor** (ADR-043). Four accounts exist, one per role, created at first boot from the environment; `username` is the credential and `email` is an editable notification address.
 - **Brute force:** login is rate-limited (5 per 15 minutes per IP+email), and an account locks after 10 failures.
 
 ## Email

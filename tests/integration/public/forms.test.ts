@@ -9,7 +9,7 @@ import { Enquiry, Message, Office, PracticeArea } from '../../../src/models/inde
 import { setMailer } from '../../../src/services/notify.service.js';
 import { setCaptcha } from '../../../src/services/captcha.service.js';
 import { captureLogs } from '../../support/logs.js';
-import { config } from '../../../src/config/env.js';
+import { createTestUser } from '../../support/auth.js';
 import type { SentMail } from '../../../src/interfaces/integrations/mailer.interface.js';
 
 /**
@@ -31,8 +31,15 @@ beforeAll(async () => {
   await Promise.all(mongoose.modelNames().map((name) => mongoose.model(name).syncIndexes()));
 });
 
+/** Business development's inbox: where enquiry and message alerts now go. */
+const BIZDEV_INBOX = 'bd@spaajibade.test';
+
 beforeEach(async () => {
   await runSeed();
+
+  // A form's notification goes to the account that handles that kind of
+  // submission, so one has to exist with an address on it (ADR-043).
+  await createTestUser({ roles: ['business_dev'], username: 'business_dev', email: BIZDEV_INBOX });
 
   sent.length = 0;
   setMailer({
@@ -178,7 +185,7 @@ describe('what the firm is told', () => {
     const res = await request(app).post('/api/v1/enquiries').send(enquiry());
     const reference: string = res.body.data.reference;
 
-    const notification = sent.find((mail) => mail.to === config.NOTIFY_ENQUIRIES_TO);
+    const notification = sent.find((mail) => mail.to === BIZDEV_INBOX);
     expect(notification, `no notification among ${String(sent.length)} mails`).toBeDefined();
 
     const body = `${notification?.subject ?? ''} ${notification?.text ?? ''} ${notification?.html ?? ''}`;

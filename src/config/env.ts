@@ -68,6 +68,16 @@ const envSchema = z.object({
     .regex(/^[0-9a-f]{64}$/i, 'ENCRYPTION_KEY must be 64 hex characters (32 bytes)'),
   IP_HASH_SALT: z.string().min(16, 'IP_HASH_SALT must be at least 16 characters'),
 
+  // --- the four role accounts (ADR-043) ---
+  //
+  // One password per role, read at first boot. An account whose variable is
+  // unset is not created; nothing here is ever defaulted, because an account
+  // with a password nobody chose is an account nobody knows is there.
+  ADMIN_PASSWORD: optionalString,
+  EDITOR_PASSWORD: optionalString,
+  HR_PASSWORD: optionalString,
+  BIZDEV_PASSWORD: optionalString,
+
   // --- integration drivers ---
   STORAGE_PUBLIC_DRIVER: z.enum(['local', 'cloudinary']).default('local'),
   /** Where the local image driver writes. Served at /uploads outside production. */
@@ -108,12 +118,9 @@ const envSchema = z.object({
   FRONTEND_REVALIDATE_SECRET: optionalString,
 
   // --- notifications and retention ---
-  NOTIFY_ENQUIRIES_TO: z.string().email().default('frontoffice@spaajibade.com'),
-  NOTIFY_APPLICATIONS_TO: z
-    .string()
-    .email()
-    .optional()
-    .or(z.literal('').transform(() => undefined)),
+  //
+  // No NOTIFY_* addresses: a form's notification goes to the inbox of the role
+  // that handles it, read from that account's profile (ADR-043).
   ADMIN_DASHBOARD_URL: z.string().url().default('http://localhost:3001'),
   RETENTION_ENQUIRY_DAYS: z.coerce.number().int().positive().max(3650).default(730),
   RETENTION_APPLICATION_DAYS: z.coerce.number().int().positive().max(3650).default(365),

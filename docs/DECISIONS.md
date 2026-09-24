@@ -160,6 +160,16 @@ The majors: preview accepted a token a password change should have killed, becau
 
 One claim was corrected rather than fixed: the loader says it creates everything as a draft, and pages and settings have no draft state — their content is live the moment it runs. The docstring, the test name, the CLI output and the runbook all now say so.
 
+**ADR-043: One account per role, no second factor, and an email the holder sets.** The project lead judged the original scheme too complex for a four-person dashboard, and this replaces it. Three parts:
+
+1. **Login is by username, not email.** Four accounts exist — `admin`, `editor`, `hr`, `business_dev` — created at first boot from `ADMIN_PASSWORD`, `EDITOR_PASSWORD`, `HR_PASSWORD` and `BIZDEV_PASSWORD`. There is no sign-up, no invitation flow and no first-administrator CLI. An account whose variable is unset is not created; nothing is ever defaulted, because an account with a password nobody chose is an account nobody knows is there. An account that already exists is never touched, so a restart cannot reset a password the firm has changed.
+2. **No TOTP.** The two-factor routes, the encrypted secret, the enforcement in `requireAuth` and the otplib dependency are all gone. What still protects the dashboard: argon2id passwords, a fifteen-minute access token, rotating refresh tokens with reuse detection, a lockout after ten failures, and `credentialsChangedAt` so a password change ends the sessions already open.
+3. **Email is a notification address, not a credential.** Each holder sets their own with `PATCH /admin/auth/me`, and a form's notification goes to the inbox of the role that handles it — enquiries and messages to `business_dev`, applications to `hr`. This replaces `NOTIFY_ENQUIRIES_TO` and `NOTIFY_APPLICATIONS_TO`, so redirecting a notification is a dashboard change rather than a deploy. With no address set the notification is skipped and logged; the submission is already stored by then and must not fail for want of a profile field.
+
+**What this costs, recorded because it was argued and decided rather than overlooked.** The audit log now answers "which _role_ read this CV", not "which person" — with a shared account, individual attribution has to come from who held the password at the time. And a phished or shared password is the only thing between an outsider and the firm's client enquiries, where before it was one of two. The mitigations that remain are the lockout, the rate limits, and the fact that the dashboard origin is on the CORS allow-list. Turning 2FA back on later means restoring one middleware check and one enrolment flow; nothing else in the design depends on its absence.
+
+Also gone with it: `scripts/create-admin.ts`, which existed only to solve the chicken-and-egg problem the bootstrap now solves, and `helpers/crypto.helper.ts`, whose AES-GCM was only ever used for TOTP secrets.
+
 ## Known content conflicts (from the designs; the firm must resolve them)
 
 Seed them as designed. Don't silently "fix" them.

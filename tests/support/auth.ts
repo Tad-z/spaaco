@@ -53,9 +53,11 @@ export const expiredToken = (): string =>
  */
 export interface TestUserOptions {
   readonly roles?: UserRole[];
-  readonly totpEnabled?: boolean;
   readonly isActive?: boolean;
-  readonly email?: string;
+  /** The login identifier. Defaults to a unique one, so tests do not collide. */
+  readonly username?: string;
+  /** The notification address, which is optional on a real account too. */
+  readonly email?: string | null;
   readonly password?: string;
 }
 
@@ -65,12 +67,12 @@ export async function createTestUser(
   options: TestUserOptions = {}
 ): Promise<{ user: IUser; token: string }> {
   const created = await User.create({
+    username: options.username ?? `user-${new Types.ObjectId().toString()}`,
     name: 'Test User',
-    email: options.email ?? `user-${new Types.ObjectId().toString()}@spaajibade.test`,
+    email: options.email ?? null,
     passwordHash: await hashPassword(options.password ?? TEST_PASSWORD),
     roles: options.roles ?? ['admin'],
     isActive: options.isActive ?? true,
-    totp: { enabled: options.totpEnabled ?? true, secretEncrypted: null },
   });
 
   const user = created.toObject<IUser>();
@@ -81,10 +83,9 @@ export async function createTestUser(
  * A token that actually grants preview.
  *
  * `signAccessToken()` alone no longer does: preview reloads the user and
- * requires an active, TOTP-enrolled, content-capable account, so a
- * signature-valid token with nothing behind it is treated as anonymous. Tests
- * about preview want a real editor; tests about *refusing* preview still use
- * the bare signer.
+ * requires an active, content-capable account, so a signature-valid token
+ * with nothing behind it is treated as anonymous. Tests about preview want a
+ * real editor; tests about *refusing* preview still use the bare signer.
  */
 export async function previewToken(): Promise<string> {
   const { token } = await createTestUser({ roles: ['editor'] });

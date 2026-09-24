@@ -4,20 +4,23 @@ import type { UserRole } from '../types/api.js';
 /**
  * An admin account.
  *
- * The TOTP secret is stored encrypted rather than hashed, because it must be
- * readable to verify a code. `enabled` stays false until the user proves
- * enrolment, so an abandoned setup cannot lock anyone out of their own account.
+ * One per role, created at first boot from the deployment's environment
+ * (ADR-043). `username` is the credential — `admin`, `editor`, `hr`,
+ * `business_dev` — and `email` is a profile field the holder sets themselves,
+ * used to address the notifications their role receives.
  */
 export interface IUser {
   _id: Types.ObjectId;
+  /** The login identifier. Lowercase, unique, usually the role name. */
+  username: string;
   name: string;
-  email: string;
+  /**
+   * Where this role's notifications go. Null until the holder sets it, which
+   * they do from the dashboard — it is not a credential and not required.
+   */
+  email?: string | null;
   passwordHash: string;
   roles: UserRole[];
-  totp: {
-    secretEncrypted?: string | null;
-    enabled: boolean;
-  };
   isActive: boolean;
   lastLoginAt?: Date | null;
   /**

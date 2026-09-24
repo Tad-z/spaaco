@@ -5,20 +5,19 @@ import {
   logoutHandler,
   meHandler,
   refreshHandler,
-  totpEnableHandler,
-  totpSetupHandler,
+  updateProfileHandler,
 } from '../../controllers/admin/auth.controller.js';
 import { requireAuth } from '../../middlewares/require-auth.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { loginLimiter } from '../../middlewares/rate-limit.middleware.js';
 import { noStore } from '../../middlewares/cache-headers.middleware.js';
-import { loginBody, passwordChangeBody, totpEnableBody } from '../../validators/auth.validator.js';
+import {
+  loginBody,
+  passwordChangeBody,
+  profileUpdateBody,
+} from '../../validators/auth.validator.js';
 
-/**
- * These routes are the only ones that accept a user who has not yet enrolled
- * in two-factor: otherwise nobody could ever complete setup.
- */
-const allowEnrolment = requireAuth({ allowWithoutTotp: true });
+const signedIn = requireAuth();
 
 export const adminAuthRoutes: Router = Router();
 
@@ -34,19 +33,22 @@ adminAuthRoutes.post(
 adminAuthRoutes.post('/auth/refresh', noStore, loginLimiter, refreshHandler);
 adminAuthRoutes.post('/auth/logout', noStore, logoutHandler);
 
-adminAuthRoutes.get('/auth/me', noStore, allowEnrolment, meHandler);
-adminAuthRoutes.post('/auth/2fa/setup', noStore, allowEnrolment, totpSetupHandler);
-adminAuthRoutes.post(
-  '/auth/2fa/enable',
+adminAuthRoutes.get('/auth/me', noStore, signedIn, meHandler);
+
+// Your own display name and notification address. Roles and activation are
+// not here: an account that could grant itself a role would make the matrix
+// decorative.
+adminAuthRoutes.patch(
+  '/auth/me',
   noStore,
-  allowEnrolment,
-  validate({ body: totpEnableBody }),
-  totpEnableHandler
+  signedIn,
+  validate({ body: profileUpdateBody }),
+  updateProfileHandler
 );
 adminAuthRoutes.post(
   '/auth/password',
   noStore,
-  allowEnrolment,
+  signedIn,
   validate({ body: passwordChangeBody }),
   changePasswordHandler
 );

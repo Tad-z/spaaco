@@ -12,9 +12,9 @@ import { Insight, User } from '../../../src/models/index.js';
  *
  * Preview is the one place a public route returns a draft, so the question is
  * not "is the token valid" but "is this an account that should be reading
- * this". It used to be the former, which meant a phished password alone — no
- * second factor — read every embargoed insight and unannounced hire on the
- * site, and a deactivated account kept doing so for the life of its token.
+ * this". It used to be the former, so a deactivated account kept reading every
+ * embargoed insight and unannounced hire for the life of its token, and so did
+ * a role with no content permission at all.
  *
  * Each case below is silent rather than a 403: preview is optional, so a
  * request that does not qualify is served the published site like any other.
@@ -75,14 +75,6 @@ describe('preview', () => {
     // Signature-valid and well-formed, but nothing behind it — which is all
     // the old check required.
     expect(sees(await listing(signAccessToken()))).toBe(false);
-  });
-
-  it('refuses an account that has not enrolled in two-factor', async () => {
-    // `login` issues an access token before enrolment, so this is reachable
-    // with a password alone.
-    const { token } = await createTestUser({ roles: ['editor'], totpEnabled: false });
-
-    expect(sees(await listing(token))).toBe(false);
   });
 
   it('refuses an account that has been deactivated', async () => {

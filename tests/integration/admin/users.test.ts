@@ -62,24 +62,43 @@ describe('GET /api/v1/admin/users', () => {
 });
 
 describe('POST /api/v1/admin/users', () => {
-  it('creates a user with two-factor not yet enrolled', async () => {
+  it('creates an account with a username and an optional notification address', async () => {
     const token = await asAdmin();
 
     const res = await request(app)
       .post('/api/v1/admin/users')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        username: 'ada',
         name: 'Ada Nwosu',
         email: 'Ada@Spaajibade.Test',
         password: 'a-long-enough-passphrase',
         roles: ['editor'],
       });
 
-    expect(res.status).toBe(201);
+    expect(res.status, JSON.stringify(res.body)).toBe(201);
     expectToMatchContract(res, 'post', '/api/v1/admin/users');
+
+    expect(res.body.data.username).toBe('ada');
     // Normalised, so a duplicate cannot slip in under different casing.
     expect(res.body.data.email).toBe('ada@spaajibade.test');
-    expect(res.body.data.totpEnabled).toBe(false);
+  });
+
+  it('creates an account with no email, which the holder sets later', async () => {
+    const token = await asAdmin();
+
+    const res = await request(app)
+      .post('/api/v1/admin/users')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        username: 'newcomer',
+        name: 'A Newcomer',
+        password: 'a-long-enough-passphrase',
+        roles: ['hr'],
+      });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(201);
+    expect(res.body.data.email).toBeNull();
   });
 
   it('stores the password hashed, never in the clear', async () => {
@@ -89,30 +108,28 @@ describe('POST /api/v1/admin/users', () => {
       .post('/api/v1/admin/users')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        username: 'hashed',
         name: 'Ada Nwosu',
-        email: 'hash@spaajibade.test',
         password: 'a-long-enough-passphrase',
         roles: ['editor'],
       });
 
-    const stored = await User.findOne({ email: 'hash@spaajibade.test' })
-      .select('+passwordHash')
-      .lean();
+    const stored = await User.findOne({ username: 'hashed' }).select('+passwordHash').lean();
 
     expect(stored?.passwordHash).not.toContain('a-long-enough-passphrase');
     expect(stored?.passwordHash).toMatch(/^\$argon2id\$/);
   });
 
-  it('rejects a duplicate email with 409', async () => {
+  it('rejects a duplicate username with 409', async () => {
     const token = await asAdmin();
-    await createTestUser({ email: 'taken@spaajibade.test' });
+    await createTestUser({ username: 'taken' });
 
     const res = await request(app)
       .post('/api/v1/admin/users')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        username: 'taken',
         name: 'Someone Else',
-        email: 'taken@spaajibade.test',
         password: 'a-long-enough-passphrase',
         roles: ['editor'],
       });
@@ -166,11 +183,11 @@ describe('PATCH /api/v1/admin/users/{id}', () => {
 
   it('revokes every session when an account is deactivated', async () => {
     const token = await asAdmin();
-    await createTestUser({ email: 'deact@spaajibade.test', totpEnabled: false });
+    await createTestUser({ username: 'deact' });
 
     const login = await request(app)
       .post('/api/v1/admin/auth/login')
-      .send({ email: 'deact@spaajibade.test', password: TEST_PASSWORD });
+      .send({ username: 'deact', password: TEST_PASSWORD });
     expect(login.status).toBe(200);
 
     const target = await User.findOne({ email: 'deact@spaajibade.test' }).lean();
@@ -226,7 +243,9 @@ describe('GET /api/v1/admin/audit-logs', () => {
     expect(res.status).toBe(200);
     expectToMatchContract(res, 'get', '/api/v1/admin/audit-logs');
     expect(res.body.data[0].action).toBe('insight.publish');
-    expect(res.body.data[0].actor.email).toBe(user.email);
+    // Identified by username: the stable account identity, unlike an email
+    // the holder can change or clear.
+    expect(res.body.data[0].actor.username).toBe(user.username);
   });
 
   it('filters by action', async () => {
@@ -245,7 +264,7 @@ describe('GET /api/v1/admin/audit-logs', () => {
 
   it('survives a deleted actor rather than failing the whole page', async () => {
     const { user, token } = await createTestUser({ roles: ['admin'] });
-    const { user: other } = await createTestUser({ email: 'ghost@spaajibade.test' });
+    const { user: other } = await createTestUser({ username: 'ghost' });
 
     await record({ actor: other._id, action: 'insight.publish', entity: 'Insight' });
     await User.deleteOne({ _id: other._id });
@@ -256,7 +275,7 @@ describe('GET /api/v1/admin/audit-logs', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data[0].actor).toBeNull();
-    expect(user.email).toBeTruthy();
+    expect(user.username).toBeTruthy();
   });
 
   it('does not let a failed audit write break the action being audited', async () => {

@@ -48,7 +48,7 @@ value from `.env.example`.
 # JWT_ACCESS_SECRET — any long random string
 openssl rand -base64 48
 
-# ENCRYPTION_KEY — exactly 64 hex characters (32 bytes). Encrypts TOTP secrets.
+# ENCRYPTION_KEY — exactly 64 hex characters (32 bytes). Signs local CV links.
 openssl rand -hex 32
 
 # IP_HASH_SALT — any long random string
@@ -61,9 +61,8 @@ openssl rand -base64 32
 Store them in the platform's secret manager, never in the repository, never in
 a build argument, and never in a `.env` file inside the image.
 
-**`ENCRYPTION_KEY` is not rotatable without work.** It decrypts every stored
-TOTP secret; changing it locks every administrator out of their authenticator.
-See 6.2.
+**`ENCRYPTION_KEY`** signs the local CV download links. Rotating it invalidates
+any link already issued, which is harmless — they last five minutes.
 
 ### 2.3 The CV bucket
 
@@ -170,14 +169,13 @@ build, so they run with plain `node` and need no dev dependencies.
 | Task                    | Command                                              |
 | ----------------------- | ---------------------------------------------------- |
 | Apply database indexes  | `node dist/scripts/sync-indexes.js`                  |
-| Create the first admin  | `node dist/scripts/create-admin.js`                  |
 | Load the launch content | `node dist/scripts/load-launch-content.js --confirm` |
 
 On Render, use the **Shell** tab of the service (it runs in the deployed
 environment, so the variables are already set). With Docker:
 
 ```bash
-docker run --rm -it --env-file .env spa-ajibade-api:<sha>   node dist/scripts/create-admin.js
+docker run --rm --env-file .env spa-ajibade-api:<sha>   node dist/scripts/sync-indexes.js
 ```
 
 ### 3.4 Rolling out
@@ -210,38 +208,37 @@ it will `SIGKILL` an editor's save mid-write.
 
 ---
 
-## 4. Creating the first administrator
+## 4. The four accounts
 
-There is no way to create an account over HTTP without an existing admin. This
-is deliberate.
+There is no sign-up and no first-administrator step. Four accounts exist, one
+per role, and the API creates any that are missing when it starts (ADR-043).
+Each takes its password from the environment:
 
-```bash
-node dist/scripts/create-admin.js
-```
+| Username       | Password variable | Role           | Sees                             |
+| -------------- | ----------------- | -------------- | -------------------------------- |
+| `admin`        | `ADMIN_PASSWORD`  | `admin`        | Everything.                      |
+| `editor`       | `EDITOR_PASSWORD` | `editor`       | Content, pages, settings, media. |
+| `hr`           | `HR_PASSWORD`     | `hr`           | Jobs, applications and CVs.      |
+| `business_dev` | `BIZDEV_PASSWORD` | `business_dev` | Enquiries and messages.          |
 
-It asks for a name, email, password (12 characters minimum) and roles. The new
-administrator then:
+Sign in at the dashboard with the **username**, not an email address. There is
+no second factor.
 
-1. signs in at the dashboard with email and password,
-2. is required to enrol an authenticator before any other admin route works,
-3. scans the QR code and confirms a code.
+Three things worth knowing:
 
-**Until two-factor is enrolled, that account can do nothing else.** If somebody
-enrols the wrong device, see 6.3.
+- **An account whose password variable is unset is not created.** The API still
+  starts and logs which ones it skipped. Add the variable and restart.
+- **An account that already exists is never touched.** A restart cannot reset a
+  password the firm has changed, which is why rotating one is a two-step job —
+  see 6.5.
+- **Each holder sets their own email**, from the dashboard, with
+  `PATCH /admin/auth/me`. That address is where their role's notifications go:
+  enquiries and messages to `business_dev`, job applications to `hr`. Until one
+  is set, those notifications are skipped and the skip is logged.
 
-Roles, from `docs/API.md`:
-
-| Role           | Can reach                                  |
-| -------------- | ------------------------------------------ |
-| `admin`        | Everything.                                |
-| `editor`       | Content, pages, settings, media.           |
-| `hr`           | The jobs collection, applications and CVs. |
-| `business_dev` | Enquiries and messages.                    |
-
-Give people the narrowest role that covers their work. `business_dev` cannot
-read a CV and `hr` cannot read a client enquiry, which is the point.
-
----
+Give people the narrowest account that covers their work. `business_dev` cannot
+read a CV and `hr` cannot read a client enquiry, which is the point of having
+four rather than one.
 
 ## 5. Loading the firm's launch content
 
@@ -280,36 +277,34 @@ immediately — every access token becomes unverifiable — which is exactly wha
 you want during an incident. Rotating `FRONTEND_REVALIDATE_SECRET` must be done
 on the site at the same time, or revalidation silently stops.
 
-### 6.2 `ENCRYPTION_KEY` — not a simple rotation
+### 6.2 A role password
 
-It decrypts every stored TOTP secret. Changing it means every administrator
-must re-enrol:
+The API never overwrites an account that exists, so changing the environment
+variable alone does nothing. Two steps:
 
-1. Announce it. Everyone needs their phone to hand.
-2. Set the new key and deploy.
-3. For each user, clear the stored secret so they are prompted to enrol again:
-   ```js
-   db.users.updateMany({}, { $set: { 'totp.enabled': false, 'totp.secretEncrypted': null } });
-   ```
-4. Each administrator signs in and enrols a new authenticator.
+1. Change the password from the dashboard, as that account
+   (`POST /admin/auth/password` with the current and new password). This also
+   ends every session it holds.
+2. Update the matching environment variable, so a future rebuild from an empty
+   database creates it with the password now in use.
 
-Between steps 2 and 3, sign-in fails for everyone with a stored secret. Do it in
-one sitting.
-
-### 6.3 One person's authenticator is lost
-
-An admin clears it for them; there is no self-service path, because a
-self-service path is a way around two-factor.
+If nobody can sign in to do step 1 — the password is lost — delete the account
+and restart; the API recreates it from the environment.
 
 ```js
-db.users.updateOne(
-  { email: 'person@spaajibade.com' },
-  { $set: { 'totp.enabled': false, 'totp.secretEncrypted': null } }
-);
+db.users.deleteOne({ username: 'editor' });
 ```
 
-They sign in with their password and enrol again. Confirm who you are speaking
-to by some means other than email first.
+### 6.3 Somebody has left the firm
+
+Change their role's password (6.2) and tell the others the new one. With one
+account per role rather than one per person, this is the departure procedure:
+there is no individual account to disable.
+
+This is the trade-off the firm accepted in ADR-043. Shared accounts mean the
+audit log answers "which role read this CV" rather than "which person", so
+where individual attribution matters, the answer has to come from who held the
+password at the time.
 
 ### 6.4 `IP_HASH_SALT`
 
@@ -332,8 +327,7 @@ record so nobody later reads the discontinuity as tampering.
    `{ "isActive": false }`. This also takes effect on the next request: the API
    reloads the user on every authenticated call. Do this if you are not yet
    sure the account is safe to keep open.
-3. **Clear their TOTP secret** (6.3) in case the authenticator was also taken,
-   and have them set a new password once they are back in.
+3. **Change that role's password** (6.2), since whoever had it still knows it.
 4. **Read the audit log.** `GET /admin/audit-logs?actor=<id>` shows what they
    reached. Every read of a single submission, and every CV link issued, is
    recorded there with a timestamp.

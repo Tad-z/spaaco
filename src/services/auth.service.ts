@@ -1,14 +1,12 @@
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
-import { authenticator } from 'otplib';
 import type { Types } from 'mongoose';
 import { RefreshToken, User } from '../models/index.js';
 import { config } from '../config/env.js';
 import { AUTH } from '../config/constants.js';
-import { ConflictError, ForbiddenError, UnauthenticatedError } from '../core/errors.js';
+import { ForbiddenError, UnauthenticatedError } from '../core/errors.js';
 import { logger } from '../core/logger.js';
 import { randomToken, sha256 } from '../helpers/hash.helper.js';
-import { decryptSecret, encryptSecret } from '../helpers/crypto.helper.js';
 import type { IUser } from '../interfaces/user.interface.js';
 import type { UserRole } from '../types/api.js';
 
@@ -121,14 +119,13 @@ async function registerFailure(user: IUser): Promise<void> {
 }
 
 export interface LoginInput {
-  readonly email: string;
+  readonly username: string;
   readonly password: string;
-  readonly totp?: string;
 }
 
 export async function login(input: LoginInput): Promise<{ user: IUser; tokens: SessionTokens }> {
-  const user = await User.findOne({ email: input.email.toLowerCase() })
-    .select('+passwordHash +totp.secretEncrypted')
+  const user = await User.findOne({ username: input.username.toLowerCase() })
+    .select('+passwordHash')
     .lean<IUser | null>();
 
   // Verify a dummy hash when the user does not exist, so a missing account and
@@ -144,13 +141,11 @@ export async function login(input: LoginInput): Promise<{ user: IUser; tokens: S
   // The password is checked *before* the account's state, and every failure
   // answers the same 401.
   //
-  // The order matters more than it looks. Answering "this account is disabled"
-  // or "temporarily locked" before checking the password turns the login form
-  // into a directory: one request per candidate address tells an outsider who
-  // works at the firm, and the staff are named on this very site, so guessing
-  // the address format is easy. It also made a denial-of-service trivial —
-  // ten wrong passwords lock an account for fifteen minutes, and the locked
-  // response confirmed the attack was working.
+  // The usernames here are guessable by design — they are the role names — so
+  // the enumeration risk the ordering originally guarded against is smaller
+  // than it was. The ordering stays because the other half still bites: with
+  // the state checked first, ten wrong guesses lock a role out for fifteen
+  // minutes and the response confirms the attack is working.
   const passwordMatches = await verifyPassword(user.passwordHash, input.password);
 
   if (!passwordMatches) {
@@ -166,20 +161,6 @@ export async function login(input: LoginInput): Promise<{ user: IUser; tokens: S
 
   if (user.lockedUntil && user.lockedUntil > new Date()) {
     throw new ForbiddenError('This account is temporarily locked. Try again later.');
-  }
-
-  if (user.totp.enabled) {
-    if (input.totp === undefined) {
-      // A distinct signal, so the dashboard prompts for a code rather than
-      // telling the user their password was wrong.
-      throw new UnauthenticatedError('A two-factor code is required', [
-        { path: 'totp', message: 'TOTP_REQUIRED' },
-      ]);
-    }
-    if (!verifyTotp(user, input.totp)) {
-      await registerFailure(user);
-      throw invalidCredentials();
-    }
   }
 
   await User.updateOne(
@@ -278,61 +259,6 @@ export const revokeAllSessions = async (userId: Types.ObjectId): Promise<void> =
   await RefreshToken.updateMany({ user: userId, revokedAt: null }, { revokedAt: new Date() });
 };
 
-// --- two-factor -------------------------------------------------------------
-
-export interface TotpSetupResult {
-  secret: string;
-  otpauthUrl: string;
-}
-
-export async function setupTotp(userId: Types.ObjectId): Promise<TotpSetupResult> {
-  const user = await User.findById(userId).lean<IUser | null>();
-  if (!user) throw new UnauthenticatedError();
-  if (user.totp.enabled) throw new ConflictError('Two-factor authentication is already enabled');
-
-  const secret = authenticator.generateSecret();
-
-  // Stored but not enabled: an abandoned setup must not lock the user out.
-  await User.updateOne(
-    { _id: userId },
-    { 'totp.secretEncrypted': encryptSecret(secret, config.ENCRYPTION_KEY) }
-  );
-
-  return {
-    secret,
-    otpauthUrl: authenticator.keyuri(user.email, 'SPA Ajibade & Co.', secret),
-  };
-}
-
-function verifyTotp(user: Pick<IUser, 'totp'>, code: string): boolean {
-  const encrypted = user.totp.secretEncrypted;
-  if (encrypted === null || encrypted === undefined) return false;
-
-  try {
-    return authenticator.verify({
-      token: code,
-      secret: decryptSecret(encrypted, config.ENCRYPTION_KEY),
-    });
-  } catch {
-    // A secret that will not decrypt means the key changed; treat as a failure
-    // rather than crashing a login.
-    return false;
-  }
-}
-
-export async function enableTotp(userId: Types.ObjectId, code: string): Promise<void> {
-  const user = await User.findById(userId).select('+totp.secretEncrypted').lean<IUser | null>();
-
-  if (!user) throw new UnauthenticatedError();
-  if (user.totp.enabled) throw new ConflictError('Two-factor authentication is already enabled');
-  if (user.totp.secretEncrypted === null || user.totp.secretEncrypted === undefined) {
-    throw new ConflictError('Start two-factor setup before enabling it');
-  }
-  if (!verifyTotp(user, code)) throw new UnauthenticatedError('That code is not valid');
-
-  await User.updateOne({ _id: userId }, { 'totp.enabled': true });
-}
-
 export async function changePassword(
   userId: Types.ObjectId,
   currentPassword: string,
@@ -365,5 +291,29 @@ export async function changePassword(
  */
 export const getUserById = (userId: Types.ObjectId): Promise<IUser | null> =>
   User.findById(userId)
-    .select('_id name email roles isActive totp.enabled credentialsChangedAt')
+    .select('_id username name email roles isActive credentialsChangedAt')
     .lean<IUser | null>();
+
+export interface ProfileUpdate {
+  readonly name?: string;
+  readonly email?: string | null;
+}
+
+/**
+ * Update your own display name and notification address.
+ *
+ * `email` is not a credential here — it is where this role's notifications go,
+ * which is why the holder sets it themselves rather than an administrator
+ * setting it for them (ADR-043).
+ */
+export async function updateProfile(userId: Types.ObjectId, input: ProfileUpdate): Promise<IUser> {
+  const updated = await User.findByIdAndUpdate(
+    userId,
+    { $set: input },
+    { new: true }
+  ).lean<IUser | null>();
+
+  if (!updated) throw new UnauthenticatedError();
+
+  return updated;
+}

@@ -3,15 +3,37 @@ import { USER_ROLES } from '../constants/enums.js';
 import { pagination } from './common.validator.js';
 
 const password = z.string().min(12, 'must be at least 12 characters').max(200);
-const totpCode = z.string().regex(/^[0-9]{6}$/, 'must be a six-digit code');
+
+/** The role name, which is the login identifier (ADR-043). */
+const username = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(2)
+  .max(40)
+  .regex(/^[a-z][a-z0-9_-]*$/, 'must be a username, not an email address');
 
 export const loginBody = z.object({
-  email: z.string().trim().toLowerCase().email().max(254),
+  username,
   password: z.string().min(1).max(200),
-  totp: totpCode.optional(),
 });
 
-export const totpEnableBody = z.object({ code: totpCode });
+/**
+ * What the holder of an account may change about themselves.
+ *
+ * Not their roles and not their activation: those belong to an administrator,
+ * and an account that could grant itself a role would make the whole matrix
+ * decorative.
+ */
+export const profileUpdateBody = z
+  .object({
+    name: z.string().trim().min(2).max(120).optional(),
+    email: z.string().trim().toLowerCase().email().max(254).nullable().optional(),
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'at least one field is required',
+  });
 
 export const passwordChangeBody = z.object({
   currentPassword: z.string().min(1).max(200),
@@ -19,8 +41,9 @@ export const passwordChangeBody = z.object({
 });
 
 export const createUserBody = z.object({
+  username,
   name: z.string().trim().min(2).max(120),
-  email: z.string().trim().toLowerCase().email().max(254),
+  email: z.string().trim().toLowerCase().email().max(254).nullable().optional(),
   password,
   roles: z.array(z.enum(USER_ROLES.values)).min(1),
 });

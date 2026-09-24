@@ -59,7 +59,7 @@ async function write(entry: AuditEntry): Promise<void> {
 }
 
 export type AuditLogWithActor = Omit<IAuditLog, 'actor'> & {
-  actor: Pick<IUser, '_id' | 'name' | 'email'> | null;
+  actor: Pick<IUser, '_id' | 'username' | 'name'> | null;
 };
 
 export interface ListAuditOptions {
@@ -78,7 +78,7 @@ export async function listAuditLogs(
 
   const [items, total] = await Promise.all([
     AuditLog.find(filter)
-      .populate('actor', 'name email')
+      .populate('actor', 'username name')
       .sort({ at: -1 })
       .skip(toSkip(options.page, options.pageSize))
       .limit(options.pageSize)

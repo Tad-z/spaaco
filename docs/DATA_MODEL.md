@@ -183,6 +183,6 @@ Images the firm edits (heroes, practice area photos, portraits, insight covers, 
 
 ## System collections
 
-- **`users`:** `name`, `email` (unique), `passwordHash`, `roles` [`admin|editor|hr|business_dev`], `totp` { secretEncrypted, enabled }, `isActive`, `lastLoginAt`, `failedLoginCount`, `lockedUntil`.
+- **`users`:** `username` (unique, the login identifier), `name`, `email?` (a notification address the holder sets, not a credential), `passwordHash`, `roles` [`admin|editor|hr|business_dev`], `isActive`, `lastLoginAt`, `credentialsChangedAt`, `failedLoginCount`, `lockedUntil`. One account per role (ADR-043).
 - **`refreshTokens`:** `user`, `tokenHash`, `expiresAt` (TTL), `revokedAt`, `replacedBy`.
 - **`auditLogs`:** `actor` → User, `action` (e.g. `application.cv.view`, `insight.publish`), `entity`, `entityId`, `meta`, `ip`, `at`. Keep for at least 1 year.

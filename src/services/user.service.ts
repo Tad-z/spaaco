@@ -28,22 +28,24 @@ export async function listUsers(
 }
 
 export interface CreateUserInput {
+  readonly username: string;
   readonly name: string;
-  readonly email: string;
+  readonly email?: string | null;
   readonly password: string;
   readonly roles: UserRole[];
 }
 
 export async function createUser(input: CreateUserInput): Promise<IUser> {
-  const email = input.email.toLowerCase();
+  const username = input.username.toLowerCase();
 
-  if (await User.exists({ email })) {
-    throw new ConflictError('An account with that email already exists');
+  if (await User.exists({ username })) {
+    throw new ConflictError('An account with that username already exists');
   }
 
   const created = await User.create({
+    username,
     name: input.name,
-    email,
+    email: input.email ?? null,
     passwordHash: await hashPassword(input.password),
     roles: input.roles,
   });

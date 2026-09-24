@@ -4,17 +4,20 @@ import { AUTH } from '../../config/constants.js';
 import { config } from '../../config/env.js';
 import {
   changePassword,
-  enableTotp,
   getUserById,
   login,
   logout,
   refresh,
-  setupTotp,
+  updateProfile,
 } from '../../services/auth.service.js';
 import type { SessionTokens } from '../../services/auth.service.js';
 import { toAdminUser } from '../../serializers/user.serializer.js';
 import { readBody } from '../../middlewares/validate.middleware.js';
-import { loginBody, passwordChangeBody, totpEnableBody } from '../../validators/auth.validator.js';
+import {
+  loginBody,
+  passwordChangeBody,
+  profileUpdateBody,
+} from '../../validators/auth.validator.js';
 
 /**
  * Admin auth endpoints.
@@ -93,19 +96,13 @@ export async function meHandler(req: Request, res: Response): Promise<void> {
   res.json({ data: toAdminUser(user) });
 }
 
-export async function totpSetupHandler(req: Request, res: Response): Promise<void> {
+export async function updateProfileHandler(req: Request, res: Response): Promise<void> {
   if (!req.user) throw new UnauthenticatedError();
 
-  res.json({ data: await setupTotp(req.user.id) });
-}
+  const body = readBody(req, profileUpdateBody);
+  const updated = await updateProfile(req.user.id, body);
 
-export async function totpEnableHandler(req: Request, res: Response): Promise<void> {
-  if (!req.user) throw new UnauthenticatedError();
-
-  const { code } = readBody(req, totpEnableBody);
-  await enableTotp(req.user.id, code);
-
-  res.status(204).end();
+  res.json({ data: toAdminUser(updated) });
 }
 
 export async function changePasswordHandler(req: Request, res: Response): Promise<void> {
