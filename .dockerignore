@@ -1,0 +1,40 @@
+# Everything the build does not need, and a few things it must never have.
+#
+# The build context is sent to the daemon in full, so this is both a speed
+# measure and a safety one: `.env` in a build context ends up in an image layer,
+# and layers are not secret.
+
+.env
+.env.*
+!.env.example
+
+node_modules
+dist
+coverage
+
+.git
+.github
+.gitignore
+
+# Uploaded files: local-driver artefacts, and CVs are personal data.
+.uploads
+.uploads-test
+.private-uploads
+.private-uploads-test
+
+# Nothing here runs in production.
+tests
+docs
+fixtures
+openapi
+scripts
+.claude
+eslint.config.js
+redocly.yaml
+vitest.config.ts
+.prettierrc.json
+.prettierignore
+CLAUDE.md
+README.md
+Dockerfile
+.dockerignore

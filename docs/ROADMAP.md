@@ -116,7 +116,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 ## Phase 7: Hardening and deployment
 
 - [ ] **7.1 Security review:** run the `api-reviewer` agent across `src/`, fix its findings, and run `npm audit`.
-- [ ] **7.2 Multi-stage Dockerfile (build with tsc, run `dist/`) + `.dockerignore` + GitHub Actions CI running `npm run check` and `npm run build`.**
+- [x] **7.2 Multi-stage Dockerfile (build with tsc, run `dist/`) + `.dockerignore` + GitHub Actions CI running `npm run check` and `npm run build`.**
 - [ ] **7.3 Sentry integration (optional via env) + graceful shutdown test.**
 - [ ] **7.4 `docs/RUNBOOK.md`:** deploy, rotate secrets, restore backup, create admin, rerun revalidation.
 - [ ] **7.5 Launch content loader:** `scripts/load-launch-content.ts` loads the text from `fixtures/seed/*` into an **empty** production database (with no placeholder images, and image fields left empty) so the firm doesn't retype copy. It requires a `--confirm` flag and refuses to run if any content already exists. Everything is created as `draft`, so the firm reviews each item, uploads images through the admin UI, and publishes.

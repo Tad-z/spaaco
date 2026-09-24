@@ -1,0 +1,97 @@
+name: CI
+
+# Every pull request, and every push to main. A branch that cannot pass
+# `npm run check` cannot merge, which is the only thing keeping the contract,
+# the types and the tests honest once more than one person is working here.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A second push to the same branch cancels the first: there is no value in
+# finishing a run for a commit nobody will merge.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, types, contract and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # `npm ci` rather than `npm install`: the lockfile is the input, so a
+      # transitive dependency cannot change under a build that once passed.
+      - run: npm ci
+
+      # Lint, typecheck, format, spec lint, generated types and the full suite.
+      # The in-memory MongoDB downloads on first use; the cache below keeps
+      # that out of every subsequent run.
+      - name: Cache the in-memory MongoDB binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}
+
+      - run: npm run check
+
+      # Proves the production build compiles from a clean tree, which
+      # `typecheck` alone does not: it emits nothing.
+      - run: npm run build
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Production dependencies only, and only high severity or worse. A dev
+      # dependency advisory matters, but it must not block a release that does
+      # not ship it — it is reported, not enforced.
+      - run: npm audit --omit=dev --audit-level=high
+
+      - name: Report dev dependency advisories
+        run: npm audit || true
+
+  image:
+    name: Build the container image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Only on main: a pull request has already had its build proved by `check`,
+    # and the image adds several minutes for no extra signal.
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          # Built and cached, not pushed: publishing to a registry needs
+          # credentials the firm has not supplied yet (see docs/RUNBOOK.md).
+          push: false
+          tags: spa-ajibade-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
