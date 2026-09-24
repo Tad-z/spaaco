@@ -19,3 +19,5 @@ export { Settings } from './settings.model.js';
 export { User } from './user.model.js';
 export { RefreshToken } from './refresh-token.model.js';
 export { AuditLog } from './audit-log.model.js';
+export { Enquiry } from './enquiry.model.js';
+export { Message } from './message.model.js';

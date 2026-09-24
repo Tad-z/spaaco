@@ -112,6 +112,8 @@ Also: `prettier --check .` runs as part of `npm run check`, since generated file
 6. **`publishedAt` is not writable, and an empty PATCH is a 400.** Both were divergences from the generated spec: the first let a client backdate an article outside the audited publish action, the second consumed a revision and invalidated caches for a write that changed nothing.
 7. **`STORAGE_PUBLIC_DRIVER=local` is refused in production.** The local driver stamps `${API_BASE_URL}/uploads/...` onto records permanently, and `/uploads` is only mounted outside production, so a misconfigured deploy would write URLs that 404 for ever. It now fails at startup.
 
+**ADR-036: Two mail drivers, not three — `resend` and `log`.** The kit listed an `smtp` driver, which would need nodemailer: a mail-transport dependency, its own TLS and auth surface, and a configuration format (`SMTP_URL`) with more ways to be subtly wrong than a bearer key. Resend is an HTTP API, so its driver is one `fetch` and no dependency, and the project brief names Resend rather than SMTP. `MAILER_DRIVER` is now `log | resend`, and `SMTP_URL` is gone from `.env.example`. If the firm's IT prefers their own mail server later, the driver interface is one method and adding it back is an afternoon — that is the point of the adapter.
+
 ## Known content conflicts (from the designs; the firm must resolve them)
 
 Seed them as designed. Don't silently "fix" them.

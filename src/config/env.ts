@@ -63,7 +63,9 @@ const envSchema = z.object({
   /** Where the local image driver writes. Served at /uploads outside production. */
   UPLOAD_DIR: z.string().trim().min(1).default('./.uploads'),
   STORAGE_PRIVATE_DRIVER: z.enum(['local', 's3']).default('local'),
-  MAILER_DRIVER: z.enum(['log', 'resend', 'smtp']).default('log'),
+  // No SMTP driver: see ADR-036. Resend is an HTTP API, so it needs no
+  // mail-transport dependency.
+  MAILER_DRIVER: z.enum(['log', 'resend']).default('log'),
   CAPTCHA_DRIVER: z.enum(['noop', 'turnstile']).default('noop'),
   VIRUS_SCAN_DRIVER: z.enum(['noop', 'clamav']).default('noop'),
   REVALIDATE_DRIVER: z.enum(['noop', 'http']).default('noop'),
@@ -75,7 +77,6 @@ const envSchema = z.object({
   S3_ACCESS_KEY_ID: optionalString,
   S3_SECRET_ACCESS_KEY: optionalString,
   RESEND_API_KEY: optionalString,
-  SMTP_URL: optionalString,
   MAIL_FROM: z.string().trim().min(1).default('SPA Ajibade & Co. <no-reply@spaajibade.com>'),
   TURNSTILE_SECRET_KEY: optionalString,
   CLAMAV_HOST: optionalString,
@@ -108,7 +109,6 @@ const DRIVER_REQUIREMENTS = [
     requires: ['S3_BUCKET_PRIVATE', 'S3_REGION', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY'],
   },
   { field: 'MAILER_DRIVER', driver: 'resend', requires: ['RESEND_API_KEY'] },
-  { field: 'MAILER_DRIVER', driver: 'smtp', requires: ['SMTP_URL'] },
   { field: 'CAPTCHA_DRIVER', driver: 'turnstile', requires: ['TURNSTILE_SECRET_KEY'] },
   { field: 'VIRUS_SCAN_DRIVER', driver: 'clamav', requires: ['CLAMAV_HOST'] },
   {

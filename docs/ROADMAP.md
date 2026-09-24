@@ -107,7 +107,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 ## Phase 6: Forms and submissions
 
 - [x] **6.1 Spec first** for the admin submission endpoints (the public form POSTs were already specced in 0.2).
-- [ ] **6.2 Enquiries + messages:** validation, honeypot, Turnstile, rate limit, reference generation, ipHash (SHA-256 with a salt), acknowledgement + notification emails, TTL index.
+- [x] **6.2 Enquiries + messages:** validation, honeypot, Turnstile, rate limit, reference generation, ipHash (SHA-256 with a salt), acknowledgement + notification emails, TTL index.
 - [ ] **6.3 Applications:** multipart via multer (memory storage, 5 MB), PDF/DOCX magic-byte check, virus scan adapter, private storage, and emails.
 - [ ] **6.4 Admin submissions endpoints:** list/detail/status update, a signed CV URL (5 min), and audit entries on every detail view and CV access.
 - [ ] **6.5 Retention job:** a daily job deleting CV files whose application has been TTL-deleted (orphan sweep).

@@ -86,7 +86,22 @@ const options: LoggerOptions = {
   },
 };
 
-export const logger: Logger = pino(options);
+/**
+ * Where log lines go.
+ *
+ * Pino's default destination resolves file descriptor 1 once, at construction.
+ * Writing through this indirection instead keeps the target late-bound, which
+ * has two benefits: tests can intercept what redaction actually emitted rather
+ * than inspecting the arguments a call site passed, and every line is written
+ * synchronously, so a crash cannot take the last few log lines with it.
+ */
+const destination = {
+  write(chunk: string): void {
+    process.stdout.write(chunk);
+  },
+};
+
+export const logger: Logger = pino(options, destination);
 
 /** A child logger tagged with the request id, used by the request-id middleware. */
 export const requestLogger = (requestId: string): Logger => logger.child({ requestId });

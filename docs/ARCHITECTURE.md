@@ -155,14 +155,14 @@ request
 
 Each integration exports a factory (`index.ts`) that returns a driver implementing its interface from `interfaces/integrations/`. The driver is chosen by config, and every integration has a credential-free driver for dev and tests.
 
-| Integration               | Drivers                 | Dev/test default                                                   |
-| ------------------------- | ----------------------- | ------------------------------------------------------------------ |
-| `storage/public` (images) | `cloudinary`, `local`   | `local` (writes to `./.uploads`, served at `/uploads` in dev only) |
-| `storage/private` (CVs)   | `s3`, `local`           | `local` (`./.private-uploads`, never served)                       |
-| `mailer`                  | `resend`, `smtp`, `log` | `log` (writes rendered email to logger)                            |
-| `captcha`                 | `turnstile`, `noop`     | `noop` (accepts token `"test"`)                                    |
-| `virusScan`               | `clamav`, `noop`        | `noop` (returns `clean`)                                           |
-| `revalidate`              | `http`, `noop`          | `noop`                                                             |
+| Integration               | Drivers               | Dev/test default                                                   |
+| ------------------------- | --------------------- | ------------------------------------------------------------------ |
+| `storage/public` (images) | `cloudinary`, `local` | `local` (writes to `./.uploads`, served at `/uploads` in dev only) |
+| `storage/private` (CVs)   | `s3`, `local`         | `local` (`./.private-uploads`, never served)                       |
+| `mailer`                  | `resend`, `log`       | `log` (logs the recipient and subject, never the body)             |
+| `captcha`                 | `turnstile`, `noop`   | `noop` (accepts token `"test"`)                                    |
+| `virusScan`               | `clamav`, `noop`      | `noop` (returns `clean`)                                           |
+| `revalidate`              | `http`, `noop`        | `noop`                                                             |
 
 ## Auth
 

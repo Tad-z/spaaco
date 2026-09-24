@@ -6,6 +6,7 @@ import { personRoutes } from './public/person.routes.js';
 import { insightRoutes } from './public/insight.routes.js';
 import { pageRoutes } from './public/page.routes.js';
 import { searchRoutes } from './public/search.routes.js';
+import { submissionRoutes } from './public/submission.routes.js';
 import { adminAuthRoutes } from './admin/auth.routes.js';
 import { adminUserRoutes } from './admin/user.routes.js';
 import { adminContentRoutes } from './admin/content.routes.js';
@@ -31,6 +32,8 @@ apiRoutes.use(pageRoutes);
 apiRoutes.use(searchRoutes);
 
 // Admin routers deny by default: each states its own auth and roles.
+apiRoutes.use(submissionRoutes);
+
 apiRoutes.use('/admin', adminAuthRoutes);
 apiRoutes.use('/admin', adminUserRoutes);
 apiRoutes.use('/admin', adminContentRoutes);
