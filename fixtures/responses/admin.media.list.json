@@ -1,0 +1,39 @@
+{
+  "data": [
+    {
+      "id": "665f00000000000000000101",
+      "url": "https://placehold.co/1200x900?text=Tax",
+      "sizes": {
+        "sm": "https://placehold.co/480x360?text=Tax",
+        "md": "https://placehold.co/960x720?text=Tax",
+        "lg": "https://placehold.co/1440x1080?text=Tax"
+      },
+      "alt": "Photograph representing the Tax practice",
+      "title": "Tax",
+      "width": 1200,
+      "height": 900,
+      "mimeType": "image/png",
+      "bytes": 1024,
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-06-01T00:00:00.000Z",
+      "usedBy": [
+        {
+          "collection": "practiceAreas",
+          "id": "665f00000000000000000103",
+          "label": "Tax",
+          "field": "image"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "pageSize": 24,
+    "total": 1,
+    "totalPages": 1
+  }
+}

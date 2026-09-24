@@ -60,6 +60,14 @@ tags:
     description: Sign-in, token rotation and two-factor enrolment for the admin dashboard.
   - name: Admin users
     description: Managing admin accounts and reading the audit log. Administrators only.
+  - name: Admin content
+    description: |
+      CRUD for the seven content collections. Every collection shares the same
+      operations, so they share one set of paths, keyed by `collection`.
+  - name: Admin singletons
+    description: Site settings and the eight page documents.
+  - name: Admin media
+    description: The image library the firm uploads through.
 
 paths:
   /api/v1/health:
@@ -1210,6 +1218,692 @@ paths:
           $ref: '#/components/responses/InternalError'
 
 
+  /api/v1/admin/content/{collection}:
+    parameters:
+      - $ref: '#/components/parameters/AdminCollection'
+    get:
+      tags: [Admin content]
+      operationId: listAdminContent
+      summary: List items in a content collection
+      description: |
+        Every status, not just published. The response shape depends on
+        `collection`: each item is the editable shape for that collection
+        (see `AdminContentItem`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminStatus'
+        - $ref: '#/components/parameters/AdminSearch'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of items in their editable shape.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminContentItem'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                practiceAreas:
+                  value:
+                    $ref: '../fixtures/responses/admin.practice-areas.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Admin content]
+      operationId: createAdminContent
+      summary: Create an item
+      description: |
+        The body is the editable shape without `id`, `revision`, timestamps or
+        `_expanded`. A slug is generated from the title when none is given.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminContentWrite'
+            example:
+              title: Tax
+              shortLabel: Tax
+              summary: When a business needs to understand or meet its tax obligations…
+      responses:
+        '201':
+          $ref: '#/components/responses/AdminContentItem'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/content/{collection}/reorder:
+    patch:
+      tags: [Admin content]
+      operationId: reorderAdminContent
+      summary: Reorder a collection
+      description: |
+        Sets `order` from the position of each id in the list. Ids not
+        mentioned keep their current order.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminCollection'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+            example:
+              ids:
+                - 665f1a2b3c4d5e6f70819293
+                - 665f1a2b3c4d5e6f70819294
+      responses:
+        '204':
+          description: Reordered.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/content/{collection}/{id}:
+    parameters:
+      - $ref: '#/components/parameters/AdminCollection'
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags: [Admin content]
+      operationId: getAdminContent
+      summary: Get one item in its editable shape
+      description: |
+        References stay as ids, exactly as they must be sent back. `_expanded`
+        carries a minimal preview of each referenced media item or person so the
+        dashboard can render thumbnails without extra calls; it is ignored on
+        write (ADR-014).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminContentItem'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Admin content]
+      operationId: updateAdminContent
+      summary: Update an item
+      description: |
+        Requires `If-Match` with the revision read. A stale revision returns 409
+        with the current one, so two editors cannot silently overwrite each
+        other (ADR-015).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminContentWrite'
+            example:
+              summary: Updated summary text for the practice area.
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminContentItem'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Admin content]
+      operationId: deleteAdminContent
+      summary: Delete an item
+      description: |
+        Refused with 409 when something still references the item, with the
+        referencing records in `error.details`, so the dashboard can show where
+        it is still used.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/content/{collection}/{id}/publish:
+    post:
+      tags: [Admin content]
+      operationId: publishAdminContent
+      summary: Publish an item
+      description: Sets `publishedAt` the first time only, so republishing keeps the original date.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminCollection'
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminContentItem'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/content/{collection}/{id}/unpublish:
+    post:
+      tags: [Admin content]
+      operationId: unpublishAdminContent
+      summary: Unpublish an item
+      description: Returns the item to draft. The original `publishedAt` is kept.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminCollection'
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminContentItem'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/settings:
+    get:
+      tags: [Admin singletons]
+      operationId: getAdminSettings
+      summary: Get site settings in their editable shape
+      description: |
+        Everything the shell renders, plus the `revision` a write must quote in
+        `If-Match`. Minus `id` and `revision`, the body is a valid PUT body.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Settings, plus the revision to send back with a write.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SettingsAdmin'
+              examples:
+                settings:
+                  value:
+                    $ref: '../fixtures/responses/admin.settings.json'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags: [Admin singletons]
+      operationId: replaceAdminSettings
+      summary: Replace site settings
+      description: Whole-document replace. Requires `If-Match`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsWrite'
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminSettings'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Admin singletons]
+      operationId: patchAdminSettings
+      summary: Merge settings section by section
+      description: |
+        Each top-level key in the body replaces that section entirely. Sections
+        not mentioned are untouched, and arrays inside a section are replaced
+        whole, never merged. The merged result is validated before saving.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsPatch'
+            example:
+              phone: (+234) 80000000001
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminSettings'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/pages/{key}:
+    parameters:
+      - $ref: '#/components/parameters/PageKey'
+    get:
+      tags: [Admin singletons]
+      operationId: getAdminPage
+      summary: Get a page in its editable shape
+      description: |
+        References stay as ids. `_expanded` previews each referenced media item
+        and person. Minus `_expanded`, `id`, timestamps and `revision`, the body
+        is a valid PUT body.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The page document.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PageAdmin'
+              examples:
+                home:
+                  value:
+                    $ref: '../fixtures/responses/admin.pages.home.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags: [Admin singletons]
+      operationId: replaceAdminPage
+      summary: Replace a page
+      description: |
+        Whole-document replace, validated against the schema for that page key.
+        Requires `If-Match`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PageWrite'
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Admin singletons]
+      operationId: patchAdminPage
+      summary: Merge a page section by section
+      description: |
+        Each top-level key replaces that section entirely; sections not in the
+        body are untouched; arrays inside a section are replaced whole. The
+        merged document is validated against the page schema before saving, so
+        a patch cannot leave a page the composers cannot render.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PagePatch'
+            example:
+              hero:
+                title: Counsel To The Institutions Building Nigeria's Economy.
+                subtitle: null
+                image: 665f1a2b3c4d5e6f70819293
+                primaryCta: { label: Discuss a Mandate, href: 'action:mandate', kind: action }
+                secondaryCta: null
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/media:
+    get:
+      tags: [Admin media]
+      operationId: listMedia
+      summary: The image library
+      description: |
+        The picker the admin dashboard shows when attaching an image. `?unused=true`
+        narrows it to images nothing references, which is what makes a clear-out
+        safe.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminSearch'
+        - name: unused
+          in: query
+          required: false
+          description: Only images nothing references, for finding what is safe to delete.
+          schema:
+            type: boolean
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [newest, oldest]
+            default: newest
+        - $ref: '#/components/parameters/Page'
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 24
+      responses:
+        '200':
+          description: A page of media records.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MediaAdmin'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                media:
+                  value:
+                    $ref: '../fixtures/responses/admin.media.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Admin media]
+      operationId: uploadMedia
+      summary: Upload an image
+      description: |
+        JPEG, PNG, WebP or AVIF, at most 10 MB, type checked by magic bytes
+        rather than by extension. SVG is rejected because it can carry scripts;
+        export badges as PNG (ADR-016). Alt text is required on upload.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MediaUploadRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/AdminMedia'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/media/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags: [Admin media]
+      operationId: getMedia
+      summary: One image, with everywhere it is used
+      description: |
+        `usedBy` is computed from the media reference registry on each request
+        rather than stored, so it cannot drift out of date (ADR-013).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminMedia'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Admin media]
+      operationId: updateMedia
+      summary: Edit alt text, title or focal point
+      description: Metadata only. Replacing the file itself is a separate endpoint.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MediaPatch'
+            example:
+              alt: Lady Justice statue against the Lagos skyline
+              focalPoint: { x: 0.5, y: 0.35 }
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminMedia'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Admin media]
+      operationId: deleteMedia
+      summary: Delete an image
+      description: |
+        Allowed only when nothing references it. Otherwise 409, with `usedBy`
+        in `error.details` so the dashboard can show where it is still used.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Deleted, along with the stored file.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/media/{id}/file:
+    put:
+      tags: [Admin media]
+      operationId: replaceMediaFile
+      summary: Replace the file, keeping the id
+      description: |
+        The id and alt text stay, so every page using this image updates at
+        once. The new file gets a new URL, so no cache can serve the old one;
+        the old file is deleted after the swap succeeds, every referencing
+        entity is invalidated, and the action is audit-logged (ADR-013).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MediaReplaceRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminMedia'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1333,6 +2027,39 @@ components:
         maxLength: 100
       example: arbitration
 
+    AdminCollection:
+      name: collection
+      in: path
+      required: true
+      description: Which content collection to act on.
+      schema:
+        $ref: '#/components/schemas/AdminCollection'
+    AdminStatus:
+      name: status
+      in: query
+      required: false
+      description: Filter by status. Omit for every status, which is the admin default.
+      schema:
+        type: string
+        enum: [draft, published]
+    AdminSearch:
+      name: q
+      in: query
+      required: false
+      description: Free-text filter over the collection's searchable fields.
+      schema:
+        type: string
+        maxLength: 200
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: |
+        The `revision` read from the GET. A stale value returns 409 with the
+        current revision, so two editors cannot silently overwrite each other.
+      schema:
+        type: string
+
   responses:
     ValidationError:
       description: The request failed validation.
@@ -1418,6 +2145,76 @@ components:
             error:
               code: CONFLICT
               message: An account with that email already exists
+    PreconditionRequired:
+      description: The write needs an `If-Match` header carrying the revision read.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: An If-Match header carrying the current revision is required
+    AdminContentItem:
+      description: One item in its editable shape.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/AdminContentItem'
+          examples:
+            practiceArea:
+              value:
+                $ref: '../fixtures/responses/admin.practice-areas.detail.json'
+    AdminSettings:
+      description: Site settings in their editable shape.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/SettingsAdmin'
+          examples:
+            settings:
+              value:
+                $ref: '../fixtures/responses/admin.settings.json'
+    AdminPage:
+      description: A page document in its editable shape.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/PageAdmin'
+          examples:
+            home:
+              value:
+                $ref: '../fixtures/responses/admin.pages.home.json'
+    AdminMedia:
+      description: One media record, with everywhere it is used.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/MediaAdmin'
+          examples:
+            media:
+              value:
+                $ref: '../fixtures/responses/admin.media.detail.json'
     RateLimited:
       description: Too many requests from this IP.
       content:
@@ -3154,4 +3951,654 @@ components:
         at:
           type: string
           format: date-time
+
+    AdminCollection:
+      type: string
+      enum:
+        - practice-areas
+        - people
+        - insights
+        - offices
+        - recognitions
+        - faqs
+        - jobs
+
+    ExpandedMedia:
+      type: object
+      additionalProperties: false
+      required: [kind, url, alt]
+      properties:
+        kind:
+          type: string
+          enum: [media]
+        url:
+          type: string
+        alt:
+          type: string
+
+    ExpandedPerson:
+      type: object
+      additionalProperties: false
+      required: [kind, displayName]
+      properties:
+        kind:
+          type: string
+          enum: [person]
+        displayName:
+          type: string
+
+    Expanded:
+      type: object
+      description: |
+        Minimal previews of the referenced ids in this document, keyed by id, so
+        the dashboard can render thumbnails and names without extra calls. The
+        client never sends it back; the server ignores it if it does (ADR-014).
+      additionalProperties:
+        oneOf:
+          - $ref: '#/components/schemas/ExpandedMedia'
+          - $ref: '#/components/schemas/ExpandedPerson'
+
+    SeoWrite:
+      type: object
+      additionalProperties: false
+      required: [title, description]
+      properties:
+        title:
+          type: [string, 'null']
+        description:
+          type: [string, 'null']
+
+    PracticeAreaAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - status
+        - publishedAt
+        - order
+        - revision
+        - createdAt
+        - updatedAt
+        - title
+        - shortLabel
+        - summary
+        - image
+        - body
+        - keyServices
+        - contacts
+        - featuredOnHome
+        - homeOrder
+        - showInFooter
+        - seo
+        - _expanded
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        slug: { $ref: '#/components/schemas/Slug' }
+        status: { type: string, enum: [draft, published] }
+        publishedAt: { type: [string, 'null'], format: date-time }
+        order: { type: integer }
+        revision: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        title: { type: string }
+        shortLabel: { type: string }
+        summary: { type: string }
+        image:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        body: { type: [string, 'null'] }
+        keyServices:
+          type: array
+          items: { type: string }
+        contacts:
+          type: array
+          items: { $ref: '#/components/schemas/ObjectId' }
+        featuredOnHome: { type: boolean }
+        homeOrder: { type: [integer, 'null'] }
+        showInFooter: { type: boolean }
+        seo: { $ref: '#/components/schemas/SeoWrite' }
+        _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    PersonAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - status
+        - publishedAt
+        - order
+        - revision
+        - createdAt
+        - updatedAt
+        - honorific
+        - firstName
+        - lastName
+        - postNominals
+        - role
+        - photo
+        - linkedinUrl
+        - email
+        - bio
+        - quote
+        - practiceAreas
+        - office
+        - featuredInLeadership
+        - _expanded
+      description: Unlike the public shape, this carries `email`, which the site never shows.
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        slug: { $ref: '#/components/schemas/Slug' }
+        status: { type: string, enum: [draft, published] }
+        publishedAt: { type: [string, 'null'], format: date-time }
+        order: { type: integer }
+        revision: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        honorific: { type: [string, 'null'] }
+        firstName: { type: string }
+        lastName: { type: string }
+        postNominals: { type: [string, 'null'] }
+        role: { $ref: '#/components/schemas/PersonRole' }
+        photo:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        linkedinUrl: { type: [string, 'null'] }
+        email: { type: [string, 'null'] }
+        bio: { type: [string, 'null'] }
+        quote: { type: [string, 'null'] }
+        practiceAreas:
+          type: array
+          items: { $ref: '#/components/schemas/ObjectId' }
+        office:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        featuredInLeadership: { type: boolean }
+        _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    InsightAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - status
+        - publishedAt
+        - order
+        - revision
+        - createdAt
+        - updatedAt
+        - title
+        - excerpt
+        - body
+        - format
+        - videoUrl
+        - categories
+        - practiceAreas
+        - author
+        - coverImage
+        - featured
+        - _expanded
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        slug: { $ref: '#/components/schemas/Slug' }
+        status: { type: string, enum: [draft, published] }
+        publishedAt: { type: [string, 'null'], format: date-time }
+        order: { type: integer }
+        revision: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        title: { type: string }
+        excerpt: { type: [string, 'null'] }
+        body: { type: [string, 'null'] }
+        format: { $ref: '#/components/schemas/InsightFormat' }
+        videoUrl: { type: [string, 'null'] }
+        categories:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/InsightCategory' }
+        practiceAreas:
+          type: array
+          items: { $ref: '#/components/schemas/ObjectId' }
+        author:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: Null means the firm is the author.
+        coverImage:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        featured: { type: boolean }
+        _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    OfficeAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - status
+        - publishedAt
+        - order
+        - revision
+        - createdAt
+        - updatedAt
+        - name
+        - address
+        - hours
+        - location
+        - directionsUrl
+        - phone
+        - email
+        - _expanded
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        slug: { $ref: '#/components/schemas/Slug' }
+        status: { type: string, enum: [draft, published] }
+        publishedAt: { type: [string, 'null'], format: date-time }
+        order: { type: integer }
+        revision: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        name: { type: string }
+        address: { type: string }
+        hours: { type: string }
+        location:
+          oneOf:
+            - $ref: '#/components/schemas/GeoPoint'
+            - type: 'null'
+          description: Stored as GeoJSON. The public API serialises it as { lat, lng }.
+        directionsUrl: { type: [string, 'null'] }
+        phone: { type: [string, 'null'] }
+        email: { type: [string, 'null'] }
+        _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    GeoPoint:
+      type: object
+      additionalProperties: false
+      required: [type, coordinates]
+      properties:
+        type:
+          type: string
+          enum: [Point]
+        coordinates:
+          type: array
+          minItems: 2
+          maxItems: 2
+          description: '[longitude, latitude], in GeoJSON order.'
+          items:
+            type: number
+
+    RecognitionAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - status
+        - publishedAt
+        - order
+        - revision
+        - createdAt
+        - updatedAt
+        - organization
+        - title
+        - year
+        - badge
+        - url
+        - tab
+        - _expanded
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        slug: { $ref: '#/components/schemas/Slug' }
+        status: { type: string, enum: [draft, published] }
+        publishedAt: { type: [string, 'null'], format: date-time }
+        order: { type: integer }
+        revision: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        organization: { type: string }
+        title: { type: string }
+        year: { type: [integer, 'null'] }
+        badge:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        url: { type: [string, 'null'] }
+        tab: { $ref: '#/components/schemas/RecognitionTab' }
+        _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    FaqAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - status
+        - publishedAt
+        - order
+        - revision
+        - createdAt
+        - updatedAt
+        - question
+        - answer
+        - _expanded
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        slug: { $ref: '#/components/schemas/Slug' }
+        status: { type: string, enum: [draft, published] }
+        publishedAt: { type: [string, 'null'], format: date-time }
+        order: { type: integer }
+        revision: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        question: { type: string }
+        answer:
+          type: string
+          description: Sanitised HTML on write.
+        _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    JobAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - status
+        - publishedAt
+        - order
+        - revision
+        - createdAt
+        - updatedAt
+        - title
+        - practiceArea
+        - description
+        - experience
+        - employmentType
+        - workMode
+        - office
+        - closingDate
+        - isOpen
+        - _expanded
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        slug: { $ref: '#/components/schemas/Slug' }
+        status: { type: string, enum: [draft, published] }
+        publishedAt: { type: [string, 'null'], format: date-time }
+        order: { type: integer }
+        revision: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        title: { type: string }
+        practiceArea:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        description: { type: string }
+        experience: { type: [string, 'null'] }
+        employmentType: { $ref: '#/components/schemas/EmploymentType' }
+        workMode: { $ref: '#/components/schemas/WorkMode' }
+        office:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        closingDate: { type: [string, 'null'], format: date-time }
+        isOpen: { type: boolean }
+        _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    AdminContentItem:
+      oneOf:
+        - $ref: '#/components/schemas/PracticeAreaAdmin'
+        - $ref: '#/components/schemas/PersonAdmin'
+        - $ref: '#/components/schemas/InsightAdmin'
+        - $ref: '#/components/schemas/OfficeAdmin'
+        - $ref: '#/components/schemas/RecognitionAdmin'
+        - $ref: '#/components/schemas/FaqAdmin'
+        - $ref: '#/components/schemas/JobAdmin'
+      description: |
+        Which of these you get is decided by the `collection` path parameter,
+        not by a field in the body — the caller always knows which it asked
+        for. Every content collection shares the same operations, so they share
+        one set of paths (ADR-033).
+
+    AdminContentWrite:
+      type: object
+      description: |
+        The editable shape for the collection, without `id`, `revision`,
+        timestamps or `_expanded`. Validated per collection on the server, so
+        an unknown field is a 400 rather than silently dropped. On create the
+        required fields are the collection's own; on update every field is
+        optional.
+      additionalProperties: true
+
+    ReorderRequest:
+      type: object
+      additionalProperties: false
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/ObjectId'
+
+    SettingsAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - revision
+        - firmName
+        - legalDescriptor
+        - tagline
+        - foundedYear
+        - phone
+        - email
+        - socials
+        - copyright
+        - faqSection
+        - stillHaveQuestions
+        - contactCallout
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        revision: { type: integer }
+        firmName: { type: string }
+        legalDescriptor: { type: string }
+        tagline: { type: string }
+        foundedYear: { type: integer }
+        phone: { type: [string, 'null'] }
+        email: { type: [string, 'null'] }
+        socials: { $ref: '#/components/schemas/Socials' }
+        copyright: { type: string }
+        faqSection:
+          type: object
+          additionalProperties: false
+          required: [eyebrow, title]
+          properties:
+            eyebrow: { type: [string, 'null'] }
+            title: { type: string }
+        stillHaveQuestions: { $ref: '#/components/schemas/StillHaveQuestions' }
+        contactCallout: { $ref: '#/components/schemas/ContactCallout' }
+
+    SettingsWrite:
+      type: object
+      additionalProperties: false
+      required:
+        - firmName
+        - legalDescriptor
+        - tagline
+        - foundedYear
+        - phone
+        - email
+        - socials
+        - copyright
+        - faqSection
+        - stillHaveQuestions
+        - contactCallout
+      properties:
+        firmName: { type: string, minLength: 1, maxLength: 160 }
+        legalDescriptor: { type: string, minLength: 1, maxLength: 200 }
+        tagline: { type: string, minLength: 1, maxLength: 300 }
+        foundedYear: { type: integer, minimum: 1800, maximum: 2200 }
+        phone: { type: [string, 'null'] }
+        email: { type: [string, 'null'] }
+        socials: { $ref: '#/components/schemas/Socials' }
+        copyright: { type: string, minLength: 1, maxLength: 300 }
+        faqSection:
+          type: object
+          additionalProperties: false
+          required: [eyebrow, title]
+          properties:
+            eyebrow: { type: [string, 'null'] }
+            title: { type: string }
+        stillHaveQuestions: { $ref: '#/components/schemas/StillHaveQuestions' }
+        contactCallout: { $ref: '#/components/schemas/ContactCallout' }
+
+    SettingsPatch:
+      type: object
+      minProperties: 1
+      description: |
+        Any subset of the settings sections. Each key given replaces that
+        section entirely; the rest are untouched.
+      additionalProperties: true
+
+    PageAdmin:
+      type: object
+      description: |
+        The stored page document: every reference is an id, and only the
+        sections that page key uses are present. `_expanded` previews the
+        referenced media and people.
+      additionalProperties: true
+      required: [id, key, revision, seo, _expanded]
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        key: { $ref: '#/components/schemas/PageKey' }
+        revision: { type: integer }
+        seo:
+          type: object
+          additionalProperties: false
+          required: [title, description, ogImage]
+          properties:
+            title: { type: [string, 'null'] }
+            description: { type: [string, 'null'] }
+            ogImage:
+              oneOf:
+                - $ref: '#/components/schemas/ObjectId'
+                - type: 'null'
+        _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    PageWrite:
+      type: object
+      description: |
+        A whole page document, validated against the schema for its key. The
+        sections differ per key, which is why this is not enumerated here; a
+        wrong or missing section returns 400 with the exact path.
+      additionalProperties: true
+
+    PagePatch:
+      type: object
+      minProperties: 1
+      description: Any subset of the page's sections. Each key replaces that section entirely.
+      additionalProperties: true
+
+    MediaUsage:
+      type: object
+      additionalProperties: false
+      required: [collection, id, label, field]
+      description: One place an image is referenced, so the UI can show where it is used.
+      properties:
+        collection: { type: string }
+        id: { $ref: '#/components/schemas/ObjectId' }
+        label: { type: string }
+        field: { type: string }
+
+    MediaAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - url
+        - sizes
+        - alt
+        - title
+        - width
+        - height
+        - mimeType
+        - bytes
+        - focalPoint
+        - createdAt
+        - updatedAt
+        - usedBy
+      description: The storage key is deliberately absent; it is an internal path.
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        url: { type: string }
+        sizes: { $ref: '#/components/schemas/ImageSizes' }
+        alt: { type: string }
+        title: { type: [string, 'null'] }
+        width: { type: integer }
+        height: { type: integer }
+        mimeType: { type: string }
+        bytes: { type: integer }
+        focalPoint:
+          type: object
+          additionalProperties: false
+          required: [x, y]
+          properties:
+            x: { type: number, minimum: 0, maximum: 1 }
+            y: { type: number, minimum: 0, maximum: 1 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        usedBy:
+          type: array
+          description: Computed from the media reference registry, not stored (ADR-013).
+          items:
+            $ref: '#/components/schemas/MediaUsage'
+
+    MediaUploadRequest:
+      type: object
+      additionalProperties: false
+      required: [file, alt]
+      properties:
+        file:
+          type: string
+          format: binary
+          description: JPEG, PNG, WebP or AVIF, at most 10 MB, verified by magic bytes.
+        alt:
+          type: string
+          minLength: 1
+          maxLength: 300
+        title:
+          type: string
+          maxLength: 200
+
+    MediaReplaceRequest:
+      type: object
+      additionalProperties: false
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+
+    MediaPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        alt: { type: string, minLength: 1, maxLength: 300 }
+        title: { type: [string, 'null'], maxLength: 200 }
+        focalPoint:
+          type: object
+          additionalProperties: false
+          required: [x, y]
+          properties:
+            x: { type: number, minimum: 0, maximum: 1 }
+            y: { type: number, minimum: 0, maximum: 1 }
 

@@ -1,0 +1,114 @@
+{
+  "data": {
+    "id": "665f00000000000000000130",
+    "key": "home",
+    "revision": 5,
+    "hero": {
+      "title": "Counsel To The Institutions Building Nigeria's Economy.",
+      "subtitle": "For over five decades, we have advised governments, financial institutions and multinational corporations on capital markets transactions, complex disputes and the regulatory frameworks that shape commerce in Nigeria.",
+      "image": "665f00000000000000000120",
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Explore Our Practice Areas",
+        "href": "/practice-areas",
+        "kind": "internal"
+      }
+    },
+    "aboutFirm": {
+      "title": "A Firm Built On Integrity, Proven In Outcomes.",
+      "paragraphs": [
+        "S. P. A. Ajibade & Co was founded in 1967. The Firm is managed by Dr. B. A. M. Ajibade, SAN as the Managing Partner together with six (6) other Partners, Dr. J. C. Onyido, Dr. K. Mayomi, Mrs. B. Gabari, Mr. P. O. Olalere and Dr. M. Ejelonu and Mr. M. Sowunmi. The Firm is focused on the following areas of practice: Dispute Resolution, Intellectual Property & Telecommunications, Corporate Finance & Capital Markets, Real Estate & Succession, Energy & Natural Resources.",
+        "At S. P. A. Ajibade & Co, maintaining the integrity of the legal profession by ethically satisfying every client's specific needs and interests, whilst ensuring the continuous growth and development of the Firm is the core of daily practice."
+      ],
+      "cta": {
+        "label": "Learn more about our history",
+        "href": "/about",
+        "kind": "internal"
+      }
+    },
+    "videoShowcase": {
+      "videoUrl": null,
+      "poster": null
+    },
+    "recognitionTabs": {
+      "achievementsLabel": "Our Achievements",
+      "recognizedByLabel": "Independently Recognized By"
+    },
+    "practiceSection": {
+      "eyebrow": "Services",
+      "title": "Focused Practice Areas.",
+      "cta": {
+        "label": "Explore Our Practice Areas",
+        "href": "/practice-areas",
+        "kind": "internal"
+      }
+    },
+    "leadershipSection": {
+      "eyebrow": "Our People",
+      "title": "Behind Every Victory Is A Leadership You Can Trust",
+      "cta": {
+        "label": "View full directory",
+        "href": "/people",
+        "kind": "internal"
+      }
+    },
+    "whyChooseUs": {
+      "eyebrow": "Why Clients Choose SPA Ajibade",
+      "title": "Scale Hasn't Changed How We Treat A Matter.",
+      "text": "Across every office and every practice area, the standard stays the same, direct access to the advisor handling your matter, not a rotating team.",
+      "points": [
+        {
+          "icon": "award",
+          "title": "Proven Track Record",
+          "text": null
+        },
+        {
+          "icon": "shield-plus",
+          "title": "Trial-Tested Attorneys",
+          "text": null
+        },
+        {
+          "icon": "handshake",
+          "title": "Client-Centered Focus",
+          "text": null
+        },
+        {
+          "icon": "folder-lock",
+          "title": "Confidential Handling",
+          "text": null
+        }
+      ],
+      "image": "665f00000000000000000121"
+    },
+    "insightsSection": {
+      "eyebrow": "Insights and News",
+      "title": "Recent Publications",
+      "cta": {
+        "label": "View all insights",
+        "href": "/insights",
+        "kind": "internal"
+      }
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    },
+    "_expanded": {
+      "665f00000000000000000120": {
+        "kind": "media",
+        "url": "https://placehold.co/1440x662?text=Home%20hero",
+        "alt": "Lady Justice statue against the Lagos skyline"
+      },
+      "665f00000000000000000121": {
+        "kind": "media",
+        "url": "https://placehold.co/1200x900?text=Why%20choose%20us",
+        "alt": "Attorneys of the firm in discussion around a boardroom table"
+      }
+    }
+  }
+}

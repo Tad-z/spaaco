@@ -598,6 +598,289 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/content/{collection}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Which content collection to act on. */
+                collection: components["parameters"]["AdminCollection"];
+            };
+            cookie?: never;
+        };
+        /**
+         * List items in a content collection
+         * @description Every status, not just published. The response shape depends on
+         *     `collection`: each item is the editable shape for that collection
+         *     (see `AdminContentItem`).
+         */
+        get: operations["listAdminContent"];
+        put?: never;
+        /**
+         * Create an item
+         * @description The body is the editable shape without `id`, `revision`, timestamps or
+         *     `_expanded`. A slug is generated from the title when none is given.
+         */
+        post: operations["createAdminContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/{collection}/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reorder a collection
+         * @description Sets `order` from the position of each id in the list. Ids not
+         *     mentioned keep their current order.
+         */
+        patch: operations["reorderAdminContent"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/{collection}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Which content collection to act on. */
+                collection: components["parameters"]["AdminCollection"];
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get one item in its editable shape
+         * @description References stay as ids, exactly as they must be sent back. `_expanded`
+         *     carries a minimal preview of each referenced media item or person so the
+         *     dashboard can render thumbnails without extra calls; it is ignored on
+         *     write (ADR-014).
+         */
+        get: operations["getAdminContent"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete an item
+         * @description Refused with 409 when something still references the item, with the
+         *     referencing records in `error.details`, so the dashboard can show where
+         *     it is still used.
+         */
+        delete: operations["deleteAdminContent"];
+        options?: never;
+        head?: never;
+        /**
+         * Update an item
+         * @description Requires `If-Match` with the revision read. A stale revision returns 409
+         *     with the current one, so two editors cannot silently overwrite each
+         *     other (ADR-015).
+         */
+        patch: operations["updateAdminContent"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/{collection}/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish an item
+         * @description Sets `publishedAt` the first time only, so republishing keeps the original date.
+         */
+        post: operations["publishAdminContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/{collection}/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish an item
+         * @description Returns the item to draft. The original `publishedAt` is kept.
+         */
+        post: operations["unpublishAdminContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get site settings in their editable shape
+         * @description Everything the shell renders, plus the `revision` a write must quote in
+         *     `If-Match`. Minus `id` and `revision`, the body is a valid PUT body.
+         */
+        get: operations["getAdminSettings"];
+        /**
+         * Replace site settings
+         * @description Whole-document replace. Requires `If-Match`.
+         */
+        put: operations["replaceAdminSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Merge settings section by section
+         * @description Each top-level key in the body replaces that section entirely. Sections
+         *     not mentioned are untouched, and arrays inside a section are replaced
+         *     whole, never merged. The merged result is validated before saving.
+         */
+        patch: operations["patchAdminSettings"];
+        trace?: never;
+    };
+    "/api/v1/admin/pages/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Which page to compose. */
+                key: components["parameters"]["PageKey"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get a page in its editable shape
+         * @description References stay as ids. `_expanded` previews each referenced media item
+         *     and person. Minus `_expanded`, `id`, timestamps and `revision`, the body
+         *     is a valid PUT body.
+         */
+        get: operations["getAdminPage"];
+        /**
+         * Replace a page
+         * @description Whole-document replace, validated against the schema for that page key.
+         *     Requires `If-Match`.
+         */
+        put: operations["replaceAdminPage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Merge a page section by section
+         * @description Each top-level key replaces that section entirely; sections not in the
+         *     body are untouched; arrays inside a section are replaced whole. The
+         *     merged document is validated against the page schema before saving, so
+         *     a patch cannot leave a page the composers cannot render.
+         */
+        patch: operations["patchAdminPage"];
+        trace?: never;
+    };
+    "/api/v1/admin/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The image library
+         * @description The picker the admin dashboard shows when attaching an image. `?unused=true`
+         *     narrows it to images nothing references, which is what makes a clear-out
+         *     safe.
+         */
+        get: operations["listMedia"];
+        put?: never;
+        /**
+         * Upload an image
+         * @description JPEG, PNG, WebP or AVIF, at most 10 MB, type checked by magic bytes
+         *     rather than by extension. SVG is rejected because it can carry scripts;
+         *     export badges as PNG (ADR-016). Alt text is required on upload.
+         */
+        post: operations["uploadMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/media/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * One image, with everywhere it is used
+         * @description `usedBy` is computed from the media reference registry on each request
+         *     rather than stored, so it cannot drift out of date (ADR-013).
+         */
+        get: operations["getMedia"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete an image
+         * @description Allowed only when nothing references it. Otherwise 409, with `usedBy`
+         *     in `error.details` so the dashboard can show where it is still used.
+         */
+        delete: operations["deleteMedia"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit alt text, title or focal point
+         * @description Metadata only. Replacing the file itself is a separate endpoint.
+         */
+        patch: operations["updateMedia"];
+        trace?: never;
+    };
+    "/api/v1/admin/media/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace the file, keeping the id
+         * @description The id and alt text stay, so every page using this image updates at
+         *     once. The new file gets a new URL, so no cache can serve the old one;
+         *     the old file is deleted after the swap succeeds, every referencing
+         *     entity is invalidated, and the action is audit-logged (ADR-013).
+         */
+        put: operations["replaceMediaFile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1328,6 +1611,346 @@ export interface components {
             /** Format: date-time */
             at: string;
         };
+        /** @enum {string} */
+        AdminCollection: "practice-areas" | "people" | "insights" | "offices" | "recognitions" | "faqs" | "jobs";
+        ExpandedMedia: {
+            /** @enum {string} */
+            kind: "media";
+            url: string;
+            alt: string;
+        };
+        ExpandedPerson: {
+            /** @enum {string} */
+            kind: "person";
+            displayName: string;
+        };
+        /**
+         * @description Minimal previews of the referenced ids in this document, keyed by id, so
+         *     the dashboard can render thumbnails and names without extra calls. The
+         *     client never sends it back; the server ignores it if it does (ADR-014).
+         */
+        Expanded: {
+            [key: string]: components["schemas"]["ExpandedMedia"] | components["schemas"]["ExpandedPerson"];
+        };
+        SeoWrite: {
+            title: string | null;
+            description: string | null;
+        };
+        PracticeAreaAdmin: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            publishedAt: string | null;
+            order: number;
+            revision: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            title: string;
+            shortLabel: string;
+            summary: string;
+            image: components["schemas"]["ObjectId"] | null;
+            body: string | null;
+            keyServices: string[];
+            contacts: components["schemas"]["ObjectId"][];
+            featuredOnHome: boolean;
+            homeOrder: number | null;
+            showInFooter: boolean;
+            seo: components["schemas"]["SeoWrite"];
+            _expanded: components["schemas"]["Expanded"];
+        };
+        /** @description Unlike the public shape, this carries `email`, which the site never shows. */
+        PersonAdmin: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            publishedAt: string | null;
+            order: number;
+            revision: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            honorific: string | null;
+            firstName: string;
+            lastName: string;
+            postNominals: string | null;
+            role: components["schemas"]["PersonRole"];
+            photo: components["schemas"]["ObjectId"] | null;
+            linkedinUrl: string | null;
+            email: string | null;
+            bio: string | null;
+            quote: string | null;
+            practiceAreas: components["schemas"]["ObjectId"][];
+            office: components["schemas"]["ObjectId"] | null;
+            featuredInLeadership: boolean;
+            _expanded: components["schemas"]["Expanded"];
+        };
+        InsightAdmin: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            publishedAt: string | null;
+            order: number;
+            revision: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            title: string;
+            excerpt: string | null;
+            body: string | null;
+            format: components["schemas"]["InsightFormat"];
+            videoUrl: string | null;
+            categories: components["schemas"]["InsightCategory"][];
+            practiceAreas: components["schemas"]["ObjectId"][];
+            /** @description Null means the firm is the author. */
+            author: components["schemas"]["ObjectId"] | null;
+            coverImage: components["schemas"]["ObjectId"] | null;
+            featured: boolean;
+            _expanded: components["schemas"]["Expanded"];
+        };
+        OfficeAdmin: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            publishedAt: string | null;
+            order: number;
+            revision: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            name: string;
+            address: string;
+            hours: string;
+            /** @description Stored as GeoJSON. The public API serialises it as { lat, lng }. */
+            location: components["schemas"]["GeoPoint"] | null;
+            directionsUrl: string | null;
+            phone: string | null;
+            email: string | null;
+            _expanded: components["schemas"]["Expanded"];
+        };
+        GeoPoint: {
+            /** @enum {string} */
+            type: "Point";
+            /** @description [longitude, latitude], in GeoJSON order. */
+            coordinates: number[];
+        };
+        RecognitionAdmin: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            publishedAt: string | null;
+            order: number;
+            revision: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            organization: string;
+            title: string;
+            year: number | null;
+            badge: components["schemas"]["ObjectId"] | null;
+            url: string | null;
+            tab: components["schemas"]["RecognitionTab"];
+            _expanded: components["schemas"]["Expanded"];
+        };
+        FaqAdmin: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            publishedAt: string | null;
+            order: number;
+            revision: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            question: string;
+            /** @description Sanitised HTML on write. */
+            answer: string;
+            _expanded: components["schemas"]["Expanded"];
+        };
+        JobAdmin: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            publishedAt: string | null;
+            order: number;
+            revision: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            title: string;
+            practiceArea: components["schemas"]["ObjectId"] | null;
+            description: string;
+            experience: string | null;
+            employmentType: components["schemas"]["EmploymentType"];
+            workMode: components["schemas"]["WorkMode"];
+            office: components["schemas"]["ObjectId"] | null;
+            /** Format: date-time */
+            closingDate: string | null;
+            isOpen: boolean;
+            _expanded: components["schemas"]["Expanded"];
+        };
+        /**
+         * @description Which of these you get is decided by the `collection` path parameter,
+         *     not by a field in the body — the caller always knows which it asked
+         *     for. Every content collection shares the same operations, so they share
+         *     one set of paths (ADR-033).
+         */
+        AdminContentItem: components["schemas"]["PracticeAreaAdmin"] | components["schemas"]["PersonAdmin"] | components["schemas"]["InsightAdmin"] | components["schemas"]["OfficeAdmin"] | components["schemas"]["RecognitionAdmin"] | components["schemas"]["FaqAdmin"] | components["schemas"]["JobAdmin"];
+        /**
+         * @description The editable shape for the collection, without `id`, `revision`,
+         *     timestamps or `_expanded`. Validated per collection on the server, so
+         *     an unknown field is a 400 rather than silently dropped. On create the
+         *     required fields are the collection's own; on update every field is
+         *     optional.
+         */
+        AdminContentWrite: {
+            [key: string]: unknown;
+        };
+        ReorderRequest: {
+            ids: components["schemas"]["ObjectId"][];
+        };
+        SettingsAdmin: {
+            id: components["schemas"]["ObjectId"];
+            revision: number;
+            firmName: string;
+            legalDescriptor: string;
+            tagline: string;
+            foundedYear: number;
+            phone: string | null;
+            email: string | null;
+            socials: components["schemas"]["Socials"];
+            copyright: string;
+            faqSection: {
+                eyebrow: string | null;
+                title: string;
+            };
+            stillHaveQuestions: components["schemas"]["StillHaveQuestions"];
+            contactCallout: components["schemas"]["ContactCallout"];
+        };
+        SettingsWrite: {
+            firmName: string;
+            legalDescriptor: string;
+            tagline: string;
+            foundedYear: number;
+            phone: string | null;
+            email: string | null;
+            socials: components["schemas"]["Socials"];
+            copyright: string;
+            faqSection: {
+                eyebrow: string | null;
+                title: string;
+            };
+            stillHaveQuestions: components["schemas"]["StillHaveQuestions"];
+            contactCallout: components["schemas"]["ContactCallout"];
+        };
+        /**
+         * @description Any subset of the settings sections. Each key given replaces that
+         *     section entirely; the rest are untouched.
+         */
+        SettingsPatch: {
+            [key: string]: unknown;
+        };
+        /**
+         * @description The stored page document: every reference is an id, and only the
+         *     sections that page key uses are present. `_expanded` previews the
+         *     referenced media and people.
+         */
+        PageAdmin: {
+            id: components["schemas"]["ObjectId"];
+            key: components["schemas"]["PageKey"];
+            revision: number;
+            seo: {
+                title: string | null;
+                description: string | null;
+                ogImage: components["schemas"]["ObjectId"] | null;
+            };
+            _expanded: components["schemas"]["Expanded"];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * @description A whole page document, validated against the schema for its key. The
+         *     sections differ per key, which is why this is not enumerated here; a
+         *     wrong or missing section returns 400 with the exact path.
+         */
+        PageWrite: {
+            [key: string]: unknown;
+        };
+        /** @description Any subset of the page's sections. Each key replaces that section entirely. */
+        PagePatch: {
+            [key: string]: unknown;
+        };
+        /** @description One place an image is referenced, so the UI can show where it is used. */
+        MediaUsage: {
+            collection: string;
+            id: components["schemas"]["ObjectId"];
+            label: string;
+            field: string;
+        };
+        /** @description The storage key is deliberately absent; it is an internal path. */
+        MediaAdmin: {
+            id: components["schemas"]["ObjectId"];
+            url: string;
+            sizes: components["schemas"]["ImageSizes"];
+            alt: string;
+            title: string | null;
+            width: number;
+            height: number;
+            mimeType: string;
+            bytes: number;
+            focalPoint: {
+                x: number;
+                y: number;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @description Computed from the media reference registry, not stored (ADR-013). */
+            usedBy: components["schemas"]["MediaUsage"][];
+        };
+        MediaUploadRequest: {
+            /**
+             * Format: binary
+             * @description JPEG, PNG, WebP or AVIF, at most 10 MB, verified by magic bytes.
+             */
+            file: string;
+            alt: string;
+            title?: string;
+        };
+        MediaReplaceRequest: {
+            /** Format: binary */
+            file: string;
+        };
+        MediaPatch: {
+            alt?: string;
+            title?: string | null;
+            focalPoint?: {
+                x: number;
+                y: number;
+            };
+        };
     };
     responses: {
         /** @description The request failed validation. */
@@ -1456,6 +2079,67 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
+        /** @description The write needs an `If-Match` header carrying the revision read. */
+        PreconditionRequired: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "VALIDATION_ERROR",
+                 *         "message": "An If-Match header carrying the current revision is required"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description One item in its editable shape. */
+        AdminContentItem: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AdminContentItem"];
+                };
+            };
+        };
+        /** @description Site settings in their editable shape. */
+        AdminSettings: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["SettingsAdmin"];
+                };
+            };
+        };
+        /** @description A page document in its editable shape. */
+        AdminPage: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["PageAdmin"];
+                };
+            };
+        };
+        /** @description One media record, with everywhere it is used. */
+        AdminMedia: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["MediaAdmin"];
+                };
+            };
+        };
         /** @description Too many requests from this IP. */
         RateLimited: {
             headers: {
@@ -1541,6 +2225,17 @@ export interface components {
          * @example arbitration
          */
         SearchQuery: string;
+        /** @description Which content collection to act on. */
+        AdminCollection: components["schemas"]["AdminCollection"];
+        /** @description Filter by status. Omit for every status, which is the admin default. */
+        AdminStatus: "draft" | "published";
+        /** @description Free-text filter over the collection's searchable fields. */
+        AdminSearch: string;
+        /**
+         * @description The `revision` read from the GET. A stale value returns 409 with the
+         *     current revision, so two editors cannot silently overwrite each other.
+         */
+        IfMatch: string;
     };
     requestBodies: never;
     headers: never;
@@ -2601,6 +3296,608 @@ export interface operations {
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listAdminContent: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status, which is the admin default. */
+                status?: components["parameters"]["AdminStatus"];
+                /** @description Free-text filter over the collection's searchable fields. */
+                q?: components["parameters"]["AdminSearch"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path: {
+                /** @description Which content collection to act on. */
+                collection: components["parameters"]["AdminCollection"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of items in their editable shape. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminContentItem"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createAdminContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Which content collection to act on. */
+                collection: components["parameters"]["AdminCollection"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "title": "Tax",
+                 *       "shortLabel": "Tax",
+                 *       "summary": "When a business needs to understand or meet its tax obligations…"
+                 *     }
+                 */
+                "application/json": components["schemas"]["AdminContentWrite"];
+            };
+        };
+        responses: {
+            201: components["responses"]["AdminContentItem"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reorderAdminContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Which content collection to act on. */
+                collection: components["parameters"]["AdminCollection"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "ids": [
+                 *         "665f1a2b3c4d5e6f70819293",
+                 *         "665f1a2b3c4d5e6f70819294"
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getAdminContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Which content collection to act on. */
+                collection: components["parameters"]["AdminCollection"];
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminContentItem"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteAdminContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Which content collection to act on. */
+                collection: components["parameters"]["AdminCollection"];
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateAdminContent: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description Which content collection to act on. */
+                collection: components["parameters"]["AdminCollection"];
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "summary": "Updated summary text for the practice area."
+                 *     }
+                 */
+                "application/json": components["schemas"]["AdminContentWrite"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminContentItem"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    publishAdminContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Which content collection to act on. */
+                collection: components["parameters"]["AdminCollection"];
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminContentItem"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unpublishAdminContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Which content collection to act on. */
+                collection: components["parameters"]["AdminCollection"];
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminContentItem"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getAdminSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Settings, plus the revision to send back with a write. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SettingsAdmin"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    replaceAdminSettings: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingsWrite"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminSettings"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    patchAdminSettings: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "phone": "(+234) 80000000001"
+                 *     }
+                 */
+                "application/json": components["schemas"]["SettingsPatch"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminSettings"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getAdminPage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Which page to compose. */
+                key: components["parameters"]["PageKey"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The page document. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PageAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    replaceAdminPage: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description Which page to compose. */
+                key: components["parameters"]["PageKey"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PageWrite"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminPage"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    patchAdminPage: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description Which page to compose. */
+                key: components["parameters"]["PageKey"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "hero": {
+                 *         "title": "Counsel To The Institutions Building Nigeria's Economy.",
+                 *         "subtitle": null,
+                 *         "image": "665f1a2b3c4d5e6f70819293",
+                 *         "primaryCta": {
+                 *           "label": "Discuss a Mandate",
+                 *           "href": "action:mandate",
+                 *           "kind": "action"
+                 *         },
+                 *         "secondaryCta": null
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["PagePatch"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminPage"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listMedia: {
+        parameters: {
+            query?: {
+                /** @description Free-text filter over the collection's searchable fields. */
+                q?: components["parameters"]["AdminSearch"];
+                /** @description Only images nothing references, for finding what is safe to delete. */
+                unused?: boolean;
+                sort?: "newest" | "oldest";
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of media records. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    uploadMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["MediaUploadRequest"];
+            };
+        };
+        responses: {
+            201: components["responses"]["AdminMedia"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMediaType"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminMedia"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted, along with the stored file. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "alt": "Lady Justice statue against the Lagos skyline",
+                 *       "focalPoint": {
+                 *         "x": 0.5,
+                 *         "y": 0.35
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["MediaPatch"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminMedia"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    replaceMediaFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["MediaReplaceRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminMedia"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMediaType"];
             500: components["responses"]["InternalError"];
         };
     };

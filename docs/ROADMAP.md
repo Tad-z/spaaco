@@ -93,7 +93,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 
 ## Phase 5: Admin content API
 
-- [ ] **5.1 Spec first:** add the admin content, pages, settings and media endpoints to the spec.
+- [x] **5.1 Spec first:** add the admin content, pages, settings and media endpoints to the spec.
 - [ ] **5.2 Generic CRUD factory:** list/get/create/update/delete/publish/unpublish/reorder for a model, plus its schemas. Use it for all 7 content collections. Admin GETs use the editable shape (IDs + `_expanded`); see "Editable shape vs public shape" in API.md.
   - **Accept:** each collection has CRUD tests; publish sets publishedAt once; delete is blocked (409) when the record is referenced; a round-trip test (admin GET → PUT the same body) succeeds unchanged for every collection; a stale `If-Match` returns 409.
 - [ ] **5.3 Pages + settings: GET (editable shape), PUT (replace) and PATCH (section-level merge)**, validated against the per-key schemas after merge, with `revision` + `If-Match` optimistic locking.

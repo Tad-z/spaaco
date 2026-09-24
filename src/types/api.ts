@@ -126,3 +126,26 @@ export type CreateUserRequest = Schemas['CreateUserRequest'];
 export type UpdateUserRequest = Schemas['UpdateUserRequest'];
 export type AuditActor = Schemas['AuditActor'];
 export type AuditLogEntry = Schemas['AuditLogEntry'];
+
+// --- admin content, singletons and media (Phase 5) ---
+export type AdminCollection = Schemas['AdminCollection'];
+export type Expanded = Schemas['Expanded'];
+export type ExpandedMedia = Schemas['ExpandedMedia'];
+export type ExpandedPerson = Schemas['ExpandedPerson'];
+export type SeoWrite = Schemas['SeoWrite'];
+export type GeoPoint = Schemas['GeoPoint'];
+export type PracticeAreaAdmin = Schemas['PracticeAreaAdmin'];
+export type PersonAdmin = Schemas['PersonAdmin'];
+export type InsightAdmin = Schemas['InsightAdmin'];
+export type OfficeAdmin = Schemas['OfficeAdmin'];
+export type RecognitionAdmin = Schemas['RecognitionAdmin'];
+export type FaqAdmin = Schemas['FaqAdmin'];
+export type JobAdmin = Schemas['JobAdmin'];
+export type AdminContentItem = Schemas['AdminContentItem'];
+export type ReorderRequest = Schemas['ReorderRequest'];
+export type SettingsAdmin = Schemas['SettingsAdmin'];
+export type SettingsWrite = Schemas['SettingsWrite'];
+export type PageAdmin = Schemas['PageAdmin'];
+export type MediaAdmin = Schemas['MediaAdmin'];
+export type MediaUsage = Schemas['MediaUsage'];
+export type MediaPatch = Schemas['MediaPatch'];

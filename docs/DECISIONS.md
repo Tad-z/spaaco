@@ -81,6 +81,10 @@ Mechanically, one mongod now starts in `globalSetup` for the whole run instead o
 
 **ADR-032: Cache tags err towards clearing too much.** The tag map originally listed only the surfaces where an entity is the *subject*. But a practice area also appears as a chip on insight cards and a job card, and is counted by an About stat; an attorney appears in every insight card's author block; an office appears in a job's location chip. Each write now clears every surface that embeds the entity. A stale page is a visible bug the firm reports; an extra cache miss costs milliseconds.
 
+**ADR-033: Admin content CRUD is specified once, under `/admin/content/{collection}`.** The seven content collections share identical operations, so enumerating them would mean 56 near-identical operations in the spec and seven near-identical routers in the code. One set of paths keyed by a `collection` enum matches how the generic CRUD factory actually works. The response is `oneOf` the seven editable shapes, which are each fully specified — the caller always knows which collection it asked for, so the absence of a discriminator costs nothing.
+
+The `/content/` segment is a deliberate addition to the URLs in `docs/API.md`. Without it, `/admin/{collection}` is genuinely ambiguous with `/admin/settings`, `/admin/pages/{key}` and `/admin/media/{id}`: correctness would depend on Express route registration order, and adding any future admin singleton could silently collide with a collection name. Redocly flags the ambiguity too. Nothing is broken by the change, because the admin contract is new in this phase and the dashboard is not built yet.
+
 ## Known content conflicts (from the designs; the firm must resolve them)
 
 Seed them as designed. Don't silently "fix" them.
