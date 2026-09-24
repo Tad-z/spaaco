@@ -9,6 +9,7 @@ import { searchRoutes } from './public/search.routes.js';
 import { adminAuthRoutes } from './admin/auth.routes.js';
 import { adminUserRoutes } from './admin/user.routes.js';
 import { adminContentRoutes } from './admin/content.routes.js';
+import { adminSingletonRoutes } from './admin/singleton.routes.js';
 
 /**
  * The one place routers are mounted.
@@ -32,3 +33,4 @@ apiRoutes.use(searchRoutes);
 apiRoutes.use('/admin', adminAuthRoutes);
 apiRoutes.use('/admin', adminUserRoutes);
 apiRoutes.use('/admin', adminContentRoutes);
+apiRoutes.use('/admin', adminSingletonRoutes);

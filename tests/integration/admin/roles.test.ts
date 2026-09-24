@@ -36,6 +36,11 @@ const MATRIX: Record<string, readonly UserRole[]> = {
   '/api/v1/admin/content/:collection/reorder': ['editor', 'hr'],
   '/api/v1/admin/content/:collection/:id/publish': ['editor', 'hr'],
   '/api/v1/admin/content/:collection/:id/unpublish': ['editor', 'hr'],
+
+  // Pages and settings are the site's own structure: editor and above, and no
+  // HR, whose grant is the jobs collection rather than the pages it appears on.
+  '/api/v1/admin/pages/:key': ['editor'],
+  '/api/v1/admin/settings': ['editor'],
 };
 
 /** Auth routes are about having a session, not a role; auth.test.ts covers them. */
@@ -57,6 +62,7 @@ const roleGoverned = adminRoutes.filter((route) => !isAuthRoute(route.path));
 /** Concrete values so a derived route can actually be called. */
 const CONCRETE: Record<string, string> = {
   ':collection': 'jobs',
+  ':key': 'home',
   ':id': '665f1a2b3c4d5e6f70819293',
 };
 

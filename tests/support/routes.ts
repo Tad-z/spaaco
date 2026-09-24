@@ -1,6 +1,7 @@
 import { adminAuthRoutes } from '../../src/routes/admin/auth.routes.js';
 import { adminUserRoutes } from '../../src/routes/admin/user.routes.js';
 import { adminContentRoutes } from '../../src/routes/admin/content.routes.js';
+import { adminSingletonRoutes } from '../../src/routes/admin/singleton.routes.js';
 import { apiRoutes, API_PREFIX } from '../../src/routes/index.js';
 
 /**
@@ -49,7 +50,12 @@ function collect(layers: readonly RouteLayer[], prefix: string, into: Registered
 export function registeredAdminRoutes(): RegisteredRoute[] {
   const routes: RegisteredRoute[] = [];
 
-  for (const router of [adminAuthRoutes, adminUserRoutes, adminContentRoutes]) {
+  for (const router of [
+    adminAuthRoutes,
+    adminUserRoutes,
+    adminContentRoutes,
+    adminSingletonRoutes,
+  ]) {
     collect((router as unknown as { stack: RouteLayer[] }).stack, `${API_PREFIX}/admin`, routes);
   }
 
