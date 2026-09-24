@@ -149,3 +149,15 @@ export type PageAdmin = Schemas['PageAdmin'];
 export type MediaAdmin = Schemas['MediaAdmin'];
 export type MediaUsage = Schemas['MediaUsage'];
 export type MediaPatch = Schemas['MediaPatch'];
+
+// Submissions (personal data; see .claude/rules/submissions.md).
+export type SubmissionStatus = Schemas['SubmissionStatus'];
+export type ApplicationStatus = Schemas['ApplicationStatus'];
+export type ScanStatus = Schemas['ScanStatus'];
+export type SubmissionConsent = Schemas['SubmissionConsent'];
+export type EnquiryAdmin = Schemas['EnquiryAdmin'];
+export type MessageAdmin = Schemas['MessageAdmin'];
+export type ApplicationAdmin = Schemas['ApplicationAdmin'];
+export type ApplicationCv = Schemas['ApplicationCv'];
+export type SignedFileUrl = Schemas['SignedFileUrl'];
+export type JobRef = Schemas['JobRef'];

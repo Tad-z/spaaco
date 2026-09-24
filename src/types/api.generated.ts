@@ -1585,6 +1585,177 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/enquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mandate enquiries
+         * @description Personal data. Reading one record is audit-logged; reading the list is
+         *     not, since a list carries no detail worth attributing.
+         */
+        get: operations["listEnquiries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/enquiries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * One enquiry
+         * @description Audit-logged, because it discloses personal data.
+         */
+        get: operations["getEnquiry"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change the status or who it is assigned to
+         * @description The only editable fields. Nothing a submitter typed can be altered, so
+         *     the record stays a faithful account of what was sent.
+         */
+        patch: operations["updateEnquiry"];
+        trace?: never;
+    };
+    "/api/v1/admin/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Messages to the firm
+         * @description Personal data. Reading one record is audit-logged; the list is not.
+         */
+        get: operations["listMessages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/messages/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * One message
+         * @description Audit-logged, because it discloses personal data.
+         */
+        get: operations["getMessage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change the status or who it is assigned to
+         * @description The only editable fields. What the sender wrote is never altered.
+         */
+        patch: operations["updateMessage"];
+        trace?: never;
+    };
+    "/api/v1/admin/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job applications
+         * @description Personal data, and the HR role's main working list. Filterable by
+         *     vacancy and hiring stage. CVs are not included at any size of listing.
+         */
+        get: operations["listApplications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/applications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * One application
+         * @description Audit-logged. The CV is not included: it is fetched separately through a
+         *     short-lived signed URL, so each access is attributable on its own.
+         */
+        get: operations["getApplication"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Move an application through the hiring stages
+         * @description Status only. Everything the applicant submitted stays as they sent it.
+         */
+        patch: operations["updateApplication"];
+        trace?: never;
+    };
+    "/api/v1/admin/applications/{id}/cv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A short-lived link to the CV
+         * @description CVs are never publicly served. This returns a signed URL valid for five
+         *     minutes, and every call is audit-logged with the actor — so who read
+         *     whose CV, and when, is always answerable.
+         *
+         *     A CV that has not passed the virus scan is refused with 409, whatever
+         *     its status: `pending` means the scan has not finished, and `infected`
+         *     means the file must never be handed to anybody.
+         */
+        get: operations["getApplicationCv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2766,6 +2937,114 @@ export interface components {
         PagePatch: {
             [key: string]: unknown;
         };
+        /** @enum {string} */
+        SubmissionStatus: "new" | "in_review" | "closed";
+        /** @enum {string} */
+        ApplicationStatus: "new" | "shortlisted" | "rejected" | "hired";
+        /**
+         * @description A CV is downloadable only once the scan says `clean`.
+         * @enum {string}
+         */
+        ScanStatus: "pending" | "clean" | "infected";
+        /**
+         * @description Proof of consent as it stood when the form was sent (NDPA 2023). The
+         *     text version pins which wording the submitter agreed to.
+         */
+        SubmissionConsent: {
+            /** @constant */
+            given: true;
+            textVersion: string;
+            /** Format: date-time */
+            at: string;
+        };
+        /** @description The admin user a submission is assigned to. */
+        SubmissionActor: {
+            id: components["schemas"]["ObjectId"];
+            name: string;
+        };
+        /**
+         * @description A mandate enquiry, as the dashboard shows it. `ipHash` and the user
+         *     agent are stored for abuse investigation but never returned: they are
+         *     of no use to a person reading the enquiry, and returning them would
+         *     spread personal data further than it needs to go.
+         */
+        EnquiryAdmin: {
+            id: components["schemas"]["ObjectId"];
+            /** @description Quoted in the acknowledgement email, so the submitter can cite it. */
+            reference: string;
+            fullName: string;
+            email: string;
+            phone: string | null;
+            organization: string | null;
+            practiceArea: components["schemas"]["PracticeAreaRef"] | null;
+            preferredOffice: components["schemas"]["OfficeRef"] | null;
+            summary: string;
+            consent: components["schemas"]["SubmissionConsent"];
+            status: components["schemas"]["SubmissionStatus"];
+            assignedTo: components["schemas"]["SubmissionActor"] | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        MessageAdmin: {
+            id: components["schemas"]["ObjectId"];
+            reference: string;
+            fullName: string;
+            email: string;
+            phone: string | null;
+            subject: string | null;
+            message: string;
+            consent: components["schemas"]["SubmissionConsent"];
+            status: components["schemas"]["SubmissionStatus"];
+            assignedTo: components["schemas"]["SubmissionActor"] | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /**
+         * @description Describes the file without locating it: the storage key is absent, so
+         *     nothing but a signed URL can reach the document.
+         */
+        ApplicationCv: {
+            originalName: string;
+            mimeType: string;
+            bytes: number;
+            scanStatus: components["schemas"]["ScanStatus"];
+        };
+        ApplicationAdmin: {
+            id: components["schemas"]["ObjectId"];
+            reference: string;
+            /** @description Null if the vacancy has since been deleted. */
+            job: components["schemas"]["JobRef"] | null;
+            fullName: string;
+            email: string;
+            phone: string | null;
+            coverNote: string | null;
+            cv: components["schemas"]["ApplicationCv"];
+            consent: components["schemas"]["SubmissionConsent"];
+            status: components["schemas"]["ApplicationStatus"];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description The handling fields only. What the submitter wrote is never editable. */
+        SubmissionPatch: {
+            status?: components["schemas"]["SubmissionStatus"];
+            assignedTo?: components["schemas"]["ObjectId"] | null;
+        };
+        ApplicationPatch: {
+            status?: components["schemas"]["ApplicationStatus"];
+        };
+        SignedFileUrl: {
+            /** @description Valid for five minutes. Treat it as a secret. */
+            url: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** @description The name the file was uploaded under, for the download prompt. */
+            filename: string;
+        };
+        /** @description A minimal vacancy, enough to label an application. */
+        JobRef: {
+            id: components["schemas"]["ObjectId"];
+            title: string;
+        };
         /** @description One place an image is referenced, so the UI can show where it is used. */
         MediaUsage: {
             collection: string;
@@ -2999,6 +3278,39 @@ export interface components {
                 };
             };
         };
+        /** @description One mandate enquiry. */
+        AdminEnquiry: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["EnquiryAdmin"];
+                };
+            };
+        };
+        /** @description One message to the firm. */
+        AdminMessage: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["MessageAdmin"];
+                };
+            };
+        };
+        /** @description One job application, without the CV itself. */
+        AdminApplication: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["ApplicationAdmin"];
+                };
+            };
+        };
         /** @description Too many requests from this IP. */
         RateLimited: {
             headers: {
@@ -3088,6 +3400,10 @@ export interface components {
         AdminStatus: "draft" | "published";
         /** @description Free-text filter over the collection's searchable fields. */
         AdminSearch: string;
+        /** @description Filter by status. Omit for every status. */
+        SubmissionStatusFilter: components["schemas"]["SubmissionStatus"];
+        /** @description Filter by hiring stage. Omit for every stage. */
+        ApplicationStatusFilter: components["schemas"]["ApplicationStatus"];
         /**
          * @description The `revision` read from the GET. A stale value returns 409 with the
          *     current revision, so two editors cannot silently overwrite each other.
@@ -6300,6 +6616,297 @@ export interface operations {
             413: components["responses"]["PayloadTooLarge"];
             415: components["responses"]["UnsupportedMediaType"];
             428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listEnquiries: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status. */
+                status?: components["parameters"]["SubmissionStatusFilter"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of enquiries, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EnquiryAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getEnquiry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminEnquiry"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateEnquiry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "status": "in_review"
+                 *     }
+                 */
+                "application/json": components["schemas"]["SubmissionPatch"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminEnquiry"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listMessages: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status. */
+                status?: components["parameters"]["SubmissionStatusFilter"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of messages, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MessageAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminMessage"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "status": "closed"
+                 *     }
+                 */
+                "application/json": components["schemas"]["SubmissionPatch"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminMessage"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listApplications: {
+        parameters: {
+            query?: {
+                /** @description Filter by hiring stage. Omit for every stage. */
+                status?: components["parameters"]["ApplicationStatusFilter"];
+                /** @description Only applications for this vacancy. */
+                job?: components["schemas"]["ObjectId"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of applications, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApplicationAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminApplication"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "status": "shortlisted"
+                 *     }
+                 */
+                "application/json": components["schemas"]["ApplicationPatch"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminApplication"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getApplicationCv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The link, and when it stops working. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "url": "https://storage.example.com/cv/1a2b3c?signature=...&expires=1780000000",
+                     *         "expiresAt": "2026-06-01T12:05:00.000Z",
+                     *         "filename": "adaeze-nwosu-cv.pdf"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["SignedFileUrl"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             500: components["responses"]["InternalError"];
         };
     };

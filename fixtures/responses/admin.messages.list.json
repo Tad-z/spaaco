@@ -1,0 +1,30 @@
+{
+  "data": [
+    {
+      "id": "665f1a2b3c4d5e6f70819302",
+      "reference": "MSG-4B8D1C",
+      "fullName": "Ibrahim Danladi",
+      "email": "ibrahim.danladi@example.com",
+      "phone": null,
+      "subject": "Question about an existing matter",
+      "message": "Could someone confirm who is handling our trademark renewal this quarter?",
+      "consent": {
+        "given": true,
+        "textVersion": "2026-01",
+        "at": "2026-06-02T11:02:00.000Z"
+      },
+      "status": "in_review",
+      "assignedTo": {
+        "id": "665f1a2b3c4d5e6f70819111",
+        "name": "Chinelo Okafor"
+      },
+      "createdAt": "2026-06-02T11:02:00.000Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "pageSize": 20,
+    "total": 1,
+    "totalPages": 1
+  }
+}

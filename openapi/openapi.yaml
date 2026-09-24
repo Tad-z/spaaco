@@ -3700,6 +3700,338 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/v1/admin/enquiries:
+    get:
+      tags: [Admin submissions]
+      operationId: listEnquiries
+      summary: Mandate enquiries
+      description: |
+        Personal data. Reading one record is audit-logged; reading the list is
+        not, since a list carries no detail worth attributing.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubmissionStatusFilter'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of enquiries, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/EnquiryAdmin' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+              examples:
+                enquiries:
+                  value:
+                    $ref: '../fixtures/responses/admin.enquiries.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/enquiries/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags: [Admin submissions]
+      operationId: getEnquiry
+      summary: One enquiry
+      description: Audit-logged, because it discloses personal data.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminEnquiry'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Admin submissions]
+      operationId: updateEnquiry
+      summary: Change the status or who it is assigned to
+      description: |
+        The only editable fields. Nothing a submitter typed can be altered, so
+        the record stays a faithful account of what was sent.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubmissionPatch' }
+            example:
+              status: in_review
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminEnquiry'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/messages:
+    get:
+      tags: [Admin submissions]
+      operationId: listMessages
+      summary: Messages to the firm
+      description: |
+        Personal data. Reading one record is audit-logged; the list is not.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SubmissionStatusFilter'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of messages, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/MessageAdmin' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+              examples:
+                messages:
+                  value:
+                    $ref: '../fixtures/responses/admin.messages.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/messages/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags: [Admin submissions]
+      operationId: getMessage
+      summary: One message
+      description: Audit-logged, because it discloses personal data.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminMessage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Admin submissions]
+      operationId: updateMessage
+      summary: Change the status or who it is assigned to
+      description: |
+        The only editable fields. What the sender wrote is never altered.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubmissionPatch' }
+            example:
+              status: closed
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminMessage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/applications:
+    get:
+      tags: [Admin submissions]
+      operationId: listApplications
+      summary: Job applications
+      description: |
+        Personal data, and the HR role's main working list. Filterable by
+        vacancy and hiring stage. CVs are not included at any size of listing.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApplicationStatusFilter'
+        - name: job
+          in: query
+          required: false
+          description: Only applications for this vacancy.
+          schema: { $ref: '#/components/schemas/ObjectId' }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of applications, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ApplicationAdmin' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+              examples:
+                applications:
+                  value:
+                    $ref: '../fixtures/responses/admin.applications.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/applications/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags: [Admin submissions]
+      operationId: getApplication
+      summary: One application
+      description: |
+        Audit-logged. The CV is not included: it is fetched separately through a
+        short-lived signed URL, so each access is attributable on its own.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminApplication'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Admin submissions]
+      operationId: updateApplication
+      summary: Move an application through the hiring stages
+      description: |
+        Status only. Everything the applicant submitted stays as they sent it.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ApplicationPatch' }
+            example:
+              status: shortlisted
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminApplication'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/applications/{id}/cv:
+    get:
+      tags: [Admin submissions]
+      operationId: getApplicationCv
+      summary: A short-lived link to the CV
+      description: |
+        CVs are never publicly served. This returns a signed URL valid for five
+        minutes, and every call is audit-logged with the actor — so who read
+        whose CV, and when, is always answerable.
+
+        A CV that has not passed the virus scan is refused with 409, whatever
+        its status: `pending` means the scan has not finished, and `infected`
+        means the file must never be handed to anybody.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The link, and when it stops working.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/SignedFileUrl' }
+              example:
+                data:
+                  url: https://storage.example.com/cv/1a2b3c?signature=...&expires=1780000000
+                  expiresAt: '2026-06-01T12:05:00.000Z'
+                  filename: adaeze-nwosu-cv.pdf
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -3839,6 +4171,18 @@ components:
       schema:
         type: string
         maxLength: 200
+    SubmissionStatusFilter:
+      name: status
+      in: query
+      required: false
+      description: Filter by status. Omit for every status.
+      schema: { $ref: '#/components/schemas/SubmissionStatus' }
+    ApplicationStatusFilter:
+      name: status
+      in: query
+      required: false
+      description: Filter by hiring stage. Omit for every stage.
+      schema: { $ref: '#/components/schemas/ApplicationStatus' }
     IfMatch:
       name: If-Match
       in: header
@@ -3989,6 +4333,51 @@ components:
             media:
               value:
                 $ref: '../fixtures/responses/admin.media.detail.json'
+    AdminEnquiry:
+      description: One mandate enquiry.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/EnquiryAdmin'
+          examples:
+            enquiry:
+              value:
+                $ref: '../fixtures/responses/admin.enquiries.detail.json'
+    AdminMessage:
+      description: One message to the firm.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/MessageAdmin'
+          examples:
+            message:
+              value:
+                $ref: '../fixtures/responses/admin.messages.detail.json'
+    AdminApplication:
+      description: One job application, without the CV itself.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/ApplicationAdmin'
+          examples:
+            application:
+              value:
+                $ref: '../fixtures/responses/admin.applications.detail.json'
     RateLimited:
       description: Too many requests from this IP.
       content:
@@ -6563,6 +6952,194 @@ components:
       description: Any subset of the page's sections. Each key replaces that section entirely.
       additionalProperties: true
 
+    SubmissionStatus:
+      type: string
+      enum: [new, in_review, closed]
+    ApplicationStatus:
+      type: string
+      enum: [new, shortlisted, rejected, hired]
+    ScanStatus:
+      type: string
+      enum: [pending, clean, infected]
+      description: |
+        A CV is downloadable only once the scan says `clean`.
+    SubmissionConsent:
+      type: object
+      additionalProperties: false
+      required: [given, textVersion, at]
+      description: |
+        Proof of consent as it stood when the form was sent (NDPA 2023). The
+        text version pins which wording the submitter agreed to.
+      properties:
+        given: { const: true }
+        textVersion: { type: string }
+        at: { type: string, format: date-time }
+    SubmissionActor:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      description: The admin user a submission is assigned to.
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        name: { type: string }
+    EnquiryAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - reference
+        - fullName
+        - email
+        - phone
+        - organization
+        - practiceArea
+        - preferredOffice
+        - summary
+        - consent
+        - status
+        - assignedTo
+        - createdAt
+      description: |
+        A mandate enquiry, as the dashboard shows it. `ipHash` and the user
+        agent are stored for abuse investigation but never returned: they are
+        of no use to a person reading the enquiry, and returning them would
+        spread personal data further than it needs to go.
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        reference:
+          type: string
+          description: Quoted in the acknowledgement email, so the submitter can cite it.
+        fullName: { type: string }
+        email: { type: string }
+        phone: { type: [string, 'null'] }
+        organization: { type: [string, 'null'] }
+        practiceArea:
+          oneOf:
+            - $ref: '#/components/schemas/PracticeAreaRef'
+            - type: 'null'
+        preferredOffice:
+          oneOf:
+            - $ref: '#/components/schemas/OfficeRef'
+            - type: 'null'
+        summary: { type: string }
+        consent: { $ref: '#/components/schemas/SubmissionConsent' }
+        status: { $ref: '#/components/schemas/SubmissionStatus' }
+        assignedTo:
+          oneOf:
+            - $ref: '#/components/schemas/SubmissionActor'
+            - type: 'null'
+        createdAt: { type: string, format: date-time }
+    MessageAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - reference
+        - fullName
+        - email
+        - phone
+        - subject
+        - message
+        - consent
+        - status
+        - assignedTo
+        - createdAt
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        reference: { type: string }
+        fullName: { type: string }
+        email: { type: string }
+        phone: { type: [string, 'null'] }
+        subject: { type: [string, 'null'] }
+        message: { type: string }
+        consent: { $ref: '#/components/schemas/SubmissionConsent' }
+        status: { $ref: '#/components/schemas/SubmissionStatus' }
+        assignedTo:
+          oneOf:
+            - $ref: '#/components/schemas/SubmissionActor'
+            - type: 'null'
+        createdAt: { type: string, format: date-time }
+    ApplicationCv:
+      type: object
+      additionalProperties: false
+      required: [originalName, mimeType, bytes, scanStatus]
+      description: |
+        Describes the file without locating it: the storage key is absent, so
+        nothing but a signed URL can reach the document.
+      properties:
+        originalName: { type: string }
+        mimeType: { type: string }
+        bytes: { type: integer }
+        scanStatus: { $ref: '#/components/schemas/ScanStatus' }
+    ApplicationAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - reference
+        - job
+        - fullName
+        - email
+        - phone
+        - coverNote
+        - cv
+        - consent
+        - status
+        - createdAt
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        reference: { type: string }
+        job:
+          oneOf:
+            - $ref: '#/components/schemas/JobRef'
+            - type: 'null'
+          description: Null if the vacancy has since been deleted.
+        fullName: { type: string }
+        email: { type: string }
+        phone: { type: [string, 'null'] }
+        coverNote: { type: [string, 'null'] }
+        cv: { $ref: '#/components/schemas/ApplicationCv' }
+        consent: { $ref: '#/components/schemas/SubmissionConsent' }
+        status: { $ref: '#/components/schemas/ApplicationStatus' }
+        createdAt: { type: string, format: date-time }
+    SubmissionPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: |
+        The handling fields only. What the submitter wrote is never editable.
+      properties:
+        status: { $ref: '#/components/schemas/SubmissionStatus' }
+        assignedTo:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+    ApplicationPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        status: { $ref: '#/components/schemas/ApplicationStatus' }
+    SignedFileUrl:
+      type: object
+      additionalProperties: false
+      required: [url, expiresAt, filename]
+      properties:
+        url:
+          type: string
+          description: Valid for five minutes. Treat it as a secret.
+        expiresAt: { type: string, format: date-time }
+        filename:
+          type: string
+          description: The name the file was uploaded under, for the download prompt.
+    JobRef:
+      type: object
+      additionalProperties: false
+      required: [id, title]
+      description: A minimal vacancy, enough to label an application.
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        title: { type: string }
     MediaUsage:
       type: object
       additionalProperties: false

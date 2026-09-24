@@ -1,0 +1,38 @@
+{
+  "data": [
+    {
+      "id": "665f1a2b3c4d5e6f70819301",
+      "reference": "ENQ-7F3K2A",
+      "fullName": "Adaeze Nwosu",
+      "email": "adaeze.nwosu@example.com",
+      "phone": "+2348030000000",
+      "organization": "Meridian Capital Partners",
+      "practiceArea": {
+        "id": "665f1a2b3c4d5e6f70819201",
+        "slug": "corporate-finance-capital-markets",
+        "title": "Corporate Finance & Capital Markets",
+        "shortLabel": "Corporate Finance"
+      },
+      "preferredOffice": {
+        "id": "665f1a2b3c4d5e6f70819211",
+        "slug": "lagos",
+        "name": "Lagos"
+      },
+      "summary": "We are preparing a bond issuance and need counsel on the SEC filing timetable and the related corporate restructuring.",
+      "consent": {
+        "given": true,
+        "textVersion": "2026-01",
+        "at": "2026-06-01T09:14:00.000Z"
+      },
+      "status": "new",
+      "assignedTo": null,
+      "createdAt": "2026-06-01T09:14:00.000Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "pageSize": 20,
+    "total": 1,
+    "totalPages": 1
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "data": {
+    "id": "665f1a2b3c4d5e6f70819303",
+    "reference": "APP-9C2E5F",
+    "job": {
+      "id": "665f1a2b3c4d5e6f70819221",
+      "title": "Associate"
+    },
+    "fullName": "Temitope Bakare",
+    "email": "temitope.bakare@example.com",
+    "phone": "+2348050000000",
+    "coverNote": "I am completing my third year in corporate practice and would welcome the chance to join the firm's capital markets team.",
+    "cv": {
+      "originalName": "temitope-bakare-cv.pdf",
+      "mimeType": "application/pdf",
+      "bytes": 184320,
+      "scanStatus": "clean"
+    },
+    "consent": {
+      "given": true,
+      "textVersion": "2026-01",
+      "at": "2026-06-03T16:40:00.000Z"
+    },
+    "status": "new",
+    "createdAt": "2026-06-03T16:40:00.000Z"
+  }
+}
