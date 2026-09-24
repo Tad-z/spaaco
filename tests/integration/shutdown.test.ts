@@ -31,15 +31,33 @@ afterEach(async () => {
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** A server with one route that answers only when told to. */
-async function listen(): Promise<{ server: Server; url: string; release: () => void }> {
+/**
+ * A server with one route that answers only when told to.
+ *
+ * `arrived` resolves when the handler has actually been entered. Waiting on it
+ * rather than on a fixed sleep is what makes these tests reliable under
+ * coverage instrumentation, which is slow enough that a 50 ms guess ran the
+ * shutdown before the request had reached the route at all.
+ */
+async function listen(): Promise<{
+  server: Server;
+  url: string;
+  release: () => void;
+  arrived: Promise<void>;
+}> {
   let release: (() => void) | undefined;
+  let entered: () => void = () => undefined;
+  const arrived = new Promise<void>((resolve) => {
+    entered = resolve;
+  });
+
   const app = express();
 
   app.get('/slow', (_req, res) => {
     release = () => {
       res.json({ finished: true });
     };
+    entered();
   });
   app.get('/fast', (_req, res) => {
     res.json({ ok: true });
@@ -54,6 +72,7 @@ async function listen(): Promise<{ server: Server; url: string; release: () => v
   return {
     server,
     url: `http://127.0.0.1:${String(port)}`,
+    arrived,
     release: () => {
       release?.();
     },
@@ -62,7 +81,7 @@ async function listen(): Promise<{ server: Server; url: string; release: () => v
 
 describe('shutting down', () => {
   it('lets an in-flight request finish', async () => {
-    const { server, url, release } = await listen();
+    const { server, url, release, arrived } = await listen();
 
     const lifecycle = createServerLifecycle(server, {
       onClose: () => Promise.resolve(),
@@ -70,8 +89,7 @@ describe('shutting down', () => {
     });
 
     const inFlight = fetch(`${url}/slow`);
-    // Long enough for the request to reach the handler before the signal.
-    await sleep(50);
+    await arrived;
 
     lifecycle.shutdown('SIGTERM');
 
@@ -84,7 +102,7 @@ describe('shutting down', () => {
   });
 
   it('stops accepting new connections once the signal arrives', async () => {
-    const { server, url, release } = await listen();
+    const { server, url, release, arrived } = await listen();
 
     const lifecycle = createServerLifecycle(server, {
       onClose: () => Promise.resolve(),
@@ -92,7 +110,7 @@ describe('shutting down', () => {
     });
 
     const inFlight = fetch(`${url}/slow`);
-    await sleep(50);
+    await arrived;
 
     lifecycle.shutdown('SIGTERM');
     await sleep(20);
@@ -105,7 +123,7 @@ describe('shutting down', () => {
   });
 
   it('closes the database only after the server has drained, then exits', async () => {
-    const { server, url, release } = await listen();
+    const { server, url, release, arrived } = await listen();
 
     const order: string[] = [];
     const lifecycle = createServerLifecycle(server, {
@@ -119,7 +137,7 @@ describe('shutting down', () => {
     });
 
     const inFlight = fetch(`${url}/slow`);
-    await sleep(50);
+    await arrived;
 
     lifecycle.shutdown('SIGTERM');
 
@@ -155,7 +173,7 @@ describe('shutting down', () => {
   });
 
   it('gives up on a connection that will not drain', async () => {
-    const { server, url } = await listen();
+    const { server, url, arrived } = await listen();
 
     const exits: number[] = [];
     const lifecycle = createServerLifecycle(
@@ -172,7 +190,7 @@ describe('shutting down', () => {
 
     // Never released, so this request holds the server open indefinitely.
     void fetch(`${url}/slow`).catch(() => undefined);
-    await sleep(50);
+    await arrived;
 
     lifecycle.shutdown('SIGTERM');
     await sleep(250);
