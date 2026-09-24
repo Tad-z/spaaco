@@ -598,37 +598,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/content/{collection}": {
+    "/api/v1/admin/content/practice-areas": {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                /** @description Which content collection to act on. */
-                collection: components["parameters"]["AdminCollection"];
-            };
+            path?: never;
             cookie?: never;
         };
         /**
-         * List items in a content collection
-         * @description Every status, not just published. The response shape depends on
-         *     `collection`: each item is the editable shape for that collection
-         *     (see `AdminContentItem`).
+         * List practice areas
+         * @description Every status, not just published.
+         *
+         *     The Home tab bar uses `homeOrder`, which differs from the page order.
          */
-        get: operations["listAdminContent"];
+        get: operations["listPracticeAreaAdmin"];
         put?: never;
         /**
-         * Create an item
-         * @description The body is the editable shape without `id`, `revision`, timestamps or
-         *     `_expanded`. A slug is generated from the title when none is given.
+         * Create a practice area
+         * @description A slug is generated when none is given.
+         *
+         *     The Home tab bar uses `homeOrder`, which differs from the page order.
          */
-        post: operations["createAdminContent"];
+        post: operations["createPracticeArea"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/content/{collection}/reorder": {
+    "/api/v1/admin/content/practice-areas/reorder": {
         parameters: {
             query?: never;
             header?: never;
@@ -642,54 +640,46 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Reorder a collection
-         * @description Sets `order` from the position of each id in the list. Ids not
-         *     mentioned keep their current order.
+         * Reorder practice areas
+         * @description Sets `order` from each id’s position. Ids not listed keep their order.
          */
-        patch: operations["reorderAdminContent"];
+        patch: operations["reorderPracticeArea"];
         trace?: never;
     };
-    "/api/v1/admin/content/{collection}/{id}": {
+    "/api/v1/admin/content/practice-areas/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Which content collection to act on. */
-                collection: components["parameters"]["AdminCollection"];
                 /** @description A 24-character hexadecimal identifier. */
                 id: components["parameters"]["ObjectId"];
             };
             cookie?: never;
         };
         /**
-         * Get one item in its editable shape
-         * @description References stay as ids, exactly as they must be sent back. `_expanded`
-         *     carries a minimal preview of each referenced media item or person so the
-         *     dashboard can render thumbnails without extra calls; it is ignored on
-         *     write (ADR-014).
+         * Get one practice area in its editable shape
+         * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+         *
+         *     The Home tab bar uses `homeOrder`, which differs from the page order.
          */
-        get: operations["getAdminContent"];
+        get: operations["getPracticeAreaAdmin"];
         put?: never;
         post?: never;
         /**
-         * Delete an item
-         * @description Refused with 409 when something still references the item, with the
-         *     referencing records in `error.details`, so the dashboard can show where
-         *     it is still used.
+         * Delete a practice area
+         * @description Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
          */
-        delete: operations["deleteAdminContent"];
+        delete: operations["deletePracticeArea"];
         options?: never;
         head?: never;
         /**
-         * Update an item
-         * @description Requires `If-Match` with the revision read. A stale revision returns 409
-         *     with the current one, so two editors cannot silently overwrite each
-         *     other (ADR-015).
+         * Update a practice area
+         * @description Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
          */
-        patch: operations["updateAdminContent"];
+        patch: operations["updatePracticeArea"];
         trace?: never;
     };
-    "/api/v1/admin/content/{collection}/{id}/publish": {
+    "/api/v1/admin/content/practice-areas/{id}/publish": {
         parameters: {
             query?: never;
             header?: never;
@@ -699,17 +689,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Publish an item
-         * @description Sets `publishedAt` the first time only, so republishing keeps the original date.
+         * Publish a practice area
+         * @description Stamps `publishedAt` on first publish only, so republishing keeps the date.
          */
-        post: operations["publishAdminContent"];
+        post: operations["publishPracticeArea"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/content/{collection}/{id}/unpublish": {
+    "/api/v1/admin/content/practice-areas/{id}/unpublish": {
         parameters: {
             query?: never;
             header?: never;
@@ -719,10 +709,724 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Unpublish an item
-         * @description Returns the item to draft. The original `publishedAt` is kept.
+         * Unpublish a practice area
+         * @description Returns it to draft. The original `publishedAt` is kept.
          */
-        post: operations["unpublishAdminContent"];
+        post: operations["unpublishPracticeArea"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List attorneys
+         * @description Every status, not just published.
+         *
+         *     Carries `email`, which the public API never returns.
+         */
+        get: operations["listPersonAdmin"];
+        put?: never;
+        /**
+         * Create a attorney
+         * @description A slug is generated when none is given.
+         *
+         *     Carries `email`, which the public API never returns.
+         */
+        post: operations["createPerson"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/people/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reorder attorneys
+         * @description Sets `order` from each id’s position. Ids not listed keep their order.
+         */
+        patch: operations["reorderPerson"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/people/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get one attorney in its editable shape
+         * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+         *
+         *     Carries `email`, which the public API never returns.
+         */
+        get: operations["getPersonAdmin"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a attorney
+         * @description Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+         */
+        delete: operations["deletePerson"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a attorney
+         * @description Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+         */
+        patch: operations["updatePerson"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/people/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a attorney
+         * @description Stamps `publishedAt` on first publish only, so republishing keeps the date.
+         */
+        post: operations["publishPerson"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/people/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish a attorney
+         * @description Returns it to draft. The original `publishedAt` is kept.
+         */
+        post: operations["unpublishPerson"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List insights
+         * @description Every status, not just published.
+         *
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+         */
+        get: operations["listInsightAdmin"];
+        put?: never;
+        /**
+         * Create a insight
+         * @description A slug is generated when none is given.
+         *
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+         */
+        post: operations["createInsight"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/insights/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reorder insights
+         * @description Sets `order` from each id’s position. Ids not listed keep their order.
+         */
+        patch: operations["reorderInsight"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/insights/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get one insight in its editable shape
+         * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+         *
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+         */
+        get: operations["getInsightAdmin"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a insight
+         * @description Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+         */
+        delete: operations["deleteInsight"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a insight
+         * @description Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+         */
+        patch: operations["updateInsight"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/insights/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a insight
+         * @description Stamps `publishedAt` on first publish only, so republishing keeps the date.
+         */
+        post: operations["publishInsight"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/insights/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish a insight
+         * @description Returns it to draft. The original `publishedAt` is kept.
+         */
+        post: operations["unpublishInsight"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/offices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List offices
+         * @description Every status, not just published.
+         *
+         *     `location` is GeoJSON `[longitude, latitude]`, the reverse of how people say it.
+         */
+        get: operations["listOfficeAdmin"];
+        put?: never;
+        /**
+         * Create a office
+         * @description A slug is generated when none is given.
+         *
+         *     `location` is GeoJSON `[longitude, latitude]`, the reverse of how people say it.
+         */
+        post: operations["createOffice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/offices/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reorder offices
+         * @description Sets `order` from each id’s position. Ids not listed keep their order.
+         */
+        patch: operations["reorderOffice"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/offices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get one office in its editable shape
+         * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+         *
+         *     `location` is GeoJSON `[longitude, latitude]`, the reverse of how people say it.
+         */
+        get: operations["getOfficeAdmin"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a office
+         * @description Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+         */
+        delete: operations["deleteOffice"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a office
+         * @description Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+         */
+        patch: operations["updateOffice"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/offices/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a office
+         * @description Stamps `publishedAt` on first publish only, so republishing keeps the date.
+         */
+        post: operations["publishOffice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/offices/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish a office
+         * @description Returns it to draft. The original `publishedAt` is kept.
+         */
+        post: operations["unpublishOffice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/recognitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List recognitions
+         * @description Every status, not just published.
+         */
+        get: operations["listRecognitionAdmin"];
+        put?: never;
+        /**
+         * Create a recognition
+         * @description A slug is generated when none is given.
+         */
+        post: operations["createRecognition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/recognitions/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reorder recognitions
+         * @description Sets `order` from each id’s position. Ids not listed keep their order.
+         */
+        patch: operations["reorderRecognition"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/recognitions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get one recognition in its editable shape
+         * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+         */
+        get: operations["getRecognitionAdmin"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a recognition
+         * @description Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+         */
+        delete: operations["deleteRecognition"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a recognition
+         * @description Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+         */
+        patch: operations["updateRecognition"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/recognitions/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a recognition
+         * @description Stamps `publishedAt` on first publish only, so republishing keeps the date.
+         */
+        post: operations["publishRecognition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/recognitions/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish a recognition
+         * @description Returns it to draft. The original `publishedAt` is kept.
+         */
+        post: operations["unpublishRecognition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/faqs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List FAQs
+         * @description Every status, not just published.
+         */
+        get: operations["listFaqAdmin"];
+        put?: never;
+        /**
+         * Create a FAQ
+         * @description A slug is generated when none is given.
+         */
+        post: operations["createFaq"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/faqs/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reorder FAQs
+         * @description Sets `order` from each id’s position. Ids not listed keep their order.
+         */
+        patch: operations["reorderFaq"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/faqs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get one FAQ in its editable shape
+         * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+         */
+        get: operations["getFaqAdmin"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a FAQ
+         * @description Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+         */
+        delete: operations["deleteFaq"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a FAQ
+         * @description Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+         */
+        patch: operations["updateFaq"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/faqs/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a FAQ
+         * @description Stamps `publishedAt` on first publish only, so republishing keeps the date.
+         */
+        post: operations["publishFaq"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/faqs/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish a FAQ
+         * @description Returns it to draft. The original `publishedAt` is kept.
+         */
+        post: operations["unpublishFaq"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List jobs
+         * @description Every status, not just published.
+         *
+         *     A vacancy leaves the public API when `isOpen` is false or `closingDate` has passed.
+         */
+        get: operations["listJobAdmin"];
+        put?: never;
+        /**
+         * Create a job
+         * @description A slug is generated when none is given.
+         *
+         *     A vacancy leaves the public API when `isOpen` is false or `closingDate` has passed.
+         */
+        post: operations["createJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/jobs/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reorder jobs
+         * @description Sets `order` from each id’s position. Ids not listed keep their order.
+         */
+        patch: operations["reorderJob"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get one job in its editable shape
+         * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+         *
+         *     A vacancy leaves the public API when `isOpen` is false or `closingDate` has passed.
+         */
+        get: operations["getJobAdmin"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a job
+         * @description Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+         */
+        delete: operations["deleteJob"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a job
+         * @description Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+         */
+        patch: operations["updateJob"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/jobs/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a job
+         * @description Stamps `publishedAt` on first publish only, so republishing keeps the date.
+         */
+        post: operations["publishJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/jobs/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish a job
+         * @description Returns it to draft. The original `publishedAt` is kept.
+         */
+        post: operations["unpublishJob"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1611,8 +2315,6 @@ export interface components {
             /** Format: date-time */
             at: string;
         };
-        /** @enum {string} */
-        AdminCollection: "practice-areas" | "people" | "insights" | "offices" | "recognitions" | "faqs" | "jobs";
         ExpandedMedia: {
             /** @enum {string} */
             kind: "media";
@@ -1810,22 +2512,185 @@ export interface components {
             isOpen: boolean;
             _expanded: components["schemas"]["Expanded"];
         };
-        /**
-         * @description Which of these you get is decided by the `collection` path parameter,
-         *     not by a field in the body — the caller always knows which it asked
-         *     for. Every content collection shares the same operations, so they share
-         *     one set of paths (ADR-033).
-         */
-        AdminContentItem: components["schemas"]["PracticeAreaAdmin"] | components["schemas"]["PersonAdmin"] | components["schemas"]["InsightAdmin"] | components["schemas"]["OfficeAdmin"] | components["schemas"]["RecognitionAdmin"] | components["schemas"]["FaqAdmin"] | components["schemas"]["JobAdmin"];
-        /**
-         * @description The editable shape for the collection, without `id`, `revision`,
-         *     timestamps or `_expanded`. Validated per collection on the server, so
-         *     an unknown field is a 400 rather than silently dropped. On create the
-         *     required fields are the collection's own; on update every field is
-         *     optional.
-         */
-        AdminContentWrite: {
-            [key: string]: unknown;
+        /** @description Creates a practice area. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
+        PracticeAreaCreate: {
+            slug?: components["schemas"]["Slug"];
+            title: string;
+            shortLabel: string;
+            summary: string;
+            image?: components["schemas"]["ObjectId"] | null;
+            body?: string | null;
+            keyServices?: string[];
+            contacts?: components["schemas"]["ObjectId"][];
+            featuredOnHome?: boolean;
+            homeOrder?: number | null;
+            showInFooter?: boolean;
+            seo?: components["schemas"]["SeoWrite"];
+        };
+        /** @description Any subset of the practice area fields. Requires `If-Match`. */
+        PracticeAreaUpdate: {
+            slug?: components["schemas"]["Slug"];
+            title?: string;
+            shortLabel?: string;
+            summary?: string;
+            image?: components["schemas"]["ObjectId"] | null;
+            body?: string | null;
+            keyServices?: string[];
+            contacts?: components["schemas"]["ObjectId"][];
+            featuredOnHome?: boolean;
+            homeOrder?: number | null;
+            showInFooter?: boolean;
+            seo?: components["schemas"]["SeoWrite"];
+        };
+        /** @description Creates a attorney. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
+        PersonCreate: {
+            slug?: components["schemas"]["Slug"];
+            honorific?: string | null;
+            firstName: string;
+            lastName: string;
+            postNominals?: string | null;
+            role: components["schemas"]["PersonRole"];
+            photo?: components["schemas"]["ObjectId"] | null;
+            linkedinUrl?: string | null;
+            email?: string | null;
+            bio?: string | null;
+            quote?: string | null;
+            practiceAreas?: components["schemas"]["ObjectId"][];
+            office?: components["schemas"]["ObjectId"] | null;
+            featuredInLeadership?: boolean;
+        };
+        /** @description Any subset of the attorney fields. Requires `If-Match`. */
+        PersonUpdate: {
+            slug?: components["schemas"]["Slug"];
+            honorific?: string | null;
+            firstName?: string;
+            lastName?: string;
+            postNominals?: string | null;
+            role?: components["schemas"]["PersonRole"];
+            photo?: components["schemas"]["ObjectId"] | null;
+            linkedinUrl?: string | null;
+            email?: string | null;
+            bio?: string | null;
+            quote?: string | null;
+            practiceAreas?: components["schemas"]["ObjectId"][];
+            office?: components["schemas"]["ObjectId"] | null;
+            featuredInLeadership?: boolean;
+        };
+        /** @description Creates a insight. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
+        InsightCreate: {
+            slug?: components["schemas"]["Slug"];
+            title: string;
+            excerpt?: string | null;
+            body?: string | null;
+            format: components["schemas"]["InsightFormat"];
+            videoUrl?: string | null;
+            categories: components["schemas"]["InsightCategory"][];
+            practiceAreas?: components["schemas"]["ObjectId"][];
+            /** @description Null means the firm is the author. */
+            author?: components["schemas"]["ObjectId"] | null;
+            coverImage?: components["schemas"]["ObjectId"] | null;
+            featured?: boolean;
+        };
+        /** @description Any subset of the insight fields. Requires `If-Match`. */
+        InsightUpdate: {
+            slug?: components["schemas"]["Slug"];
+            title?: string;
+            excerpt?: string | null;
+            body?: string | null;
+            format?: components["schemas"]["InsightFormat"];
+            videoUrl?: string | null;
+            categories?: components["schemas"]["InsightCategory"][];
+            practiceAreas?: components["schemas"]["ObjectId"][];
+            /** @description Null means the firm is the author. */
+            author?: components["schemas"]["ObjectId"] | null;
+            coverImage?: components["schemas"]["ObjectId"] | null;
+            featured?: boolean;
+        };
+        /** @description Creates a office. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
+        OfficeCreate: {
+            slug?: components["schemas"]["Slug"];
+            name: string;
+            address: string;
+            hours: string;
+            /** @description Stored as GeoJSON. The public API serialises it as { lat, lng }. */
+            location?: components["schemas"]["GeoPoint"] | null;
+            directionsUrl?: string | null;
+            phone?: string | null;
+            email?: string | null;
+        };
+        /** @description Any subset of the office fields. Requires `If-Match`. */
+        OfficeUpdate: {
+            slug?: components["schemas"]["Slug"];
+            name?: string;
+            address?: string;
+            hours?: string;
+            /** @description Stored as GeoJSON. The public API serialises it as { lat, lng }. */
+            location?: components["schemas"]["GeoPoint"] | null;
+            directionsUrl?: string | null;
+            phone?: string | null;
+            email?: string | null;
+        };
+        /** @description Creates a recognition. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
+        RecognitionCreate: {
+            slug?: components["schemas"]["Slug"];
+            organization: string;
+            title: string;
+            year?: number | null;
+            badge?: components["schemas"]["ObjectId"] | null;
+            url?: string | null;
+            tab: components["schemas"]["RecognitionTab"];
+        };
+        /** @description Any subset of the recognition fields. Requires `If-Match`. */
+        RecognitionUpdate: {
+            slug?: components["schemas"]["Slug"];
+            organization?: string;
+            title?: string;
+            year?: number | null;
+            badge?: components["schemas"]["ObjectId"] | null;
+            url?: string | null;
+            tab?: components["schemas"]["RecognitionTab"];
+        };
+        /** @description Creates a FAQ. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
+        FaqCreate: {
+            slug?: components["schemas"]["Slug"];
+            question: string;
+            /** @description Sanitised HTML on write. */
+            answer: string;
+        };
+        /** @description Any subset of the FAQ fields. Requires `If-Match`. */
+        FaqUpdate: {
+            slug?: components["schemas"]["Slug"];
+            question?: string;
+            /** @description Sanitised HTML on write. */
+            answer?: string;
+        };
+        /** @description Creates a job. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
+        JobCreate: {
+            slug?: components["schemas"]["Slug"];
+            title: string;
+            practiceArea?: components["schemas"]["ObjectId"] | null;
+            description: string;
+            experience?: string | null;
+            employmentType: components["schemas"]["EmploymentType"];
+            workMode: components["schemas"]["WorkMode"];
+            office?: components["schemas"]["ObjectId"] | null;
+            /** Format: date-time */
+            closingDate?: string | null;
+            isOpen?: boolean;
+        };
+        /** @description Any subset of the job fields. Requires `If-Match`. */
+        JobUpdate: {
+            slug?: components["schemas"]["Slug"];
+            title?: string;
+            practiceArea?: components["schemas"]["ObjectId"] | null;
+            description?: string;
+            experience?: string | null;
+            employmentType?: components["schemas"]["EmploymentType"];
+            workMode?: components["schemas"]["WorkMode"];
+            office?: components["schemas"]["ObjectId"] | null;
+            /** Format: date-time */
+            closingDate?: string | null;
+            isOpen?: boolean;
         };
         ReorderRequest: {
             ids: components["schemas"]["ObjectId"][];
@@ -2096,17 +2961,6 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description One item in its editable shape. */
-        AdminContentItem: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": {
-                    data: components["schemas"]["AdminContentItem"];
-                };
-            };
-        };
         /** @description Site settings in their editable shape. */
         AdminSettings: {
             headers: {
@@ -2225,8 +3079,6 @@ export interface components {
          * @example arbitration
          */
         SearchQuery: string;
-        /** @description Which content collection to act on. */
-        AdminCollection: components["schemas"]["AdminCollection"];
         /** @description Filter by status. Omit for every status, which is the admin default. */
         AdminStatus: "draft" | "published";
         /** @description Free-text filter over the collection's searchable fields. */
@@ -3299,7 +4151,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    listAdminContent: {
+    listPracticeAreaAdmin: {
         parameters: {
             query?: {
                 /** @description Filter by status. Omit for every status, which is the admin default. */
@@ -3312,22 +4164,19 @@ export interface operations {
                 pageSize?: components["parameters"]["PageSize"];
             };
             header?: never;
-            path: {
-                /** @description Which content collection to act on. */
-                collection: components["parameters"]["AdminCollection"];
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description A page of items in their editable shape. */
+            /** @description A page of practice areas in their editable shape. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["AdminContentItem"][];
+                        data: components["schemas"]["PracticeAreaAdmin"][];
                         meta: components["schemas"]["PaginationMeta"];
                     };
                 };
@@ -3338,30 +4187,30 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    createAdminContent: {
+    createPracticeArea: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                /** @description Which content collection to act on. */
-                collection: components["parameters"]["AdminCollection"];
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "title": "Tax",
-                 *       "shortLabel": "Tax",
-                 *       "summary": "When a business needs to understand or meet its tax obligations…"
-                 *     }
-                 */
-                "application/json": components["schemas"]["AdminContentWrite"];
+                "application/json": components["schemas"]["PracticeAreaCreate"];
             };
         };
         responses: {
-            201: components["responses"]["AdminContentItem"];
+            /** @description The created practice area. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PracticeAreaAdmin"];
+                    };
+                };
+            };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
@@ -3369,26 +4218,15 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    reorderAdminContent: {
+    reorderPracticeArea: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                /** @description Which content collection to act on. */
-                collection: components["parameters"]["AdminCollection"];
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "ids": [
-                 *         "665f1a2b3c4d5e6f70819293",
-                 *         "665f1a2b3c4d5e6f70819294"
-                 *       ]
-                 *     }
-                 */
                 "application/json": components["schemas"]["ReorderRequest"];
             };
         };
@@ -3407,13 +4245,11 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    getAdminContent: {
+    getPracticeAreaAdmin: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Which content collection to act on. */
-                collection: components["parameters"]["AdminCollection"];
                 /** @description A 24-character hexadecimal identifier. */
                 id: components["parameters"]["ObjectId"];
             };
@@ -3421,7 +4257,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["AdminContentItem"];
+            /** @description The practice area. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PracticeAreaAdmin"];
+                    };
+                };
+            };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
@@ -3429,13 +4275,11 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    deleteAdminContent: {
+    deletePracticeArea: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Which content collection to act on. */
-                collection: components["parameters"]["AdminCollection"];
                 /** @description A 24-character hexadecimal identifier. */
                 id: components["parameters"]["ObjectId"];
             };
@@ -3458,7 +4302,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    updateAdminContent: {
+    updatePracticeArea: {
         parameters: {
             query?: never;
             header: {
@@ -3469,8 +4313,6 @@ export interface operations {
                 "If-Match": components["parameters"]["IfMatch"];
             };
             path: {
-                /** @description Which content collection to act on. */
-                collection: components["parameters"]["AdminCollection"];
                 /** @description A 24-character hexadecimal identifier. */
                 id: components["parameters"]["ObjectId"];
             };
@@ -3478,16 +4320,21 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "summary": "Updated summary text for the practice area."
-                 *     }
-                 */
-                "application/json": components["schemas"]["AdminContentWrite"];
+                "application/json": components["schemas"]["PracticeAreaUpdate"];
             };
         };
         responses: {
-            200: components["responses"]["AdminContentItem"];
+            /** @description The updated practice area. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PracticeAreaAdmin"];
+                    };
+                };
+            };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
@@ -3497,13 +4344,11 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    publishAdminContent: {
+    publishPracticeArea: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Which content collection to act on. */
-                collection: components["parameters"]["AdminCollection"];
                 /** @description A 24-character hexadecimal identifier. */
                 id: components["parameters"]["ObjectId"];
             };
@@ -3511,7 +4356,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["AdminContentItem"];
+            /** @description The published practice area. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PracticeAreaAdmin"];
+                    };
+                };
+            };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
@@ -3519,13 +4374,11 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    unpublishAdminContent: {
+    unpublishPracticeArea: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Which content collection to act on. */
-                collection: components["parameters"]["AdminCollection"];
                 /** @description A 24-character hexadecimal identifier. */
                 id: components["parameters"]["ObjectId"];
             };
@@ -3533,7 +4386,1535 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["AdminContentItem"];
+            /** @description The unpublished practice area. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PracticeAreaAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listPersonAdmin: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status, which is the admin default. */
+                status?: components["parameters"]["AdminStatus"];
+                /** @description Free-text filter over the collection's searchable fields. */
+                q?: components["parameters"]["AdminSearch"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of attorneys in their editable shape. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PersonAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createPerson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonCreate"];
+            };
+        };
+        responses: {
+            /** @description The created attorney. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PersonAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reorderPerson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getPersonAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The attorney. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PersonAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deletePerson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updatePerson: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated attorney. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PersonAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    publishPerson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published attorney. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PersonAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unpublishPerson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished attorney. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PersonAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listInsightAdmin: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status, which is the admin default. */
+                status?: components["parameters"]["AdminStatus"];
+                /** @description Free-text filter over the collection's searchable fields. */
+                q?: components["parameters"]["AdminSearch"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of insights in their editable shape. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InsightAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createInsight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InsightCreate"];
+            };
+        };
+        responses: {
+            /** @description The created insight. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InsightAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reorderInsight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getInsightAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The insight. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InsightAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteInsight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateInsight: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InsightUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated insight. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InsightAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    publishInsight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published insight. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InsightAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unpublishInsight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished insight. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InsightAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listOfficeAdmin: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status, which is the admin default. */
+                status?: components["parameters"]["AdminStatus"];
+                /** @description Free-text filter over the collection's searchable fields. */
+                q?: components["parameters"]["AdminSearch"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of offices in their editable shape. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OfficeAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createOffice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfficeCreate"];
+            };
+        };
+        responses: {
+            /** @description The created office. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OfficeAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reorderOffice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getOfficeAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The office. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OfficeAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteOffice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateOffice: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfficeUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated office. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OfficeAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    publishOffice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published office. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OfficeAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unpublishOffice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished office. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OfficeAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listRecognitionAdmin: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status, which is the admin default. */
+                status?: components["parameters"]["AdminStatus"];
+                /** @description Free-text filter over the collection's searchable fields. */
+                q?: components["parameters"]["AdminSearch"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of recognitions in their editable shape. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecognitionAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createRecognition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecognitionCreate"];
+            };
+        };
+        responses: {
+            /** @description The created recognition. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecognitionAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reorderRecognition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getRecognitionAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The recognition. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecognitionAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteRecognition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateRecognition: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecognitionUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated recognition. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecognitionAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    publishRecognition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published recognition. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecognitionAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unpublishRecognition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished recognition. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecognitionAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listFaqAdmin: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status, which is the admin default. */
+                status?: components["parameters"]["AdminStatus"];
+                /** @description Free-text filter over the collection's searchable fields. */
+                q?: components["parameters"]["AdminSearch"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of FAQs in their editable shape. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FaqAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createFaq: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FaqCreate"];
+            };
+        };
+        responses: {
+            /** @description The created FAQ. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FaqAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reorderFaq: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getFaqAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The FAQ. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FaqAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteFaq: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateFaq: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FaqUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated FAQ. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FaqAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    publishFaq: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published FAQ. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FaqAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unpublishFaq: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished FAQ. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FaqAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listJobAdmin: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status, which is the admin default. */
+                status?: components["parameters"]["AdminStatus"];
+                /** @description Free-text filter over the collection's searchable fields. */
+                q?: components["parameters"]["AdminSearch"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of jobs in their editable shape. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobCreate"];
+            };
+        };
+        responses: {
+            /** @description The created job. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reorderJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getJobAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The job. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateJob: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated job. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    publishJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published job. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unpublishJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished job. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobAdmin"];
+                    };
+                };
+            };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];

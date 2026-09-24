@@ -1,0 +1,32 @@
+{
+  "data": {
+    "id": "665f1a2b3c4d5e6f70819293",
+    "slug": "example",
+    "status": "published",
+    "publishedAt": "2026-06-01T00:00:00.000Z",
+    "order": 0,
+    "revision": 3,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-06-01T00:00:00.000Z",
+    "honorific": "Dr.",
+    "firstName": "Babatunde",
+    "lastName": "Ajibade",
+    "postNominals": "SAN",
+    "role": "managing_partner",
+    "photo": "665f00000000000000000101",
+    "linkedinUrl": null,
+    "email": null,
+    "bio": null,
+    "quote": "law is a profession, not an occupation.",
+    "practiceAreas": [],
+    "office": null,
+    "featuredInLeadership": true,
+    "_expanded": {
+      "665f00000000000000000101": {
+        "kind": "media",
+        "url": "https://placehold.co/1200x900?text=Example",
+        "alt": "A placeholder image, replaced when the firm uploads the real one"
+      }
+    }
+  }
+}

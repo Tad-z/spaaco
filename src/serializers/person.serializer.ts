@@ -47,7 +47,9 @@ export interface PersonDetailSource extends PersonSummarySource {
  * The designs show no honorific except "Dr.", so Mr./Mrs. are stored for the
  * About copy but omitted from the display name. Post-nominals are appended.
  */
-export function toDisplayName(person: Pick<IPerson, 'honorific' | 'firstName' | 'lastName' | 'postNominals'>): string {
+export function toDisplayName(
+  person: Pick<IPerson, 'honorific' | 'firstName' | 'lastName' | 'postNominals'>
+): string {
   const prefix = person.honorific === 'Dr.' ? 'Dr. ' : '';
   const suffix = person.postNominals ? `, ${person.postNominals}` : '';
   return `${prefix}${person.firstName} ${person.lastName}${suffix}`;

@@ -1,6 +1,7 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import type { ZodError, ZodTypeAny, z } from 'zod';
 import { ValidationError } from '../core/errors.js';
+import { namedHandler } from '../helpers/named-handler.helper.js';
 import type { ErrorDetail } from '../types/api.js';
 
 /**
@@ -22,12 +23,12 @@ export interface ValidationSchemas {
 export const toErrorDetails = (error: ZodError, prefix?: string): ErrorDetail[] =>
   error.issues.map((issue) => {
     const path = issue.path.join('.');
-    const full = prefix !== undefined && path !== '' ? `${prefix}.${path}` : (path || (prefix ?? ''));
+    const full = prefix !== undefined && path !== '' ? `${prefix}.${path}` : path || (prefix ?? '');
     return { path: full, message: issue.message };
   });
 
 export function validate(schemas: ValidationSchemas): RequestHandler {
-  return (req: Request, _res: Response, next: NextFunction): void => {
+  const handler: RequestHandler = (req: Request, _res: Response, next: NextFunction): void => {
     const details: ErrorDetail[] = [];
     const validated: { body: unknown; query: unknown; params: unknown } = {
       body: undefined,
@@ -57,6 +58,8 @@ export function validate(schemas: ValidationSchemas): RequestHandler {
     req.validated = validated;
     next();
   };
+
+  return namedHandler('validate', handler);
 }
 
 /**

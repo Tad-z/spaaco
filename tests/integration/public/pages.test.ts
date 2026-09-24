@@ -35,7 +35,10 @@ function normalise(value: unknown): unknown {
       if (key === 'id') return [key, '<id>'];
       // Placeholder image URLs embed generated labels; the fixture and the
       // seed agree on the label but not on which record produced it.
-      if ((key === 'url' || key === 'sm' || key === 'md' || key === 'lg') && typeof nested === 'string') {
+      if (
+        (key === 'url' || key === 'sm' || key === 'md' || key === 'lg') &&
+        typeof nested === 'string'
+      ) {
         return [key, nested.replace(/\d+x\d+/, '<size>')];
       }
       return [key, normalise(nested)];
@@ -119,7 +122,9 @@ describe('embedded collections', () => {
   it('orders the Home practice tabs by homeOrder, not the page order', async () => {
     const res = await request(app).get('/api/v1/pages/home');
 
-    expect(res.body.data.practiceAreas.map((area: { shortLabel: string }) => area.shortLabel)).toEqual([
+    expect(
+      res.body.data.practiceAreas.map((area: { shortLabel: string }) => area.shortLabel)
+    ).toEqual([
       'Corporate',
       'Data Privacy',
       'Energy',

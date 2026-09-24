@@ -1,0 +1,29 @@
+{
+  "data": {
+    "id": "665f1a2b3c4d5e6f70819293",
+    "slug": "example",
+    "status": "published",
+    "publishedAt": "2026-06-01T00:00:00.000Z",
+    "order": 0,
+    "revision": 3,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-06-01T00:00:00.000Z",
+    "title": "Regulatory Update On The 2026 Supreme Court Practice Directions",
+    "excerpt": null,
+    "body": "<p>[PENDING FROM FIRM]</p>",
+    "format": "article",
+    "videoUrl": null,
+    "categories": ["regulatory_updates"],
+    "practiceAreas": [],
+    "author": null,
+    "coverImage": "665f00000000000000000101",
+    "featured": false,
+    "_expanded": {
+      "665f00000000000000000101": {
+        "kind": "media",
+        "url": "https://placehold.co/1200x900?text=Example",
+        "alt": "A placeholder image, replaced when the firm uploads the real one"
+      }
+    }
+  }
+}

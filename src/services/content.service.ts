@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
 import type { Model, Types } from 'mongoose';
 import { CONTENT_COLLECTIONS } from '../constants/content-collections.js';
-import type { ContentCollectionConfig } from '../constants/content-collections.js';
+import type { AdminCollection, ContentCollectionConfig } from '../constants/content-collections.js';
 import { ConflictError, NotFoundError } from '../core/errors.js';
 import { toSkip } from '../helpers/pagination.helper.js';
 import { invalidateEntity } from './cache.service.js';
 import { record } from './audit.service.js';
-import type { AdminCollection, ErrorDetail } from '../types/api.js';
+import type { ErrorDetail } from '../types/api.js';
 
 /**
  * One implementation of CRUD for all seven content collections.
@@ -78,10 +78,7 @@ export async function listContent(
   return { items, total };
 }
 
-export async function getContent(
-  collection: AdminCollection,
-  id: string
-): Promise<ContentDoc> {
+export async function getContent(collection: AdminCollection, id: string): Promise<ContentDoc> {
   const doc = await modelFor(collection).findById(id).lean<ContentDoc | null>();
   if (!doc) throw new NotFoundError(config(collection).label);
   return doc;
@@ -250,7 +247,10 @@ export async function reorderContent(
 ): Promise<void> {
   const model = modelFor(collection);
 
-  const found = await model.find({ _id: { $in: ids } }).select('_id').lean<{ _id: Types.ObjectId }[]>();
+  const found = await model
+    .find({ _id: { $in: ids } })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId }[]>();
   if (found.length !== ids.length) {
     throw new NotFoundError(`One or more ${config(collection).label.toLowerCase()} records`);
   }

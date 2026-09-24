@@ -61,7 +61,10 @@ export class ForbiddenError extends AppError {
   readonly statusCode = 403;
   readonly code = 'FORBIDDEN';
 
-  constructor(message = 'You do not have access to this resource', details?: readonly ErrorDetail[]) {
+  constructor(
+    message = 'You do not have access to this resource',
+    details?: readonly ErrorDetail[]
+  ) {
     super(message, details);
   }
 }
@@ -80,7 +83,10 @@ export class ConflictError extends AppError {
   readonly statusCode = 409;
   readonly code = 'CONFLICT';
 
-  constructor(message = 'The request conflicts with the current state', details?: readonly ErrorDetail[]) {
+  constructor(
+    message = 'The request conflicts with the current state',
+    details?: readonly ErrorDetail[]
+  ) {
     super(message, details);
   }
 }

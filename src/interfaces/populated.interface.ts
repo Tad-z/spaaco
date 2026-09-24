@@ -61,25 +61,23 @@ export type IRecognitionWithBadge = Omit<IRecognition, 'badge'> & {
 type WithImage<T> = Omit<T, 'image'> & { image?: IMedia | null };
 
 /** A page document with every media and person reference populated. */
-export interface IPageDoc
-  extends Omit<
-    IPage,
-    | 'hero'
-    | 'seo'
-    | 'videoShowcase'
-    | 'whyChooseUs'
-    | 'story'
-    | 'missionSection'
-    | 'principles'
-    | 'awardsList'
-    | 'csrBanner'
-  > {
+export interface IPageDoc extends Omit<
+  IPage,
+  | 'hero'
+  | 'seo'
+  | 'videoShowcase'
+  | 'whyChooseUs'
+  | 'story'
+  | 'missionSection'
+  | 'principles'
+  | 'awardsList'
+  | 'csrBanner'
+> {
   _id: Types.ObjectId;
   hero?: (Omit<NonNullable<IPage['hero']>, 'image'> & { image?: IMedia | null }) | null;
   seo: Omit<IPage['seo'], 'ogImage'> & { ogImage?: IMedia | null };
   videoShowcase?:
-    | (Omit<NonNullable<IPage['videoShowcase']>, 'poster'> & { poster?: IMedia | null })
-    | null;
+    (Omit<NonNullable<IPage['videoShowcase']>, 'poster'> & { poster?: IMedia | null }) | null;
   whyChooseUs?: WithImage<NonNullable<IPage['whyChooseUs']>> | null;
   story?:
     | (Omit<NonNullable<IPage['story']>, 'quotePerson'> & {

@@ -38,9 +38,7 @@ async function main(): Promise<void> {
     }
 
     const roles: UserRole[] =
-      rolesInput === ''
-        ? ['admin']
-        : rolesInput.split(',').map((role) => role.trim() as UserRole);
+      rolesInput === '' ? ['admin'] : rolesInput.split(',').map((role) => role.trim() as UserRole);
 
     const unknown = roles.filter((role) => !USER_ROLES.values.includes(role));
     if (unknown.length > 0) throw new Error(`Unknown roles: ${unknown.join(', ')}`);

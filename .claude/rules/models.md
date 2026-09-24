@@ -1,7 +1,7 @@
 ---
 paths:
-  - "src/models/**/*.ts"
-  - "src/interfaces/**/*.ts"
+  - 'src/models/**/*.ts'
+  - 'src/interfaces/**/*.ts'
 ---
 
 # Model and interface rules

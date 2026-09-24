@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { toImage, toNullableImage } from '../../../src/serializers/image.serializer.js';
-import { toDisplayName, toSummary, toDetail as personDetail } from '../../../src/serializers/person.serializer.js';
+import {
+  toDisplayName,
+  toSummary,
+  toDetail as personDetail,
+} from '../../../src/serializers/person.serializer.js';
 import {
   FIRM_AUTHOR,
   toCard,
@@ -8,7 +12,10 @@ import {
   toCta,
   toDetail as insightDetail,
 } from '../../../src/serializers/insight.serializer.js';
-import { toCard as practiceAreaCard, toRef as practiceAreaRef } from '../../../src/serializers/practice-area.serializer.js';
+import {
+  toCard as practiceAreaCard,
+  toRef as practiceAreaRef,
+} from '../../../src/serializers/practice-area.serializer.js';
 import { toOffice } from '../../../src/serializers/office.serializer.js';
 import { formatErrors, getValidator, SPEC_ID } from '../../support/spec.js';
 import {
@@ -68,8 +75,16 @@ describe('person serializer', () => {
   });
 
   it.each([
-    ['keeps Dr. and appends post-nominals', { honorific: 'Dr.', postNominals: 'SAN' }, 'Dr. Babatunde Ajibade, SAN'],
-    ['keeps Dr. without post-nominals', { honorific: 'Dr.', postNominals: null }, 'Dr. Babatunde Ajibade'],
+    [
+      'keeps Dr. and appends post-nominals',
+      { honorific: 'Dr.', postNominals: 'SAN' },
+      'Dr. Babatunde Ajibade, SAN',
+    ],
+    [
+      'keeps Dr. without post-nominals',
+      { honorific: 'Dr.', postNominals: null },
+      'Dr. Babatunde Ajibade',
+    ],
     ['omits Mr., as the cards do', { honorific: 'Mr.', postNominals: null }, 'Babatunde Ajibade'],
     ['omits Mrs.', { honorific: 'Mrs.', postNominals: null }, 'Babatunde Ajibade'],
     ['handles no honorific at all', { honorific: null, postNominals: null }, 'Babatunde Ajibade'],

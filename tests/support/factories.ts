@@ -19,7 +19,9 @@ import type { OfficeSource } from '../../src/serializers/office.serializer.js';
 
 const id = (): Types.ObjectId => new Types.ObjectId();
 
-const contentFields = (overrides: Partial<{ slug: string; status: 'draft' | 'published' }> = {}) => ({
+const contentFields = (
+  overrides: Partial<{ slug: string; status: 'draft' | 'published' }> = {}
+) => ({
   slug: overrides.slug ?? 'a-slug',
   status: overrides.status ?? ('published' as const),
   publishedAt: new Date('2026-06-01T00:00:00.000Z'),

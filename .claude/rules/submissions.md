@@ -1,11 +1,11 @@
 ---
 paths:
-  - "src/**/enquiry*.ts"
-  - "src/**/message*.ts"
-  - "src/**/application*.ts"
-  - "src/integrations/storage/**"
-  - "src/integrations/mailer/**"
-  - "src/templates/emails/**"
+  - 'src/**/enquiry*.ts'
+  - 'src/**/message*.ts'
+  - 'src/**/application*.ts'
+  - 'src/integrations/storage/**'
+  - 'src/integrations/mailer/**'
+  - 'src/templates/emails/**'
 ---
 
 # Personal data rules (NDPA 2023)

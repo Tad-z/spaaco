@@ -133,16 +133,7 @@ export const STAT_SOURCES = {
 export type StatSource = (typeof STAT_SOURCES.values)[number];
 
 export const PAGE_KEYS = {
-  values: [
-    'home',
-    'about',
-    'practice-areas',
-    'people',
-    'insights',
-    'careers',
-    'faq',
-    'offices',
-  ],
+  values: ['home', 'about', 'practice-areas', 'people', 'insights', 'careers', 'faq', 'offices'],
   labels: {
     home: 'Home',
     about: 'About Us',

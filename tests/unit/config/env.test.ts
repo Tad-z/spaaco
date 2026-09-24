@@ -9,7 +9,9 @@ import { MINIMAL_VALID_ENV } from '../../support/test-env.js';
  * single first error, and not an `undefined` surfacing later in a request.
  */
 
-const withEnv = (overrides: Record<string, string | undefined>): Record<string, string | undefined> => ({
+const withEnv = (
+  overrides: Record<string, string | undefined>
+): Record<string, string | undefined> => ({
   ...MINIMAL_VALID_ENV,
   ...overrides,
 });

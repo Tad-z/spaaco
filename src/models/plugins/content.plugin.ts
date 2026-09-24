@@ -106,7 +106,9 @@ export function contentPlugin(schema: Schema, options: ContentPluginOptions): vo
       }
 
       if (asString(doc.slug) === undefined) {
-        next(new Error(`Could not find a free slug for "${base}" after ${MAX_SLUG_ATTEMPTS} tries.`));
+        next(
+          new Error(`Could not find a free slug for "${base}" after ${MAX_SLUG_ATTEMPTS} tries.`)
+        );
         return;
       }
     }

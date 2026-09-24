@@ -23,7 +23,8 @@ const layerZones = [
   {
     target: './src/services',
     from: ['./src/controllers', './src/routes', './src/serializers', './src/middlewares'],
-    message: 'services may only import models, core, integrations, helpers, constants and interfaces.',
+    message:
+      'services may only import models, core, integrations, helpers, constants and interfaces.',
   },
   {
     target: './src/serializers',
@@ -49,8 +50,7 @@ const layerZones = [
       './src/integrations',
       './src/validators',
     ],
-    message:
-      'models may only import interfaces, constants, helpers and models/plugins|schemas.',
+    message: 'models may only import interfaces, constants, helpers and models/plugins|schemas.',
   },
   {
     target: './src/helpers',
@@ -214,7 +214,10 @@ export default tseslint.config(
         'error',
         { allowExpressions: true, allowTypedFunctionExpressions: true },
       ],
-      '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'separate-type-imports' }],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { fixStyle: 'separate-type-imports' },
+      ],
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
       'no-console': 'error',
     },

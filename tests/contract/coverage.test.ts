@@ -75,7 +75,10 @@ describe('spec coverage', () => {
         }
       }
 
-      expect(withoutExample, `${describeOperation(op)} has no example for ${withoutExample.join(', ')}`).toEqual([]);
+      expect(
+        withoutExample,
+        `${describeOperation(op)} has no example for ${withoutExample.join(', ')}`
+      ).toEqual([]);
     }
   );
 

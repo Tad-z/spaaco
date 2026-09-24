@@ -114,17 +114,13 @@ describe('security headers and CORS', () => {
   });
 
   it('allows an origin on the allow-list', async () => {
-    const res = await request(app)
-      .get('/api/v1/health')
-      .set('Origin', 'http://localhost:3000');
+    const res = await request(app).get('/api/v1/health').set('Origin', 'http://localhost:3000');
 
     expect(res.headers['access-control-allow-origin']).toBe('http://localhost:3000');
   });
 
   it('does not grant CORS to an origin that is not on the allow-list', async () => {
-    const res = await request(app)
-      .get('/api/v1/health')
-      .set('Origin', 'https://attacker.example');
+    const res = await request(app).get('/api/v1/health').set('Origin', 'https://attacker.example');
 
     expect(res.status).toBe(200);
     expect(res.headers['access-control-allow-origin']).toBeUndefined();

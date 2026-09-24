@@ -1,11 +1,11 @@
 ---
 paths:
-  - "src/routes/**"
-  - "src/controllers/**"
-  - "src/services/**"
-  - "src/serializers/**"
-  - "src/validators/**"
-  - "src/middlewares/**"
+  - 'src/routes/**'
+  - 'src/controllers/**'
+  - 'src/services/**'
+  - 'src/serializers/**'
+  - 'src/validators/**'
+  - 'src/middlewares/**'
 ---
 
 # Layer rules

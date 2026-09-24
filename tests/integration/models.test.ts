@@ -1,7 +1,16 @@
 import mongoose from 'mongoose';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { setupTestDb } from '../support/setup-db.js';
-import { Faq, Insight, Job, Media, Office, Person, PracticeArea, Recognition } from '../../src/models/index.js';
+import {
+  Faq,
+  Insight,
+  Job,
+  Media,
+  Office,
+  Person,
+  PracticeArea,
+  Recognition,
+} from '../../src/models/index.js';
 import { MEDIA_REFS } from '../../src/constants/media-refs.js';
 
 /**
@@ -54,7 +63,11 @@ describe('validation rules', () => {
   });
 
   it('does not require videoUrl on an article', async () => {
-    const doc = await Insight.create({ title: 'An article', format: 'article', categories: ['articles'] });
+    const doc = await Insight.create({
+      title: 'An article',
+      format: 'article',
+      categories: ['articles'],
+    });
 
     expect(doc.videoUrl).toBeNull();
   });
@@ -78,7 +91,11 @@ describe('validation rules', () => {
   });
 
   it('accepts every role the contract defines', async () => {
-    const doc = await Person.create({ firstName: 'Ada', lastName: 'Nwosu', role: 'nysc_associate' });
+    const doc = await Person.create({
+      firstName: 'Ada',
+      lastName: 'Nwosu',
+      role: 'nysc_associate',
+    });
 
     expect(doc.role).toBe('nysc_associate');
   });
@@ -141,7 +158,13 @@ describe('indexes', () => {
   const expected: [mongoose.Model<never>, Record<string, unknown>[]][] = [
     [PracticeArea as never, [{ status: 1, order: 1 }]],
     [Person as never, [{ status: 1, role: 1, order: 1 }]],
-    [Insight as never, [{ status: 1, categories: 1, publishedAt: -1 }, { status: 1, featured: 1, publishedAt: -1 }]],
+    [
+      Insight as never,
+      [
+        { status: 1, categories: 1, publishedAt: -1 },
+        { status: 1, featured: 1, publishedAt: -1 },
+      ],
+    ],
     [Office as never, [{ status: 1, order: 1 }]],
     [Faq as never, [{ status: 1, order: 1 }]],
     [Job as never, [{ status: 1, isOpen: 1, closingDate: 1, order: 1 }]],
@@ -179,7 +202,9 @@ describe('indexes', () => {
   it('enforces slug uniqueness on every content collection', async () => {
     for (const model of [PracticeArea, Person, Insight, Office, Faq, Job, Recognition]) {
       const indexes = await model.listIndexes();
-      const slugIndex = indexes.find((index) => JSON.stringify(index.key) === JSON.stringify({ slug: 1 }));
+      const slugIndex = indexes.find(
+        (index) => JSON.stringify(index.key) === JSON.stringify({ slug: 1 })
+      );
 
       expect(slugIndex, `${model.modelName} has no slug index`).toBeDefined();
       expect(slugIndex?.unique, `${model.modelName}'s slug index is not unique`).toBe(true);
@@ -238,7 +263,10 @@ describe('media reference registry', () => {
     for (const ref of MEDIA_REFS) {
       const model = mongoose.models[ref.model];
       expect(model, `media-refs names model "${ref.model}", which is not registered`).toBeDefined();
-      expect(model?.schema.path(ref.path), `${ref.model}.${ref.path} is not a real path`).toBeDefined();
+      expect(
+        model?.schema.path(ref.path),
+        `${ref.model}.${ref.path} is not a real path`
+      ).toBeDefined();
     }
   });
 
@@ -250,7 +278,12 @@ describe('media reference registry', () => {
 
   it('can actually find a usage through the registry', async () => {
     const imageId = await media();
-    await PracticeArea.create({ title: 'Tax', shortLabel: 'Tax', summary: 'Summary', image: imageId });
+    await PracticeArea.create({
+      title: 'Tax',
+      shortLabel: 'Tax',
+      summary: 'Summary',
+      image: imageId,
+    });
 
     const ref = MEDIA_REFS.find((entry) => entry.model === 'PracticeArea');
     expect(ref).toBeDefined();

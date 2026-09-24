@@ -30,12 +30,8 @@
         "title": "Regulatory Update On The 2026 Supreme Court Practice Directions",
         "excerpt": null,
         "format": "article",
-        "categories": [
-          "regulatory_updates"
-        ],
-        "categoryLabels": [
-          "Regulatory Updates"
-        ],
+        "categories": ["regulatory_updates"],
+        "categoryLabels": ["Regulatory Updates"],
         "practiceAreas": [
           {
             "id": "665f00000000000000000008",
@@ -44,10 +40,7 @@
             "shortLabel": "Dispute Resolution"
           }
         ],
-        "chips": [
-          "Regulatory Updates",
-          "Dispute Resolution & Arbitration"
-        ],
+        "chips": ["Regulatory Updates", "Dispute Resolution & Arbitration"],
         "author": {
           "type": "firm",
           "name": "SPA AJIBADE & Co.",

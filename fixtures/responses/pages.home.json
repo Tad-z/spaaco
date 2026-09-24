@@ -464,12 +464,8 @@
         "title": "The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors.",
         "excerpt": null,
         "format": "article",
-        "categories": [
-          "articles"
-        ],
-        "categoryLabels": [
-          "Articles"
-        ],
+        "categories": ["articles"],
+        "categoryLabels": ["Articles"],
         "practiceAreas": [
           {
             "id": "665f00000000000000000002",
@@ -478,10 +474,7 @@
             "shortLabel": "Energy"
           }
         ],
-        "chips": [
-          "Articles",
-          "Energy & Natural Resources"
-        ],
+        "chips": ["Articles", "Energy & Natural Resources"],
         "author": {
           "type": "person",
           "person": {
@@ -536,12 +529,8 @@
         "title": "Repositioning and Promoting Energy Investments Between South Africa and Nigeria: A Perspective on Trade Secrets.",
         "excerpt": "The focus of this brief is specifically on a bilateral energy investment relationship between Nigeria and South Africa: two nations that represent, by any objective commercial assessment, the most logical and most strategically significant energy partnership on the African continent…",
         "format": "article",
-        "categories": [
-          "articles"
-        ],
-        "categoryLabels": [
-          "Articles"
-        ],
+        "categories": ["articles"],
+        "categoryLabels": ["Articles"],
         "practiceAreas": [
           {
             "id": "665f00000000000000000002",
@@ -550,10 +539,7 @@
             "shortLabel": "Energy"
           }
         ],
-        "chips": [
-          "Articles",
-          "Energy & Natural Resources"
-        ],
+        "chips": ["Articles", "Energy & Natural Resources"],
         "author": {
           "type": "person",
           "person": {
@@ -608,19 +594,10 @@
         "title": "Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy",
         "excerpt": null,
         "format": "video",
-        "categories": [
-          "webinar_resources",
-          "firm_news"
-        ],
-        "categoryLabels": [
-          "Webinar Resources",
-          "Firm News"
-        ],
+        "categories": ["webinar_resources", "firm_news"],
+        "categoryLabels": ["Webinar Resources", "Firm News"],
         "practiceAreas": [],
-        "chips": [
-          "Webinar Resources",
-          "Firm News"
-        ],
+        "chips": ["Webinar Resources", "Firm News"],
         "author": {
           "type": "firm",
           "name": "SPA AJIBADE & Co.",
@@ -654,12 +631,8 @@
         "title": "Regulatory Update On The 2026 Supreme Court Practice Directions",
         "excerpt": null,
         "format": "article",
-        "categories": [
-          "regulatory_updates"
-        ],
-        "categoryLabels": [
-          "Regulatory Updates"
-        ],
+        "categories": ["regulatory_updates"],
+        "categoryLabels": ["Regulatory Updates"],
         "practiceAreas": [
           {
             "id": "665f00000000000000000008",
@@ -668,10 +641,7 @@
             "shortLabel": "Dispute Resolution"
           }
         ],
-        "chips": [
-          "Regulatory Updates",
-          "Dispute Resolution & Arbitration"
-        ],
+        "chips": ["Regulatory Updates", "Dispute Resolution & Arbitration"],
         "author": {
           "type": "firm",
           "name": "SPA AJIBADE & Co.",

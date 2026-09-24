@@ -1,5 +1,6 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { ForbiddenError, UnauthenticatedError } from '../core/errors.js';
+import { namedHandler } from '../helpers/named-handler.helper.js';
 import type { UserRole } from '../types/api.js';
 
 /**
@@ -10,7 +11,7 @@ import type { UserRole } from '../types/api.js';
  * `admin` passes every check without being listed, since it is the superset.
  */
 export function requireRole(...allowed: readonly UserRole[]): RequestHandler {
-  return (req: Request, _res: Response, next: NextFunction): void => {
+  const handler: RequestHandler = (req: Request, _res: Response, next: NextFunction): void => {
     const user = req.user;
 
     if (!user) {
@@ -29,4 +30,7 @@ export function requireRole(...allowed: readonly UserRole[]): RequestHandler {
 
     next();
   };
+
+  // Named so the route inventory can see the guard; see namedHandler.
+  return namedHandler('requireRole', handler);
 }

@@ -1,11 +1,11 @@
 {
   "data": [
     {
-      "id": "665f00000000000000000103",
-      "slug": "tax",
+      "id": "665f1a2b3c4d5e6f70819293",
+      "slug": "example",
       "status": "published",
       "publishedAt": "2026-06-01T00:00:00.000Z",
-      "order": 7,
+      "order": 0,
       "revision": 3,
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-06-01T00:00:00.000Z",
@@ -15,9 +15,7 @@
       "image": "665f00000000000000000101",
       "body": null,
       "keyServices": [],
-      "contacts": [
-        "665f00000000000000000102"
-      ],
+      "contacts": ["665f00000000000000000102"],
       "featuredOnHome": true,
       "homeOrder": 6,
       "showInFooter": true,
@@ -28,8 +26,8 @@
       "_expanded": {
         "665f00000000000000000101": {
           "kind": "media",
-          "url": "https://placehold.co/1200x900?text=Tax",
-          "alt": "Photograph representing the Tax practice"
+          "url": "https://placehold.co/1200x900?text=Example",
+          "alt": "A placeholder image, replaced when the firm uploads the real one"
         },
         "665f00000000000000000102": {
           "kind": "person",

@@ -6,7 +6,10 @@ const HEADER = 'x-request-id';
 
 /** Accept a caller-supplied id only if it is short and printable ASCII. */
 const isUsable = (value: unknown): value is string =>
-  typeof value === 'string' && value.length > 0 && value.length <= 200 && /^[\x20-\x7E]+$/.test(value);
+  typeof value === 'string' &&
+  value.length > 0 &&
+  value.length <= 200 &&
+  /^[\x20-\x7E]+$/.test(value);
 
 /**
  * Give every request an id, echo it back, and default `preview` to off.

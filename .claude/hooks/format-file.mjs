@@ -8,7 +8,11 @@ for await (const chunk of process.stdin) raw += chunk;
 const filePath = JSON.parse(raw || '{}')?.tool_input?.file_path;
 if (!filePath) process.exit(0);
 
-spawnSync('npx', ['--no-install', 'prettier', '--write', '--ignore-unknown', '--log-level', 'silent', filePath], {
-  stdio: 'ignore',
-});
+spawnSync(
+  'npx',
+  ['--no-install', 'prettier', '--write', '--ignore-unknown', '--log-level', 'silent', filePath],
+  {
+    stdio: 'ignore',
+  }
+);
 process.exit(0);

@@ -1,5 +1,24 @@
-import type { AdminCollection } from '../types/api.js';
 import type { CacheEntity } from './cache-tags.js';
+
+/**
+ * The seven content collections, as URL segments.
+ *
+ * This is an implementation grouping rather than a contract shape. The spec
+ * lists each collection's paths explicitly so the dashboard gets a concrete
+ * request and response type per collection (ADR-033), which leaves nothing for
+ * a collection enum to describe in the contract.
+ */
+export const ADMIN_COLLECTIONS = [
+  'practice-areas',
+  'people',
+  'insights',
+  'offices',
+  'recognitions',
+  'faqs',
+  'jobs',
+] as const;
+
+export type AdminCollection = (typeof ADMIN_COLLECTIONS)[number];
 
 /**
  * What the generic CRUD factory needs to know about each content collection.
@@ -115,5 +134,3 @@ export const CONTENT_COLLECTIONS: Record<AdminCollection, ContentCollectionConfi
     label: 'Job',
   },
 };
-
-export const ADMIN_COLLECTIONS = Object.keys(CONTENT_COLLECTIONS) as AdminCollection[];

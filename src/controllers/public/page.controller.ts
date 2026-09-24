@@ -17,9 +17,7 @@ export async function getPageHandler(req: Request, res: Response): Promise<void>
 
   // One expression for both, so the key and its tag cannot drift apart.
   const tag = TAGS.page(key);
-  const data = await remember<Page>(tag, [tag], async () =>
-    toPage(key, await getPageSources(key))
-  );
+  const data = await remember<Page>(tag, [tag], async () => toPage(key, await getPageSources(key)));
 
   res.json({ data });
 }

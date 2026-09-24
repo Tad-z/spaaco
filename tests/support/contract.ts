@@ -45,8 +45,7 @@ function responseFor(
   status: number
 ): { node: Record<string, unknown> | undefined; base: string } {
   const raw = asObject(asObject(operationNode(path, method)?.responses)?.[String(status)]);
-  const base =
-    `${SPEC_ID}#/paths/${escapePointer(path)}/${method}/responses/${String(status)}`;
+  const base = `${SPEC_ID}#/paths/${escapePointer(path)}/${method}/responses/${String(status)}`;
 
   return resolveRef(raw, base);
 }

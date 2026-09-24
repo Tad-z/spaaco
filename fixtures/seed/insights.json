@@ -6,12 +6,8 @@
     "body": "<p>[PENDING FROM FIRM]</p>",
     "format": "article",
     "videoUrl": null,
-    "categories": [
-      "articles"
-    ],
-    "practiceAreas": [
-      "energy-natural-resources"
-    ],
+    "categories": ["articles"],
+    "practiceAreas": ["energy-natural-resources"],
     "author": "john-onyido",
     "coverImage": {
       "placeholder": "Trade Secrets",
@@ -31,12 +27,8 @@
     "body": "<p>[PENDING FROM FIRM]</p>",
     "format": "article",
     "videoUrl": null,
-    "categories": [
-      "articles"
-    ],
-    "practiceAreas": [
-      "energy-natural-resources"
-    ],
+    "categories": ["articles"],
+    "practiceAreas": ["energy-natural-resources"],
     "author": "peter-olalere",
     "coverImage": {
       "placeholder": "Mini-Grid Regulation",
@@ -56,10 +48,7 @@
     "body": null,
     "format": "video",
     "videoUrl": "[PENDING FROM FIRM]",
-    "categories": [
-      "webinar_resources",
-      "firm_news"
-    ],
+    "categories": ["webinar_resources", "firm_news"],
     "practiceAreas": [],
     "author": null,
     "coverImage": {
@@ -80,12 +69,8 @@
     "body": "<p>[PENDING FROM FIRM]</p>",
     "format": "article",
     "videoUrl": null,
-    "categories": [
-      "regulatory_updates"
-    ],
-    "practiceAreas": [
-      "dispute-resolution-arbitration"
-    ],
+    "categories": ["regulatory_updates"],
+    "practiceAreas": ["dispute-resolution-arbitration"],
     "author": null,
     "coverImage": {
       "placeholder": "Practice Directions",

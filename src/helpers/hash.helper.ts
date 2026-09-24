@@ -8,8 +8,7 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
  * back to an address (NDPA data minimisation).
  */
 
-export const sha256 = (value: string): string =>
-  createHash('sha256').update(value).digest('hex');
+export const sha256 = (value: string): string => createHash('sha256').update(value).digest('hex');
 
 /** Salted, so the same address does not hash alike across deployments. */
 export const hashIp = (ip: string, salt: string): string => sha256(`${ip}:${salt}`);

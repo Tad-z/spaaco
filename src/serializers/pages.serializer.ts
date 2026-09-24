@@ -53,7 +53,13 @@ function required<T>(value: T | null | undefined, key: string, section: string):
   return value;
 }
 
-function composeHome({ page, practiceAreas, leadership, insights, recognitions }: IPageSources): HomePage {
+function composeHome({
+  page,
+  practiceAreas,
+  leadership,
+  insights,
+  recognitions,
+}: IPageSources): HomePage {
   const hero = required(toHero(page.hero), 'home', 'hero');
   const aboutFirm = required(page.aboutFirm, 'home', 'aboutFirm');
   const whyChooseUs = required(page.whyChooseUs, 'home', 'whyChooseUs');
@@ -167,7 +173,9 @@ function composePeople({ page }: IPageSources): PeoplePage {
   return {
     key: 'people',
     hero: required(toHero(page.hero), 'people', 'hero'),
-    directorySection: toSectionHeader(required(page.directorySection, 'people', 'directorySection')),
+    directorySection: toSectionHeader(
+      required(page.directorySection, 'people', 'directorySection')
+    ),
     roleFilters: [...ROLE_FILTERS],
     seo: toSeo(page.seo),
   };

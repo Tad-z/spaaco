@@ -1,8 +1,8 @@
 ---
 paths:
-  - "src/**/*.ts"
-  - "scripts/**/*.ts"
-  - "tests/**/*.ts"
+  - 'src/**/*.ts'
+  - 'scripts/**/*.ts'
+  - 'tests/**/*.ts'
 ---
 
 # TypeScript rules
@@ -18,4 +18,4 @@ paths:
   - **Stored document shapes:** `interfaces/*.interface.ts`, used as `Schema<IThing>` and `lean<Lean<IThing>>()`.
 - Never edit `types/api.generated.ts`. Change `openapi.yaml`, then run `npm run types:gen`.
 - Prefer `readonly` arrays and properties for config and constants. Build enums with `as const` objects rather than TS `enum`.
-- Exported functions declare explicit return types. This matters most for services and serializers, where the return type *is* the contract.
+- Exported functions declare explicit return types. This matters most for services and serializers, where the return type _is_ the contract.

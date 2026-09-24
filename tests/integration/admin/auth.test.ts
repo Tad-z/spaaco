@@ -169,17 +169,22 @@ describe('two-factor at sign-in', () => {
       .send({ code: authenticator.generate(setup.body.data.secret) });
     expect(enabled.status).toBe(204);
 
-    const login = await request(app).post('/api/v1/admin/auth/login').send({
-      email: 'mfa3@spaajibade.test',
-      password: TEST_PASSWORD,
-      totp: authenticator.generate(setup.body.data.secret),
-    });
+    const login = await request(app)
+      .post('/api/v1/admin/auth/login')
+      .send({
+        email: 'mfa3@spaajibade.test',
+        password: TEST_PASSWORD,
+        totp: authenticator.generate(setup.body.data.secret),
+      });
 
     expect(login.status).toBe(200);
   });
 
   it('stores the TOTP secret encrypted, not in the clear', async () => {
-    const { token, user } = await createTestUser({ email: 'enc@spaajibade.test', totpEnabled: false });
+    const { token, user } = await createTestUser({
+      email: 'enc@spaajibade.test',
+      totpEnabled: false,
+    });
 
     const setup = await request(app)
       .post('/api/v1/admin/auth/2fa/setup')
@@ -206,7 +211,10 @@ describe('two-factor at sign-in', () => {
   });
 
   it('refuses to enable before setup has run', async () => {
-    const { token } = await createTestUser({ email: 'nosetup@spaajibade.test', totpEnabled: false });
+    const { token } = await createTestUser({
+      email: 'nosetup@spaajibade.test',
+      totpEnabled: false,
+    });
 
     const res = await request(app)
       .post('/api/v1/admin/auth/2fa/enable')
@@ -288,7 +296,9 @@ describe('GET /api/v1/admin/auth/me', () => {
   it('returns the signed-in user', async () => {
     const { token } = await createTestUser({ email: 'me@spaajibade.test' });
 
-    const res = await request(app).get('/api/v1/admin/auth/me').set('Authorization', `Bearer ${token}`);
+    const res = await request(app)
+      .get('/api/v1/admin/auth/me')
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
     expectToMatchContract(res, 'get', '/api/v1/admin/auth/me');
@@ -308,7 +318,9 @@ describe('GET /api/v1/admin/auth/me', () => {
     await User.updateOne({ _id: user._id }, { isActive: false });
 
     // The token is still cryptographically valid; the user is reloaded anyway.
-    const res = await request(app).get('/api/v1/admin/auth/me').set('Authorization', `Bearer ${token}`);
+    const res = await request(app)
+      .get('/api/v1/admin/auth/me')
+      .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(401);
   });
 });
@@ -366,7 +378,9 @@ describe('two-factor enforcement', () => {
   it('blocks an admin route until two-factor is enabled', async () => {
     const { token } = await createTestUser({ roles: ['admin'], totpEnabled: false });
 
-    const res = await request(app).get('/api/v1/admin/users').set('Authorization', `Bearer ${token}`);
+    const res = await request(app)
+      .get('/api/v1/admin/users')
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(403);
     expect(res.body.error.details).toEqual([{ path: 'totp', message: 'TOTP_REQUIRED' }]);
@@ -375,7 +389,9 @@ describe('two-factor enforcement', () => {
   it('still allows the auth routes, or nobody could ever enrol', async () => {
     const { token } = await createTestUser({ totpEnabled: false });
 
-    const res = await request(app).get('/api/v1/admin/auth/me').set('Authorization', `Bearer ${token}`);
+    const res = await request(app)
+      .get('/api/v1/admin/auth/me')
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
   });

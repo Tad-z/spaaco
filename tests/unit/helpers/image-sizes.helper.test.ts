@@ -25,7 +25,9 @@ describe('buildLocalSizes', () => {
   });
 
   it('is not fooled by a dot in a directory name', () => {
-    expect(buildLocalSizes('https://cdn.test/v1.2/photo').sm).toBe('https://cdn.test/v1.2/photo-480');
+    expect(buildLocalSizes('https://cdn.test/v1.2/photo').sm).toBe(
+      'https://cdn.test/v1.2/photo-480'
+    );
   });
 });
 

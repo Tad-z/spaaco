@@ -1,7 +1,7 @@
 ---
 paths:
-  - "openapi/**"
-  - "fixtures/**"
+  - 'openapi/**'
+  - 'fixtures/**'
 ---
 
 # Contract rules

@@ -1217,19 +1217,18 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-
-  /api/v1/admin/content/{collection}:
-    parameters:
-      - $ref: '#/components/parameters/AdminCollection'
+  # --- BEGIN GENERATED admin content paths (npm run spec:gen) ---
+  /api/v1/admin/content/practice-areas:
     get:
-      tags: [Admin content]
-      operationId: listAdminContent
-      summary: List items in a content collection
-      description: |
-        Every status, not just published. The response shape depends on
-        `collection`: each item is the editable shape for that collection
-        (see `AdminContentItem`).
-      security:
+      tags:
+        - Admin content
+      operationId: listPracticeAreaAdmin
+      summary: List practice areas
+      description: |-
+        Every status, not just published.
+
+        The Home tab bar uses `homeOrder`, which differs from the page order.
+      security: &a1
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AdminStatus'
@@ -1238,24 +1237,26 @@ paths:
         - $ref: '#/components/parameters/PageSize'
       responses:
         '200':
-          description: A page of items in their editable shape.
+          description: A page of practice areas in their editable shape.
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: false
-                required: [data, meta]
+                required:
+                  - data
+                  - meta
                 properties:
                   data:
                     type: array
-                    items:
-                      $ref: '#/components/schemas/AdminContentItem'
+                    items: &a2
+                      $ref: '#/components/schemas/PracticeAreaAdmin'
                   meta:
                     $ref: '#/components/schemas/PaginationMeta'
               examples:
-                practiceAreas:
+                practice-areas:
                   value:
-                    $ref: '../fixtures/responses/admin.practice-areas.list.json'
+                    $ref: ../fixtures/responses/admin.practice-areas.list.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -1265,27 +1266,37 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
     post:
-      tags: [Admin content]
-      operationId: createAdminContent
-      summary: Create an item
-      description: |
-        The body is the editable shape without `id`, `revision`, timestamps or
-        `_expanded`. A slug is generated from the title when none is given.
-      security:
-        - bearerAuth: []
+      tags:
+        - Admin content
+      operationId: createPracticeArea
+      summary: Create a practice area
+      description: |-
+        A slug is generated when none is given.
+
+        The Home tab bar uses `homeOrder`, which differs from the page order.
+      security: *a1
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminContentWrite'
-            example:
-              title: Tax
-              shortLabel: Tax
-              summary: When a business needs to understand or meet its tax obligations…
+              $ref: '#/components/schemas/PracticeAreaCreate'
       responses:
         '201':
-          $ref: '#/components/responses/AdminContentItem'
+          description: The created practice area.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a2
+              examples:
+                practice-areas:
+                  value:
+                    $ref: ../fixtures/responses/admin.practice-areas.detail.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -1296,29 +1307,20 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
-
-  /api/v1/admin/content/{collection}/reorder:
+  /api/v1/admin/content/practice-areas/reorder:
     patch:
-      tags: [Admin content]
-      operationId: reorderAdminContent
-      summary: Reorder a collection
-      description: |
-        Sets `order` from the position of each id in the list. Ids not
-        mentioned keep their current order.
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/AdminCollection'
+      tags:
+        - Admin content
+      operationId: reorderPracticeArea
+      summary: Reorder practice areas
+      description: Sets `order` from each id’s position. Ids not listed keep their order.
+      security: *a1
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ReorderRequest'
-            example:
-              ids:
-                - 665f1a2b3c4d5e6f70819293
-                - 665f1a2b3c4d5e6f70819294
       responses:
         '204':
           description: Reordered.
@@ -1332,25 +1334,35 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-
-  /api/v1/admin/content/{collection}/{id}:
+  /api/v1/admin/content/practice-areas/{id}:
     parameters:
-      - $ref: '#/components/parameters/AdminCollection'
       - $ref: '#/components/parameters/ObjectId'
     get:
-      tags: [Admin content]
-      operationId: getAdminContent
-      summary: Get one item in its editable shape
-      description: |
-        References stay as ids, exactly as they must be sent back. `_expanded`
-        carries a minimal preview of each referenced media item or person so the
-        dashboard can render thumbnails without extra calls; it is ignored on
-        write (ADR-014).
-      security:
-        - bearerAuth: []
+      tags:
+        - Admin content
+      operationId: getPracticeAreaAdmin
+      summary: Get one practice area in its editable shape
+      description: |-
+        References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+
+        The Home tab bar uses `homeOrder`, which differs from the page order.
+      security: *a1
       responses:
         '200':
-          $ref: '#/components/responses/AdminContentItem'
+          description: The practice area.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a2
+              examples:
+                practice-areas:
+                  value:
+                    $ref: ../fixtures/responses/admin.practice-areas.detail.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -1362,15 +1374,12 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
     patch:
-      tags: [Admin content]
-      operationId: updateAdminContent
-      summary: Update an item
-      description: |
-        Requires `If-Match` with the revision read. A stale revision returns 409
-        with the current one, so two editors cannot silently overwrite each
-        other (ADR-015).
-      security:
-        - bearerAuth: []
+      tags:
+        - Admin content
+      operationId: updatePracticeArea
+      summary: Update a practice area
+      description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+      security: *a1
       parameters:
         - $ref: '#/components/parameters/IfMatch'
       requestBody:
@@ -1378,12 +1387,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminContentWrite'
-            example:
-              summary: Updated summary text for the practice area.
+              $ref: '#/components/schemas/PracticeAreaUpdate'
       responses:
         '200':
-          $ref: '#/components/responses/AdminContentItem'
+          description: The updated practice area.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a2
+              examples:
+                practice-areas:
+                  value:
+                    $ref: ../fixtures/responses/admin.practice-areas.detail.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -1399,15 +1419,12 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
     delete:
-      tags: [Admin content]
-      operationId: deleteAdminContent
-      summary: Delete an item
-      description: |
-        Refused with 409 when something still references the item, with the
-        referencing records in `error.details`, so the dashboard can show where
-        it is still used.
-      security:
-        - bearerAuth: []
+      tags:
+        - Admin content
+      operationId: deletePracticeArea
+      summary: Delete a practice area
+      description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+      security: *a1
       responses:
         '204':
           description: Deleted.
@@ -1423,21 +1440,32 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
-
-  /api/v1/admin/content/{collection}/{id}/publish:
+  /api/v1/admin/content/practice-areas/{id}/publish:
     post:
-      tags: [Admin content]
-      operationId: publishAdminContent
-      summary: Publish an item
-      description: Sets `publishedAt` the first time only, so republishing keeps the original date.
-      security:
-        - bearerAuth: []
+      tags:
+        - Admin content
+      operationId: publishPracticeArea
+      summary: Publish a practice area
+      description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
+      security: *a1
       parameters:
-        - $ref: '#/components/parameters/AdminCollection'
         - $ref: '#/components/parameters/ObjectId'
       responses:
         '200':
-          $ref: '#/components/responses/AdminContentItem'
+          description: The published practice area.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a2
+              examples:
+                practice-areas:
+                  value:
+                    $ref: ../fixtures/responses/admin.practice-areas.detail.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -1448,21 +1476,32 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-
-  /api/v1/admin/content/{collection}/{id}/unpublish:
+  /api/v1/admin/content/practice-areas/{id}/unpublish:
     post:
-      tags: [Admin content]
-      operationId: unpublishAdminContent
-      summary: Unpublish an item
-      description: Returns the item to draft. The original `publishedAt` is kept.
-      security:
-        - bearerAuth: []
+      tags:
+        - Admin content
+      operationId: unpublishPracticeArea
+      summary: Unpublish a practice area
+      description: Returns it to draft. The original `publishedAt` is kept.
+      security: *a1
       parameters:
-        - $ref: '#/components/parameters/AdminCollection'
         - $ref: '#/components/parameters/ObjectId'
       responses:
         '200':
-          $ref: '#/components/responses/AdminContentItem'
+          description: The unpublished practice area.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a2
+              examples:
+                practice-areas:
+                  value:
+                    $ref: ../fixtures/responses/admin.practice-areas.detail.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -1473,6 +1512,1753 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/people:
+    get:
+      tags:
+        - Admin content
+      operationId: listPersonAdmin
+      summary: List attorneys
+      description: |-
+        Every status, not just published.
+
+        Carries `email`, which the public API never returns.
+      security: &a3
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminStatus'
+        - $ref: '#/components/parameters/AdminSearch'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of attorneys in their editable shape.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    type: array
+                    items: &a4
+                      $ref: '#/components/schemas/PersonAdmin'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                people:
+                  value:
+                    $ref: ../fixtures/responses/admin.people.list.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Admin content
+      operationId: createPerson
+      summary: Create a attorney
+      description: |-
+        A slug is generated when none is given.
+
+        Carries `email`, which the public API never returns.
+      security: *a3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonCreate'
+      responses:
+        '201':
+          description: The created attorney.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a4
+              examples:
+                people:
+                  value:
+                    $ref: ../fixtures/responses/admin.people.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/people/reorder:
+    patch:
+      tags:
+        - Admin content
+      operationId: reorderPerson
+      summary: Reorder attorneys
+      description: Sets `order` from each id’s position. Ids not listed keep their order.
+      security: *a3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '204':
+          description: Reordered.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/people/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - Admin content
+      operationId: getPersonAdmin
+      summary: Get one attorney in its editable shape
+      description: |-
+        References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+
+        Carries `email`, which the public API never returns.
+      security: *a3
+      responses:
+        '200':
+          description: The attorney.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a4
+              examples:
+                people:
+                  value:
+                    $ref: ../fixtures/responses/admin.people.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags:
+        - Admin content
+      operationId: updatePerson
+      summary: Update a attorney
+      description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+      security: *a3
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonUpdate'
+      responses:
+        '200':
+          description: The updated attorney.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a4
+              examples:
+                people:
+                  value:
+                    $ref: ../fixtures/responses/admin.people.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - Admin content
+      operationId: deletePerson
+      summary: Delete a attorney
+      description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+      security: *a3
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/people/{id}/publish:
+    post:
+      tags:
+        - Admin content
+      operationId: publishPerson
+      summary: Publish a attorney
+      description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
+      security: *a3
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The published attorney.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a4
+              examples:
+                people:
+                  value:
+                    $ref: ../fixtures/responses/admin.people.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/people/{id}/unpublish:
+    post:
+      tags:
+        - Admin content
+      operationId: unpublishPerson
+      summary: Unpublish a attorney
+      description: Returns it to draft. The original `publishedAt` is kept.
+      security: *a3
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The unpublished attorney.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a4
+              examples:
+                people:
+                  value:
+                    $ref: ../fixtures/responses/admin.people.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/insights:
+    get:
+      tags:
+        - Admin content
+      operationId: listInsightAdmin
+      summary: List insights
+      description: |-
+        Every status, not just published.
+
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+      security: &a5
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminStatus'
+        - $ref: '#/components/parameters/AdminSearch'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of insights in their editable shape.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    type: array
+                    items: &a6
+                      $ref: '#/components/schemas/InsightAdmin'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                insights:
+                  value:
+                    $ref: ../fixtures/responses/admin.insights.list.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Admin content
+      operationId: createInsight
+      summary: Create a insight
+      description: |-
+        A slug is generated when none is given.
+
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+      security: *a5
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsightCreate'
+      responses:
+        '201':
+          description: The created insight.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a6
+              examples:
+                insights:
+                  value:
+                    $ref: ../fixtures/responses/admin.insights.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/insights/reorder:
+    patch:
+      tags:
+        - Admin content
+      operationId: reorderInsight
+      summary: Reorder insights
+      description: Sets `order` from each id’s position. Ids not listed keep their order.
+      security: *a5
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '204':
+          description: Reordered.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/insights/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - Admin content
+      operationId: getInsightAdmin
+      summary: Get one insight in its editable shape
+      description: |-
+        References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+      security: *a5
+      responses:
+        '200':
+          description: The insight.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a6
+              examples:
+                insights:
+                  value:
+                    $ref: ../fixtures/responses/admin.insights.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags:
+        - Admin content
+      operationId: updateInsight
+      summary: Update a insight
+      description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+      security: *a5
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsightUpdate'
+      responses:
+        '200':
+          description: The updated insight.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a6
+              examples:
+                insights:
+                  value:
+                    $ref: ../fixtures/responses/admin.insights.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - Admin content
+      operationId: deleteInsight
+      summary: Delete a insight
+      description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+      security: *a5
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/insights/{id}/publish:
+    post:
+      tags:
+        - Admin content
+      operationId: publishInsight
+      summary: Publish a insight
+      description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
+      security: *a5
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The published insight.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a6
+              examples:
+                insights:
+                  value:
+                    $ref: ../fixtures/responses/admin.insights.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/insights/{id}/unpublish:
+    post:
+      tags:
+        - Admin content
+      operationId: unpublishInsight
+      summary: Unpublish a insight
+      description: Returns it to draft. The original `publishedAt` is kept.
+      security: *a5
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The unpublished insight.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a6
+              examples:
+                insights:
+                  value:
+                    $ref: ../fixtures/responses/admin.insights.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/offices:
+    get:
+      tags:
+        - Admin content
+      operationId: listOfficeAdmin
+      summary: List offices
+      description: |-
+        Every status, not just published.
+
+        `location` is GeoJSON `[longitude, latitude]`, the reverse of how people say it.
+      security: &a7
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminStatus'
+        - $ref: '#/components/parameters/AdminSearch'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of offices in their editable shape.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    type: array
+                    items: &a8
+                      $ref: '#/components/schemas/OfficeAdmin'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                offices:
+                  value:
+                    $ref: ../fixtures/responses/admin.offices.list.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Admin content
+      operationId: createOffice
+      summary: Create a office
+      description: |-
+        A slug is generated when none is given.
+
+        `location` is GeoJSON `[longitude, latitude]`, the reverse of how people say it.
+      security: *a7
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfficeCreate'
+      responses:
+        '201':
+          description: The created office.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a8
+              examples:
+                offices:
+                  value:
+                    $ref: ../fixtures/responses/admin.offices.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/offices/reorder:
+    patch:
+      tags:
+        - Admin content
+      operationId: reorderOffice
+      summary: Reorder offices
+      description: Sets `order` from each id’s position. Ids not listed keep their order.
+      security: *a7
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '204':
+          description: Reordered.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/offices/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - Admin content
+      operationId: getOfficeAdmin
+      summary: Get one office in its editable shape
+      description: |-
+        References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+
+        `location` is GeoJSON `[longitude, latitude]`, the reverse of how people say it.
+      security: *a7
+      responses:
+        '200':
+          description: The office.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a8
+              examples:
+                offices:
+                  value:
+                    $ref: ../fixtures/responses/admin.offices.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags:
+        - Admin content
+      operationId: updateOffice
+      summary: Update a office
+      description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+      security: *a7
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfficeUpdate'
+      responses:
+        '200':
+          description: The updated office.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a8
+              examples:
+                offices:
+                  value:
+                    $ref: ../fixtures/responses/admin.offices.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - Admin content
+      operationId: deleteOffice
+      summary: Delete a office
+      description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+      security: *a7
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/offices/{id}/publish:
+    post:
+      tags:
+        - Admin content
+      operationId: publishOffice
+      summary: Publish a office
+      description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
+      security: *a7
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The published office.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a8
+              examples:
+                offices:
+                  value:
+                    $ref: ../fixtures/responses/admin.offices.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/offices/{id}/unpublish:
+    post:
+      tags:
+        - Admin content
+      operationId: unpublishOffice
+      summary: Unpublish a office
+      description: Returns it to draft. The original `publishedAt` is kept.
+      security: *a7
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The unpublished office.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a8
+              examples:
+                offices:
+                  value:
+                    $ref: ../fixtures/responses/admin.offices.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/recognitions:
+    get:
+      tags:
+        - Admin content
+      operationId: listRecognitionAdmin
+      summary: List recognitions
+      description: Every status, not just published.
+      security: &a9
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminStatus'
+        - $ref: '#/components/parameters/AdminSearch'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of recognitions in their editable shape.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    type: array
+                    items: &a10
+                      $ref: '#/components/schemas/RecognitionAdmin'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                recognitions:
+                  value:
+                    $ref: ../fixtures/responses/admin.recognitions.list.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Admin content
+      operationId: createRecognition
+      summary: Create a recognition
+      description: A slug is generated when none is given.
+      security: *a9
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecognitionCreate'
+      responses:
+        '201':
+          description: The created recognition.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a10
+              examples:
+                recognitions:
+                  value:
+                    $ref: ../fixtures/responses/admin.recognitions.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/recognitions/reorder:
+    patch:
+      tags:
+        - Admin content
+      operationId: reorderRecognition
+      summary: Reorder recognitions
+      description: Sets `order` from each id’s position. Ids not listed keep their order.
+      security: *a9
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '204':
+          description: Reordered.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/recognitions/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - Admin content
+      operationId: getRecognitionAdmin
+      summary: Get one recognition in its editable shape
+      description: References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+      security: *a9
+      responses:
+        '200':
+          description: The recognition.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a10
+              examples:
+                recognitions:
+                  value:
+                    $ref: ../fixtures/responses/admin.recognitions.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags:
+        - Admin content
+      operationId: updateRecognition
+      summary: Update a recognition
+      description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+      security: *a9
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecognitionUpdate'
+      responses:
+        '200':
+          description: The updated recognition.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a10
+              examples:
+                recognitions:
+                  value:
+                    $ref: ../fixtures/responses/admin.recognitions.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - Admin content
+      operationId: deleteRecognition
+      summary: Delete a recognition
+      description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+      security: *a9
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/recognitions/{id}/publish:
+    post:
+      tags:
+        - Admin content
+      operationId: publishRecognition
+      summary: Publish a recognition
+      description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
+      security: *a9
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The published recognition.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a10
+              examples:
+                recognitions:
+                  value:
+                    $ref: ../fixtures/responses/admin.recognitions.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/recognitions/{id}/unpublish:
+    post:
+      tags:
+        - Admin content
+      operationId: unpublishRecognition
+      summary: Unpublish a recognition
+      description: Returns it to draft. The original `publishedAt` is kept.
+      security: *a9
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The unpublished recognition.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a10
+              examples:
+                recognitions:
+                  value:
+                    $ref: ../fixtures/responses/admin.recognitions.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/faqs:
+    get:
+      tags:
+        - Admin content
+      operationId: listFaqAdmin
+      summary: List FAQs
+      description: Every status, not just published.
+      security: &a11
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminStatus'
+        - $ref: '#/components/parameters/AdminSearch'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of FAQs in their editable shape.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    type: array
+                    items: &a12
+                      $ref: '#/components/schemas/FaqAdmin'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                faqs:
+                  value:
+                    $ref: ../fixtures/responses/admin.faqs.list.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Admin content
+      operationId: createFaq
+      summary: Create a FAQ
+      description: A slug is generated when none is given.
+      security: *a11
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FaqCreate'
+      responses:
+        '201':
+          description: The created FAQ.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a12
+              examples:
+                faqs:
+                  value:
+                    $ref: ../fixtures/responses/admin.faqs.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/faqs/reorder:
+    patch:
+      tags:
+        - Admin content
+      operationId: reorderFaq
+      summary: Reorder FAQs
+      description: Sets `order` from each id’s position. Ids not listed keep their order.
+      security: *a11
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '204':
+          description: Reordered.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/faqs/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - Admin content
+      operationId: getFaqAdmin
+      summary: Get one FAQ in its editable shape
+      description: References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+      security: *a11
+      responses:
+        '200':
+          description: The FAQ.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a12
+              examples:
+                faqs:
+                  value:
+                    $ref: ../fixtures/responses/admin.faqs.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags:
+        - Admin content
+      operationId: updateFaq
+      summary: Update a FAQ
+      description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+      security: *a11
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FaqUpdate'
+      responses:
+        '200':
+          description: The updated FAQ.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a12
+              examples:
+                faqs:
+                  value:
+                    $ref: ../fixtures/responses/admin.faqs.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - Admin content
+      operationId: deleteFaq
+      summary: Delete a FAQ
+      description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+      security: *a11
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/faqs/{id}/publish:
+    post:
+      tags:
+        - Admin content
+      operationId: publishFaq
+      summary: Publish a FAQ
+      description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
+      security: *a11
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The published FAQ.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a12
+              examples:
+                faqs:
+                  value:
+                    $ref: ../fixtures/responses/admin.faqs.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/faqs/{id}/unpublish:
+    post:
+      tags:
+        - Admin content
+      operationId: unpublishFaq
+      summary: Unpublish a FAQ
+      description: Returns it to draft. The original `publishedAt` is kept.
+      security: *a11
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The unpublished FAQ.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a12
+              examples:
+                faqs:
+                  value:
+                    $ref: ../fixtures/responses/admin.faqs.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/jobs:
+    get:
+      tags:
+        - Admin content
+      operationId: listJobAdmin
+      summary: List jobs
+      description: |-
+        Every status, not just published.
+
+        A vacancy leaves the public API when `isOpen` is false or `closingDate` has passed.
+      security: &a13
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminStatus'
+        - $ref: '#/components/parameters/AdminSearch'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of jobs in their editable shape.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    type: array
+                    items: &a14
+                      $ref: '#/components/schemas/JobAdmin'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                jobs:
+                  value:
+                    $ref: ../fixtures/responses/admin.jobs.list.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Admin content
+      operationId: createJob
+      summary: Create a job
+      description: |-
+        A slug is generated when none is given.
+
+        A vacancy leaves the public API when `isOpen` is false or `closingDate` has passed.
+      security: *a13
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreate'
+      responses:
+        '201':
+          description: The created job.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a14
+              examples:
+                jobs:
+                  value:
+                    $ref: ../fixtures/responses/admin.jobs.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/jobs/reorder:
+    patch:
+      tags:
+        - Admin content
+      operationId: reorderJob
+      summary: Reorder jobs
+      description: Sets `order` from each id’s position. Ids not listed keep their order.
+      security: *a13
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '204':
+          description: Reordered.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/jobs/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - Admin content
+      operationId: getJobAdmin
+      summary: Get one job in its editable shape
+      description: |-
+        References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+
+        A vacancy leaves the public API when `isOpen` is false or `closingDate` has passed.
+      security: *a13
+      responses:
+        '200':
+          description: The job.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a14
+              examples:
+                jobs:
+                  value:
+                    $ref: ../fixtures/responses/admin.jobs.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags:
+        - Admin content
+      operationId: updateJob
+      summary: Update a job
+      description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+      security: *a13
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobUpdate'
+      responses:
+        '200':
+          description: The updated job.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a14
+              examples:
+                jobs:
+                  value:
+                    $ref: ../fixtures/responses/admin.jobs.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - Admin content
+      operationId: deleteJob
+      summary: Delete a job
+      description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+      security: *a13
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/jobs/{id}/publish:
+    post:
+      tags:
+        - Admin content
+      operationId: publishJob
+      summary: Publish a job
+      description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
+      security: *a13
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The published job.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a14
+              examples:
+                jobs:
+                  value:
+                    $ref: ../fixtures/responses/admin.jobs.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/jobs/{id}/unpublish:
+    post:
+      tags:
+        - Admin content
+      operationId: unpublishJob
+      summary: Unpublish a job
+      description: Returns it to draft. The original `publishedAt` is kept.
+      security: *a13
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The unpublished job.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a14
+              examples:
+                jobs:
+                  value:
+                    $ref: ../fixtures/responses/admin.jobs.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  # --- END GENERATED admin content paths ---
 
   /api/v1/admin/settings:
     get:
@@ -1903,7 +3689,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-
 components:
   securitySchemes:
     bearerAuth:
@@ -2027,13 +3812,6 @@ components:
         maxLength: 100
       example: arbitration
 
-    AdminCollection:
-      name: collection
-      in: path
-      required: true
-      description: Which content collection to act on.
-      schema:
-        $ref: '#/components/schemas/AdminCollection'
     AdminStatus:
       name: status
       in: query
@@ -2155,21 +3933,6 @@ components:
             error:
               code: VALIDATION_ERROR
               message: An If-Match header carrying the current revision is required
-    AdminContentItem:
-      description: One item in its editable shape.
-      content:
-        application/json:
-          schema:
-            type: object
-            additionalProperties: false
-            required: [data]
-            properties:
-              data:
-                $ref: '#/components/schemas/AdminContentItem'
-          examples:
-            practiceArea:
-              value:
-                $ref: '../fixtures/responses/admin.practice-areas.detail.json'
     AdminSettings:
       description: Site settings in their editable shape.
       content:
@@ -2607,7 +4370,19 @@ components:
       type: object
       additionalProperties: false
       required:
-        [id, slug, title, shortLabel, summary, image, body, keyServices, contacts, relatedInsights, seo]
+        [
+          id,
+          slug,
+          title,
+          shortLabel,
+          summary,
+          image,
+          body,
+          keyServices,
+          contacts,
+          relatedInsights,
+          seo,
+        ]
       properties:
         id:
           $ref: '#/components/schemas/ObjectId'
@@ -3081,8 +4856,7 @@ components:
     SiteSettings:
       type: object
       additionalProperties: false
-      required:
-        [firmName, legalDescriptor, tagline, foundedYear, phone, email, socials, copyright]
+      required: [firmName, legalDescriptor, tagline, foundedYear, phone, email, socials, copyright]
       properties:
         firmName:
           type: string
@@ -3952,17 +5726,6 @@ components:
           type: string
           format: date-time
 
-    AdminCollection:
-      type: string
-      enum:
-        - practice-areas
-        - people
-        - insights
-        - offices
-        - recognitions
-        - faqs
-        - jobs
-
     ExpandedMedia:
       type: object
       additionalProperties: false
@@ -4351,30 +6114,312 @@ components:
         isOpen: { type: boolean }
         _expanded: { $ref: '#/components/schemas/Expanded' }
 
-    AdminContentItem:
-      oneOf:
-        - $ref: '#/components/schemas/PracticeAreaAdmin'
-        - $ref: '#/components/schemas/PersonAdmin'
-        - $ref: '#/components/schemas/InsightAdmin'
-        - $ref: '#/components/schemas/OfficeAdmin'
-        - $ref: '#/components/schemas/RecognitionAdmin'
-        - $ref: '#/components/schemas/FaqAdmin'
-        - $ref: '#/components/schemas/JobAdmin'
-      description: |
-        Which of these you get is decided by the `collection` path parameter,
-        not by a field in the body — the caller always knows which it asked
-        for. Every content collection shares the same operations, so they share
-        one set of paths (ADR-033).
-
-    AdminContentWrite:
+    # --- BEGIN GENERATED admin content schemas (npm run spec:gen) ---
+    PracticeAreaCreate:
       type: object
-      description: |
-        The editable shape for the collection, without `id`, `revision`,
-        timestamps or `_expanded`. Validated per collection on the server, so
-        an unknown field is a 400 rather than silently dropped. On create the
-        required fields are the collection's own; on update every field is
-        optional.
-      additionalProperties: true
+      additionalProperties: false
+      required:
+        - title
+        - shortLabel
+        - summary
+      description: Creates a practice area. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
+      properties: &a1
+        slug:
+          $ref: '#/components/schemas/Slug'
+        title:
+          type: string
+        shortLabel:
+          type: string
+        summary:
+          type: string
+        image:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        body:
+          type:
+            - string
+            - 'null'
+        keyServices:
+          type: array
+          items:
+            type: string
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectId'
+        featuredOnHome:
+          type: boolean
+        homeOrder:
+          type:
+            - integer
+            - 'null'
+        showInFooter:
+          type: boolean
+        seo:
+          $ref: '#/components/schemas/SeoWrite'
+    PracticeAreaUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: Any subset of the practice area fields. Requires `If-Match`.
+      properties: *a1
+    PersonCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - firstName
+        - lastName
+        - role
+      description: Creates a attorney. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
+      properties: &a2
+        slug:
+          $ref: '#/components/schemas/Slug'
+        honorific:
+          type:
+            - string
+            - 'null'
+        firstName:
+          type: string
+        lastName:
+          type: string
+        postNominals:
+          type:
+            - string
+            - 'null'
+        role:
+          $ref: '#/components/schemas/PersonRole'
+        photo:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        linkedinUrl:
+          type:
+            - string
+            - 'null'
+        email:
+          type:
+            - string
+            - 'null'
+        bio:
+          type:
+            - string
+            - 'null'
+        quote:
+          type:
+            - string
+            - 'null'
+        practiceAreas:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectId'
+        office:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        featuredInLeadership:
+          type: boolean
+    PersonUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: Any subset of the attorney fields. Requires `If-Match`.
+      properties: *a2
+    InsightCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - format
+        - categories
+      description: Creates a insight. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
+      properties: &a3
+        slug:
+          $ref: '#/components/schemas/Slug'
+        title:
+          type: string
+        excerpt:
+          type:
+            - string
+            - 'null'
+        body:
+          type:
+            - string
+            - 'null'
+        format:
+          $ref: '#/components/schemas/InsightFormat'
+        videoUrl:
+          type:
+            - string
+            - 'null'
+        categories:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/InsightCategory'
+        practiceAreas:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectId'
+        author:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: Null means the firm is the author.
+        coverImage:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        featured:
+          type: boolean
+    InsightUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: Any subset of the insight fields. Requires `If-Match`.
+      properties: *a3
+    OfficeCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - address
+        - hours
+      description: Creates a office. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
+      properties: &a4
+        slug:
+          $ref: '#/components/schemas/Slug'
+        name:
+          type: string
+        address:
+          type: string
+        hours:
+          type: string
+        location:
+          oneOf:
+            - $ref: '#/components/schemas/GeoPoint'
+            - type: 'null'
+          description: Stored as GeoJSON. The public API serialises it as { lat, lng }.
+        directionsUrl:
+          type:
+            - string
+            - 'null'
+        phone:
+          type:
+            - string
+            - 'null'
+        email:
+          type:
+            - string
+            - 'null'
+    OfficeUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: Any subset of the office fields. Requires `If-Match`.
+      properties: *a4
+    RecognitionCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - organization
+        - title
+        - tab
+      description: Creates a recognition. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
+      properties: &a5
+        slug:
+          $ref: '#/components/schemas/Slug'
+        organization:
+          type: string
+        title:
+          type: string
+        year:
+          type:
+            - integer
+            - 'null'
+        badge:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        url:
+          type:
+            - string
+            - 'null'
+        tab:
+          $ref: '#/components/schemas/RecognitionTab'
+    RecognitionUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: Any subset of the recognition fields. Requires `If-Match`.
+      properties: *a5
+    FaqCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - question
+        - answer
+      description: Creates a FAQ. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
+      properties: &a6
+        slug:
+          $ref: '#/components/schemas/Slug'
+        question:
+          type: string
+        answer:
+          type: string
+          description: Sanitised HTML on write.
+    FaqUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: Any subset of the FAQ fields. Requires `If-Match`.
+      properties: *a6
+    JobCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - description
+        - employmentType
+        - workMode
+      description: Creates a job. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
+      properties: &a7
+        slug:
+          $ref: '#/components/schemas/Slug'
+        title:
+          type: string
+        practiceArea:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        description:
+          type: string
+        experience:
+          type:
+            - string
+            - 'null'
+        employmentType:
+          $ref: '#/components/schemas/EmploymentType'
+        workMode:
+          $ref: '#/components/schemas/WorkMode'
+        office:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        closingDate:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        isOpen:
+          type: boolean
+    JobUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: Any subset of the job fields. Requires `If-Match`.
+      properties: *a7
+    # --- END GENERATED admin content schemas ---
 
     ReorderRequest:
       type: object
@@ -4601,4 +6646,3 @@ components:
           properties:
             x: { type: number, minimum: 0, maximum: 1 }
             y: { type: number, minimum: 0, maximum: 1 }
-

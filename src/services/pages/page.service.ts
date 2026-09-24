@@ -48,33 +48,45 @@ const none = <T>(): Promise<T[]> => Promise.resolve([]);
  * The FAQ page needs nothing beyond its own document, and paying for eight
  * collection queries to serve it would be wasteful on every request.
  */
-async function loadFor(key: PageKey, page: IPageDoc, options: PreviewOptions): Promise<IPageSources> {
+async function loadFor(
+  key: PageKey,
+  page: IPageDoc,
+  options: PreviewOptions
+): Promise<IPageSources> {
   const needsCounts = key === 'about';
 
-  const [practiceAreas, leadership, insights, recognitions, offices, jobs, officeCount, practiceAreaCount] =
-    await Promise.all([
-      key === 'home'
-        ? listFeaturedOnHome(options)
-        : key === 'practice-areas'
-          ? listPracticeAreas(options)
-          : none<IPracticeAreaWithImage>(),
-      key === 'home' ? listLeadership(options) : none<IPersonWithPhoto>(),
-      key === 'home'
-        ? listLatestInsights(options)
-        : key === 'insights'
-          ? listFeaturedInsights(options)
-          : none<IInsightDoc>(),
-      key === 'home'
-        ? Recognition.find(publishedFilter(options))
-            .populate('badge')
-            .sort({ order: 1 })
-            .lean<IRecognitionWithBadge[]>()
-        : none<IRecognitionWithBadge>(),
-      key === 'offices' ? listOffices(options) : none<IOfficeDoc>(),
-      key === 'careers' ? listJobs(options) : none<IJobDoc>(),
-      needsCounts ? Office.countDocuments(publishedFilter(options)) : Promise.resolve(0),
-      needsCounts ? PracticeArea.countDocuments(publishedFilter(options)) : Promise.resolve(0),
-    ]);
+  const [
+    practiceAreas,
+    leadership,
+    insights,
+    recognitions,
+    offices,
+    jobs,
+    officeCount,
+    practiceAreaCount,
+  ] = await Promise.all([
+    key === 'home'
+      ? listFeaturedOnHome(options)
+      : key === 'practice-areas'
+        ? listPracticeAreas(options)
+        : none<IPracticeAreaWithImage>(),
+    key === 'home' ? listLeadership(options) : none<IPersonWithPhoto>(),
+    key === 'home'
+      ? listLatestInsights(options)
+      : key === 'insights'
+        ? listFeaturedInsights(options)
+        : none<IInsightDoc>(),
+    key === 'home'
+      ? Recognition.find(publishedFilter(options))
+          .populate('badge')
+          .sort({ order: 1 })
+          .lean<IRecognitionWithBadge[]>()
+      : none<IRecognitionWithBadge>(),
+    key === 'offices' ? listOffices(options) : none<IOfficeDoc>(),
+    key === 'careers' ? listJobs(options) : none<IJobDoc>(),
+    needsCounts ? Office.countDocuments(publishedFilter(options)) : Promise.resolve(0),
+    needsCounts ? PracticeArea.countDocuments(publishedFilter(options)) : Promise.resolve(0),
+  ]);
 
   return {
     page,

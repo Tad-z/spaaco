@@ -20,7 +20,12 @@ export interface NavEntry {
 export const NAV_ENTRIES: readonly NavEntry[] = [
   { label: 'Home', href: '/', kind: 'internal' },
   { label: 'About Us', href: '/about', kind: 'internal' },
-  { label: 'Practice Areas', href: '/practice-areas', kind: 'internal', practiceAreaDropdown: true },
+  {
+    label: 'Practice Areas',
+    href: '/practice-areas',
+    kind: 'internal',
+    practiceAreaDropdown: true,
+  },
   { label: 'Our People', href: '/people', kind: 'internal' },
   { label: 'Insights & News', href: '/insights', kind: 'internal' },
   { label: 'Careers', href: '/careers', kind: 'internal' },

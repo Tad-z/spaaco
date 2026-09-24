@@ -28,12 +28,27 @@ const validateErrorResponse = getValidator(`${SPEC_ID}#/components/schemas/Error
 /** Every error type, with the status and code docs/API.md assigns it. */
 const cases = [
   { name: 'ValidationError', error: new ValidationError(), status: 400, code: 'VALIDATION_ERROR' },
-  { name: 'UnauthenticatedError', error: new UnauthenticatedError(), status: 401, code: 'UNAUTHENTICATED' },
+  {
+    name: 'UnauthenticatedError',
+    error: new UnauthenticatedError(),
+    status: 401,
+    code: 'UNAUTHENTICATED',
+  },
   { name: 'ForbiddenError', error: new ForbiddenError(), status: 403, code: 'FORBIDDEN' },
   { name: 'NotFoundError', error: new NotFoundError(), status: 404, code: 'NOT_FOUND' },
   { name: 'ConflictError', error: new ConflictError(), status: 409, code: 'CONFLICT' },
-  { name: 'PayloadTooLargeError', error: new PayloadTooLargeError(), status: 413, code: 'PAYLOAD_TOO_LARGE' },
-  { name: 'UnsupportedMediaTypeError', error: new UnsupportedMediaTypeError(), status: 415, code: 'UNSUPPORTED_MEDIA_TYPE' },
+  {
+    name: 'PayloadTooLargeError',
+    error: new PayloadTooLargeError(),
+    status: 413,
+    code: 'PAYLOAD_TOO_LARGE',
+  },
+  {
+    name: 'UnsupportedMediaTypeError',
+    error: new UnsupportedMediaTypeError(),
+    status: 415,
+    code: 'UNSUPPORTED_MEDIA_TYPE',
+  },
   { name: 'FileRejectedError', error: new FileRejectedError(), status: 422, code: 'FILE_REJECTED' },
   { name: 'RateLimitedError', error: new RateLimitedError(), status: 429, code: 'RATE_LIMITED' },
   { name: 'InternalError', error: new InternalError(), status: 500, code: 'INTERNAL' },

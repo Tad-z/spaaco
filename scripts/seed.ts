@@ -22,7 +22,18 @@ import { logger } from '../src/core/logger.js';
 import { config } from '../src/config/env.js';
 import { IMAGE_SIZES } from '../src/config/constants.js';
 import { slugify } from '../src/helpers/slug.helper.js';
-import { Faq, Insight, Job, Media, Office, Page, Person, PracticeArea, Recognition, Settings } from '../src/models/index.js';
+import {
+  Faq,
+  Insight,
+  Job,
+  Media,
+  Office,
+  Page,
+  Person,
+  PracticeArea,
+  Recognition,
+  Settings,
+} from '../src/models/index.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SEED_DIR = join(ROOT, 'fixtures', 'seed');
@@ -43,8 +54,7 @@ const isPlaceholder = (value: unknown): value is Placeholder =>
   'placeholder' in value &&
   typeof (value as Placeholder).placeholder === 'string';
 
-const readJson = (file: string): unknown =>
-  JSON.parse(readFileSync(join(SEED_DIR, file), 'utf8'));
+const readJson = (file: string): unknown => JSON.parse(readFileSync(join(SEED_DIR, file), 'utf8'));
 
 /** Seed files are checked-in fixtures, validated by the models on write. */
 const readDocs = (file: string): Json[] => {
@@ -183,26 +193,30 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
 
   const mediaIds = new Map<string, Types.ObjectId>();
   for (const [storageKey, placeholder] of placeholders) {
-    const id = await upsert(Media, { storageKey }, {
-      kind: 'image',
-      provider: 'local',
-      storageKey,
-      url: placeholderUrl(placeholder, placeholder.width),
-      sizes: {
-        sm: placeholderUrl(placeholder, IMAGE_SIZES.sm),
-        md: placeholderUrl(placeholder, IMAGE_SIZES.md),
-        lg: placeholderUrl(placeholder, IMAGE_SIZES.lg),
-      },
-      version: 1,
-      width: placeholder.width,
-      height: placeholder.height,
-      mimeType: 'image/png',
-      bytes: 1024,
-      originalFilename: `${slugify(placeholder.placeholder)}.png`,
-      title: placeholder.placeholder,
-      alt: placeholder.alt,
-      focalPoint: { x: 0.5, y: 0.5 },
-    });
+    const id = await upsert(
+      Media,
+      { storageKey },
+      {
+        kind: 'image',
+        provider: 'local',
+        storageKey,
+        url: placeholderUrl(placeholder, placeholder.width),
+        sizes: {
+          sm: placeholderUrl(placeholder, IMAGE_SIZES.sm),
+          md: placeholderUrl(placeholder, IMAGE_SIZES.md),
+          lg: placeholderUrl(placeholder, IMAGE_SIZES.lg),
+        },
+        version: 1,
+        width: placeholder.width,
+        height: placeholder.height,
+        mimeType: 'image/png',
+        bytes: 1024,
+        originalFilename: `${slugify(placeholder.placeholder)}.png`,
+        title: placeholder.placeholder,
+        alt: placeholder.alt,
+        focalPoint: { x: 0.5, y: 0.5 },
+      }
+    );
     mediaIds.set(storageKey, id);
   }
 
@@ -225,25 +239,33 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
     const { slug, practiceAreas, office, ...rest } = resolvePlaceholders(doc, mediaIds) as Json;
     peopleIds.set(
       String(slug),
-      await upsert(Person, { slug }, {
-        slug,
-        ...rest,
-        practiceAreas: toIds(practiceAreaIds, practiceAreas),
-        office: toId(officeIds, office),
-      })
+      await upsert(
+        Person,
+        { slug },
+        {
+          slug,
+          ...rest,
+          practiceAreas: toIds(practiceAreaIds, practiceAreas),
+          office: toId(officeIds, office),
+        }
+      )
     );
   }
 
   // --- insights reference people and practice areas -----------------------
   for (const doc of insightDocs) {
     const { slug, practiceAreas, author, ...rest } = resolvePlaceholders(doc, mediaIds) as Json;
-    await upsert(Insight, { slug }, {
-      slug,
-      ...rest,
-      practiceAreas: toIds(practiceAreaIds, practiceAreas),
-      // Null is meaningful here: it means the firm is the author.
-      author: toId(peopleIds, author),
-    });
+    await upsert(
+      Insight,
+      { slug },
+      {
+        slug,
+        ...rest,
+        practiceAreas: toIds(practiceAreaIds, practiceAreas),
+        // Null is meaningful here: it means the firm is the author.
+        author: toId(peopleIds, author),
+      }
+    );
   }
 
   for (const doc of recognitionDocs) {
@@ -258,12 +280,16 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
 
   for (const doc of jobDocs) {
     const { slug, practiceArea, office, ...rest } = resolvePlaceholders(doc, mediaIds) as Json;
-    await upsert(Job, { slug }, {
-      slug,
-      ...rest,
-      practiceArea: toId(practiceAreaIds, practiceArea),
-      office: toId(officeIds, office),
-    });
+    await upsert(
+      Job,
+      { slug },
+      {
+        slug,
+        ...rest,
+        practiceArea: toId(practiceAreaIds, practiceArea),
+        office: toId(officeIds, office),
+      }
+    );
   }
 
   // --- singletons ---------------------------------------------------------
@@ -281,7 +307,11 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
   }
 
   const { key: settingsKey, ...settingsRest } = resolvePlaceholders(settingsDoc, mediaIds) as Json;
-  await upsert(Settings, { key: settingsKey ?? 'site' }, { key: settingsKey ?? 'site', ...settingsRest });
+  await upsert(
+    Settings,
+    { key: settingsKey ?? 'site' },
+    { key: settingsKey ?? 'site', ...settingsRest }
+  );
 
   return {
     media: await Media.countDocuments(),

@@ -47,8 +47,9 @@ describe('GET /api/v1/site', () => {
 
     // The design's footer shows 7 of the 9 areas.
     expect(res.body.data.footer.practiceAreas).toHaveLength(7);
-    expect(res.body.data.nav.find((i: { label: string }) => i.label === 'Practice Areas').children)
-      .toHaveLength(9);
+    expect(
+      res.body.data.nav.find((i: { label: string }) => i.label === 'Practice Areas').children
+    ).toHaveLength(9);
   });
 
   it('orders offices Lagos, Abuja, Ibadan, as the page does', async () => {
@@ -65,11 +66,9 @@ describe('GET /api/v1/site', () => {
     const res = await request(app).get('/api/v1/site');
 
     expect(res.body.data.faqSection.items).toHaveLength(5);
-    expect(res.body.data.faqSection.stillHaveQuestions.actions.map((a: { href: string }) => a.href)).toEqual([
-      'action:chat',
-      'action:message',
-      'action:call',
-    ]);
+    expect(
+      res.body.data.faqSection.stillHaveQuestions.actions.map((a: { href: string }) => a.href)
+    ).toEqual(['action:chat', 'action:message', 'action:call']);
   });
 
   it('returns 404 when the site has never been configured', async () => {

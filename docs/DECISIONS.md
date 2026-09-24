@@ -6,7 +6,7 @@ Append new entries at the bottom of each section. Never rewrite history; superse
 
 **ADR-001: Hand-built API on Node.js + Express + MongoDB.** No headless CMS. We own the admin API; the frontend team owns all UI, including the admin dashboard.
 
-**ADR-002: JavaScript (ESM), not TypeScript.** *Superseded by ADR-017.* Correction: this was recorded as "the team's preference", but it was an assumption made while drafting the kit, not a stated preference.
+**ADR-002: JavaScript (ESM), not TypeScript.** _Superseded by ADR-017._ Correction: this was recorded as "the team's preference", but it was an assumption made while drafting the kit, not a stated preference.
 
 **ADR-003: Spec-first contract.** `openapi/openapi.yaml` is hand-authored before the implementation so the frontend can start on day one against a Prism mock. Code is verified against it by contract tests. We don't generate the spec from code.
 
@@ -60,7 +60,7 @@ Append new entries at the bottom of each section. Never rewrite history; superse
 
 **ADR-028: `home.aboutFirm` has no image.** It briefly carried one, which contradicted ADR-012 and the "Image ownership" section of DATA_MODEL.md: the world-map backdrop is a frontend asset. Shipping it would have given the firm a required upload slot for an asset they do not own, and removing it later would have been a breaking change.
 
-**ADR-029: Testing scope and speed.** *(Requested as ADR-019; that number was already used for the `/api/v1` path prefix and is referenced from commit messages and PROGRESS.md, so this takes the next free number rather than renumbering history.)*
+**ADR-029: Testing scope and speed.** _(Requested as ADR-019; that number was already used for the `/api/v1` path prefix and is referenced from commit messages and PROGRESS.md, so this takes the next free number rather than renumbering history.)_
 
 The suite was slowing every task, so coverage is now proved **once, in the cheapest place that proves it**:
 
@@ -77,13 +77,30 @@ Mechanically, one mongod now starts in `globalSetup` for the whole run instead o
 
 **ADR-030: Responsive image `sizes` are stored on the Media record, not derived at read time.** How the three widths are formed depends on where the file lives: the local driver writes three files beside the original, Cloudinary expresses them as URL transformations, and the dev seed points all three at placehold.co. A serializer cannot tell which rule applies from the URL alone, so whatever creates the record writes the answer. `helpers/image-sizes.helper.ts` builds them per provider at upload time. The one consequence to remember: Cloudinary sizes embed the focal point as gravity, so changing `focalPoint` must rebuild them (handled with the media PATCH in Phase 5).
 
-**ADR-031: Populated references are filtered to published documents too.** `publishedFilter` constrains only the document being fetched, so a published insight was pulling in its author and practice areas regardless of their status — a draft attorney's name, slug and photo were reachable on `/insights`, `/pages/home`, `/pages/insights` and `/search` with no token at all. `helpers/published-filter.helper.ts#publishedPopulate` now wraps every populate of a *content* collection (author, practiceAreas, contacts, office, practiceArea, story.quotePerson). Media is exempt, having no status. Mongoose nulls a non-matching single reference and drops it from an array, which the serializers already handle: a draft author falls back to the firm block rather than removing the card.
+**ADR-031: Populated references are filtered to published documents too.** `publishedFilter` constrains only the document being fetched, so a published insight was pulling in its author and practice areas regardless of their status — a draft attorney's name, slug and photo were reachable on `/insights`, `/pages/home`, `/pages/insights` and `/search` with no token at all. `helpers/published-filter.helper.ts#publishedPopulate` now wraps every populate of a _content_ collection (author, practiceAreas, contacts, office, practiceArea, story.quotePerson). Media is exempt, having no status. Mongoose nulls a non-matching single reference and drops it from an array, which the serializers already handle: a draft author falls back to the firm block rather than removing the card.
 
-**ADR-032: Cache tags err towards clearing too much.** The tag map originally listed only the surfaces where an entity is the *subject*. But a practice area also appears as a chip on insight cards and a job card, and is counted by an About stat; an attorney appears in every insight card's author block; an office appears in a job's location chip. Each write now clears every surface that embeds the entity. A stale page is a visible bug the firm reports; an extra cache miss costs milliseconds.
+**ADR-032: Cache tags err towards clearing too much.** The tag map originally listed only the surfaces where an entity is the _subject_. But a practice area also appears as a chip on insight cards and a job card, and is counted by an About stat; an attorney appears in every insight card's author block; an office appears in a job's location chip. Each write now clears every surface that embeds the entity. A stale page is a visible bug the firm reports; an extra cache miss costs milliseconds.
 
-**ADR-033: Admin content CRUD is specified once, under `/admin/content/{collection}`.** The seven content collections share identical operations, so enumerating them would mean 56 near-identical operations in the spec and seven near-identical routers in the code. One set of paths keyed by a `collection` enum matches how the generic CRUD factory actually works. The response is `oneOf` the seven editable shapes, which are each fully specified — the caller always knows which collection it asked for, so the absence of a discriminator costs nothing.
+**ADR-033: Admin content paths carry a `/content/` segment, and the spec lists all seven collections explicitly.** _(Revised: the first version of this ADR used a single generic `/admin/content/{collection}` path with a `oneOf` response. The project lead asked for explicit paths so the dashboard gets concrete types.)_
 
-The `/content/` segment is a deliberate addition to the URLs in `docs/API.md`. Without it, `/admin/{collection}` is genuinely ambiguous with `/admin/settings`, `/admin/pages/{key}` and `/admin/media/{id}`: correctness would depend on Express route registration order, and adding any future admin singleton could silently collide with a collection name. Redocly flags the ambiguity too. Nothing is broken by the change, because the admin contract is new in this phase and the dashboard is not built yet.
+Two parts:
+
+1. **The `/content/` segment.** Without it, `/admin/{collection}` is genuinely ambiguous with `/admin/settings`, `/admin/pages/{key}` and `/admin/media/{id}`: correctness would depend on Express route registration order, any future admin singleton could silently collide with a collection name, and Redocly flags the ambiguity. `docs/API.md` is updated to match.
+
+2. **Explicit paths, generated.** Each collection has its own paths, its own `<Name>Create` and `<Name>Update` request schemas, and `<Name>Admin` as its response — 56 operations, no unions, so the dashboard never has to narrow a response by hand. Writing those by hand would guarantee they drift, so `scripts/generate-admin-content-spec.ts` produces them (and their example fixtures) from one template, keyed off the hand-written `<Name>Admin` schemas. The write schemas are _derived_ from the read schema by dropping the server-owned fields, which is what makes "an admin GET body is a valid PUT body" true by construction rather than by discipline. Run with `npm run spec:gen`.
+
+The implementation is unchanged: one generic CRUD factory still serves all seven collections behind those paths. `AdminCollection` moved out of the contract into `constants/content-collections.ts`, since it is now an implementation grouping rather than something the API describes.
+
+**ADR-034: Two guardrails against the failure modes that keep recurring.**
+
+Three of the worst defects in this build were of two kinds: a route that was not guarded the way the matrix said (the `router.use(requireRole('admin'))` that applied to the whole `/admin` mount), and a draft that escaped through a path nobody had thought to test (drafts reachable through populated references). Both were found by luck — a test written for another purpose — rather than by design. So each now has a test that cannot be forgotten:
+
+- **Route inventory** (`tests/integration/admin/roles.test.ts`): the list of admin routes is _derived from the Express router stack_, not hand-maintained. Every route must have an explicit role guard and an entry in the matrix, so adding an unguarded route fails the suite instead of shipping.
+- **Draft canary** (`tests/integration/public/draft-canary.test.ts`): a draft of every content collection, a media item nothing published references, and a draft attorney who _is_ the author of a published insight, all carrying one unique string. Every public GET path in `openapi.yaml` is called — anonymously and with an unauthenticated `preview=true` — and the canary must appear in no response body. Media has no draft state of its own, so it is covered by reachability instead: if it surfaces, something unpublished carried it there.
+
+  Both guardrails were checked against a deliberately broken build before being trusted: removing `requireRole('admin')` from one route, and publishing one canary item, each fail the suite. That exercise found the inventory's first version too weak — it accepted `requireAuth` as evidence of a role guard, so authentication and authorisation are now asserted separately.
+
+Also: `prettier --check .` runs as part of `npm run check`, since generated files bypass the format-on-edit hook.
 
 ## Known content conflicts (from the designs; the firm must resolve them)
 
@@ -99,16 +116,16 @@ Seed them as designed. Don't silently "fix" them.
 
 ## Open questions (with the default we build to until answered)
 
-| # | Question | Owner | Default assumption |
-|---|---|---|---|
-| Q1 | What does "Discuss a Mandate" open? The copy says "not a form". | Design/firm | A short enquiry form via `POST /enquiries`. The frontend decides the presentation. |
-| Q2 | Chat widget: live chat, WhatsApp handoff, or AI assistant? | Firm | Out of scope. `action:chat` is a link kind the frontend resolves. |
-| Q3 | Does the "Partners" filter include the Managing Partner? | Design | Yes. |
-| Q4 | Short labels and Home visibility for Company Secretarial and Telecommunications Regulatory | Design | "Company Secretarial" / "Telecoms"; not featured on Home; not in the footer. |
-| Q5 | Retention periods for enquiries, messages and applications | Firm (DPO) | Enquiries/messages 730 days; applications 365 days (configurable via env). |
-| Q6 | Public image hosting: Cloudinary or S3 + an image CDN? | Engineering | Cloudinary (responsive sizes built in). |
-| Q7 | Frontend framework and revalidation mechanism | Frontend | A generic webhook with cache tags; the frontend maps tags to its own revalidation. |
-| Q8 | Do the detail pages (practice area, insight, attorney, CSR) have designs? | Design | Serve full data now; adjust the shapes when designs land (via a DECISIONS entry). |
-| Q9 | Should attorney emails be public? | Firm | No. The field exists but isn't returned publicly. |
-| Q10 | Who confirms image licences (the stock photos, and any AI-generated hero scenes) and consent for attorney portraits? | Firm | The firm, before publishing. Nothing to build. |
-| Q11 | Who writes alt text for the real images? | Firm/frontend | The admin UI requires it on upload; drafts can be suggested. |
+| #   | Question                                                                                                             | Owner         | Default assumption                                                                 |
+| --- | -------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------- |
+| Q1  | What does "Discuss a Mandate" open? The copy says "not a form".                                                      | Design/firm   | A short enquiry form via `POST /enquiries`. The frontend decides the presentation. |
+| Q2  | Chat widget: live chat, WhatsApp handoff, or AI assistant?                                                           | Firm          | Out of scope. `action:chat` is a link kind the frontend resolves.                  |
+| Q3  | Does the "Partners" filter include the Managing Partner?                                                             | Design        | Yes.                                                                               |
+| Q4  | Short labels and Home visibility for Company Secretarial and Telecommunications Regulatory                           | Design        | "Company Secretarial" / "Telecoms"; not featured on Home; not in the footer.       |
+| Q5  | Retention periods for enquiries, messages and applications                                                           | Firm (DPO)    | Enquiries/messages 730 days; applications 365 days (configurable via env).         |
+| Q6  | Public image hosting: Cloudinary or S3 + an image CDN?                                                               | Engineering   | Cloudinary (responsive sizes built in).                                            |
+| Q7  | Frontend framework and revalidation mechanism                                                                        | Frontend      | A generic webhook with cache tags; the frontend maps tags to its own revalidation. |
+| Q8  | Do the detail pages (practice area, insight, attorney, CSR) have designs?                                            | Design        | Serve full data now; adjust the shapes when designs land (via a DECISIONS entry).  |
+| Q9  | Should attorney emails be public?                                                                                    | Firm          | No. The field exists but isn't returned publicly.                                  |
+| Q10 | Who confirms image licences (the stock photos, and any AI-generated hero scenes) and consent for attorney portraits? | Firm          | The firm, before publishing. Nothing to build.                                     |
+| Q11 | Who writes alt text for the real images?                                                                             | Firm/frontend | The admin UI requires it on upload; drafts can be suggested.                       |

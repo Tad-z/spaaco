@@ -12,7 +12,7 @@ Start by getting the change under review. Use `git diff HEAD` for uncommitted wo
 Check, in priority order:
 
 1. **Layers and types.** Check for violations of the layer table in `docs/ARCHITECTURE.md` (a controller importing a model, a serializer doing I/O, a service touching req/res). Flag `any`, unjustified `as` casts, `!` assertions, and hand-written types that duplicate `types/api.ts`.
-2. **Contract.** Does each changed response match `openapi/openapi.yaml` exactly, with no extra or missing fields and the correct nullability? Was the spec updated *before* the code? Is there an `expectToMatchContract` assertion for each changed route?
+2. **Contract.** Does each changed response match `openapi/openapi.yaml` exactly, with no extra or missing fields and the correct nullability? Was the spec updated _before_ the code? Is there an `expectToMatchContract` assertion for each changed route?
 3. **Data exposure.** Do public queries filter to published content? Are drafts reachable without preview auth? Are internal fields (`createdBy`, email, `ipHash`, storage keys) leaking into responses?
 4. **Personal data (NDPA).** Is any personal data logged? Are consent, honeypot and captcha enforced before writes? Are CVs private and accessed only through audited signed URLs?
 5. **Auth and roles.** Does every admin route have `requireAuth` plus the right `requireRole` per the matrix in `docs/API.md`?
@@ -22,6 +22,7 @@ Check, in priority order:
 9. **Tests.** Is there coverage for the happy path, 400, 404, draft exclusion, 401/403? Watch for weakened or skipped assertions.
 
 Output:
+
 - **Verdict:** Approve / Approve with nits / Changes required
 - **Findings:** each with severity (blocker, major, minor, nit), `file:line`, what's wrong, and the concrete fix.
 - Don't list things that are fine. If there are no findings, say so in one line.

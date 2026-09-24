@@ -58,10 +58,7 @@ export const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     // destination page.
     a: (tagName, attribs) => ({
       tagName,
-      attribs:
-        attribs.target === '_blank'
-          ? { ...attribs, rel: 'noopener noreferrer' }
-          : attribs,
+      attribs: attribs.target === '_blank' ? { ...attribs, rel: 'noopener noreferrer' } : attribs,
     }),
   },
 };

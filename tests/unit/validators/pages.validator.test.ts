@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { PAGE_SCHEMAS, homePageSchema, insightsPageSchema } from '../../../src/validators/pages/index.js';
+import {
+  PAGE_SCHEMAS,
+  homePageSchema,
+  insightsPageSchema,
+} from '../../../src/validators/pages/index.js';
 import { PAGE_KEYS } from '../../../src/constants/enums.js';
 
 /**
@@ -138,7 +142,9 @@ describe('homePageSchema', () => {
     });
 
     expect(result.success).toBe(false);
-    expect(result.success ? '' : result.error.issues[0]?.path.join('.')).toBe('stats.items.0.source');
+    expect(result.success ? '' : result.error.issues[0]?.path.join('.')).toBe(
+      'stats.items.0.source'
+    );
   });
 });
 

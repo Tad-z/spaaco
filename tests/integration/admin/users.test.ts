@@ -27,7 +27,9 @@ describe('GET /api/v1/admin/users', () => {
   it('lists users with pagination meta and matches the contract', async () => {
     const token = await asAdmin();
 
-    const res = await request(app).get('/api/v1/admin/users').set('Authorization', `Bearer ${token}`);
+    const res = await request(app)
+      .get('/api/v1/admin/users')
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
     expectToMatchContract(res, 'get', '/api/v1/admin/users');
@@ -37,7 +39,9 @@ describe('GET /api/v1/admin/users', () => {
   it('never exposes password hashes or TOTP secrets', async () => {
     const token = await asAdmin();
 
-    const res = await request(app).get('/api/v1/admin/users').set('Authorization', `Bearer ${token}`);
+    const res = await request(app)
+      .get('/api/v1/admin/users')
+      .set('Authorization', `Bearer ${token}`);
 
     const body = JSON.stringify(res.body);
     expect(body).not.toContain('passwordHash');
@@ -208,7 +212,12 @@ describe('GET /api/v1/admin/audit-logs', () => {
   it('lists entries newest first with the actor expanded', async () => {
     const { user, token } = await createTestUser({ roles: ['admin'] });
 
-    await record({ actor: user._id, action: 'insight.publish', entity: 'Insight', meta: { slug: 'x' } });
+    await record({
+      actor: user._id,
+      action: 'insight.publish',
+      entity: 'Insight',
+      meta: { slug: 'x' },
+    });
 
     const res = await request(app)
       .get('/api/v1/admin/audit-logs')
@@ -253,9 +262,7 @@ describe('GET /api/v1/admin/audit-logs', () => {
   it('does not let a failed audit write break the action being audited', async () => {
     // A recording failure must be swallowed: refusing to publish because the
     // audit collection hiccuped would be worse than a missing line.
-    await expect(
-      record({ action: 'x'.repeat(200), entity: 'Insight' })
-    ).resolves.toBeUndefined();
+    await expect(record({ action: 'x'.repeat(200), entity: 'Insight' })).resolves.toBeUndefined();
 
     expect(await AuditLog.countDocuments({ action: 'x'.repeat(200) })).toBe(0);
   });

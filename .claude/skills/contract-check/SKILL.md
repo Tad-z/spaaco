@@ -9,6 +9,7 @@ allowed-tools: Bash(npm run spec:lint) Bash(npm test -- tests/contract) Read Gre
 The frontend builds against `openapi/openapi.yaml`. Any gap between the spec, the fixtures and the running code shows up as a broken screen on their side, so this check looks for all three kinds of drift.
 
 ## Steps
+
 0. Run `npm run spec:lint`, then `npm test -- tests/contract`, and note any failures.
 1. **Spec → tests.** List every `paths` entry and method in `openapi/openapi.yaml`. For each one, grep `tests/` for an `expectToMatchContract(` call using that method and path. Record the ones that are missing.
 2. **Code → spec.** List every route registered in `src/routes/**/*.routes.ts`, and flag routes that aren't in the spec. `/health` is exempt only if the spec omits it on purpose.
@@ -17,6 +18,7 @@ The frontend builds against `openapi/openapi.yaml`. Any gap between the spec, th
 5. **Seed → fixtures.** For each `/pages/:key`, confirm there is a test comparing the seeded output with its fixture.
 
 ## Report format
+
 Give a short verdict first ("In sync", or "N issues"). Then give one table:
 
 | Kind | Path/file | Problem | Suggested fix |

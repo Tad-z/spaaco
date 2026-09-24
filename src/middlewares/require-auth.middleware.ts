@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { ForbiddenError, UnauthenticatedError } from '../core/errors.js';
 import { getUserById } from '../services/auth.service.js';
 import { bearerToken, verifyAccessToken } from './auth.middleware.js';
+import { namedHandler } from '../helpers/named-handler.helper.js';
 import type { UserRole } from '../types/api.js';
 
 /**
@@ -40,7 +41,7 @@ export interface RequireAuthOptions {
 }
 
 export function requireAuth(options: RequireAuthOptions = {}): RequestHandler {
-  return (req: Request, _res: Response, next: NextFunction): void => {
+  const handler: RequestHandler = (req: Request, _res: Response, next: NextFunction): void => {
     const token = bearerToken(req);
     if (token === undefined) {
       next(new UnauthenticatedError());
@@ -76,4 +77,7 @@ export function requireAuth(options: RequireAuthOptions = {}): RequestHandler {
       })
       .catch(next);
   };
+
+  // Named so the route inventory can see the guard; see namedHandler.
+  return namedHandler('requireAuth', handler);
 }

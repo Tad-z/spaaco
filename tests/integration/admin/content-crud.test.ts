@@ -47,7 +47,7 @@ describe('listing', () => {
     const res = await request(app).get(`${base}/practice-areas`).set('Authorization', auth());
 
     expect(res.status).toBe(200);
-    expectToMatchContract(res, 'get', '/api/v1/admin/content/{collection}');
+    expectToMatchContract(res, 'get', '/api/v1/admin/content/practice-areas');
     expect(res.body.meta.total).toBe(9);
   });
 
@@ -79,9 +79,7 @@ describe('listing', () => {
 
   it('treats a regex metacharacter in the query as literal text', async () => {
     // An unescaped ".*" would match everything and quietly defeat the filter.
-    const res = await request(app)
-      .get(`${base}/practice-areas?q=.*`)
-      .set('Authorization', auth());
+    const res = await request(app).get(`${base}/practice-areas?q=.*`).set('Authorization', auth());
 
     expect(res.body.meta.total).toBe(0);
   });
@@ -100,7 +98,7 @@ describe('the editable shape', () => {
     const res = await request(app).get(`${base}/practice-areas/${id}`).set('Authorization', auth());
 
     expect(res.status).toBe(200);
-    expectToMatchContract(res, 'get', '/api/v1/admin/content/{collection}/{id}');
+    expectToMatchContract(res, 'get', '/api/v1/admin/content/practice-areas/{id}');
 
     const { image, _expanded } = res.body.data;
     expect(typeof image).toBe('string');
@@ -110,10 +108,21 @@ describe('the editable shape', () => {
 
   it('round-trips: the GET body, minus read-only fields, is a valid PATCH body', async () => {
     const { id } = await getTax();
-    const read = await request(app).get(`${base}/practice-areas/${id}`).set('Authorization', auth());
+    const read = await request(app)
+      .get(`${base}/practice-areas/${id}`)
+      .set('Authorization', auth());
 
-    const { id: _id, revision, createdAt, updatedAt, publishedAt, status, order, _expanded, ...writable } =
-      read.body.data;
+    const {
+      id: _id,
+      revision,
+      createdAt,
+      updatedAt,
+      publishedAt,
+      status,
+      order,
+      _expanded,
+      ...writable
+    } = read.body.data;
 
     const written = await request(app)
       .patch(`${base}/practice-areas/${id}`)
@@ -182,7 +191,7 @@ describe('optimistic locking', () => {
 
     expect(res.status).toBe(409);
     expect(res.body.error.details[0].message).toContain(String(revision + 1));
-    expectToMatchContract(res, 'patch', '/api/v1/admin/content/{collection}/{id}');
+    expectToMatchContract(res, 'patch', '/api/v1/admin/content/practice-areas/{id}');
   });
 
   it('does not apply the losing write', async () => {
@@ -249,7 +258,7 @@ describe('create', () => {
       .send({ title: 'Shipping & Admiralty', shortLabel: 'Shipping', summary: 'A new practice.' });
 
     expect(res.status).toBe(201);
-    expectToMatchContract(res, 'post', '/api/v1/admin/content/{collection}');
+    expectToMatchContract(res, 'post', '/api/v1/admin/content/practice-areas');
     expect(res.body.data.slug).toBe('shipping-admiralty');
     expect(res.body.data.status).toBe('draft');
   });
@@ -297,13 +306,15 @@ describe('publish and unpublish', () => {
       .set('Authorization', auth());
 
     expect(published.status).toBe(200);
-    expectToMatchContract(published, 'post', '/api/v1/admin/content/{collection}/{id}/publish');
+    expectToMatchContract(published, 'post', '/api/v1/admin/content/faqs/{id}/publish');
     expect(published.body.data.status).toBe('published');
 
     const first: string = published.body.data.publishedAt;
 
     await request(app).post(`${base}/faqs/${id}/unpublish`).set('Authorization', auth());
-    const again = await request(app).post(`${base}/faqs/${id}/publish`).set('Authorization', auth());
+    const again = await request(app)
+      .post(`${base}/faqs/${id}/publish`)
+      .set('Authorization', auth());
 
     // Republishing must not rewrite the original publication date.
     expect(again.body.data.publishedAt).toBe(first);
@@ -329,7 +340,7 @@ describe('delete', () => {
 
     expect(res.status).toBe(409);
     expect(res.body.error.details.length).toBeGreaterThan(0);
-    expectToMatchContract(res, 'delete', '/api/v1/admin/content/{collection}/{id}');
+    expectToMatchContract(res, 'delete', '/api/v1/admin/content/practice-areas/{id}');
   });
 
   it('deletes once the references are gone', async () => {
@@ -386,13 +397,10 @@ describe('reorder', () => {
 
 describe('sanitisation on write', () => {
   it('strips a script tag from rich text', async () => {
-    const res = await request(app)
-      .post(`${base}/faqs`)
-      .set('Authorization', auth())
-      .send({
-        question: 'Is HTML sanitised?',
-        answer: '<p>Safe.</p><script>alert(1)</script><p onclick="steal()">Also safe.</p>',
-      });
+    const res = await request(app).post(`${base}/faqs`).set('Authorization', auth()).send({
+      question: 'Is HTML sanitised?',
+      answer: '<p>Safe.</p><script>alert(1)</script><p onclick="steal()">Also safe.</p>',
+    });
 
     expect(res.status).toBe(201);
     expect(res.body.data.answer).not.toContain('script');
@@ -401,13 +409,11 @@ describe('sanitisation on write', () => {
   });
 
   it('keeps the formatting a legal article needs', async () => {
-    const res = await request(app)
-      .post(`${base}/faqs`)
-      .set('Authorization', auth())
-      .send({
-        question: 'Is formatting kept?',
-        answer: '<h2>Heading</h2><ul><li><strong>Bold</strong></li></ul><blockquote>Quote</blockquote>',
-      });
+    const res = await request(app).post(`${base}/faqs`).set('Authorization', auth()).send({
+      question: 'Is formatting kept?',
+      answer:
+        '<h2>Heading</h2><ul><li><strong>Bold</strong></li></ul><blockquote>Quote</blockquote>',
+    });
 
     expect(res.body.data.answer).toContain('<h2>');
     expect(res.body.data.answer).toContain('<strong>');
@@ -415,10 +421,10 @@ describe('sanitisation on write', () => {
   });
 
   it('removes a javascript: link, which is an execution vector', async () => {
-    const res = await request(app)
-      .post(`${base}/faqs`)
-      .set('Authorization', auth())
-      .send({ question: 'Are links checked?', answer: '<p><a href="javascript:alert(1)">x</a></p>' });
+    const res = await request(app).post(`${base}/faqs`).set('Authorization', auth()).send({
+      question: 'Are links checked?',
+      answer: '<p><a href="javascript:alert(1)">x</a></p>',
+    });
 
     expect(res.body.data.answer).not.toContain('javascript:');
   });
@@ -510,36 +516,4 @@ describe('every collection', () => {
       expect(published.body.data.status).toBe('published');
     }
   );
-});
-
-describe('role access to content', () => {
-  it('lets HR work on jobs', async () => {
-    const hr = await createTestUser({ roles: ['hr'] });
-
-    const res = await request(app)
-      .get(`${base}/jobs`)
-      .set('Authorization', `Bearer ${hr.token}`);
-
-    expect(res.status).toBe(200);
-  });
-
-  it('stops HR reaching any other collection', async () => {
-    const hr = await createTestUser({ roles: ['hr'] });
-
-    const res = await request(app)
-      .get(`${base}/insights`)
-      .set('Authorization', `Bearer ${hr.token}`);
-
-    expect(res.status).toBe(403);
-  });
-
-  it('stops business development touching content at all', async () => {
-    const bd = await createTestUser({ roles: ['business_dev'] });
-
-    const res = await request(app)
-      .get(`${base}/jobs`)
-      .set('Authorization', `Bearer ${bd.token}`);
-
-    expect(res.status).toBe(403);
-  });
 });

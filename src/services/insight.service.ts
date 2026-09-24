@@ -36,18 +36,20 @@ function findCards(
   limit: number,
   options: PreviewOptions = {}
 ): Promise<IInsightDoc[]> {
-  return Insight.find(filter)
-    .select(CARD_FIELDS)
-    .populate('coverImage')
-    .populate(publishedPopulate('practiceAreas', options))
-    .populate({ ...publishedPopulate('author', options), populate: { path: 'photo' } })
-    // Several insights share a publish month, so the sort needs a tiebreaker or
-    // the order varies between identical requests. `order` lets the firm
-    // decide; `_id` makes it total.
-    .sort({ publishedAt: sort, order: 1, _id: 1 })
-    .skip(skip)
-    .limit(limit)
-    .lean<IInsightDoc[]>();
+  return (
+    Insight.find(filter)
+      .select(CARD_FIELDS)
+      .populate('coverImage')
+      .populate(publishedPopulate('practiceAreas', options))
+      .populate({ ...publishedPopulate('author', options), populate: { path: 'photo' } })
+      // Several insights share a publish month, so the sort needs a tiebreaker or
+      // the order varies between identical requests. `order` lets the firm
+      // decide; `_id` makes it total.
+      .sort({ publishedAt: sort, order: 1, _id: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean<IInsightDoc[]>()
+  );
 }
 
 async function resolvePracticeAreaId(slug: string): Promise<Types.ObjectId | null> {

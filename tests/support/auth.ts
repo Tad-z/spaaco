@@ -30,9 +30,13 @@ export function signAccessToken(claims: TokenClaims = {}): string {
 
 /** A token signed with the wrong key: structurally valid, cryptographically not. */
 export function signWithWrongSecret(): string {
-  return jwt.sign({ sub: new Types.ObjectId().toString(), roles: ['admin'] }, 'a-different-secret-entirely', {
-    expiresIn: '5m',
-  });
+  return jwt.sign(
+    { sub: new Types.ObjectId().toString(), roles: ['admin'] },
+    'a-different-secret-entirely',
+    {
+      expiresIn: '5m',
+    }
+  );
 }
 
 export const expiredToken = (): string =>

@@ -66,7 +66,9 @@ function signAccessToken(user: Pick<IUser, '_id' | 'roles'>): string {
   return jwt.sign(claims, config.JWT_ACCESS_SECRET, { expiresIn: accessTokenSeconds() });
 }
 
-async function issueRefreshToken(userId: Types.ObjectId): Promise<{ token: string; expiresAt: Date }> {
+async function issueRefreshToken(
+  userId: Types.ObjectId
+): Promise<{ token: string; expiresAt: Date }> {
   const token = randomToken();
   const expiresAt = new Date(Date.now() + config.REFRESH_TOKEN_TTL_DAYS * 86_400_000);
 
@@ -102,7 +104,8 @@ async function registerFailure(user: IUser): Promise<void> {
     }
   );
 
-  if (locked) logger.warn({ userId: user._id.toString() }, 'account locked after repeated failures');
+  if (locked)
+    logger.warn({ userId: user._id.toString() }, 'account locked after repeated failures');
 }
 
 export interface LoginInput {
@@ -119,7 +122,10 @@ export async function login(input: LoginInput): Promise<{ user: IUser; tokens: S
   // Verify a dummy hash when the user does not exist, so a missing account and
   // a wrong password take about the same time to answer.
   if (!user) {
-    await verifyPassword('$argon2id$v=19$m=65536,t=3,p=4$0000000000000000$0000000000000000', input.password);
+    await verifyPassword(
+      '$argon2id$v=19$m=65536,t=3,p=4$0000000000000000$0000000000000000',
+      input.password
+    );
     throw invalidCredentials();
   }
 
@@ -175,7 +181,8 @@ async function revokeChain(tokenId: Types.ObjectId): Promise<void> {
 export async function refresh(presented: string): Promise<{ user: IUser; tokens: SessionTokens }> {
   const existing = await RefreshToken.findOne({ tokenHash: sha256(presented) });
 
-  if (!existing || existing.expiresAt < new Date()) throw new UnauthenticatedError('Session expired');
+  if (!existing || existing.expiresAt < new Date())
+    throw new UnauthenticatedError('Session expired');
 
   if (existing.revokedAt) {
     // Someone is replaying a token that was already rotated away. Either it was
@@ -241,7 +248,10 @@ function verifyTotp(user: Pick<IUser, 'totp'>, code: string): boolean {
   if (encrypted === null || encrypted === undefined) return false;
 
   try {
-    return authenticator.verify({ token: code, secret: decryptSecret(encrypted, config.ENCRYPTION_KEY) });
+    return authenticator.verify({
+      token: code,
+      secret: decryptSecret(encrypted, config.ENCRYPTION_KEY),
+    });
   } catch {
     // A secret that will not decrypt means the key changed; treat as a failure
     // rather than crashing a login.
@@ -250,9 +260,7 @@ function verifyTotp(user: Pick<IUser, 'totp'>, code: string): boolean {
 }
 
 export async function enableTotp(userId: Types.ObjectId, code: string): Promise<void> {
-  const user = await User.findById(userId)
-    .select('+totp.secretEncrypted')
-    .lean<IUser | null>();
+  const user = await User.findById(userId).select('+totp.secretEncrypted').lean<IUser | null>();
 
   if (!user) throw new UnauthenticatedError();
   if (user.totp.enabled) throw new ConflictError('Two-factor authentication is already enabled');

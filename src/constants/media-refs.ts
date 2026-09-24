@@ -47,6 +47,4 @@ export const mediaRefsFor = (model: string): readonly MediaRef[] =>
   MEDIA_REFS.filter((ref) => ref.model === model);
 
 /** Every model name that can reference media. */
-export const MEDIA_REF_MODELS: readonly string[] = [
-  ...new Set(MEDIA_REFS.map((ref) => ref.model)),
-];
+export const MEDIA_REF_MODELS: readonly string[] = [...new Set(MEDIA_REFS.map((ref) => ref.model))];

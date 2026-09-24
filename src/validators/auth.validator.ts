@@ -37,7 +37,10 @@ export const updateUserBody = z
 
 export const listAuditQuery = pagination.extend({
   action: z.string().trim().max(80).optional(),
-  actor: z.string().regex(/^[0-9a-f]{24}$/i).optional(),
+  actor: z
+    .string()
+    .regex(/^[0-9a-f]{24}$/i)
+    .optional(),
 });
 
 export type LoginBody = z.infer<typeof loginBody>;

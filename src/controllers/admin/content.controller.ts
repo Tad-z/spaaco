@@ -26,7 +26,7 @@ import {
   listContentQuery,
   reorderBody,
 } from '../../validators/content.validator.js';
-import type { AdminCollection } from '../../types/api.js';
+import type { AdminCollection } from '../../constants/content-collections.js';
 
 /**
  * One set of handlers for all seven content collections.

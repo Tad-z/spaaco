@@ -10,7 +10,7 @@ import {
 } from '../constants/enums.js';
 import { sanitizeRichText } from '../helpers/sanitize.helper.js';
 import { objectId, objectIdRef, pagination, seoBasic, slug } from './common.validator.js';
-import type { AdminCollection } from '../types/api.js';
+import type { AdminCollection } from '../constants/content-collections.js';
 
 /**
  * Write schemas for the seven content collections.
@@ -185,7 +185,15 @@ export const CONTENT_UPDATE_SCHEMAS: Record<AdminCollection, ZodTypeAny> = {
 };
 
 export const adminCollectionParams = z.object({
-  collection: z.enum(['practice-areas', 'people', 'insights', 'offices', 'recognitions', 'faqs', 'jobs']),
+  collection: z.enum([
+    'practice-areas',
+    'people',
+    'insights',
+    'offices',
+    'recognitions',
+    'faqs',
+    'jobs',
+  ]),
 });
 
 export const adminItemParams = adminCollectionParams.extend({ id: objectId });

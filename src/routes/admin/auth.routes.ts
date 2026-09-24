@@ -12,11 +12,7 @@ import { requireAuth } from '../../middlewares/require-auth.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { loginLimiter } from '../../middlewares/rate-limit.middleware.js';
 import { noStore } from '../../middlewares/cache-headers.middleware.js';
-import {
-  loginBody,
-  passwordChangeBody,
-  totpEnableBody,
-} from '../../validators/auth.validator.js';
+import { loginBody, passwordChangeBody, totpEnableBody } from '../../validators/auth.validator.js';
 
 /**
  * These routes are the only ones that accept a user who has not yet enrolled
@@ -28,7 +24,13 @@ export const adminAuthRoutes: Router = Router();
 
 // Attached per route, not with a path-less `use`: this router shares the
 // `/admin` mount with the others, so a blanket `use` would touch them all.
-adminAuthRoutes.post('/auth/login', noStore, loginLimiter, validate({ body: loginBody }), loginHandler);
+adminAuthRoutes.post(
+  '/auth/login',
+  noStore,
+  loginLimiter,
+  validate({ body: loginBody }),
+  loginHandler
+);
 adminAuthRoutes.post('/auth/refresh', noStore, loginLimiter, refreshHandler);
 adminAuthRoutes.post('/auth/logout', noStore, logoutHandler);
 

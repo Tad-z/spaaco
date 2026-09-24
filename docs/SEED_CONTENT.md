@@ -3,6 +3,7 @@
 This is the only source for real copy. It's used for fixtures, the dev/staging seed, and the launch content loader (ROADMAP 7.5). Images are not listed here: dev uses placeholders, and the firm uploads real images through the admin UI. Keep wording exact, including punctuation such as trailing full stops on titles. `[PENDING FROM FIRM]` marks content the designs don't show. Known conflicts are flagged with ⚠ and listed in DECISIONS.md. Seed them as they appear in the designs.
 
 ## Site settings
+
 - **firmName:** SPA Ajibade & Co.
 - **legalDescriptor:** Legal Practitioners, Arbitrators and Notaries Public
 - **tagline:** Counsel to the institutions building Nigeria's economy.
@@ -19,17 +20,18 @@ This is the only source for real copy. It's used for fixtures, the dev/staging s
   - primaryCta "Discuss a Mandate" → `action:mandate`
 
 ## Practice areas (order as on the Practice Areas page)
-| # | title | shortLabel | featuredOnHome | summary |
-|---|---|---|---|---|
-| 1 | Company Secretarial | Company Secretarial ⚠ | false ⚠ | When a business must fulfill its statutory obligations, the firm expertly manages all company secretarial duties, including board and shareholder governance, comprehensive CAC filings, and ensuring full regulatory compliance with laws and standards. |
-| 2 | Corporate Finance & Capital Markets | Corporate | true | When a business needs to raise capital, restructure, or meet regulatory requirements, the firm guides it through securities issuance, corporate restructuring, and filings with the Securities and Exchange Commission. |
-| 3 | Data Protection & Privacy | Data Privacy | true | When a company collects or manages personal data, it ensures compliance with the Nigeria Data Protection Act 2023 by providing comprehensive support, including conducting audits, drafting policies, and managing responses in the event of a data breach. |
-| 4 | Dispute Resolution & Arbitration | Dispute Resolution | true | When a disagreement threatens to disrupt a business, a contract, or a relationship, the firm steps in to resolve it, whether that means representing a client in court, before an arbitral tribunal, or through negotiated settlement, across commercial, shareholder, and regulatory disputes. |
-| 5 | Energy & Natural Resources | Energy | true | When a project involves power generation, distribution, or oil and gas, the firm advises on the regulatory approvals and compliance needed to get it built and keep it running, from electricity sector rules to mini-grid and rural electrification. |
-| 6 | Intellectual Property | Intellectual Property | true | When a business wants to protect its creations such as a brand, invention, or original content, our firm expertly handles the full process of registration, licensing, and enforcement to keep ownership rights fully protected and secure. |
-| 7 | Real Estate & Succession | Real Estate | true | When a client is buying property, resolving a landlord-tenant dispute, or planning what happens to their estate, the firm manages the legal work that makes the transaction or transition sound. |
-| 8 | Tax | Tax | true | When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way. |
-| 9 | Telecommunications Regulatory | Telecoms ⚠ | false ⚠ | When a business operates in or enters the telecommunications sector, the firm advises on licensing, spectrum, and compliance with NCC regulations, from market entry to ongoing regulatory obligations. |
+
+| #   | title                               | shortLabel            | featuredOnHome | summary                                                                                                                                                                                                                                                                                         |
+| --- | ----------------------------------- | --------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Company Secretarial                 | Company Secretarial ⚠ | false ⚠        | When a business must fulfill its statutory obligations, the firm expertly manages all company secretarial duties, including board and shareholder governance, comprehensive CAC filings, and ensuring full regulatory compliance with laws and standards.                                       |
+| 2   | Corporate Finance & Capital Markets | Corporate             | true           | When a business needs to raise capital, restructure, or meet regulatory requirements, the firm guides it through securities issuance, corporate restructuring, and filings with the Securities and Exchange Commission.                                                                         |
+| 3   | Data Protection & Privacy           | Data Privacy          | true           | When a company collects or manages personal data, it ensures compliance with the Nigeria Data Protection Act 2023 by providing comprehensive support, including conducting audits, drafting policies, and managing responses in the event of a data breach.                                     |
+| 4   | Dispute Resolution & Arbitration    | Dispute Resolution    | true           | When a disagreement threatens to disrupt a business, a contract, or a relationship, the firm steps in to resolve it, whether that means representing a client in court, before an arbitral tribunal, or through negotiated settlement, across commercial, shareholder, and regulatory disputes. |
+| 5   | Energy & Natural Resources          | Energy                | true           | When a project involves power generation, distribution, or oil and gas, the firm advises on the regulatory approvals and compliance needed to get it built and keep it running, from electricity sector rules to mini-grid and rural electrification.                                           |
+| 6   | Intellectual Property               | Intellectual Property | true           | When a business wants to protect its creations such as a brand, invention, or original content, our firm expertly handles the full process of registration, licensing, and enforcement to keep ownership rights fully protected and secure.                                                     |
+| 7   | Real Estate & Succession            | Real Estate           | true           | When a client is buying property, resolving a landlord-tenant dispute, or planning what happens to their estate, the firm manages the legal work that makes the transaction or transition sound.                                                                                                |
+| 8   | Tax                                 | Tax                   | true           | When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.                                                                                     |
+| 9   | Telecommunications Regulatory       | Telecoms ⚠            | false ⚠        | When a business operates in or enters the telecommunications sector, the firm advises on licensing, spectrum, and compliance with NCC regulations, from market entry to ongoing regulatory obligations.                                                                                         |
 
 - The Home tab order in the design is Corporate, Data Privacy, Energy, Dispute Resolution, Intellectual Property, Real Estate, Tax. Use a separate `homeOrder` if the frontend needs it; otherwise, use `order`.
 - The title "TAX" appears in all caps in the design; seed it as "Tax".
@@ -37,31 +39,34 @@ This is the only source for real copy. It's used for fixtures, the dev/staging s
 - `body`, `keyServices` and `contacts` are all `[PENDING FROM FIRM]`.
 
 ## People (directory order)
-| honorific | firstName | lastName | postNominals | role | featuredInLeadership |
-|---|---|---|---|---|---|
-| Dr. | Babatunde | Ajibade | SAN | managing_partner | true |
-| Dr. | John | Onyido | | partner | true |
-| Dr. | Kolawole | Mayomi | | partner | true |
-| Mr. | Peter | Olalere | | associate_partner ⚠ | false |
-| Mrs. | Bolaji | Gabari | | associate_partner ⚠ | false |
-| Dr. | Magnus | Ejelonu | | associate_partner ⚠ | false |
-| Mr. | Moruf | Sowunmi | | associate_partner ⚠ | false |
-| | Emmanuel | Bassey | | senior_associate | false |
-| | David | Essien | | senior_associate | false |
+
+| honorific | firstName | lastName | postNominals | role                | featuredInLeadership |
+| --------- | --------- | -------- | ------------ | ------------------- | -------------------- |
+| Dr.       | Babatunde | Ajibade  | SAN          | managing_partner    | true                 |
+| Dr.       | John      | Onyido   |              | partner             | true                 |
+| Dr.       | Kolawole  | Mayomi   |              | partner             | true                 |
+| Mr.       | Peter     | Olalere  |              | associate_partner ⚠ | false                |
+| Mrs.      | Bolaji    | Gabari   |              | associate_partner ⚠ | false                |
+| Dr.       | Magnus    | Ejelonu  |              | associate_partner ⚠ | false                |
+| Mr.       | Moruf     | Sowunmi  |              | associate_partner ⚠ | false                |
+|           | Emmanuel  | Bassey   |              | senior_associate    | false                |
+|           | David     | Essien   |              | senior_associate    | false                |
 
 Honorifics for Mr./Mrs. come from the About text. Cards show no honorific except "Dr.", so the `displayName` virtual omits Mr./Mrs. Bios and LinkedIn URLs are `[PENDING FROM FIRM]`.
 **MP quote (About → Our Story):** "law is a profession, not an occupation." (lowercase start, as designed)
 
 ## Offices (page order)
-| name | address | hours |
-|---|---|---|
-| Lagos | Suite 201, SPAACO House, 27A Macarthy Street, Onikan | 8:00 AM to 4:00 PM, Monday to Friday |
-| Abuja | 2nd Floor, Left Wing, Commercial Plaza, Gudu | 8:00 AM to 4:00 PM, Monday to Friday |
+
+| name   | address                                                 | hours                                |
+| ------ | ------------------------------------------------------- | ------------------------------------ |
+| Lagos  | Suite 201, SPAACO House, 27A Macarthy Street, Onikan    | 8:00 AM to 4:00 PM, Monday to Friday |
+| Abuja  | 2nd Floor, Left Wing, Commercial Plaza, Gudu            | 8:00 AM to 4:00 PM, Monday to Friday |
 | Ibadan | Top Floor Suite, SPAACO House, 138 Liberty Stadium Road | 8:00 AM to 4:00 PM, Monday to Friday |
 
 Coordinates are `[PENDING]`: the design maps are placeholders. The footer lists Lagos, Ibadan, Abuja ⚠. Use the page order everywhere.
 
 ## Recognitions (Home tiles, tab "achievements")
+
 1. IFLR1000: Recommended Firm, 2024 (badge variant A)
 2. IFLR1000: Recommended Firm, 2024 (badge variant B)
 3. Chambers Global: Ranked in Global, 2026
@@ -70,6 +75,7 @@ Coordinates are `[PENDING]`: the design maps are placeholders. The footer lists 
 The "recognized_by" tab content is `[PENDING FROM FIRM]`.
 
 ## FAQs (order)
+
 1. How do I schedule a consultation?: `[PENDING FROM FIRM]`
 2. What types of matters does the firm handle?: The firm provides expert advice on a wide range of legal matters including dispute resolution and arbitration, corporate finance and capital markets, real estate and succession planning, energy and natural resources, intellectual property rights, data protection regulations, and tax law. Their comprehensive services are designed to support clients through complex legal challenges in these diverse areas.
 3. Does the firm work with international clients?: `[PENDING FROM FIRM]`
@@ -77,22 +83,25 @@ The "recognized_by" tab content is `[PENDING FROM FIRM]`.
 5. How long does a typical matter take?: `[PENDING FROM FIRM]`
 
 ## Insights
-| title | format | categories | practiceAreas | author | publishedAt | featured |
-|---|---|---|---|---|---|---|
-| Repositioning and Promoting Energy Investments Between South Africa and Nigeria: A Perspective on Trade Secrets. | article | articles | Energy & Natural Resources | John Onyido | 2026-06 | true |
-| The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors. | article | articles | Energy & Natural Resources | Peter Olalere | 2026-07 | true |
-| Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy | video | webinar_resources, firm_news | — | firm | 2026-06 ⚠ | true |
-| Regulatory Update On The 2026 Supreme Court Practice Directions | article | regulatory_updates | Dispute Resolution & Arbitration | firm | 2026-05 | false |
+
+| title                                                                                                                           | format  | categories                   | practiceAreas                    | author        | publishedAt | featured |
+| ------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------- | -------------------------------- | ------------- | ----------- | -------- |
+| Repositioning and Promoting Energy Investments Between South Africa and Nigeria: A Perspective on Trade Secrets.                | article | articles                     | Energy & Natural Resources       | John Onyido   | 2026-06     | true     |
+| The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors. | article | articles                     | Energy & Natural Resources       | Peter Olalere | 2026-07     | true     |
+| Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy                              | video   | webinar_resources, firm_news | —                                | firm          | 2026-06 ⚠   | true     |
+| Regulatory Update On The 2026 Supreme Court Practice Directions                                                                 | article | regulatory_updates           | Dispute Resolution & Arbitration | firm          | 2026-05     | false    |
 
 Excerpt for #1: "The focus of this brief is specifically on a bilateral energy investment relationship between Nigeria and South Africa: two nations that represent, by any objective commercial assessment, the most logical and most strategically significant energy partnership on the African continent…". The other excerpts, all bodies, and the video URL are `[PENDING FROM FIRM]`. For listing fixtures that need 9+ cards, repeat these with `-2`, `-3` slug suffixes, marked in the fixture filename as demo data.
 
 ## Jobs
+
 Both jobs share: practiceArea Corporate Finance & Capital Markets, experience "2–4 years experience", employmentType full_time, workMode hybrid, office Lagos.
 
 - **Associate**
 - **NYSC Associate** ⚠ (identical description and experience)
 
 Description (both):
+
 > We're looking for an Associate to join our Corporate Finance & Capital Markets practice. You'll work directly with partners on securities offerings, corporate restructurings, and regulatory filings for clients across banking, energy, and infrastructure, supporting due diligence, drafting, and filings on live transactions, advising clients on compliance with SEC and CAMA requirements, and working directly with senior counsel rather than as part of a rotating pool.
 >
 > We're looking for someone with 2 to 4 years post-call experience, ideally in corporate finance or capital markets, called to the Nigerian Bar, with strong drafting and analytical skills, and comfortable working directly with clients and partners from an early stage.
@@ -100,6 +109,7 @@ Description (both):
 ## Pages
 
 ### home
+
 - **hero:** "Counsel To The Institutions Building Nigeria's Economy."
   - subtitle: "For over five decades, we have advised governments, financial institutions and multinational corporations on capital markets transactions, complex disputes and the regulatory frameworks that shape commerce in Nigeria."
   - CTAs: Discuss a Mandate (`action:mandate`) / Explore Our Practice Areas (`/practice-areas`)
@@ -117,6 +127,7 @@ Description (both):
 - **insightsSection:** eyebrow "Insights and News", title "Recent Publications", cta "View all insights" → `/insights`
 
 ### about
+
 - **hero:** "Who We Are"
   - subtitle: "Integrity isn't a value we list, it's the reason clients keep coming back."
   - CTAs: Discuss a Mandate / Meet Our People (`/people`)
@@ -144,6 +155,7 @@ Description (both):
   - items: IFLR 1000, Chambers Global, Legal 500, Who's Who Legal (URLs `[PENDING]`)
 
 ### practice-areas
+
 - **hero:** "Our Practice Areas"
   - subtitle: "We've covered enough ground to know that no two matters are really the same."
   - CTAs: Discuss a Mandate / Meet Our People
@@ -153,6 +165,7 @@ Description (both):
   - cta "Learn About Our CSR" → `[PENDING: CSR page]`
 
 ### people
+
 - **hero:** "Get To Know Our Attorneys"
   - subtitle: "Meet the attorneys behind our firm's trusted reputation for strong counsel, thoughtful representation, strategic advocacy, and unwavering commitment to every client we serve." (the design's typo "forstrong" is fixed here)
   - CTAs: Discuss a Mandate / About Us (`/about`)
@@ -160,22 +173,26 @@ Description (both):
 - **roleFilters:** Our Attorneys (all), Partners, Associate Partners, Senior Associates, Associates, NYSC Associates. The "Partners" filter should include managing_partner.
 
 ### insights
+
 - **hero:** none in the design (the page opens with the featured carousel), so seed `null`.
 - **listingSection.title:** "Insights & News"
 - **categoryFilters:** All insights & news, Firm News, Articles, Insights, Regulatory Updates, News Updates, Media Coverage, Webinar Resources
 
 ### careers
+
 - **hero:** "Practice Law, Not Just A Role."
   - subtitle: "At SPA Ajibade, associates work directly with partners on matters that matter, not behind layers of a rotating team."
   - CTAs: Discuss a Mandate / Our People
 - **jobsSection.title:** "Careers"
 
 ### faq
+
 - **hero:** "Frequently Asked Questions"
   - subtitle: "Straight answers to what people most often ask before reaching out, about the firm, how matters work, and what to expect."
   - CTAs: Discuss a Mandate / View our offices (`/offices`)
 
 ### offices
+
 - **hero:** "Wherever You Find Us."
   - subtitle: "Three offices, one standard of counsel, direct access to the team handling your matter, no matter which door you walk through."
   - CTAs: Discuss a Mandate / Chat with us (`action:chat`)

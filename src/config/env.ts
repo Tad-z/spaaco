@@ -83,7 +83,11 @@ const envSchema = z.object({
 
   // --- notifications and retention ---
   NOTIFY_ENQUIRIES_TO: z.string().email().default('frontoffice@spaajibade.com'),
-  NOTIFY_APPLICATIONS_TO: z.string().email().optional().or(z.literal('').transform(() => undefined)),
+  NOTIFY_APPLICATIONS_TO: z
+    .string()
+    .email()
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
   ADMIN_DASHBOARD_URL: z.string().url().default('http://localhost:3001'),
   RETENTION_ENQUIRY_DAYS: z.coerce.number().int().positive().max(3650).default(730),
   RETENTION_APPLICATION_DAYS: z.coerce.number().int().positive().max(3650).default(365),

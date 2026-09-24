@@ -89,15 +89,15 @@ tests/
 
 ## Layer rules
 
-| Layer | May import | Must not |
-|---|---|---|
-| routes | middlewares, controllers, validators | services, models |
-| controllers | services, serializers, validators (types), core/errors | models, integrations |
-| services | models, core, integrations, helpers, constants, interfaces, other services | express types (req/res), serializers |
-| serializers | types, interfaces, helpers, constants | models, services, any I/O |
-| models | interfaces, constants, helpers, models/plugins, models/schemas | services |
-| helpers | types, constants | anything with I/O |
-| middlewares | core, services (auth only), helpers, validators | models |
+| Layer       | May import                                                                 | Must not                             |
+| ----------- | -------------------------------------------------------------------------- | ------------------------------------ |
+| routes      | middlewares, controllers, validators                                       | services, models                     |
+| controllers | services, serializers, validators (types), core/errors                     | models, integrations                 |
+| services    | models, core, integrations, helpers, constants, interfaces, other services | express types (req/res), serializers |
+| serializers | types, interfaces, helpers, constants                                      | models, services, any I/O            |
+| models      | interfaces, constants, helpers, models/plugins, models/schemas             | services                             |
+| helpers     | types, constants                                                           | anything with I/O                    |
+| middlewares | core, services (auth only), helpers, validators                            | models                               |
 
 `models` may import `helpers` so `models/plugins/content.plugin.ts` can call `helpers/slug.helper.ts` rather than keeping a second copy of slug generation (ADR-022). Helpers are pure, so this adds no I/O to the model layer.
 
@@ -155,14 +155,14 @@ request
 
 Each integration exports a factory (`index.ts`) that returns a driver implementing its interface from `interfaces/integrations/`. The driver is chosen by config, and every integration has a credential-free driver for dev and tests.
 
-| Integration | Drivers | Dev/test default |
-|---|---|---|
-| `storage/public` (images) | `cloudinary`, `local` | `local` (writes to `./.uploads`, served at `/uploads` in dev only) |
-| `storage/private` (CVs) | `s3`, `local` | `local` (`./.private-uploads`, never served) |
-| `mailer` | `resend`, `smtp`, `log` | `log` (writes rendered email to logger) |
-| `captcha` | `turnstile`, `noop` | `noop` (accepts token `"test"`) |
-| `virusScan` | `clamav`, `noop` | `noop` (returns `clean`) |
-| `revalidate` | `http`, `noop` | `noop` |
+| Integration               | Drivers                 | Dev/test default                                                   |
+| ------------------------- | ----------------------- | ------------------------------------------------------------------ |
+| `storage/public` (images) | `cloudinary`, `local`   | `local` (writes to `./.uploads`, served at `/uploads` in dev only) |
+| `storage/private` (CVs)   | `s3`, `local`           | `local` (`./.private-uploads`, never served)                       |
+| `mailer`                  | `resend`, `smtp`, `log` | `log` (writes rendered email to logger)                            |
+| `captcha`                 | `turnstile`, `noop`     | `noop` (accepts token `"test"`)                                    |
+| `virusScan`               | `clamav`, `noop`        | `noop` (returns `clean`)                                           |
+| `revalidate`              | `http`, `noop`          | `noop`                                                             |
 
 ## Auth
 

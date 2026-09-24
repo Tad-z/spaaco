@@ -1,5 +1,15 @@
 import { Types } from 'mongoose';
-import type { AdminCollection, AdminContentItem, Expanded } from '../types/api.js';
+import type {
+  Expanded,
+  FaqAdmin,
+  InsightAdmin,
+  JobAdmin,
+  OfficeAdmin,
+  PersonAdmin,
+  PracticeAreaAdmin,
+  RecognitionAdmin,
+} from '../types/api.js';
+import type { AdminCollection } from '../constants/content-collections.js';
 import { CONTENT_COLLECTIONS } from '../constants/content-collections.js';
 
 /**
@@ -28,14 +38,16 @@ const idOrNull = (value: unknown): string | null => {
   if (value instanceof Types.ObjectId) return value.toHexString();
 
   if (typeof value === 'object' && value !== null && '_id' in value) {
-    return idOrNull((value)._id);
+    return idOrNull(value._id);
   }
 
   return null;
 };
 
 const idList = (value: unknown): string[] =>
-  Array.isArray(value) ? value.map((item) => idOrNull(item)).filter((id): id is string => id !== null) : [];
+  Array.isArray(value)
+    ? value.map((item) => idOrNull(item)).filter((id): id is string => id !== null)
+    : [];
 
 /** Fields every content item carries, in the shape the contract declares. */
 function meta(doc: StoredDoc): Record<string, unknown> {
@@ -161,14 +173,31 @@ const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknow
   }),
 };
 
-export function toAdminContent(
-  collection: AdminCollection,
+/**
+ * Which contract shape each collection serialises to.
+ *
+ * A mapped type rather than a union: the spec now types every operation to one
+ * collection (ADR-033), so a call site that knows its collection gets the exact
+ * shape back and never has to narrow.
+ */
+export interface AdminShapeByCollection {
+  'practice-areas': PracticeAreaAdmin;
+  people: PersonAdmin;
+  insights: InsightAdmin;
+  offices: OfficeAdmin;
+  recognitions: RecognitionAdmin;
+  faqs: FaqAdmin;
+  jobs: JobAdmin;
+}
+
+export function toAdminContent<C extends AdminCollection>(
+  collection: C,
   doc: StoredDoc,
   expanded: Expanded
-): AdminContentItem {
+): AdminShapeByCollection[C] {
   const shaped = { ...meta(doc), ...shapers[collection](doc), _expanded: expanded };
 
-  // The shapers produce exactly the collection's schema; the cast names which
-  // member of the union this is, which only the caller's `collection` knows.
-  return shaped as unknown as AdminContentItem;
+  // The shaper for this collection produces exactly its schema; the cast says
+  // which one, which only the caller's `collection` knows at compile time.
+  return shaped as unknown as AdminShapeByCollection[C];
 }

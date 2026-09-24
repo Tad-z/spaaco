@@ -33,9 +33,7 @@ export const aboutPageSchema = z
         items: z.array(stat).max(8),
       })
       .strict(),
-    missionSection: z
-      .object({ ...sectionWithImage, items: z.array(titledBody).max(8) })
-      .strict(),
+    missionSection: z.object({ ...sectionWithImage, items: z.array(titledBody).max(8) }).strict(),
     principles: z.object({ ...sectionWithImage, items: z.array(iconItem).max(12) }).strict(),
     awardsList: z
       .object({

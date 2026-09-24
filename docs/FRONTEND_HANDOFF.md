@@ -5,7 +5,7 @@ realistic responses for every public endpoint, using the real copy from the appr
 
 Nothing below is provisional in shape: if a response field changes name, type or nullability
 later, it is a breaking change, it gets an entry in `docs/DECISIONS.md`, and you will be told.
-What *is* provisional is some of the content, which is flagged under
+What _is_ provisional is some of the content, which is flagged under
 [Known placeholders](#known-placeholders).
 
 ---
@@ -89,9 +89,12 @@ apart from "this field is wrong" without reading the status code.
 
 ```jsonc
 {
-  "url": "https://…", "alt": "…", "width": 1440, "height": 662,
-  "sizes": { "sm": "…", "md": "…", "lg": "…" },   // roughly 480 / 960 / 1440 wide
-  "focalPoint": { "x": 0.5, "y": 0.4 }            // always present; use for art-directed cropping
+  "url": "https://…",
+  "alt": "…",
+  "width": 1440,
+  "height": 662,
+  "sizes": { "sm": "…", "md": "…", "lg": "…" }, // roughly 480 / 960 / 1440 wide
+  "focalPoint": { "x": 0.5, "y": 0.4 }, // always present; use for art-directed cropping
 }
 ```
 
@@ -124,25 +127,25 @@ This is how the admin dashboard will preview unpublished content.
 
 ## Endpoints
 
-| Method & path | Returns |
-|---|---|
-| `GET /api/v1/health` | `{ status, db, version }` |
-| `GET /api/v1/site` | The global shell — settings, nav, footer, FAQ section, contact callout |
-| `GET /api/v1/pages/{key}` | One composed page; `key` is one of the 8 page keys |
-| `GET /api/v1/practice-areas` | All published practice areas, in the firm's order |
-| `GET /api/v1/practice-areas/{slug}` | Detail, plus contacts and 3 related insights |
-| `GET /api/v1/people` | Directory. `?role=`, `?sort=seniority\|name_asc\|name_desc`, paginated (default 9) |
-| `GET /api/v1/people/{slug}` | Profile, practice areas, office, their latest 3 insights |
-| `GET /api/v1/insights` | Listing. `?category=`, `?practiceArea=<slug>`, `?sort=newest\|oldest`, paginated (default 9) |
-| `GET /api/v1/insights/{slug}` | Full body or video URL, author, 3 related |
-| `GET /api/v1/offices` | All offices, in page order: Lagos, Abuja, Ibadan |
-| `GET /api/v1/jobs` | Open vacancies only |
-| `GET /api/v1/jobs/{id}` | One vacancy |
-| `GET /api/v1/faqs` | The FAQ set (also embedded in `/site`) |
-| `GET /api/v1/search?q=` | `{ practiceAreas, people, insights }`, max 5 each, `q` is 2–100 chars |
-| `POST /api/v1/enquiries` | 201 `{ data: { reference } }` |
-| `POST /api/v1/messages` | 201 `{ data: { reference } }` |
-| `POST /api/v1/jobs/{id}/applications` | multipart, 201 `{ data: { reference } }` |
+| Method & path                         | Returns                                                                                      |
+| ------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `GET /api/v1/health`                  | `{ status, db, version }`                                                                    |
+| `GET /api/v1/site`                    | The global shell — settings, nav, footer, FAQ section, contact callout                       |
+| `GET /api/v1/pages/{key}`             | One composed page; `key` is one of the 8 page keys                                           |
+| `GET /api/v1/practice-areas`          | All published practice areas, in the firm's order                                            |
+| `GET /api/v1/practice-areas/{slug}`   | Detail, plus contacts and 3 related insights                                                 |
+| `GET /api/v1/people`                  | Directory. `?role=`, `?sort=seniority\|name_asc\|name_desc`, paginated (default 9)           |
+| `GET /api/v1/people/{slug}`           | Profile, practice areas, office, their latest 3 insights                                     |
+| `GET /api/v1/insights`                | Listing. `?category=`, `?practiceArea=<slug>`, `?sort=newest\|oldest`, paginated (default 9) |
+| `GET /api/v1/insights/{slug}`         | Full body or video URL, author, 3 related                                                    |
+| `GET /api/v1/offices`                 | All offices, in page order: Lagos, Abuja, Ibadan                                             |
+| `GET /api/v1/jobs`                    | Open vacancies only                                                                          |
+| `GET /api/v1/jobs/{id}`               | One vacancy                                                                                  |
+| `GET /api/v1/faqs`                    | The FAQ set (also embedded in `/site`)                                                       |
+| `GET /api/v1/search?q=`               | `{ practiceAreas, people, insights }`, max 5 each, `q` is 2–100 chars                        |
+| `POST /api/v1/enquiries`              | 201 `{ data: { reference } }`                                                                |
+| `POST /api/v1/messages`               | 201 `{ data: { reference } }`                                                                |
+| `POST /api/v1/jobs/{id}/applications` | multipart, 201 `{ data: { reference } }`                                                     |
 
 ### Fetch `/site` once
 
@@ -211,25 +214,25 @@ in their final shape — only the values are outstanding. Anything marked
 `[PENDING FROM FIRM]` will be replaced by the firm through the admin UI; anything `null` will
 be filled the same way. **Please design for both the filled and the empty state.**
 
-| Where | Field | Current value |
-|---|---|---|
-| All images everywhere | `url`, `sizes` | `https://placehold.co/…` placeholders; the firm uploads the real files |
-| `/site` | `settings.socials.*`, `footer.socials.*` | all `null` — no social URLs supplied yet |
-| `/site` | 4 of the 5 `faqSection.items[].answer` | `[PENDING FROM FIRM]` |
-| `/offices`, `pages/offices` | `coordinates`, `directionsUrl` | `null` — the design's maps are placeholders showing streets in Ukraine |
-| `/offices` | `phone`, `email` | `null` — fall back to the site-wide values |
-| People | `linkedinUrl`, `bio` | `null` for every attorney |
-| Insights | `excerpt` (3 of 4), `body`, `videoUrl` | `null` or `[PENDING FROM FIRM]` |
-| Practice areas | `body`, `keyServices`, `contacts` | `null` / empty — the detail page isn't designed |
-| `pages/home` | `videoShowcase.videoUrl` | `null` |
-| `pages/home` | `whyChooseUs.points[].text` | `null` — the design shows titles only |
-| `pages/about` | `missionSection.items[]` Vision, Values, Asset | `[PENDING FROM FIRM]` (Mission has real copy) |
-| `pages/about` | `awardsList.items[].url` | `null` |
-| `pages/practice-areas` | `csrBanner.cta` | `null` — the CSR page doesn't exist, so there is no link to give. Render the banner without a button until it does |
-| Every page | `seo.title`, `seo.description`, `seo.ogImage` | `null` — no SEO copy supplied yet |
-| `/practice-areas/{slug}` | `seo.title`, `seo.description` | `null`. Note practice areas have no `ogImage`, and `/people/{slug}` and `/insights/{slug}` carry no `seo` object at all |
-| Jobs | `closingDate` | `null` |
-| Recognitions | `url`; the whole `recognizedBy` tab | `null` / empty — only the "achievements" tiles are designed |
+| Where                       | Field                                          | Current value                                                                                                           |
+| --------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| All images everywhere       | `url`, `sizes`                                 | `https://placehold.co/…` placeholders; the firm uploads the real files                                                  |
+| `/site`                     | `settings.socials.*`, `footer.socials.*`       | all `null` — no social URLs supplied yet                                                                                |
+| `/site`                     | 4 of the 5 `faqSection.items[].answer`         | `[PENDING FROM FIRM]`                                                                                                   |
+| `/offices`, `pages/offices` | `coordinates`, `directionsUrl`                 | `null` — the design's maps are placeholders showing streets in Ukraine                                                  |
+| `/offices`                  | `phone`, `email`                               | `null` — fall back to the site-wide values                                                                              |
+| People                      | `linkedinUrl`, `bio`                           | `null` for every attorney                                                                                               |
+| Insights                    | `excerpt` (3 of 4), `body`, `videoUrl`         | `null` or `[PENDING FROM FIRM]`                                                                                         |
+| Practice areas              | `body`, `keyServices`, `contacts`              | `null` / empty — the detail page isn't designed                                                                         |
+| `pages/home`                | `videoShowcase.videoUrl`                       | `null`                                                                                                                  |
+| `pages/home`                | `whyChooseUs.points[].text`                    | `null` — the design shows titles only                                                                                   |
+| `pages/about`               | `missionSection.items[]` Vision, Values, Asset | `[PENDING FROM FIRM]` (Mission has real copy)                                                                           |
+| `pages/about`               | `awardsList.items[].url`                       | `null`                                                                                                                  |
+| `pages/practice-areas`      | `csrBanner.cta`                                | `null` — the CSR page doesn't exist, so there is no link to give. Render the banner without a button until it does      |
+| Every page                  | `seo.title`, `seo.description`, `seo.ogImage`  | `null` — no SEO copy supplied yet                                                                                       |
+| `/practice-areas/{slug}`    | `seo.title`, `seo.description`                 | `null`. Note practice areas have no `ogImage`, and `/people/{slug}` and `/insights/{slug}` carry no `seo` object at all |
+| Jobs                        | `closingDate`                                  | `null`                                                                                                                  |
+| Recognitions                | `url`; the whole `recognizedBy` tab            | `null` / empty — only the "achievements" tiles are designed                                                             |
 
 Two content notes you may notice in the copy:
 
@@ -247,7 +250,7 @@ resolve.
 
 ## Not designed yet
 
-These endpoints serve complete data so you aren't blocked, but their *screens* have no design.
+These endpoints serve complete data so you aren't blocked, but their _screens_ have no design.
 Expect the shapes to gain fields — additive changes only — once the designs land:
 
 - **Practice area detail** (`/practice-areas/{slug}`)

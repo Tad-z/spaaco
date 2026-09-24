@@ -58,12 +58,7 @@
           "name": "Lagos"
         },
         "closingDate": null,
-        "chips": [
-          "2–4 years experience",
-          "Full-time",
-          "Hybrid",
-          "Lagos"
-        ]
+        "chips": ["2–4 years experience", "Full-time", "Hybrid", "Lagos"]
       },
       {
         "id": "665f00000000000000000024",
@@ -87,12 +82,7 @@
           "name": "Lagos"
         },
         "closingDate": null,
-        "chips": [
-          "2–4 years experience",
-          "Full-time",
-          "Hybrid",
-          "Lagos"
-        ]
+        "chips": ["2–4 years experience", "Full-time", "Hybrid", "Lagos"]
       }
     ],
     "seo": {

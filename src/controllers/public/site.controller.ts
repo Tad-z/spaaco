@@ -13,9 +13,7 @@ export async function getSiteShell(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const data = await remember<Site>('site', [TAGS.site], async () =>
-    toSite(await getSite())
-  );
+  const data = await remember<Site>('site', [TAGS.site], async () => toSite(await getSite()));
 
   res.json({ data });
 }

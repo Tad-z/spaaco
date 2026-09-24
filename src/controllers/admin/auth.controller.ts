@@ -14,11 +14,7 @@ import {
 import type { SessionTokens } from '../../services/auth.service.js';
 import { toAdminUser } from '../../serializers/user.serializer.js';
 import { readBody } from '../../middlewares/validate.middleware.js';
-import {
-  loginBody,
-  passwordChangeBody,
-  totpEnableBody,
-} from '../../validators/auth.validator.js';
+import { loginBody, passwordChangeBody, totpEnableBody } from '../../validators/auth.validator.js';
 
 /**
  * Admin auth endpoints.
@@ -37,7 +33,11 @@ const refreshCookieOptions = (expires: Date): CookieOptions => ({
 });
 
 function setRefreshCookie(res: Response, tokens: SessionTokens): void {
-  res.cookie(AUTH.refreshCookieName, tokens.refreshToken, refreshCookieOptions(tokens.refreshExpiresAt));
+  res.cookie(
+    AUTH.refreshCookieName,
+    tokens.refreshToken,
+    refreshCookieOptions(tokens.refreshExpiresAt)
+  );
 }
 
 const readRefreshCookie = (req: Request): string | undefined => {
