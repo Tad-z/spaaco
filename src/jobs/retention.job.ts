@@ -71,6 +71,16 @@ export async function sweepOrphanedCvs(now: Date = new Date()): Promise<SweepRes
  * should stop, not wait up to a day for a housekeeping tick.
  */
 export function startRetentionSweep(intervalMs = 24 * 60 * 60 * 1000): NodeJS.Timeout {
+  // Once shortly after boot as well as daily. A container that restarts more
+  // often than the interval — routine — would otherwise never sweep at all,
+  // and orphaned CVs would accumulate for ever. Delayed so it does not compete
+  // with the first requests after a deploy.
+  setTimeout(() => {
+    void sweepOrphanedCvs().catch((error: unknown) => {
+      logger.error({ err: error }, 'the CV retention sweep failed');
+    });
+  }, 60_000).unref();
+
   const timer = setInterval(() => {
     void sweepOrphanedCvs().catch((error: unknown) => {
       logger.error({ err: error }, 'the CV retention sweep failed');

@@ -1756,6 +1756,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/files/cv/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Redeem a signed CV link
+         * @description Serves a CV to whoever holds a valid, unexpired signature. There is no
+         *     bearer token: the signature *is* the authorisation, exactly as with a
+         *     presigned S3 URL. It is issued only by `GET /admin/applications/{id}/cv`,
+         *     which is HR-only and audit-logged, it covers the key and the expiry, and
+         *     it stops working after five minutes.
+         *
+         *     This path exists **only** when the API runs on the `local` private
+         *     storage driver, which is development and staging. In production the
+         *     driver is S3 and the link points at AWS, so this route is not mounted
+         *     at all.
+         */
+        get: operations["downloadSignedCv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6907,6 +6936,50 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    downloadSignedCv: {
+        parameters: {
+            query: {
+                /** @description Unix seconds. Part of what the signature covers. */
+                expires: string;
+                signature: string;
+                /** @description The name to save the download under. */
+                filename?: string;
+            };
+            header?: never;
+            path: {
+                /** @description The stored file's key, as the signed link carries it. */
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /**
+             * @description The signature is wrong, or the link has expired. One answer for
+             *     both, so a caller cannot learn whether a key exists.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            404: components["responses"]["NotFound"];
             500: components["responses"]["InternalError"];
         };
     };

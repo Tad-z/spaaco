@@ -4032,6 +4032,66 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/v1/files/cv/{key}:
+    get:
+      tags: [Admin submissions]
+      operationId: downloadSignedCv
+      summary: Redeem a signed CV link
+      description: |
+        Serves a CV to whoever holds a valid, unexpired signature. There is no
+        bearer token: the signature *is* the authorisation, exactly as with a
+        presigned S3 URL. It is issued only by `GET /admin/applications/{id}/cv`,
+        which is HR-only and audit-logged, it covers the key and the expiry, and
+        it stops working after five minutes.
+
+        This path exists **only** when the API runs on the `local` private
+        storage driver, which is development and staging. In production the
+        driver is S3 and the link points at AWS, so this route is not mounted
+        at all.
+      parameters:
+        - name: key
+          in: path
+          required: true
+          description: The stored file's key, as the signed link carries it.
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F-]{36}\.(pdf|docx)$'
+        - name: expires
+          in: query
+          required: true
+          description: Unix seconds. Part of what the signature covers.
+          schema: { type: string }
+        - name: signature
+          in: query
+          required: true
+          schema: { type: string }
+        - name: filename
+          in: query
+          required: false
+          description: The name to save the download under.
+          schema: { type: string }
+      responses:
+        '200':
+          description: The file.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          description: |
+            The signature is wrong, or the link has expired. One answer for
+            both, so a caller cannot learn whether a key exists.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
 components:
   securitySchemes:
     bearerAuth:

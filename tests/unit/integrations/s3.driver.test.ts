@@ -70,12 +70,23 @@ describe('uploading a CV', () => {
     expect(headers['x-amz-content-sha256']).toBe(payloadHash);
     expect(headers['x-amz-acl']).toBe('private');
 
+    // Derived from the headers actually sent, not hardcoded: a hardcoded list
+    // would keep passing if the code started sending an unsigned x-amz-header,
+    // which is exactly the SigV4 mistake that makes S3 answer 403.
+    const signedNames = Object.keys(headers)
+      .filter((name) => name === 'host' || name.startsWith('x-amz-'))
+      .map((name) => name.toLowerCase())
+      .sort();
+
+    expect(signedNames).toContain('x-amz-acl');
+    expect(headers.authorization).toContain(`SignedHeaders=${signedNames.join(';')}`);
+
     const canonicalRequest = [
       'PUT',
       `/${key.split('/').map(encodeURIComponent).join('/')}`,
       '',
-      `host:spa-ajibade-cvs.s3.eu-west-1.amazonaws.com\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${AMZ_DATE}\n`,
-      'host;x-amz-content-sha256;x-amz-date',
+      `${signedNames.map((name) => `${name}:${headers[name] ?? ''}`).join('\n')}\n`,
+      signedNames.join(';'),
       payloadHash,
     ].join('\n');
 

@@ -3,6 +3,8 @@ import { dirname, join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { buildTestApp } from '../../support/build-app.js';
+import { setupTestDb } from '../../support/setup-db.js';
+import { AuditLog } from '../../../src/models/index.js';
 import { config } from '../../../src/config/env.js';
 import { signLocalUrl } from '../../../src/integrations/storage/private/local.driver.js';
 
@@ -14,6 +16,8 @@ import { signLocalUrl } from '../../../src/integrations/storage/private/local.dr
  * signature, an expired one, a signature for somebody else's file, and any key
  * that tries to leave the directory.
  */
+
+setupTestDb();
 
 const app = buildTestApp();
 
@@ -58,8 +62,28 @@ describe('a signed CV link', () => {
     expect(res.headers['cache-control']).toContain('no-store');
   });
 
+  it('audits the handover, not just the issue of the link', async () => {
+    // A five-minute link can be forwarded and redeemed more than once, so
+    // "who was given a link" and "when a CV was actually served" are
+    // different facts, and only the second says one left the building.
+    await request(app).get(link(KEY, 300)).buffer(true).parse(collect);
+
+    const entry = await AuditLog.findOne({ action: 'application.cv.download' }).lean();
+
+    expect(entry).toBeTruthy();
+    // The key is the handle on the file, so only a digest of it is kept.
+    expect(JSON.stringify(entry?.meta)).not.toContain(KEY);
+  });
+
   it('refuses a tampered signature', async () => {
-    const res = await request(app).get(link(KEY, 300).replace(/signature=./, 'signature=0'));
+    // Flipped deterministically: replacing the first character with '0' is a
+    // no-op one time in sixteen, and the test would pass a valid signature.
+    const tampered = link(KEY, 300).replace(
+      /signature=(.)/,
+      (_match, first: string) => `signature=${first === '0' ? '1' : '0'}`
+    );
+
+    const res = await request(app).get(tampered);
 
     expect(res.status).toBe(403);
   });

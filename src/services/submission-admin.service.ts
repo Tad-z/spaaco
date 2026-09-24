@@ -4,8 +4,13 @@ import { ConflictError, NotFoundError } from '../core/errors.js';
 import { toSkip } from '../helpers/pagination.helper.js';
 import { Application, Enquiry, Message } from '../models/index.js';
 import { privateStorage } from '../integrations/storage/private/index.js';
-import { record } from './audit.service.js';
-import type { ApplicationStatus, SubmissionStatus } from '../types/api.js';
+import { record, recordOrThrow } from './audit.service.js';
+import type { ApplicationStatus, SignedFileUrl, SubmissionStatus } from '../types/api.js';
+import type {
+  PopulatedApplication,
+  PopulatedEnquiry,
+  PopulatedMessage,
+} from '../interfaces/populated-submission.interface.js';
 
 /**
  * Reading and handling submissions.
@@ -16,7 +21,20 @@ import type { ApplicationStatus, SubmissionStatus } from '../types/api.js';
  * which is unanswerable unless it was recorded at the time.
  */
 
-export type SubmissionDoc = Record<string, unknown> & { _id: Types.ObjectId };
+/**
+ * Which populated shape each kind returns.
+ *
+ * A mapped type rather than one loose `Record`: the serializers type-check
+ * against the contract only if what reaches them is typed, and a caller that
+ * knows its kind then gets the right shape without narrowing.
+ */
+export interface SubmissionByKind {
+  enquiry: PopulatedEnquiry;
+  message: PopulatedMessage;
+  application: PopulatedApplication;
+}
+
+export type Kind = keyof SubmissionByKind;
 
 export interface ActorContext {
   readonly actorId?: Types.ObjectId;
@@ -40,8 +58,6 @@ const POPULATE = {
   application: [{ path: 'job', select: 'title' }],
 } as const;
 
-type Kind = keyof typeof POPULATE;
-
 const MODELS: Record<Kind, Model<unknown>> = {
   enquiry: Enquiry as unknown as Model<unknown>,
   message: Message as unknown as Model<unknown>,
@@ -54,10 +70,11 @@ const LABELS: Record<Kind, string> = {
   application: 'Application',
 };
 
-export async function listSubmissions(
-  kind: Kind,
-  options: ListOptions
-): Promise<{ items: SubmissionDoc[]; total: number }> {
+export async function listSubmissions<K extends Kind>(
+  kind: K,
+  options: ListOptions,
+  context: ActorContext = {}
+): Promise<{ items: SubmissionByKind[K][]; total: number }> {
   const filter: Record<string, unknown> = {};
   if (options.status !== undefined) filter.status = options.status;
   if (options.job !== undefined) filter.job = options.job;
@@ -71,9 +88,25 @@ export async function listSubmissions(
       .sort({ createdAt: -1, _id: -1 })
       .skip(toSkip(options.page, options.pageSize))
       .limit(options.pageSize)
-      .lean<SubmissionDoc[]>(),
+      .lean<SubmissionByKind[K][]>(),
     model.countDocuments(filter as FilterQuery<unknown>),
   ]);
+
+  // A list is audited too. Its rows carry the same names, addresses and matter
+  // summaries a detail view does, so "who read this?" would otherwise be
+  // answerable for one record and not for a hundred of them at once. The entry
+  // records the page and filter, never the contents.
+  await record({
+    action: `${kind}.list`,
+    entity: kind,
+    actor: context.actorId ?? null,
+    meta: {
+      page: options.page,
+      pageSize: options.pageSize,
+      status: options.status ?? 'any',
+      returned: items.length,
+    },
+  });
 
   return { items, total };
 }
@@ -85,15 +118,15 @@ export async function listSubmissions(
  * the two leaves a record of an access that may have happened rather than
  * silently losing one that did.
  */
-export async function getSubmission(
-  kind: Kind,
+export async function getSubmission<K extends Kind>(
+  kind: K,
   id: string,
   context: ActorContext = {}
-): Promise<SubmissionDoc> {
+): Promise<SubmissionByKind[K]> {
   const doc = await MODELS[kind]
     .findById(id)
     .populate([...POPULATE[kind]])
-    .lean<SubmissionDoc | null>();
+    .lean<SubmissionByKind[K] | null>();
 
   if (!doc) throw new NotFoundError(LABELS[kind]);
 
@@ -121,25 +154,19 @@ export interface SubmissionPatch {
  * record of what they sent, and the firm editing it after the fact would
  * destroy the one thing that makes it evidence.
  */
-export async function updateSubmission(
-  kind: Kind,
+export async function updateSubmission<K extends Kind>(
+  kind: K,
   id: string,
   patch: SubmissionPatch
-): Promise<SubmissionDoc> {
+): Promise<SubmissionByKind[K]> {
   const updated = await MODELS[kind]
     .findByIdAndUpdate(id, { $set: patch }, { new: true, runValidators: true })
     .populate([...POPULATE[kind]])
-    .lean<SubmissionDoc | null>();
+    .lean<SubmissionByKind[K] | null>();
 
   if (!updated) throw new NotFoundError(LABELS[kind]);
 
   return updated;
-}
-
-export interface CvLink {
-  readonly url: string;
-  readonly expiresAt: string;
-  readonly filename: string;
 }
 
 /**
@@ -149,7 +176,7 @@ export interface CvLink {
  * and `infected` means the file must never be handed to anybody, so both are
  * a 409 — the request is fine, the state of the record is not.
  */
-export async function getCvLink(id: string, context: ActorContext = {}): Promise<CvLink> {
+export async function getCvLink(id: string, context: ActorContext = {}): Promise<SignedFileUrl> {
   const application = await Application.findById(id).select('reference cv').lean<{
     _id: Types.ObjectId;
     reference: string;
@@ -173,7 +200,9 @@ export async function getCvLink(id: string, context: ActorContext = {}): Promise
     application.cv.originalName
   );
 
-  await record({
+  // The one audit entry that must not be best effort: without it, a CV has
+  // been handed out and nothing says to whom.
+  await recordOrThrow({
     action: 'application.cv.view',
     entity: 'application',
     entityId: application._id,

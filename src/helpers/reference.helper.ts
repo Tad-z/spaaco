@@ -1,4 +1,5 @@
 import { randomInt } from 'node:crypto';
+import type { REFERENCE_PREFIXES } from '../config/constants.js';
 
 /**
  * The reference a submitter is given, and the only thing a form returns.
@@ -14,7 +15,8 @@ import { randomInt } from 'node:crypto';
 const ALPHABET = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 const LENGTH = 6;
 
-export type ReferencePrefix = 'ENQ' | 'MSG' | 'APP';
+/** Derived from the constant, so the two cannot disagree. */
+export type ReferencePrefix = (typeof REFERENCE_PREFIXES)[keyof typeof REFERENCE_PREFIXES];
 
 export function generateReference(prefix: ReferencePrefix): string {
   const suffix = Array.from({ length: LENGTH }, () =>

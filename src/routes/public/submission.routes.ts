@@ -5,7 +5,11 @@ import {
   createMessageHandler,
 } from '../../controllers/public/submission.controller.js';
 import { validate } from '../../middlewares/validate.middleware.js';
-import { formLimiter } from '../../middlewares/rate-limit.middleware.js';
+import {
+  applicationLimiter,
+  enquiryLimiter,
+  messageLimiter,
+} from '../../middlewares/rate-limit.middleware.js';
 import { noStore } from '../../middlewares/cache-headers.middleware.js';
 import { cvUpload } from '../../middlewares/cv-upload.middleware.js';
 import { idParams } from '../../validators/common.validator.js';
@@ -27,7 +31,7 @@ export const submissionRoutes: Router = Router();
 submissionRoutes.post(
   '/enquiries',
   noStore,
-  formLimiter,
+  enquiryLimiter,
   validate({ body: enquiryBody }),
   createEnquiryHandler
 );
@@ -35,7 +39,7 @@ submissionRoutes.post(
 submissionRoutes.post(
   '/messages',
   noStore,
-  formLimiter,
+  messageLimiter,
   validate({ body: messageBody }),
   createMessageHandler
 );
@@ -45,7 +49,7 @@ submissionRoutes.post(
 submissionRoutes.post(
   '/jobs/:id/applications',
   noStore,
-  formLimiter,
+  applicationLimiter,
   cvUpload(),
   validate({ params: idParams, body: applicationBody }),
   createApplicationHandler

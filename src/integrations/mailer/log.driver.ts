@@ -4,20 +4,24 @@ import type { IMailer, SentMail } from '../../interfaces/integrations/mailer.int
 /**
  * The credential-free default: mail goes to the log.
  *
- * Only the subject and recipient are logged. The body of an acknowledgement
- * quotes the submitter's first name, and logging that would defeat the
- * redaction everywhere else — so in development the body is counted, not
- * printed.
+ * Neither the recipient nor the body is logged. An acknowledgement goes to the
+ * person who submitted the form, so its address *is* personal data — logging
+ * it would break the first rule in `.claude/rules/submissions.md` in the one
+ * driver that runs by default. The subject already carries the reference,
+ * which is what a developer needs to see that mail is flowing.
  */
 export const logMailer: IMailer = {
   name: 'log',
 
   send(mail: SentMail): Promise<void> {
     logger.info(
-      { to: mail.to, subject: mail.subject, bytes: mail.text.length },
+      { subject: mail.subject, recipientDomain: domainOf(mail.to), bytes: mail.text.length },
       'email sent (log driver)'
     );
 
     return Promise.resolve();
   },
 };
+
+/** Enough to tell the firm's own notifications from a submitter's copy. */
+const domainOf = (address: string): string => address.split('@').pop() ?? 'unknown';

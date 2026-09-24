@@ -40,10 +40,12 @@ const turnstileToken = z.string().trim().min(1).max(2048);
  * The honeypot.
  *
  * A real browser leaves it empty because it is hidden; a bot fills every field
- * it finds. Accepted as any string so the request still validates, then
- * checked by the service, which answers 201 and stores nothing.
+ * it finds. Unconstrained on purpose — a length limit would answer an
+ * over-long value with a 400 naming `website`, which tells the bot the field
+ * is inspected. Anything here is discarded by the service, which answers 201
+ * and stores nothing.
  */
-const website = z.string().max(200).optional();
+const website = z.string().optional();
 
 export const enquiryBody = z
   .object({

@@ -152,10 +152,7 @@ describe('enquiries', () => {
     expect(res.status).toBe(404);
   });
 
-  it('records an audit entry for reading one, but not for the list', async () => {
-    await request(app).get('/api/v1/admin/enquiries').set('Authorization', as('admin'));
-    expect(await AuditLog.countDocuments({ action: /enquiry/ })).toBe(0);
-
+  it('records an audit entry for reading one', async () => {
     await request(app)
       .get(`/api/v1/admin/enquiries/${enquiryId}`)
       .set('Authorization', as('admin'));
@@ -164,6 +161,19 @@ describe('enquiries', () => {
     expect(entry?.entityId?.toString()).toBe(enquiryId);
     expect(entry?.actor).toBeTruthy();
     // The trail says who read which record, never what it said.
+    expect(JSON.stringify(entry?.meta)).not.toContain('Adaeze');
+  });
+
+  it('audits the list too, since its rows carry the same personal data', async () => {
+    // A list of a hundred enquiries discloses a hundred names, addresses and
+    // matter summaries. Auditing the detail view and not this one would make
+    // "who read this?" answerable for one record and not for a page of them.
+    await request(app).get('/api/v1/admin/enquiries').set('Authorization', as('admin'));
+
+    const entry = await AuditLog.findOne({ action: 'enquiry.list' }).lean();
+
+    expect(entry?.actor).toBeTruthy();
+    expect(entry?.meta).toMatchObject({ page: 1, returned: 1 });
     expect(JSON.stringify(entry?.meta)).not.toContain('Adaeze');
   });
 
@@ -342,36 +352,9 @@ describe('the CV link', () => {
 });
 
 describe('who can see what', () => {
-  it('keeps editors out of every submission', async () => {
-    for (const path of ['enquiries', 'messages', 'applications']) {
-      const res = await request(app)
-        .get(`/api/v1/admin/${path}`)
-        .set('Authorization', as('editor'));
-
-      expect(res.status, path).toBe(403);
-    }
-  });
-
-  it('keeps business development out of applications and CVs', async () => {
-    const list = await request(app)
-      .get('/api/v1/admin/applications')
-      .set('Authorization', as('business_dev'));
-    expect(list.status).toBe(403);
-
-    const cv = await request(app)
-      .get(`/api/v1/admin/applications/${applicationId}/cv`)
-      .set('Authorization', as('business_dev'));
-    expect(cv.status).toBe(403);
-  });
-
-  it('keeps HR out of enquiries and messages', async () => {
-    for (const path of ['enquiries', 'messages']) {
-      const res = await request(app).get(`/api/v1/admin/${path}`).set('Authorization', as('hr'));
-
-      expect(res.status, path).toBe(403);
-    }
-  });
-
+  // The role matrix itself is proved once, for every admin route, in
+  // roles.test.ts (ADR-029). What belongs here is only what that table cannot
+  // say: that a refused read leaves no trace suggesting it happened.
   it('writes no audit entry for a read that was refused', async () => {
     await request(app)
       .get(`/api/v1/admin/applications/${applicationId}`)

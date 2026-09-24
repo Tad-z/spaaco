@@ -27,18 +27,35 @@ export interface AuditEntry {
 
 export async function record(entry: AuditEntry): Promise<void> {
   try {
-    await AuditLog.create({
-      actor: entry.actor ?? null,
-      action: entry.action,
-      entity: entry.entity,
-      entityId: entry.entityId ?? null,
-      meta: entry.meta ?? {},
-      ipHash: entry.ipHash ?? null,
-      at: new Date(),
-    });
+    await write(entry);
   } catch (error: unknown) {
     logger.error({ err: error, action: entry.action }, 'failed to write an audit entry');
   }
+}
+
+/**
+ * Record it, or fail the action being recorded.
+ *
+ * For almost everything, swallowing a failed audit write is right: refusing to
+ * publish an insight because the audit collection hiccuped would be worse than
+ * a missing line. Handing over a CV is the exception — the trail is the only
+ * thing that makes the disclosure accountable, so if it cannot be written the
+ * disclosure must not happen.
+ */
+export async function recordOrThrow(entry: AuditEntry): Promise<void> {
+  await write(entry);
+}
+
+async function write(entry: AuditEntry): Promise<void> {
+  await AuditLog.create({
+    actor: entry.actor ?? null,
+    action: entry.action,
+    entity: entry.entity,
+    entityId: entry.entityId ?? null,
+    meta: entry.meta ?? {},
+    ipHash: entry.ipHash ?? null,
+    at: new Date(),
+  });
 }
 
 export type AuditLogWithActor = Omit<IAuditLog, 'actor'> & {

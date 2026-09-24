@@ -51,6 +51,14 @@ export const REDACTED_PATHS = [
   // personal data
   'email',
   '*.email',
+  // Mail recipients: an acknowledgement goes to the person who submitted the
+  // form, so the address is personal data wherever it appears.
+  'to',
+  '*.to',
+  'replyTo',
+  '*.replyTo',
+  'recipient',
+  '*.recipient',
   'fullName',
   '*.fullName',
   'phone',

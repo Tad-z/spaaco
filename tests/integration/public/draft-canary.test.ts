@@ -137,12 +137,27 @@ async function seedCanaries(): Promise<void> {
   );
 }
 
+/**
+ * Paths the sweep deliberately skips, each for a stated reason.
+ *
+ * An explicit list, not a silent filter: `concreteUrls` throws on any
+ * parameterised path it has no value for, so a new endpoint has to be
+ * considered here rather than quietly going unswept.
+ */
+const NOT_CONTENT: Record<string, string> = {
+  // Serves one stored binary to a holder of a signature. It has no content, no
+  // draft concept and no reachable response without a valid signed link —
+  // cv-download.test.ts covers what it refuses.
+  [`${API_PREFIX}/files/cv/{key}`]: 'serves a signed binary, not content',
+};
+
 /** Every public GET the contract declares — admin paths are not public. */
 function publicGetPaths(): string[] {
   const paths = asObject(spec.paths) ?? {};
 
   return Object.keys(paths)
     .filter((path) => !path.startsWith(`${API_PREFIX}/admin`))
+    .filter((path) => !(path in NOT_CONTENT))
     .filter((path) => asObject(paths[path])?.get !== undefined)
     .sort();
 }

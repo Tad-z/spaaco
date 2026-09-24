@@ -156,6 +156,39 @@ const refinedSchema = envSchema.superRefine((value, ctx) => {
     });
   }
 
+  // The local *private* driver matters more: it keeps CVs on the app
+  // container's disk and mounts an unauthenticated redemption route to serve
+  // them. Protecting the public driver and not this one would have been
+  // exactly backwards.
+  if (value.STORAGE_PRIVATE_DRIVER === 'local') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['STORAGE_PRIVATE_DRIVER'],
+      message: 'STORAGE_PRIVATE_DRIVER must be "s3" in production; "local" is dev only',
+    });
+  }
+
+  // `noop` reports every file clean, and the API then records `scanStatus:
+  // "clean"` and hands out download links on the strength of it. In production
+  // that would be a lie told by the dashboard.
+  if (value.VIRUS_SCAN_DRIVER === 'noop') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['VIRUS_SCAN_DRIVER'],
+      message: 'VIRUS_SCAN_DRIVER must be "clamav" in production; "noop" reports every file clean',
+    });
+  }
+
+  // Mail would otherwise go nowhere, silently, for every acknowledgement and
+  // every notification to the firm.
+  if (value.MAILER_DRIVER === 'log') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['MAILER_DRIVER'],
+      message: 'MAILER_DRIVER must be "resend" in production; "log" sends nothing',
+    });
+  }
+
   for (const key of SECRETS_CHECKED_IN_PRODUCTION) {
     if (PLACEHOLDER_SECRETS.has(value[key].toLowerCase())) {
       ctx.addIssue({

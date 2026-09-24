@@ -19,7 +19,15 @@ import { namedHandler } from '../helpers/named-handler.helper.js';
 
 const single = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: UPLOAD_LIMITS.imageMaxBytes, files: 1 },
+  limits: {
+    fileSize: UPLOAD_LIMITS.imageMaxBytes,
+    files: 1,
+    // Bounded like the CV form: this route needs auth, but an unbounded field
+    // count is a memory problem whoever sends it.
+    fields: 16,
+    parts: 20,
+    fieldSize: 8 * 1024,
+  },
 }).single('file');
 
 /** Multer's own errors, mapped to the contract's codes. */

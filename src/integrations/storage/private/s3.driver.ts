@@ -73,16 +73,36 @@ export function createS3PrivateStorage(
   const scopeFor = (dateStamp: string): string =>
     `${dateStamp}/${credentials.region}/${SERVICE}/aws4_request`;
 
-  /** An authorization header for a request whose body is already hashed. */
+  /**
+   * An authorization header for a request whose body is already hashed.
+   *
+   * `extra` carries any further `x-amz-*` headers the request sends. SigV4
+   * requires *every* one of them to be signed — sending `x-amz-acl` while
+   * signing only the base three is a `SignatureDoesNotMatch` 403, which for
+   * this driver would mean no job application could ever be submitted.
+   */
   function authorize(
     method: string,
     key: string,
     payloadHash: string,
     amzDate: string,
-    dateStamp: string
+    dateStamp: string,
+    extra: Record<string, string> = {}
   ): string {
-    const canonicalHeaders = `host:${host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
-    const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+    const headers: Record<string, string> = {
+      host,
+      'x-amz-content-sha256': payloadHash,
+      'x-amz-date': amzDate,
+      ...extra,
+    };
+
+    // Canonical form: lowercase names, sorted, as `name:value` lines.
+    const names = Object.keys(headers)
+      .map((name) => name.toLowerCase())
+      .sort();
+
+    const canonicalHeaders = `${names.map((name) => `${name}:${headers[name] ?? ''}`).join('\n')}\n`;
+    const signedHeaders = names.join(';');
 
     const canonicalRequest = [
       method,
@@ -126,7 +146,9 @@ export function createS3PrivateStorage(
           // Belt and braces alongside the bucket policy: a CV must never be
           // readable without a signature, whatever the bucket defaults are.
           'x-amz-acl': 'private',
-          authorization: authorize('PUT', key, payloadHash, amzDate, dateStamp),
+          authorization: authorize('PUT', key, payloadHash, amzDate, dateStamp, {
+            'x-amz-acl': 'private',
+          }),
         },
         body: new Uint8Array(input.buffer),
       });

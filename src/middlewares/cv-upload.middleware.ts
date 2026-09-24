@@ -17,7 +17,16 @@ import { namedHandler } from '../helpers/named-handler.helper.js';
  */
 const single = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: UPLOAD_LIMITS.cvMaxBytes, files: 1 },
+  limits: {
+    fileSize: UPLOAD_LIMITS.cvMaxBytes,
+    files: 1,
+    // Multer defaults `fields` and `parts` to Infinity and `fieldSize` to 1 MB,
+    // so without these an anonymous caller could stream thousands of 1 MB text
+    // fields into memory before any validator runs. The form has eight fields.
+    fields: 16,
+    parts: 20,
+    fieldSize: 8 * 1024,
+  },
 }).single('cv');
 
 export function cvUpload(): RequestHandler {

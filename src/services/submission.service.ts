@@ -111,14 +111,38 @@ async function notify(
   });
 }
 
+/**
+ * Create the record, retrying once if the reference collided.
+ *
+ * ~1.5 billion references makes a collision rare, not impossible, and the
+ * unique index turns one into a 500 on a perfectly good submission. One retry
+ * makes the odds of a visible failure vanishingly small.
+ */
+async function createWithReference<T>(
+  prefix: ReferencePrefix,
+  create: (reference: string) => Promise<T>
+): Promise<T> {
+  try {
+    return await create(generateReference(prefix));
+  } catch (error: unknown) {
+    if (!isDuplicateKey(error)) throw error;
+
+    logger.warn({ prefix }, 'reference collided; retrying with a new one');
+    return create(generateReference(prefix));
+  }
+}
+
+const isDuplicateKey = (error: unknown): boolean =>
+  error instanceof Error && 'code' in error && (error as { code: unknown }).code === 11000;
+
 /** What every stored submission carries about its sender and their consent. */
 function envelope(
-  prefix: ReferencePrefix,
+  reference: string,
   body: { consentTextVersion: string },
   context: RequestContext
 ): Record<string, unknown> {
   return {
-    reference: generateReference(prefix),
+    reference,
     consent: { given: true, textVersion: body.consentTextVersion, at: new Date() },
     ipHash: hashIp(context.ip, config.IP_HASH_SALT),
     userAgent: context.userAgent ?? null,
@@ -146,16 +170,18 @@ export async function submitEnquiry(
       : Office.findById(body.preferredOffice).select('_id').lean<{ _id: Types.ObjectId } | null>(),
   ]);
 
-  const created = await Enquiry.create({
-    ...envelope('ENQ', body, context),
-    fullName: body.fullName,
-    organization: body.organization ?? null,
-    email: body.email,
-    phone: body.phone ?? null,
-    practiceArea: area?._id ?? null,
-    preferredOffice: office?._id ?? null,
-    summary: body.summary,
-  });
+  const created = await createWithReference('ENQ', (reference) =>
+    Enquiry.create({
+      ...envelope(reference, body, context),
+      fullName: body.fullName,
+      organization: body.organization ?? null,
+      email: body.email,
+      phone: body.phone ?? null,
+      practiceArea: area?._id ?? null,
+      preferredOffice: office?._id ?? null,
+      summary: body.summary,
+    })
+  );
 
   logger.info({ reference: created.reference, form: 'enquiry' }, 'submission received');
 
@@ -172,14 +198,16 @@ export async function submitMessage(
 
   await requireHuman(body.turnstileToken, context.ip);
 
-  const created = await Message.create({
-    ...envelope('MSG', body, context),
-    fullName: body.fullName,
-    email: body.email,
-    phone: body.phone ?? null,
-    subject: body.subject ?? null,
-    message: body.message,
-  });
+  const created = await createWithReference('MSG', (reference) =>
+    Message.create({
+      ...envelope(reference, body, context),
+      fullName: body.fullName,
+      email: body.email,
+      phone: body.phone ?? null,
+      subject: body.subject ?? null,
+      message: body.message,
+    })
+  );
 
   logger.info({ reference: created.reference, form: 'message' }, 'submission received');
 
@@ -240,21 +268,23 @@ export async function submitApplication(
     extension: CV_EXTENSIONS[mimeType] ?? 'bin',
   });
 
-  const created = await Application.create({
-    ...envelope('APP', body, context),
-    job: job._id,
-    fullName: body.fullName,
-    email: body.email,
-    phone: body.phone,
-    coverNote: body.coverNote ?? null,
-    cv: {
-      storageKey,
-      originalName: cv.originalName,
-      mimeType,
-      bytes: cv.buffer.byteLength,
-      scanStatus: 'clean',
-    },
-  });
+  const created = await createWithReference('APP', (reference) =>
+    Application.create({
+      ...envelope(reference, body, context),
+      job: job._id,
+      fullName: body.fullName,
+      email: body.email,
+      phone: body.phone,
+      coverNote: body.coverNote ?? null,
+      cv: {
+        storageKey,
+        originalName: cv.originalName,
+        mimeType,
+        bytes: cv.buffer.byteLength,
+        scanStatus: 'clean',
+      },
+    })
+  );
 
   logger.info({ reference: created.reference, form: 'application' }, 'submission received');
 

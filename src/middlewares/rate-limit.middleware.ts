@@ -31,7 +31,17 @@ export const publicReadLimiter = build(RATE_LIMITS.publicRead);
 export const searchLimiter = build(RATE_LIMITS.search);
 
 /** 5 per 10 minutes, per form. */
-export const formLimiter = build(RATE_LIMITS.forms);
+/**
+ * One limiter per form, not one shared by all three.
+ *
+ * `express-rate-limit` keys by IP within a single instance, so a single shared
+ * instance gave a visitor five requests per ten minutes *across* enquiries,
+ * messages and applications together — someone who sends a message and then
+ * applies for a job would have been counted against one budget.
+ */
+export const enquiryLimiter = build(RATE_LIMITS.forms);
+export const messageLimiter = build(RATE_LIMITS.forms);
+export const applicationLimiter = build(RATE_LIMITS.forms);
 
 /** 5 per 15 minutes, to slow credential stuffing against the admin login. */
 export const loginLimiter = build(RATE_LIMITS.login);

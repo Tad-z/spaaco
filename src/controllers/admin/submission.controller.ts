@@ -30,7 +30,7 @@ const actorContext = (req: Request): { actorId: Types.ObjectId } => {
 
 export async function listEnquiriesHandler(req: Request, res: Response): Promise<void> {
   const query = readQuery(req, listSubmissionsQuery);
-  const { items, total } = await listSubmissions('enquiry', query);
+  const { items, total } = await listSubmissions('enquiry', query, actorContext(req));
 
   res.json({ data: items.map(toEnquiryAdmin), meta: toMeta(query.page, query.pageSize, total) });
 }
@@ -50,7 +50,7 @@ export async function updateEnquiryHandler(req: Request, res: Response): Promise
 
 export async function listMessagesHandler(req: Request, res: Response): Promise<void> {
   const query = readQuery(req, listSubmissionsQuery);
-  const { items, total } = await listSubmissions('message', query);
+  const { items, total } = await listSubmissions('message', query, actorContext(req));
 
   res.json({ data: items.map(toMessageAdmin), meta: toMeta(query.page, query.pageSize, total) });
 }
@@ -70,7 +70,7 @@ export async function updateMessageHandler(req: Request, res: Response): Promise
 
 export async function listApplicationsHandler(req: Request, res: Response): Promise<void> {
   const query = readQuery(req, listApplicationsQuery);
-  const { items, total } = await listSubmissions('application', query);
+  const { items, total } = await listSubmissions('application', query, actorContext(req));
 
   res.json({
     data: items.map(toApplicationAdmin),

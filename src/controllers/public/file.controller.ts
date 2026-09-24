@@ -16,5 +16,12 @@ export async function downloadCvHandler(req: Request, res: Response): Promise<vo
     `attachment; filename="${download.filename.replace(/[^\w.-]/g, '_')}"`
   );
 
+  // `pipe` does not forward the source's errors, and an unhandled 'error' on a
+  // stream ends the process. A file removed between the stat and the read is
+  // rare but entirely possible.
+  download.stream.on('error', (error: Error) => {
+    res.destroy(error);
+  });
+
   download.stream.pipe(res);
 }

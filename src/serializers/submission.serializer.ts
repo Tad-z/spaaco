@@ -4,6 +4,16 @@ import type {
   MessageAdmin,
   SubmissionConsent,
 } from '../types/api.js';
+import type { IConsent } from '../interfaces/enquiry.interface.js';
+import type {
+  JobRefDoc,
+  OfficeRefDoc,
+  PopulatedApplication,
+  PopulatedEnquiry,
+  PopulatedMessage,
+  PracticeAreaRefDoc,
+  UserRefDoc,
+} from '../interfaces/populated-submission.interface.js';
 
 /**
  * Submissions as the dashboard shows them.
@@ -13,108 +23,115 @@ import type {
  * help nobody reading an enquiry, and every copy of personal data is a copy
  * that can leak. The CV's `storageKey` is absent for a stronger reason: it is
  * the only handle on the file, and a signed link is the only way in.
+ *
+ * The return types come from the contract and the arguments from the models,
+ * so a field added to either side fails to compile rather than quietly
+ * disappearing from a payload.
  */
 
-export type StoredSubmission = Record<string, unknown>;
+const ISO = (value: Date): string => value.toISOString();
 
-const ISO = (value: unknown): string =>
-  value instanceof Date ? value.toISOString() : new Date(0).toISOString();
+const consentOf = (consent: IConsent): SubmissionConsent => ({
+  given: true,
+  textVersion: consent.textVersion,
+  at: ISO(consent.at),
+});
 
-const str = (value: unknown): string => (typeof value === 'string' ? value : '');
+const practiceAreaRef = (
+  doc: PracticeAreaRefDoc
+): { id: string; slug: string; title: string; shortLabel: string } => ({
+  id: doc._id.toString(),
+  slug: doc.slug,
+  title: doc.title,
+  shortLabel: doc.shortLabel,
+});
 
-const orNull = (value: unknown): string | null => (typeof value === 'string' ? value : null);
+const officeRef = (doc: OfficeRefDoc): { id: string; slug: string; name: string } => ({
+  id: doc._id.toString(),
+  slug: doc.slug,
+  name: doc.name,
+});
 
-const consentOf = (value: unknown): SubmissionConsent => {
-  const consent = (value ?? {}) as { textVersion?: unknown; at?: unknown };
+const jobRef = (doc: JobRefDoc): { id: string; title: string } => ({
+  id: doc._id.toString(),
+  title: doc.title,
+});
 
-  return { given: true, textVersion: str(consent.textVersion), at: ISO(consent.at) };
-};
+const actorRef = (doc: UserRefDoc): { id: string; name: string } => ({
+  id: doc._id.toString(),
+  name: doc.name,
+});
 
-/** A populated reference, or null when it was never set or has been deleted. */
-function refOf<T>(value: unknown, shape: (doc: Record<string, unknown>) => T): T | null {
-  if (typeof value !== 'object' || value === null) return null;
+/**
+ * A populated reference, or null.
+ *
+ * `populate` leaves an unresolved reference as a bare ObjectId — which happens
+ * when a vacancy is deleted while its applications are still within their
+ * retention period — so anything without the fields we asked for is treated as
+ * absent rather than serialised half-formed.
+ */
+function refOf<D extends { _id: unknown }, T>(
+  value: D | null | undefined,
+  shape: (doc: D) => T
+): T | null {
+  if (value === null || value === undefined) return null;
   if (!('_id' in value)) return null;
 
   return shape(value);
 }
 
-const practiceAreaRef = (doc: Record<string, unknown>): Record<string, unknown> => ({
-  id: String(doc._id),
-  slug: str(doc.slug),
-  title: str(doc.title),
-  shortLabel: str(doc.shortLabel),
-});
-
-const officeRef = (doc: Record<string, unknown>): Record<string, unknown> => ({
-  id: String(doc._id),
-  slug: str(doc.slug),
-  name: str(doc.name),
-});
-
-const jobRef = (doc: Record<string, unknown>): Record<string, unknown> => ({
-  id: String(doc._id),
-  title: str(doc.title),
-});
-
-const actorRef = (doc: Record<string, unknown>): Record<string, unknown> => ({
-  id: String(doc._id),
-  name: str(doc.name),
-});
-
-export function toEnquiryAdmin(doc: StoredSubmission): EnquiryAdmin {
+export function toEnquiryAdmin(doc: PopulatedEnquiry): EnquiryAdmin {
   return {
-    id: String(doc._id),
-    reference: str(doc.reference),
-    fullName: str(doc.fullName),
-    email: str(doc.email),
-    phone: orNull(doc.phone),
-    organization: orNull(doc.organization),
+    id: doc._id.toString(),
+    reference: doc.reference,
+    fullName: doc.fullName,
+    email: doc.email,
+    phone: doc.phone ?? null,
+    organization: doc.organization ?? null,
     practiceArea: refOf(doc.practiceArea, practiceAreaRef),
     preferredOffice: refOf(doc.preferredOffice, officeRef),
-    summary: str(doc.summary),
+    summary: doc.summary,
     consent: consentOf(doc.consent),
     status: doc.status,
     assignedTo: refOf(doc.assignedTo, actorRef),
     createdAt: ISO(doc.createdAt),
-  } as unknown as EnquiryAdmin;
+  };
 }
 
-export function toMessageAdmin(doc: StoredSubmission): MessageAdmin {
+export function toMessageAdmin(doc: PopulatedMessage): MessageAdmin {
   return {
-    id: String(doc._id),
-    reference: str(doc.reference),
-    fullName: str(doc.fullName),
-    email: str(doc.email),
-    phone: orNull(doc.phone),
-    subject: orNull(doc.subject),
-    message: str(doc.message),
+    id: doc._id.toString(),
+    reference: doc.reference,
+    fullName: doc.fullName,
+    email: doc.email,
+    phone: doc.phone ?? null,
+    subject: doc.subject ?? null,
+    message: doc.message,
     consent: consentOf(doc.consent),
     status: doc.status,
     assignedTo: refOf(doc.assignedTo, actorRef),
     createdAt: ISO(doc.createdAt),
-  } as unknown as MessageAdmin;
+  };
 }
 
-export function toApplicationAdmin(doc: StoredSubmission): ApplicationAdmin {
-  const cv = (doc.cv ?? {}) as Record<string, unknown>;
-
+export function toApplicationAdmin(doc: PopulatedApplication): ApplicationAdmin {
   return {
-    id: String(doc._id),
-    reference: str(doc.reference),
+    id: doc._id.toString(),
+    reference: doc.reference,
     job: refOf(doc.job, jobRef),
-    fullName: str(doc.fullName),
-    email: str(doc.email),
-    phone: orNull(doc.phone),
-    coverNote: orNull(doc.coverNote),
+    fullName: doc.fullName,
+    email: doc.email,
+    phone: doc.phone ?? null,
+    coverNote: doc.coverNote ?? null,
     cv: {
       // No storageKey: see the note at the top of this file.
-      originalName: str(cv.originalName),
-      mimeType: str(cv.mimeType),
-      bytes: typeof cv.bytes === 'number' ? cv.bytes : 0,
-      scanStatus: cv.scanStatus,
+      originalName: doc.cv.originalName,
+      mimeType: doc.cv.mimeType,
+      bytes: doc.cv.bytes,
+      scanStatus: doc.cv.scanStatus,
     },
     consent: consentOf(doc.consent),
     status: doc.status,
     createdAt: ISO(doc.createdAt),
-  } as unknown as ApplicationAdmin;
+  };
 }

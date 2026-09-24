@@ -185,9 +185,19 @@ describe('parseEnv', () => {
       JWT_ACCESS_SECRET: 'a-real-production-secret-of-good-length',
       ENCRYPTION_KEY: 'c'.repeat(64),
       IP_HASH_SALT: 'a-real-production-salt-value',
-      // Production serves images from Cloudinary; the local driver is refused.
+      // Production refuses every dev-only driver: the local ones write files
+      // nothing serves, `noop` calls every CV clean, and `log` sends no mail.
       STORAGE_PUBLIC_DRIVER: 'cloudinary',
       CLOUDINARY_URL: 'cloudinary://key:secret@spa-ajibade',
+      STORAGE_PRIVATE_DRIVER: 's3',
+      S3_BUCKET_PRIVATE: 'spa-ajibade-cvs',
+      S3_REGION: 'eu-west-1',
+      S3_ACCESS_KEY_ID: 'AKIAEXAMPLE',
+      S3_SECRET_ACCESS_KEY: 'a-real-looking-secret-access-key',
+      VIRUS_SCAN_DRIVER: 'clamav',
+      CLAMAV_HOST: 'clamav.internal',
+      MAILER_DRIVER: 'resend',
+      RESEND_API_KEY: 're_example_key',
     };
 
     it('accepts real secrets', () => {
@@ -204,6 +214,16 @@ describe('parseEnv', () => {
       });
 
       expect(error.issues.join('\n')).toContain('STORAGE_PUBLIC_DRIVER');
+    });
+
+    it.each([
+      ['STORAGE_PRIVATE_DRIVER', 'local'],
+      ['VIRUS_SCAN_DRIVER', 'noop'],
+      ['MAILER_DRIVER', 'log'],
+    ])('refuses the dev-only %s=%s in production', (field, value) => {
+      const error = expectConfigError({ ...productionEnv, [field]: value });
+
+      expect(error.issues.join('\n')).toContain(field);
     });
 
     it('refuses the .env.example placeholder secret in production', () => {
