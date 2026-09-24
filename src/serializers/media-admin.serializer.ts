@@ -17,6 +17,7 @@ const ISO = (value: unknown): string =>
 export function toMediaAdmin(doc: StoredMedia, usedBy: readonly MediaUsage[] = []): MediaAdmin {
   return {
     id: doc._id.toString(),
+    revision: doc.revision,
     url: doc.url,
     sizes: { sm: doc.sizes.sm, md: doc.sizes.md, lg: doc.sizes.lg },
     alt: doc.alt,

@@ -81,6 +81,13 @@ export function createLocalStorage(directory: string, baseUrl: string): IPublicS
       };
     },
 
+    resize(): undefined {
+      // The three widths are whole files written at upload time, and none of
+      // them is cropped, so the focal point changes nothing about them. The
+      // frontend applies it when it crops (ADR-030).
+      return undefined;
+    },
+
     async remove(storageKey: string): Promise<void> {
       const extension = Object.values(EXTENSIONS);
 

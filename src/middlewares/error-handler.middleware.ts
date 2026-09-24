@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import type { AppError } from '../core/errors.js';
 import {
+  ConflictError,
   GENERIC_INTERNAL_RESPONSE,
   PayloadTooLargeError,
   ValidationError,
@@ -31,6 +32,17 @@ const asBodyParserError = (error: unknown): BodyParserError | undefined =>
     ? (error as BodyParserError)
     : undefined;
 
+/** MongoDB's duplicate-key error, which the driver raises with code 11000. */
+interface DuplicateKeyError {
+  readonly code: number;
+  readonly keyValue?: Record<string, unknown>;
+}
+
+const asDuplicateKeyError = (error: unknown): DuplicateKeyError | undefined =>
+  error instanceof Error && 'code' in error && (error as { code: unknown }).code === 11000
+    ? (error as unknown as DuplicateKeyError)
+    : undefined;
+
 /**
  * Translate the errors thrown before our own code runs — body-parser and Zod —
  * into the hierarchy, so they are reported like everything else.
@@ -40,6 +52,21 @@ function normalise(error: unknown): AppError | undefined {
 
   if (error instanceof ZodError) {
     return new ValidationError('Invalid request', toErrorDetails(error));
+  }
+
+  const duplicate = asDuplicateKeyError(error);
+  if (duplicate) {
+    // Every unique index in this schema is a slug or an email, and both are
+    // things an editor typed. Without this the driver's error reaches the
+    // generic 500 handler, and "save" fails with "Something went wrong".
+    const fields = Object.keys(duplicate.keyValue ?? {});
+
+    return new ConflictError(
+      fields.length === 1
+        ? `That ${fields[0] ?? 'value'} is already taken. Choose another.`
+        : 'That value is already taken. Choose another.',
+      fields.map((field) => ({ path: field, message: 'already in use' }))
+    );
   }
 
   const parserError = asBodyParserError(error);
@@ -85,7 +112,12 @@ export function errorHandler(
       );
     }
 
-    res.status(appError.statusCode).json(appError.toResponse());
+    // A 5xx is ours to explain in the log, never in the response: an
+    // InternalError's message exists for the operator, and can quote an
+    // upstream service verbatim (docs/API.md).
+    res
+      .status(appError.statusCode)
+      .json(appError.statusCode >= 500 ? GENERIC_INTERNAL_RESPONSE : appError.toResponse());
     return;
   }
 

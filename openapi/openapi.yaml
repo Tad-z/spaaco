@@ -3604,6 +3604,8 @@ paths:
       description: Metadata only. Replacing the file itself is a separate endpoint.
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -3624,6 +3626,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
         '500':
           $ref: '#/components/responses/InternalError'
     delete:
@@ -3665,6 +3671,7 @@ paths:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ObjectId'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -3682,10 +3689,14 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '413':
           $ref: '#/components/responses/PayloadTooLarge'
         '415':
           $ref: '#/components/responses/UnsupportedMediaType'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -6568,6 +6579,7 @@ components:
       additionalProperties: false
       required:
         - id
+        - revision
         - url
         - sizes
         - alt
@@ -6583,6 +6595,11 @@ components:
       description: The storage key is deliberately absent; it is an internal path.
       properties:
         id: { $ref: '#/components/schemas/ObjectId' }
+        revision:
+          type: integer
+          description: |
+            Send it back as `If-Match` on a metadata edit or a file
+            replacement, so two editors cannot silently overwrite each other.
         url: { type: string }
         sizes: { $ref: '#/components/schemas/ImageSizes' }
         alt: { type: string }

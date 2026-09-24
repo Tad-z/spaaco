@@ -122,6 +122,26 @@ export class FileRejectedError extends AppError {
   }
 }
 
+/**
+ * A write that needs `If-Match` arrived without it.
+ *
+ * 428 rather than 400 because nothing about the request is malformed — it is
+ * the precondition that is missing, and the client's fix is to read the record
+ * and resend, not to correct a field. The code stays `VALIDATION_ERROR`, as the
+ * spec's own example of this response does, so the error enum is unchanged.
+ */
+export class PreconditionRequiredError extends AppError {
+  readonly statusCode = 428;
+  readonly code = 'VALIDATION_ERROR';
+
+  constructor(
+    message = 'An If-Match header carrying the current revision is required',
+    details?: ErrorDetail[]
+  ) {
+    super(message, details);
+  }
+}
+
 export class RateLimitedError extends AppError {
   readonly statusCode = 429;
   readonly code = 'RATE_LIMITED';

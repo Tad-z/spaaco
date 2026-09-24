@@ -2776,6 +2776,11 @@ export interface components {
         /** @description The storage key is deliberately absent; it is an internal path. */
         MediaAdmin: {
             id: components["schemas"]["ObjectId"];
+            /**
+             * @description Send it back as `If-Match` on a metadata edit or a file
+             *     replacement, so two editors cannot silently overwrite each other.
+             */
+            revision: number;
             url: string;
             sizes: components["schemas"]["ImageSizes"];
             alt: string;
@@ -6226,7 +6231,13 @@ export interface operations {
     updateMedia: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
             path: {
                 /** @description A 24-character hexadecimal identifier. */
                 id: components["parameters"]["ObjectId"];
@@ -6253,13 +6264,21 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
             500: components["responses"]["InternalError"];
         };
     };
     replaceMediaFile: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
             path: {
                 /** @description A 24-character hexadecimal identifier. */
                 id: components["parameters"]["ObjectId"];
@@ -6277,8 +6296,10 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             413: components["responses"]["PayloadTooLarge"];
             415: components["responses"]["UnsupportedMediaType"];
+            428: components["responses"]["PreconditionRequired"];
             500: components["responses"]["InternalError"];
         };
     };

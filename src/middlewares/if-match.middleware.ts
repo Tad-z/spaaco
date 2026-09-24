@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { ValidationError } from '../core/errors.js';
+import { PreconditionRequiredError, ValidationError } from '../core/errors.js';
 
 /**
  * Requires `If-Match` on an admin write, carrying the revision that was read.
@@ -22,11 +22,7 @@ export function ifMatch(req: Request, _res: Response, next: NextFunction): void 
   const header = req.get('if-match');
 
   if (header === undefined || header.trim() === '') {
-    next(
-      new ValidationError('An If-Match header carrying the current revision is required', [
-        { path: 'If-Match', message: 'required' },
-      ])
-    );
+    next(new PreconditionRequiredError(undefined, [{ path: 'If-Match', message: 'required' }]));
     return;
   }
 

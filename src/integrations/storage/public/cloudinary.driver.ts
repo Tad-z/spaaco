@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { IMAGE_SIZES } from '../../../config/constants.js';
 import { InternalError } from '../../../core/errors.js';
 import type {
+  FocalPoint,
   IPublicStorage,
   ImageSizeUrls,
   PutImageInput,
@@ -65,12 +66,29 @@ export function createCloudinaryStorage(
   const { cloudName, apiKey, apiSecret } = credentials;
   const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
-  const sizeUrls = (publicId: string, format: string): ImageSizeUrls => {
+  /**
+   * Transformation URLs, with the focal point as gravity (ADR-030).
+   *
+   * `g_xy_center` tells Cloudinary which point to keep when a crop has to
+   * choose, so a portrait is not beheaded on a narrow viewport. It only bites
+   * once a crop is applied, which is why the widths stay `c_limit` here and the
+   * coordinates ride along for the frontend's own transformations.
+   */
+  const sizeUrls = (
+    publicId: string,
+    format: string,
+    focalPoint: FocalPoint = { x: 0.5, y: 0.5 }
+  ): ImageSizeUrls => {
+    const gravity = `g_xy_center,x_${focalPoint.x.toFixed(3)},y_${focalPoint.y.toFixed(3)}`;
+
     const at = (width: number): string =>
-      `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto,c_limit,w_${String(width)}/${publicId}.${format}`;
+      `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto,c_limit,w_${String(width)},${gravity}/${publicId}.${format}`;
 
     return { sm: at(IMAGE_SIZES.sm), md: at(IMAGE_SIZES.md), lg: at(IMAGE_SIZES.lg) };
   };
+
+  /** A public id carries no extension, so the delivery format comes from the type. */
+  const formatOf = (mimeType: string): string => mimeType.split('/').pop() ?? 'jpg';
 
   return {
     name: 'cloudinary',
@@ -103,8 +121,14 @@ export function createCloudinaryStorage(
       return {
         storageKey: body.public_id,
         url: body.secure_url,
-        sizes: sizeUrls(body.public_id, format),
+        sizes: sizeUrls(body.public_id, format, input.focalPoint),
       };
+    },
+
+    resize(storageKey: string, mimeType: string, focalPoint: FocalPoint): ImageSizeUrls {
+      // No upload needed: the widths are URLs, so a new focal point is simply a
+      // new set of URLs over the same stored original.
+      return sizeUrls(storageKey, formatOf(mimeType), focalPoint);
     },
 
     async remove(storageKey: string): Promise<void> {

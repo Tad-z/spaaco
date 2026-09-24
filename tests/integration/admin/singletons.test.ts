@@ -112,7 +112,8 @@ describe('replacing a page', () => {
       .set('Authorization', auth())
       .send(editable(body));
 
-    expect(res.status).toBe(400);
+    // 428: the precondition is missing, not the body malformed.
+    expect(res.status).toBe(428);
     expect(res.body.error.details.map((d: { path: string }) => d.path)).toContain('If-Match');
   });
 });

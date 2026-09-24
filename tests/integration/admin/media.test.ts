@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import mongoose from 'mongoose';
 import sharp from 'sharp';
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
@@ -10,7 +10,9 @@ import { expectToMatchContract } from '../../support/contract.js';
 import { createTestUser } from '../../support/auth.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { AuditLog, Media, PracticeArea } from '../../../src/models/index.js';
+import { setRevalidator } from '../../../src/services/cache.service.js';
 import { config } from '../../../src/config/env.js';
+import { UPLOAD_LIMITS } from '../../../src/config/constants.js';
 import * as cache from '../../../src/core/cache.js';
 
 /**
@@ -36,10 +38,32 @@ beforeAll(async () => {
   await Promise.all(mongoose.modelNames().map((name) => mongoose.model(name).syncIndexes()));
 });
 
+/** Captures the tags sent to the frontend, which the LRU cannot show. */
+const revalidated = vi.fn<(tags: readonly string[]) => Promise<void>>();
+
 beforeEach(async () => {
   await runSeed();
   token = (await createTestUser({ roles: ['admin'] })).token;
+
+  revalidated.mockReset();
+  revalidated.mockResolvedValue();
+  setRevalidator({ revalidate: revalidated });
 });
+
+afterEach(() => {
+  setRevalidator(undefined);
+});
+
+/** Every file the local driver has written, path included. */
+const storedFiles = async (): Promise<string[]> => {
+  if (!existsSync(config.UPLOAD_DIR)) return [];
+
+  const entries = await readdir(config.UPLOAD_DIR, { recursive: true, withFileTypes: true });
+
+  return entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => `${entry.parentPath}/${entry.name}`.split('\\').join('/'));
+};
 
 /** A real image, so the magic-byte check is exercised rather than mocked. */
 const png = async (width = 1200, height = 900): Promise<Buffer> =>
@@ -119,7 +143,7 @@ describe('uploading', () => {
   });
 
   it('refuses a file over the size limit', async () => {
-    const tooBig = Buffer.alloc(config.NODE_ENV === 'test' ? 11 * 1024 * 1024 : 0, 1);
+    const tooBig = Buffer.alloc(UPLOAD_LIMITS.imageMaxBytes + 1024, 1);
     tooBig.write('\x89PNG\r\n\x1a\n', 0, 'binary');
 
     const res = await upload({ file: tooBig });
@@ -204,6 +228,7 @@ describe('one image', () => {
     const res = await request(app)
       .patch(`${base}/${id}`)
       .set('Authorization', auth())
+      .set('If-Match', String(created.body.data.revision))
       .send({ alt: 'A revised description', focalPoint: { x: 0.25, y: 0.75 } });
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
@@ -220,6 +245,7 @@ describe('one image', () => {
     const res = await request(app)
       .patch(`${base}/${created.body.data.id}`)
       .set('Authorization', auth())
+      .set('If-Match', String(created.body.data.revision))
       .send({ focalPoint: { x: 1.5, y: 0.5 } });
 
     expect(res.status).toBe(400);
@@ -237,6 +263,7 @@ describe('replacing the file in place', () => {
     const res = await request(app)
       .put(`${base}/${id}/file`)
       .set('Authorization', auth())
+      .set('If-Match', String(created.body.data.revision))
       .attach('file', await png(800, 600), {
         filename: 'reception-v2.png',
         contentType: 'image/png',
@@ -251,8 +278,16 @@ describe('replacing the file in place', () => {
     // The alt text belongs to the picture's meaning, not its bytes.
     expect(res.body.data.alt).toBe(created.body.data.alt);
 
-    const files = existsSync(config.UPLOAD_DIR) ? await readdir(config.UPLOAD_DIR) : [];
-    expect(files.some((name) => name.startsWith(oldKey.split('/').pop() ?? 'x'))).toBe(false);
+    // Recursive: the driver writes to <UPLOAD_DIR>/YYYY/MM/, so a flat listing
+    // would only ever see the year folder and the assertion could not fail.
+    const after = await Media.findById(id).lean<{ storageKey: string } | null>();
+    const files = await storedFiles();
+
+    expect(files.filter((name) => name.includes(oldKey))).toEqual([]);
+    expect(
+      files.some((name) => name.includes(after?.storageKey ?? 'missing')),
+      'the new file was not written'
+    ).toBe(true);
   });
 
   it('clears the caches of everything using the image', async () => {
@@ -270,9 +305,17 @@ describe('replacing the file in place', () => {
     await request(app)
       .put(`${base}/${id}/file`)
       .set('Authorization', auth())
+      .set('If-Match', String(created.body.data.revision))
       .attach('file', await png(800, 600), { filename: 'v2.png', contentType: 'image/png' });
 
     expect(cache.size()).toBe(0);
+
+    // The exact tag matters, and the in-process cache cannot show it: the
+    // frontend revalidates `practice-area:tax`, so sending `practice-area:Tax`
+    // — the display label — would leave its detail page stale for ever.
+    const tags = revalidated.mock.calls.flatMap(([sent]) => [...sent]);
+    expect(tags).toContain('practice-area:tax');
+    expect(tags).not.toContain('practice-area:Tax');
   });
 
   it('records an audit entry', async () => {
@@ -281,6 +324,7 @@ describe('replacing the file in place', () => {
     await request(app)
       .put(`${base}/${created.body.data.id}/file`)
       .set('Authorization', auth())
+      .set('If-Match', String(created.body.data.revision))
       .attach('file', await png(800, 600), { filename: 'v2.png', contentType: 'image/png' });
 
     const entry = await AuditLog.findOne({ entityId: created.body.data.id }).lean();
@@ -293,9 +337,73 @@ describe('replacing the file in place', () => {
     const res = await request(app)
       .put(`${base}/${created.body.data.id}/file`)
       .set('Authorization', auth())
+      .set('If-Match', String(created.body.data.revision))
       .attach('file', Buffer.from('MZ'), { filename: 'v2.png', contentType: 'image/png' });
 
     expect(res.status).toBe(415);
+  });
+});
+
+describe('optimistic locking', () => {
+  it('refuses a write with no If-Match, rather than taking last write wins', async () => {
+    const created = await upload();
+
+    const res = await request(app)
+      .patch(`${base}/${created.body.data.id}`)
+      .set('Authorization', auth())
+      .send({ alt: 'Whose change wins?' });
+
+    expect(res.status).toBe(428);
+    expect(res.body.error.details.map((d: { path: string }) => d.path)).toContain('If-Match');
+  });
+
+  it('returns 409 when someone else saved first', async () => {
+    const created = await upload();
+    const id = created.body.data.id as string;
+    const revision = created.body.data.revision as number;
+
+    const first = await request(app)
+      .patch(`${base}/${id}`)
+      .set('Authorization', auth())
+      .set('If-Match', String(revision))
+      .send({ alt: 'Theirs' });
+
+    expect(first.status).toBe(200);
+    expect(first.body.data.revision).toBe(revision + 1);
+
+    const second = await request(app)
+      .patch(`${base}/${id}`)
+      .set('Authorization', auth())
+      .set('If-Match', String(revision))
+      .send({ alt: 'Mine' });
+
+    expect(second.status).toBe(409);
+    expect(JSON.stringify(second.body.error.details)).toContain(String(revision + 1));
+  });
+
+  it('leaves no orphaned file when a replacement loses the race', async () => {
+    const created = await upload();
+    const { id, revision } = created.body.data;
+
+    await request(app)
+      .put(`${base}/${id}/file`)
+      .set('Authorization', auth())
+      .set('If-Match', String(revision))
+      .attach('file', await png(800, 600), { filename: 'winner.png', contentType: 'image/png' });
+
+    const before = await storedFiles();
+
+    const loser = await request(app)
+      .put(`${base}/${id}/file`)
+      .set('Authorization', auth())
+      .set('If-Match', String(revision))
+      .attach('file', await png(640, 480), { filename: 'loser.png', contentType: 'image/png' });
+
+    expect(loser.status).toBe(409);
+
+    // The loser's bytes were already in storage when the revision check failed.
+    // Nothing references them, so nothing may be left behind.
+    expect(await storedFiles()).toEqual(before);
   });
 });
 

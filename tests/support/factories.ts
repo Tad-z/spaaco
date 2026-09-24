@@ -53,6 +53,7 @@ export function makeMedia(overrides: Partial<IMedia> = {}): IMedia & { _id: Type
     originalFilename: 'example.jpg',
     title: 'Example',
     alt: 'An example image',
+    revision: 0,
     focalPoint: { x: 0.5, y: 0.5 },
     uploadedBy: null,
     replacedBy: null,

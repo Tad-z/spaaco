@@ -4,7 +4,7 @@ import { UnauthenticatedError, ValidationError } from '../../core/errors.js';
 import {
   deleteMedia,
   findUsages,
-  getMedia,
+  getMediaWithUsages,
   listMedia,
   replaceMediaFile,
   updateMedia,
@@ -19,6 +19,20 @@ import {
   updateMediaBody,
   uploadMediaBody,
 } from '../../validators/media.validator.js';
+
+/**
+ * The revision the editor read. `ifMatch` runs before both write routes and
+ * refuses a request without one, so reaching here empty is a wiring bug.
+ */
+const expectedRevision = (req: Request): number => {
+  if (req.ifMatch === undefined) {
+    throw new ValidationError('An If-Match header carrying the current revision is required', [
+      { path: 'If-Match', message: 'required' },
+    ]);
+  }
+
+  return req.ifMatch;
+};
 
 /** requireAuth guarantees this, but the type does not, so it is checked once. */
 const actorContext = (req: Request): { actorId: Types.ObjectId } => {
@@ -70,7 +84,7 @@ export async function listMediaHandler(req: Request, res: Response): Promise<voi
 export async function getMediaHandler(req: Request, res: Response): Promise<void> {
   const { id } = readParams(req, idParams);
 
-  const [doc, usedBy] = await Promise.all([getMedia(id), findUsages(id)]);
+  const { doc, usedBy } = await getMediaWithUsages(id);
 
   res.json({ data: toMediaAdmin(doc, usedBy) });
 }
@@ -79,7 +93,7 @@ export async function updateMediaHandler(req: Request, res: Response): Promise<v
   const { id } = readParams(req, idParams);
   const input = readBody(req, updateMediaBody);
 
-  const doc = await updateMedia(id, input);
+  const doc = await updateMedia(id, expectedRevision(req), input);
 
   res.json({ data: toMediaAdmin(doc, await findUsages(id)) });
 }
@@ -88,7 +102,13 @@ export async function replaceMediaFileHandler(req: Request, res: Response): Prom
   const { id } = readParams(req, idParams);
   const file = uploadedFile(req);
 
-  const doc = await replaceMediaFile(id, file.buffer, file.originalname, actorContext(req));
+  const doc = await replaceMediaFile(
+    id,
+    expectedRevision(req),
+    file.buffer,
+    file.originalname,
+    actorContext(req)
+  );
 
   res.json({ data: toMediaAdmin(doc, await findUsages(id)) });
 }

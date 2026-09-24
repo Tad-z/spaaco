@@ -33,7 +33,7 @@ Base path: `/api/v1`. JSON everywhere except the CV upload (multipart).
 }
 ```
 
-The codes are `VALIDATION_ERROR` (400), `UNAUTHENTICATED` (401), `FORBIDDEN` (403), `NOT_FOUND` (404), `CONFLICT` (409), `PAYLOAD_TOO_LARGE` (413), `UNSUPPORTED_MEDIA_TYPE` (415), `FILE_REJECTED` (422), `RATE_LIMITED` (429) and `INTERNAL` (500). `FILE_REJECTED` means an upload was inspected and refused (today: it failed the virus scan), as opposed to a field being invalid. A 500 never leaks stack traces or messages.
+The codes are `VALIDATION_ERROR` (400), `UNAUTHENTICATED` (401), `FORBIDDEN` (403), `NOT_FOUND` (404), `CONFLICT` (409), `PAYLOAD_TOO_LARGE` (413), `UNSUPPORTED_MEDIA_TYPE` (415), `FILE_REJECTED` (422), `RATE_LIMITED` (429) and `INTERNAL` (500). A missing `If-Match` on a write that needs one answers **428** with the `VALIDATION_ERROR` code: nothing about the request is malformed, so it is not a 400, but the code enum stays closed. `FILE_REJECTED` means an upload was inspected and refused (today: it failed the virus scan), as opposed to a field being invalid. A 500 never leaks stack traces or messages.
 
 **Shared shapes:**
 
@@ -130,9 +130,9 @@ The `/content/` segment keeps these from colliding with the admin singletons (`/
 - `POST /media`: multipart upload (`file` + `alt`, optional `title`). Accepts JPEG, PNG, WebP or AVIF, ≤ 10 MB, type checked by magic bytes. SVG is rejected because it can carry scripts; export badges as PNG. Returns 201 with the media record.
 - `GET /media`: library listing. Takes `?q=` (matches title/alt/original filename), `?unused=true`, `?sort=newest|oldest` and pagination (default pageSize 24).
 - `GET /media/:id`: one record plus `usedBy: [{ collection, id, label, field }]`, e.g. `{ "collection": "practiceAreas", "id": "…", "label": "Tax", "field": "image" }`.
-- `PATCH /media/:id`: edit `alt`, `title` and `focalPoint` without re-uploading.
-- `PUT /media/:id/file`: **replaces the file in place.** The ID and alt text stay the same, so every page and record using the image updates at once. The new file gets a new URL (so browsers and CDNs can't serve the old one), the old file is deleted from storage after the swap succeeds, every referencing entity's cache tags are invalidated, and the action is audit-logged.
-- `DELETE /media/:id`: allowed only when `usedBy` is empty. Otherwise it returns 409 `CONFLICT` with `usedBy` in `error.details`, so the UI can show where the image is still used.
+- `PATCH /media/:id`: edit `alt`, `title` and `focalPoint` without re-uploading. Takes `If-Match`, like every other admin write. Moving the focal point rebuilds the Cloudinary size URLs, whose gravity embeds it.
+- `PUT /media/:id/file`: **replaces the file in place.** Takes `If-Match`: if the record moved on while the upload was in flight, the request is refused with 409 and the file just stored is removed, rather than left orphaned. The ID and alt text stay the same, so every page and record using the image updates at once. The new file gets a new URL (so browsers and CDNs can't serve the old one), the old file is deleted from storage after the swap succeeds, every referencing entity's cache tags are invalidated, and the action is audit-logged.
+- `DELETE /media/:id`: allowed only when `usedBy` is empty. Otherwise it returns 409 `CONFLICT` with one `error.details` entry per usage — `path` is `usedBy` and `message` names the collection, record and field — so the UI can show where the image is still used. (`ErrorDetail` is `{ path, message }`, so the structured `usedBy` array itself cannot travel in `details`; call `GET /media/:id` for that.)
 
 Admin media records use this shape:
 
@@ -147,9 +147,9 @@ Admin media records use this shape:
 Admin GETs and public GETs return **different shapes on purpose**:
 
 - **Public (composed):** references are expanded into what the site renders. `hero.image` is a full Image object; `leadership` is PersonSummary[]; computed stats are resolved.
-- **Admin (editable):** references stay as IDs, exactly as the admin UI must send them back. `hero.image` is `"665f…"` (a media ID), `story.quotePerson` is a person ID, and stats keep their `source`. To render thumbnails without extra calls, admin responses also include an `_expanded` object keyed by ID with a minimal preview of each referenced media or person (`{ url, alt }` / `{ displayName }`). The client never sends `_expanded` back; the server ignores it if it does.
+- **Admin (editable):** references stay as IDs, exactly as the admin UI must send them back. `hero.image` is `"665f…"` (a media ID), `story.quotePerson` is a person ID, and stats keep their `source`. To render thumbnails without extra calls, admin responses also include an `_expanded` object keyed by ID with a minimal preview of each referenced media or person (`{ url, alt }` / `{ displayName }`). **`_expanded` is rejected on write, not ignored:** the request schemas are strict, so sending it back is a 400 naming the field rather than a silent no-op.
 
-Rule of thumb: whatever an admin GET returns (minus `_expanded`, `id`, timestamps and `revision`) is a valid PUT body.
+Rule of thumb: whatever an admin GET returns, minus the fields the server owns, is a valid PUT body. Those fields are `id`, `slug`'s siblings `status`, `publishedAt` and `order`, plus `revision`, `createdAt`, `updatedAt` and `_expanded`. (`slug` itself _is_ writable — it is how an editor changes a URL.)
 
 **Submissions:** `GET /enquiries`, `GET /enquiries/:id`, `PATCH /enquiries/:id` (status, assignedTo). The same for `/messages` and `/applications`, plus `GET /applications/:id/cv`, which returns `{ url, expiresAt }` (a signed URL with a 5-minute TTL; this access is audited).
 

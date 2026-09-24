@@ -15,11 +15,18 @@ export interface ImageSizeUrls {
   readonly lg: string;
 }
 
+export interface FocalPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
 export interface PutImageInput {
   readonly buffer: Buffer;
   readonly mimeType: string;
   /** Used only to make the stored key readable; never trusted. */
   readonly originalFilename: string;
+  /** Where a crop should centre. Defaults to the middle of the image. */
+  readonly focalPoint?: FocalPoint;
 }
 
 export interface StoredImage {
@@ -32,6 +39,15 @@ export interface StoredImage {
 export interface IPublicStorage {
   readonly name: string;
   put(input: PutImageInput): Promise<StoredImage>;
+  /**
+   * The size URLs for an already-stored image at a new focal point, or
+   * `undefined` when the driver's widths are files rather than URLs and so
+   * cannot be re-pointed without a re-upload (ADR-030).
+   *
+   * `mimeType` comes from the record rather than the key: a Cloudinary public
+   * id carries no extension.
+   */
+  resize(storageKey: string, mimeType: string, focalPoint: FocalPoint): ImageSizeUrls | undefined;
   /** Best effort: a failure is logged, never fatal (ARCHITECTURE step 4). */
   remove(storageKey: string): Promise<void>;
 }

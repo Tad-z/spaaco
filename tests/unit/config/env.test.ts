@@ -185,12 +185,25 @@ describe('parseEnv', () => {
       JWT_ACCESS_SECRET: 'a-real-production-secret-of-good-length',
       ENCRYPTION_KEY: 'c'.repeat(64),
       IP_HASH_SALT: 'a-real-production-salt-value',
+      // Production serves images from Cloudinary; the local driver is refused.
+      STORAGE_PUBLIC_DRIVER: 'cloudinary',
+      CLOUDINARY_URL: 'cloudinary://key:secret@spa-ajibade',
     };
 
     it('accepts real secrets', () => {
       const config = parseEnv(productionEnv);
 
       expect(config.NODE_ENV).toBe('production');
+    });
+
+    it('refuses the local image driver in production, which would store dead URLs', () => {
+      const error = expectConfigError({
+        ...productionEnv,
+        STORAGE_PUBLIC_DRIVER: 'local',
+        CLOUDINARY_URL: undefined,
+      });
+
+      expect(error.issues.join('\n')).toContain('STORAGE_PUBLIC_DRIVER');
     });
 
     it('refuses the .env.example placeholder secret in production', () => {

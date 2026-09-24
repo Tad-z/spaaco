@@ -11,6 +11,7 @@ import { requireAuth } from '../../middlewares/require-auth.middleware.js';
 import { requireRole } from '../../middlewares/require-role.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { imageUpload } from '../../middlewares/upload.middleware.js';
+import { ifMatch } from '../../middlewares/if-match.middleware.js';
 import { noStore } from '../../middlewares/cache-headers.middleware.js';
 import { idParams } from '../../validators/common.validator.js';
 import {
@@ -46,6 +47,7 @@ adminMediaRoutes.get('/media/:id', ...guards, validate({ params: idParams }), ge
 adminMediaRoutes.patch(
   '/media/:id',
   ...guards,
+  ifMatch,
   validate({ params: idParams, body: updateMediaBody }),
   updateMediaHandler
 );
@@ -53,6 +55,7 @@ adminMediaRoutes.patch(
 adminMediaRoutes.put(
   '/media/:id/file',
   ...guards,
+  ifMatch,
   validate({ params: idParams }),
   imageUpload(),
   replaceMediaFileHandler

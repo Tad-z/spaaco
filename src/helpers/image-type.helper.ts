@@ -24,11 +24,21 @@ const SIGNATURES: readonly { mimeType: string; matches: (bytes: Buffer) => boole
       bytes.subarray(8, 12).toString('latin1') === 'WEBP',
   },
   {
-    // ISO-BMFF: "ftyp" at offset 4, then an AVIF brand.
+    // ISO-BMFF: "ftyp" at offset 4, then brands.
+    //
+    // The major brand at offset 8 is often `mif1`, with `avif` only in the
+    // compatible-brands list that follows it — libavif and libheif both write
+    // files that way — so matching the major brand alone rejects most real
+    // AVIFs. The whole ftyp box is searched instead.
     mimeType: 'image/avif',
-    matches: (bytes) =>
-      bytes.subarray(4, 8).toString('latin1') === 'ftyp' &&
-      ['avif', 'avis'].includes(bytes.subarray(8, 12).toString('latin1')),
+    matches: (bytes) => {
+      if (bytes.subarray(4, 8).toString('latin1') !== 'ftyp') return false;
+
+      const boxSize = bytes.readUInt32BE(0);
+      const brands = bytes.subarray(8, Math.min(boxSize, bytes.length)).toString('latin1');
+
+      return ['avif', 'avis'].some((brand) => brands.includes(brand));
+    },
   },
 ];
 

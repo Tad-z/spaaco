@@ -35,6 +35,17 @@ export interface MediaUsage {
   readonly field: string;
 }
 
+/**
+ * A usage plus the value its cache tags are keyed by.
+ *
+ * Internal: `MediaUsage` is the contract shape, and the slug is no business of
+ * the dashboard. Keeping them apart is what stopped the tag being built from
+ * the display label.
+ */
+interface TaggedUsage extends MediaUsage {
+  readonly tagValue: string;
+}
+
 export interface ListMediaOptions {
   readonly q?: string;
   readonly unused?: boolean;
@@ -91,16 +102,26 @@ async function storeImage(
   height: number;
 }> {
   const mimeType = acceptedType(buffer);
-  const metadata = await sharp(buffer).metadata();
+  // Sharp's types declare width and height as always present; at runtime they
+  // are absent for a file it can identify but not decode. The cast widens them
+  // back to the truth rather than pretending the guard below is unreachable.
+  const { width, height } = (await sharp(buffer).metadata()) as {
+    width?: number;
+    height?: number;
+  };
+
+  // An image whose dimensions sharp cannot read is a broken or truncated file.
+  // Storing it would fail the model's required fields as a 500; saying so here
+  // gives the editor the same answer as any other unusable upload.
+  if (width === undefined || height === undefined || width < 1 || height < 1) {
+    throw new UnsupportedMediaTypeError(
+      'That image could not be read. It may be truncated or corrupt.'
+    );
+  }
 
   const stored = await publicStorage().put({ buffer, mimeType, originalFilename });
 
-  return {
-    stored,
-    mimeType,
-    width: metadata.width,
-    height: metadata.height,
-  };
+  return { stored, mimeType, width, height };
 }
 
 export async function uploadMedia(
@@ -170,25 +191,66 @@ export async function getMedia(id: string): Promise<MediaDoc> {
   return doc;
 }
 
+/**
+ * One call for the record and where it is used.
+ *
+ * The controller asked for both separately, which ran the five-model registry
+ * sweep a second time on writes that had already run it while invalidating.
+ */
+export async function getMediaWithUsages(
+  id: string
+): Promise<{ doc: MediaDoc; usedBy: MediaUsage[] }> {
+  const [doc, usedBy] = await Promise.all([getMedia(id), findUsages(id)]);
+
+  return { doc, usedBy };
+}
+
 export interface UpdateMediaInput {
   readonly alt?: string;
   readonly title?: string | null;
   readonly focalPoint?: { x: number; y: number };
 }
 
-export async function updateMedia(id: string, input: UpdateMediaInput): Promise<MediaDoc> {
-  const updated = await Media.findByIdAndUpdate(
-    id,
-    { $set: input },
+export async function updateMedia(
+  id: string,
+  expectedRevision: number,
+  input: UpdateMediaInput
+): Promise<MediaDoc> {
+  const changes: Record<string, unknown> = { ...input };
+
+  if (input.focalPoint !== undefined) {
+    // Cloudinary bakes the focal point into the size URLs as gravity, so the
+    // stored `sizes` go stale the moment it moves (ADR-030). The local driver
+    // returns undefined here, because its widths are uncropped files.
+    const existing = await getMedia(id);
+    const sizes = publicStorage().resize(existing.storageKey, existing.mimeType, input.focalPoint);
+
+    if (sizes !== undefined) changes.sizes = sizes;
+  }
+
+  const updated = await Media.findOneAndUpdate(
+    { _id: id, revision: expectedRevision },
+    { $set: changes, $inc: { revision: 1 } },
     { new: true, runValidators: true }
   ).lean<MediaDoc | null>();
 
-  if (!updated) throw new NotFoundError('Image');
+  if (!updated) throw await staleOrMissing(id);
 
   // Alt text and focal point are rendered into every page using the image.
   await invalidateUsages(id);
 
   return updated;
+}
+
+/** Whichever of 404 and 409 actually happened, told apart by one read. */
+async function staleOrMissing(id: string): Promise<Error> {
+  const current = await Media.findById(id).select('revision').lean<{ revision: number } | null>();
+  if (!current) return new NotFoundError('Image');
+
+  return new ConflictError(
+    'This image changed since you loaded it. Reload and reapply your changes.',
+    [{ path: 'revision', message: `current revision is ${String(current.revision)}` }]
+  );
 }
 
 /**
@@ -201,6 +263,7 @@ export async function updateMedia(id: string, input: UpdateMediaInput): Promise<
  */
 export async function replaceMediaFile(
   id: string,
+  expectedRevision: number,
   buffer: Buffer,
   originalFilename: string,
   context: ActorContext = {}
@@ -208,8 +271,8 @@ export async function replaceMediaFile(
   const existing = await getMedia(id);
   const { stored, mimeType, width, height } = await storeImage(buffer, originalFilename);
 
-  const updated = await Media.findByIdAndUpdate(
-    id,
+  const updated = await Media.findOneAndUpdate(
+    { _id: id, revision: expectedRevision },
     {
       $set: {
         provider: publicStorage().name === 'cloudinary' ? 'cloudinary' : 'local',
@@ -224,12 +287,18 @@ export async function replaceMediaFile(
         bytes: buffer.byteLength,
         originalFilename,
       },
-      $inc: { version: 1 },
+      $inc: { version: 1, revision: 1 },
     },
     { new: true, runValidators: true }
   ).lean<MediaDoc | null>();
 
-  if (!updated) throw new NotFoundError('Image');
+  if (!updated) {
+    // We lost the race, or the record is gone. Either way the file just
+    // uploaded is referenced by nothing, so it is removed here rather than
+    // left behind as an orphan nobody will ever find.
+    await removeStored(stored.storageKey);
+    throw await staleOrMissing(id);
+  }
 
   await removeStored(existing.storageKey);
   await invalidateUsages(id);
@@ -280,6 +349,10 @@ export async function deleteMedia(id: string, context: ActorContext = {}): Promi
  * twelve round trips for a page the editor opens constantly.
  */
 export async function findUsages(id: string): Promise<MediaUsage[]> {
+  return (await findTaggedUsages(id)).map(({ tagValue: _tagValue, ...usage }) => usage);
+}
+
+async function findTaggedUsages(id: string): Promise<TaggedUsage[]> {
   const objectId = new mongoose.Types.ObjectId(id);
 
   const perModel = await Promise.all(
@@ -287,11 +360,11 @@ export async function findUsages(id: string): Promise<MediaUsage[]> {
       const refs = mediaRefsFor(modelName);
       const model = mongoose.model(modelName) as unknown as Model<unknown>;
 
-      const labels = [...new Set(refs.map((ref) => ref.label))];
+      const extras = [...new Set(refs.flatMap((ref) => [ref.label, ref.tagField]))];
 
       const docs = await model
         .find({ $or: refs.map((ref) => ({ [ref.path]: objectId })) })
-        .select([...refs.map((ref) => ref.path), ...labels].join(' '))
+        .select([...refs.map((ref) => ref.path), ...extras].join(' '))
         .lean<Record<string, unknown>[]>();
 
       return docs.flatMap((doc) =>
@@ -302,6 +375,7 @@ export async function findUsages(id: string): Promise<MediaUsage[]> {
             id: idOf(doc._id),
             label: labelOf(doc[ref.label]),
             field: ref.path,
+            tagValue: labelOf(doc[ref.tagField]),
           }))
       );
     })
@@ -370,15 +444,16 @@ const ENTITY_BY_COLLECTION: Record<string, CacheEntity> = {
  * every cached page keeps rendering the old one.
  */
 async function invalidateUsages(id: string): Promise<void> {
-  const usages = await findUsages(id);
+  const usages = await findTaggedUsages(id);
 
   const tags = new Set<string>();
   for (const usage of usages) {
     const entity = ENTITY_BY_COLLECTION[usage.collection];
     if (entity === undefined) continue;
 
-    // Pages are keyed by their page key, which is the label the registry picks.
-    for (const tag of tagsFor(entity, usage.label)) tags.add(tag);
+    // The slug or page key, never the display label: `tagsFor` builds
+    // `practice-area:${slug}`, and the frontend revalidates by that exact tag.
+    for (const tag of tagsFor(entity, usage.tagValue)) tags.add(tag);
   }
 
   if (tags.size > 0) invalidate([...tags]);

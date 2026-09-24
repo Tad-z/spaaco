@@ -1,4 +1,6 @@
+import { rm } from 'node:fs/promises';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import { TEST_ENV } from './test-env.js';
 
 /**
  * Starts one in-memory MongoDB for the whole test run.
@@ -11,7 +13,13 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let server: MongoMemoryServer | undefined;
 
+/** The media tests exercise the real local driver, which writes real files. */
+const clearUploads = (): Promise<void> =>
+  rm(TEST_ENV.UPLOAD_DIR ?? './.uploads-test', { recursive: true, force: true });
+
 export async function setup(): Promise<void> {
+  // Started clean, so one run's uploads cannot be mistaken for another's.
+  await clearUploads();
   server = await MongoMemoryServer.create();
   // Workers are forked from this process, so they inherit the variable.
   process.env.MONGO_MEMORY_URI = server.getUri();
@@ -20,4 +28,5 @@ export async function setup(): Promise<void> {
 export async function teardown(): Promise<void> {
   await server?.stop();
   server = undefined;
+  await clearUploads();
 }

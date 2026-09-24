@@ -32,6 +32,8 @@ export interface IMedia {
   /** Required: the admin UI enforces alt text on upload. */
   alt: string;
   /** Relative focal point for art-directed cropping. Defaults to the centre. */
+  /** Optimistic-locking counter; see ADR-015. */
+  revision: number;
   focalPoint: { x: number; y: number };
   uploadedBy?: Types.ObjectId | null;
   replacedBy?: Types.ObjectId | null;

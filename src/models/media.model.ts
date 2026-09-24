@@ -28,6 +28,8 @@ const mediaSchema = new Schema<IMedia>(
     originalFilename: { type: String, default: null },
     title: { type: String, default: null, trim: true, maxlength: 200 },
     alt: { type: String, required: true, trim: true, maxlength: 300 },
+    /** Bumped on every write, so `If-Match` can detect a stale edit (ADR-015). */
+    revision: { type: Number, default: 0 },
     focalPoint: {
       x: { type: Number, required: true, default: 0.5, min: 0, max: 1 },
       y: { type: Number, required: true, default: 0.5, min: 0, max: 1 },

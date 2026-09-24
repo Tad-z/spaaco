@@ -221,7 +221,9 @@ describe('optimistic locking', () => {
       .set('Authorization', auth())
       .send({ summary: 'No header supplied.' });
 
-    expect(res.status).toBe(400);
+    // 428, not 400: nothing about the request is malformed, the precondition
+    // is simply absent — which is the status the spec declares for it.
+    expect(res.status).toBe(428);
     expect(res.body.error.details[0].path).toBe('If-Match');
   });
 
@@ -474,6 +476,17 @@ describe('cache invalidation on write', () => {
 });
 
 describe('every collection', () => {
+  /**
+   * Where a published record shows up publicly. Recognitions and FAQs have no
+   * detail endpoint of their own — they are only ever listed.
+   */
+  const PUBLIC_PATHS: Partial<Record<string, string>> = {
+    'practice-areas': '/api/v1/practice-areas',
+    people: '/api/v1/people',
+    insights: '/api/v1/insights',
+    jobs: '/api/v1/jobs',
+  };
+
   const smokeBodies: Record<string, Record<string, unknown>> = {
     'practice-areas': { title: 'Smoke Area', shortLabel: 'Smoke', summary: 'A summary.' },
     people: { firstName: 'Smoke', lastName: 'Tester', role: 'associate' },
@@ -498,6 +511,10 @@ describe('every collection', () => {
         .send(smokeBodies[collection]);
 
       expect(created.status, JSON.stringify(created.body)).toBe(201);
+      // Each collection has its own response schema now (ADR-033), and this is
+      // the only place six of the seven are exercised at all.
+      expectToMatchContract(created, 'post', `/api/v1/admin/content/${collection}`);
+
       const id: string = created.body.data.id;
 
       const updated = await request(app)
@@ -507,6 +524,7 @@ describe('every collection', () => {
         .send({ slug: `smoke-${collection}` });
 
       expect(updated.status, JSON.stringify(updated.body)).toBe(200);
+      expectToMatchContract(updated, 'patch', `/api/v1/admin/content/${collection}/{id}`);
 
       const published = await request(app)
         .post(`${base}/${collection}/${id}/publish`)
@@ -514,6 +532,16 @@ describe('every collection', () => {
 
       expect(published.status).toBe(200);
       expect(published.body.data.status).toBe('published');
+
+      // And the public read the test's name promises: publishing has to make
+      // the record reachable without a token, which is the whole point of it.
+      const publicPath = PUBLIC_PATHS[collection];
+      if (publicPath !== undefined) {
+        const slugOrId = collection === 'jobs' ? id : `smoke-${collection}`;
+        const seen = await request(app).get(`${publicPath}/${slugOrId}`);
+
+        expect(seen.status, `${publicPath}/${slugOrId}: ${JSON.stringify(seen.body)}`).toBe(200);
+      }
     }
   );
 });

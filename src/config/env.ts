@@ -142,6 +142,18 @@ const refinedSchema = envSchema.superRefine((value, ctx) => {
 
   if (value.NODE_ENV !== 'production') return;
 
+  // The local image driver writes files that only the dev static mount serves,
+  // and stamps their URLs onto media records permanently. Booting production on
+  // it would fill the database with URLs that 404 for ever, so it is refused at
+  // startup rather than discovered on the first upload.
+  if (value.STORAGE_PUBLIC_DRIVER === 'local') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['STORAGE_PUBLIC_DRIVER'],
+      message: 'STORAGE_PUBLIC_DRIVER must be "cloudinary" in production; "local" is dev only',
+    });
+  }
+
   for (const key of SECRETS_CHECKED_IN_PRODUCTION) {
     if (PLACEHOLDER_SECRETS.has(value[key].toLowerCase())) {
       ctx.addIssue({

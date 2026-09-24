@@ -82,7 +82,9 @@ const insightBase = z
     author: objectIdRef.optional(),
     coverImage: objectIdRef.optional(),
     featured: z.boolean().optional(),
-    publishedAt: z.string().datetime().nullable().optional(),
+    // No `publishedAt`: it is stamped by POST /publish and is read-only in the
+    // contract, so accepting it here would let a client backdate an article
+    // out of band of the only action that is audited.
   })
   .strict();
 
@@ -174,14 +176,27 @@ export const CONTENT_CREATE_SCHEMAS: Record<AdminCollection, ZodTypeAny> = {
   jobs: jobCreate,
 };
 
+/**
+ * An update must change something.
+ *
+ * `{}` would otherwise be a valid PATCH: it passes every partial schema,
+ * consumes the `If-Match` revision, bumps it and invalidates the caches, all
+ * for a write that changed nothing. The spec says `minProperties: 1` on every
+ * `<Name>Update`, so this is what enforces it.
+ */
+const nonEmpty = (schema: ZodTypeAny): ZodTypeAny =>
+  schema.refine((value) => Object.keys(value as object).length > 0, {
+    message: 'at least one field is required',
+  });
+
 export const CONTENT_UPDATE_SCHEMAS: Record<AdminCollection, ZodTypeAny> = {
-  'practice-areas': practiceAreaCreate.partial().strict(),
-  people: personCreate.partial().strict(),
-  insights: insightUpdate,
-  offices: officeCreate.partial().strict(),
-  recognitions: recognitionCreate.partial().strict(),
-  faqs: faqCreate.partial().strict(),
-  jobs: jobCreate.partial().strict(),
+  'practice-areas': nonEmpty(practiceAreaCreate.partial().strict()),
+  people: nonEmpty(personCreate.partial().strict()),
+  insights: nonEmpty(insightUpdate),
+  offices: nonEmpty(officeCreate.partial().strict()),
+  recognitions: nonEmpty(recognitionCreate.partial().strict()),
+  faqs: nonEmpty(faqCreate.partial().strict()),
+  jobs: nonEmpty(jobCreate.partial().strict()),
 };
 
 export const adminCollectionParams = z.object({

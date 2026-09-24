@@ -119,6 +119,43 @@ describe('uploading', () => {
     expect(stored.sizes.lg).toContain('f_auto,q_auto');
   });
 
+  it('embeds the focal point as gravity, so a crop keeps the right part', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      okResponse({
+        public_id: 'spa-ajibade/abc123',
+        secure_url: 'https://res.cloudinary.com/x.jpg',
+        format: 'jpg',
+      })
+    );
+
+    const stored = await driverWith(fetchImpl).put({
+      buffer: png,
+      mimeType: 'image/jpeg',
+      originalFilename: 'portrait.jpg',
+      focalPoint: { x: 0.25, y: 0.75 },
+    });
+
+    expect(stored.sizes.md).toContain('g_xy_center,x_0.250,y_0.750');
+  });
+
+  it('centres by default when no focal point is given', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      okResponse({
+        public_id: 'spa-ajibade/abc123',
+        secure_url: 'https://res.cloudinary.com/x.jpg',
+        format: 'jpg',
+      })
+    );
+
+    const stored = await driverWith(fetchImpl).put({
+      buffer: png,
+      mimeType: 'image/jpeg',
+      originalFilename: 'a.jpg',
+    });
+
+    expect(stored.sizes.md).toContain('x_0.500,y_0.500');
+  });
+
   it('fails loudly when Cloudinary rejects the upload', async () => {
     const fetchImpl = vi.fn().mockResolvedValue({ ok: false, status: 401 });
 
@@ -133,6 +170,23 @@ describe('uploading', () => {
     await expect(
       driverWith(fetchImpl).put({ buffer: png, mimeType: 'image/png', originalFilename: 'a.png' })
     ).rejects.toThrow(/public_id/);
+  });
+});
+
+describe('changing the focal point', () => {
+  it('rebuilds the size URLs without re-uploading anything', () => {
+    const fetchImpl = vi.fn();
+
+    const sizes = driverWith(fetchImpl).resize('spa-ajibade/abc123', 'image/png', {
+      x: 0.1,
+      y: 0.9,
+    });
+
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(sizes?.lg).toBe(
+      'https://res.cloudinary.com/spa-demo/image/upload/' +
+        'f_auto,q_auto,c_limit,w_1440,g_xy_center,x_0.100,y_0.900/spa-ajibade/abc123.png'
+    );
   });
 });
 
