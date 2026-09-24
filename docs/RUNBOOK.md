@@ -102,7 +102,26 @@ stores nothing, and the per-form rate limit of five submissions per ten minutes
 per IP. Turn Turnstile on if spam becomes a problem; it is one environment
 variable.
 
-### 2.5 Production environment checklist
+### 2.5 Browser origins
+
+`CORS_ORIGINS` is a comma-separated allow-list of origins that may call the API
+from a browser. `*` allows any.
+
+Open is defensible here, and worth understanding rather than just switching on:
+every public endpoint is public by definition, and CORS is not what protects
+the admin API. The access token lives in the dashboard's memory, which no other
+origin can read, and the refresh cookie is `SameSite=Strict`, so no cross-site
+request carries it. A hostile page can call the public endpoints — which it
+could do from a server anyway — and gets nothing on the admin side.
+
+Narrow it to the real frontend origins once they exist. It costs one variable
+and removes a class of mistake.
+
+Note that with `*` the API still reflects the caller's origin rather than
+answering a literal `*`: browsers reject a wildcard on a credentialed request,
+and a literal one would break signing in.
+
+### 2.6 Production environment checklist
 
 The API validates all of this at startup and prints every problem at once, so
 a bad configuration fails in seconds rather than on the first upload. In

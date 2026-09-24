@@ -131,4 +131,28 @@ describe('security headers and CORS', () => {
 
     expect(res.status).toBe(200);
   });
+
+  describe('with CORS_ORIGINS set to *', () => {
+    const open = buildTestApp({ corsOrigins: ['*'] });
+
+    it('grants any origin', async () => {
+      const res = await request(open)
+        .get('/api/v1/health')
+        .set('Origin', 'https://anything.example');
+
+      expect(res.headers['access-control-allow-origin']).toBe('https://anything.example');
+    });
+
+    it('reflects the origin rather than answering a literal *', async () => {
+      // The API sends `credentials: true` for the refresh cookie, and a browser
+      // refuses a wildcard on a credentialed request — a literal `*` here would
+      // silently break signing in.
+      const res = await request(open)
+        .get('/api/v1/health')
+        .set('Origin', 'https://anything.example');
+
+      expect(res.headers['access-control-allow-origin']).not.toBe('*');
+      expect(res.headers['access-control-allow-credentials']).toBe('true');
+    });
+  });
 });

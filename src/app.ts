@@ -44,14 +44,29 @@ export function createApp(options: CreateAppOptions = {}): Express {
 
   app.use(requestId);
   app.use(helmet());
+  /**
+   * `CORS_ORIGINS=*` opens the API to any browser origin.
+   *
+   * It still *reflects* the caller's origin rather than answering a literal
+   * `*`, because this API sets `credentials: true` for the refresh cookie and
+   * browsers refuse a wildcard on a credentialed request — a literal `*` would
+   * silently break signing in.
+   *
+   * Open is a defensible default here: every public endpoint is public by
+   * definition, and the admin API is not protected by CORS anyway. Its access
+   * token lives in the dashboard's memory, which no other origin can read, and
+   * its refresh cookie is `SameSite=Strict`, which no cross-site request will
+   * carry. Narrow it to the real origins when they are known — it costs one
+   * variable and removes a class of mistake.
+   */
+  const allowAnyOrigin = corsOrigins.includes('*');
+
   app.use(
     cors({
-      // An allow-list, not a reflector: only the public site and the admin
-      // dashboard may call this API from a browser.
       origin: (origin, callback) => {
         // No Origin header means a same-origin or non-browser caller (curl,
         // server-side rendering, health checks), which CORS does not govern.
-        if (origin === undefined || corsOrigins.includes(origin)) {
+        if (origin === undefined || allowAnyOrigin || corsOrigins.includes(origin)) {
           callback(null, true);
           return;
         }
