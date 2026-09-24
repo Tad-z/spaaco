@@ -23,6 +23,7 @@
     "db:sync-indexes": "tsx --env-file-if-exists=.env scripts/sync-indexes.ts",
     "create-admin": "tsx scripts/create-admin.ts",
     "load-launch-content": "tsx --env-file-if-exists=.env scripts/load-launch-content.ts",
+    "publish-all": "tsx --env-file-if-exists=.env scripts/publish-all.ts",
     "mock": "prism mock openapi/openapi.yaml -p 4010",
     "spec:lint": "redocly lint openapi/openapi.yaml",
     "check": "npm run lint && npm run typecheck && npm run format:check && npm run spec:lint && npm run types:check && npm test",

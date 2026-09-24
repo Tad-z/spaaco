@@ -203,6 +203,26 @@ npm run load-launch-content -- --confirm
 Mind which database that `.env` points at: these are the same commands you
 would run against a local one.
 
+If your network refuses SRV lookups (`querySrv ECONNREFUSED` or `ETIMEOUT`),
+`mongodb+srv://` cannot be resolved. Use Atlas's non-SRV string instead —
+Connect → Drivers → "Node.js 2.2.12 or later" — which lists the shard hosts and
+resolves through ordinary A records. Remember to keep the database name in its
+path.
+
+#### Publishing everything, for the frontend team
+
+The loader leaves collection content as drafts, so the public listings are
+empty until somebody publishes. Before there is anyone at the firm doing that,
+the frontend needs real payloads to build against:
+
+```bash
+ADMIN_PASSWORD=… API_URL=https://spaaco.onrender.com npm run publish-all -- --confirm
+```
+
+This one goes over HTTP, not to the database, so each publish is audited and
+the page cache is invalidated. It is reversible per item from the dashboard, or
+by `POST /api/v1/admin/content/{collection}/{id}/unpublish`.
+
 With Docker, or on a plan that has a shell:
 
 ```bash
