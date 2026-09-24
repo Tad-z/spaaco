@@ -94,14 +94,14 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 ## Phase 5: Admin content API
 
 - [x] **5.1 Spec first:** add the admin content, pages, settings and media endpoints to the spec.
-- [ ] **5.2 Generic CRUD factory:** list/get/create/update/delete/publish/unpublish/reorder for a model, plus its schemas. Use it for all 7 content collections. Admin GETs use the editable shape (IDs + `_expanded`); see "Editable shape vs public shape" in API.md.
+- [x] **5.2 Generic CRUD factory:** list/get/create/update/delete/publish/unpublish/reorder for a model, plus its schemas. Use it for all 7 content collections. Admin GETs use the editable shape (IDs + `_expanded`); see "Editable shape vs public shape" in API.md.
   - **Accept:** each collection has CRUD tests; publish sets publishedAt once; delete is blocked (409) when the record is referenced; a round-trip test (admin GET → PUT the same body) succeeds unchanged for every collection; a stale `If-Match` returns 409.
 - [ ] **5.3 Pages + settings: GET (editable shape), PUT (replace) and PATCH (section-level merge)**, validated against the per-key schemas after merge, with `revision` + `If-Match` optimistic locking.
   - **Accept:** PATCHing `hero` leaves every other section byte-identical; an invalid merged result returns 400 with the section path; a stale revision returns 409; a round-trip GET → PUT succeeds for all 8 page keys and for settings.
 - [ ] **5.4 Media library:** upload, list/search, get with `usedBy`, PATCH metadata, **replace file in place**, and delete (blocked when in use). Includes `services/media.service.ts#findUsages` over the `constants/media-refs.ts` registry, the local driver's sharp-generated sizes, and the Cloudinary driver. Follow "Media lifecycle" in ARCHITECTURE.md.
   - **Accept:** an SVG or a renamed .exe is rejected (415); a missing alt returns 400; replacing a file keeps the ID, changes the URL, deletes the old stored file and invalidates the tags of every entity using it; deleting an in-use image returns 409 listing `usedBy`; a test fails if a model has a Media ref field that isn't in the registry.
-- [ ] **5.5 HTML sanitisation on write:** an allow-list of tags suitable for legal articles (p, h2–h4, ul/ol/li, a[href], strong, em, blockquote, table basics).
-- [ ] **5.6 Invalidation + revalidation webhook** on every write.
+- [x] **5.5 HTML sanitisation on write:** an allow-list of tags suitable for legal articles (p, h2–h4, ul/ol/li, a[href], strong, em, blockquote, table basics).
+- [x] **5.6 Invalidation + revalidation webhook** on every write.
   - **Accept:** updating a practice area clears the `site`, `page:home` and `page:practice-areas` caches, and the webhook adapter is called with the correct tags.
 
 ## Phase 6: Forms and submissions

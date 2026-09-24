@@ -52,6 +52,39 @@ const ROUTES: readonly RouteCase[] = [
     body: { name: 'Renamed' },
   },
   { method: 'get', path: '/api/v1/admin/audit-logs', allowed: [] },
+
+  // Content: editors everywhere, HR on jobs only, business development
+  // nowhere. Listing every collection is what caught a router-level `use`
+  // that was applying admin-only to the whole /admin mount.
+  { method: 'get', path: '/api/v1/admin/content/practice-areas', allowed: ['editor'] },
+  { method: 'get', path: '/api/v1/admin/content/people', allowed: ['editor'] },
+  { method: 'get', path: '/api/v1/admin/content/insights', allowed: ['editor'] },
+  { method: 'get', path: '/api/v1/admin/content/offices', allowed: ['editor'] },
+  { method: 'get', path: '/api/v1/admin/content/recognitions', allowed: ['editor'] },
+  { method: 'get', path: '/api/v1/admin/content/faqs', allowed: ['editor'] },
+  { method: 'get', path: '/api/v1/admin/content/jobs', allowed: ['editor', 'hr'] },
+  {
+    method: 'post',
+    path: '/api/v1/admin/content/faqs',
+    allowed: ['editor'],
+    body: { question: 'Role check?', answer: '<p>Yes.</p>' },
+  },
+  {
+    method: 'post',
+    path: '/api/v1/admin/content/jobs',
+    allowed: ['editor', 'hr'],
+    body: {
+      title: 'Role check',
+      description: '<p>A role.</p>',
+      employmentType: 'full_time',
+      workMode: 'hybrid',
+    },
+  },
+  {
+    method: 'delete',
+    path: '/api/v1/admin/content/faqs/665f1a2b3c4d5e6f70819293',
+    allowed: ['editor'],
+  },
 ];
 
 const send = (route: RouteCase, token?: string): request.Test => {
@@ -124,13 +157,21 @@ describe('the table itself', () => {
     const authRoutes = registered.filter((route) => route.includes('/auth/'));
     const roleGoverned = registered.filter((route) => !route.includes('/auth/'));
 
-    const tabled = ROUTES.map(
-      (route) => `${route.method} ${route.path.replace(/665f[0-9a-f]+/, ':id')}`
+    // Collapse the concrete collections and ids back to their route patterns.
+    const tabled = new Set(
+      ROUTES.map((route) =>
+        `${route.method} ${route.path}`
+          .replace(/665f[0-9a-f]+/, ':id')
+          .replace(
+            /\/content\/(practice-areas|people|insights|offices|recognitions|faqs|jobs)/,
+            '/content/:collection'
+          )
+      )
     );
 
     expect(authRoutes.length).toBeGreaterThan(0);
     for (const route of roleGoverned) {
-      expect(tabled).toContain(route.replace(':id', ':id'));
+      expect([...tabled], `${route} is not in the role table`).toContain(route);
     }
   });
 });

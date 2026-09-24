@@ -12,17 +12,30 @@ import { noStore } from '../../middlewares/cache-headers.middleware.js';
 import { idParams, pagination } from '../../validators/common.validator.js';
 import { createUserBody, listAuditQuery, updateUserBody } from '../../validators/auth.validator.js';
 
-/** Accounts and the audit trail are administrators only (docs/API.md matrix). */
+/**
+ * Accounts and the audit trail are administrators only (docs/API.md matrix).
+ *
+ * The guards are attached per route rather than with `router.use(...)`: this
+ * router is mounted at `/admin` alongside the others, and a path-less `use`
+ * would apply to every `/admin/*` request passing through it — which briefly
+ * made admin-only the rule for the whole admin API.
+ */
 export const adminUserRoutes: Router = Router();
 
-adminUserRoutes.use(noStore, requireAuth(), requireRole('admin'));
+const adminOnly = [noStore, requireAuth(), requireRole('admin')] as const;
 
-adminUserRoutes.get('/users', validate({ query: pagination }), listUsersHandler);
-adminUserRoutes.post('/users', validate({ body: createUserBody }), createUserHandler);
+adminUserRoutes.get('/users', ...adminOnly, validate({ query: pagination }), listUsersHandler);
+adminUserRoutes.post('/users', ...adminOnly, validate({ body: createUserBody }), createUserHandler);
 adminUserRoutes.patch(
   '/users/:id',
+  ...adminOnly,
   validate({ params: idParams, body: updateUserBody }),
   updateUserHandler
 );
 
-adminUserRoutes.get('/audit-logs', validate({ query: listAuditQuery }), listAuditLogsHandler);
+adminUserRoutes.get(
+  '/audit-logs',
+  ...adminOnly,
+  validate({ query: listAuditQuery }),
+  listAuditLogsHandler
+);

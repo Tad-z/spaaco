@@ -26,22 +26,24 @@ const allowEnrolment = requireAuth({ allowWithoutTotp: true });
 
 export const adminAuthRoutes: Router = Router();
 
-adminAuthRoutes.use(noStore);
+// Attached per route, not with a path-less `use`: this router shares the
+// `/admin` mount with the others, so a blanket `use` would touch them all.
+adminAuthRoutes.post('/auth/login', noStore, loginLimiter, validate({ body: loginBody }), loginHandler);
+adminAuthRoutes.post('/auth/refresh', noStore, loginLimiter, refreshHandler);
+adminAuthRoutes.post('/auth/logout', noStore, logoutHandler);
 
-adminAuthRoutes.post('/auth/login', loginLimiter, validate({ body: loginBody }), loginHandler);
-adminAuthRoutes.post('/auth/refresh', loginLimiter, refreshHandler);
-adminAuthRoutes.post('/auth/logout', logoutHandler);
-
-adminAuthRoutes.get('/auth/me', allowEnrolment, meHandler);
-adminAuthRoutes.post('/auth/2fa/setup', allowEnrolment, totpSetupHandler);
+adminAuthRoutes.get('/auth/me', noStore, allowEnrolment, meHandler);
+adminAuthRoutes.post('/auth/2fa/setup', noStore, allowEnrolment, totpSetupHandler);
 adminAuthRoutes.post(
   '/auth/2fa/enable',
+  noStore,
   allowEnrolment,
   validate({ body: totpEnableBody }),
   totpEnableHandler
 );
 adminAuthRoutes.post(
   '/auth/password',
+  noStore,
   allowEnrolment,
   validate({ body: passwordChangeBody }),
   changePasswordHandler
