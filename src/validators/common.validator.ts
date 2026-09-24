@@ -23,11 +23,83 @@ export const slug = z
 /** A nullable reference to another document. */
 export const objectIdRef = objectId.nullable();
 
-export const link = z.object({
-  label: z.string().trim().min(1).max(120),
-  href: z.string().trim().min(1).max(2048),
-  kind: z.enum(LINK_KINDS.values),
-});
+/**
+ * A URL an editor may store, restricted to schemes a browser can safely follow.
+ *
+ * The same allow-list `helpers/sanitize.helper.ts` applies inside rich text —
+ * and it has to be, because these fields bypass the sanitiser entirely and the
+ * frontend renders them straight into an `href`. Without it an editor, or
+ * anyone who takes over an editor's account, could store `javascript:` on
+ * every page of the firm's public site.
+ *
+ * A leading `//` is refused: it looks relative but is a protocol-relative
+ * absolute URL, so it would follow whatever scheme the page was served over to
+ * a host the editor chose.
+ */
+const SAFE_SCHEMES = ['http:', 'https:', 'mailto:', 'tel:'];
+
+export const safeUrl = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2048)
+  .refine(
+    (value) => {
+      if (value.startsWith('//')) return false;
+
+      try {
+        return SAFE_SCHEMES.includes(new URL(value).protocol);
+      } catch {
+        // Not parseable as absolute and not a recognised relative form.
+        return false;
+      }
+    },
+    { message: 'must be an http(s), mailto or tel URL, or a path beginning with /' }
+  );
+
+/**
+ * A link's `href` is constrained by its `kind`, because the three kinds are
+ * three different things.
+ *
+ * An `action` href is not a URL at all: it is a token like `action:mandate`
+ * that the frontend maps to a behaviour — opening the enquiry form — and it
+ * never reaches an `href` attribute. An `internal` one is a path on the site.
+ * Only an `external` one is a URL a browser will follow, and that is the one
+ * that needs the scheme allow-list.
+ *
+ * Checked as a pair rather than on the field alone, so an editor cannot smuggle
+ * `javascript:` in by labelling it an action.
+ */
+const ACTION_HREF = /^action:[a-z][a-z0-9-]{0,40}$/;
+const INTERNAL_HREF = /^\/(?!\/)[\w\-/.?=&#%]*$/;
+
+export const link = z
+  .object({
+    label: z.string().trim().min(1).max(120),
+    href: z.string().trim().min(1).max(2048),
+    kind: z.enum(LINK_KINDS.values),
+  })
+  .superRefine((value, ctx) => {
+    const valid =
+      value.kind === 'action'
+        ? ACTION_HREF.test(value.href)
+        : value.kind === 'internal'
+          ? INTERNAL_HREF.test(value.href)
+          : safeUrl.safeParse(value.href).success;
+
+    if (valid) return;
+
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['href'],
+      message:
+        value.kind === 'action'
+          ? 'an action link must be `action:<name>`'
+          : value.kind === 'internal'
+            ? 'an internal link must be a path beginning with /'
+            : 'an external link must be an http(s), mailto or tel URL',
+    });
+  });
 
 export const nullableLink = link.nullable();
 

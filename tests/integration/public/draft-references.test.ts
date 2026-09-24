@@ -4,7 +4,7 @@ import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { Insight, Office, Person, PracticeArea } from '../../../src/models/index.js';
-import { signAccessToken } from '../../support/auth.js';
+import { createTestUser } from '../../support/auth.js';
 
 /**
  * Drafts reached through a *reference*, not as the root of a query.
@@ -63,9 +63,13 @@ describe('a draft attorney referenced by a published insight', () => {
   it('is still exposed with a valid preview token, which is the point of preview', async () => {
     await Person.updateOne({ slug: 'john-onyido' }, { status: 'draft' });
 
+    // A real, active, TOTP-enrolled editor: preview reloads the user, so a
+    // merely signature-valid token is not enough (and used not to be checked).
+    const { token } = await createTestUser({ roles: ['editor'] });
+
     const res = await request(app)
       .get('/api/v1/insights?preview=true')
-      .set('Authorization', `Bearer ${signAccessToken()}`);
+      .set('Authorization', `Bearer ${token}`);
 
     expect(JSON.stringify(res.body)).toContain('john-onyido');
   });

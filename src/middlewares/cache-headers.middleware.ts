@@ -6,8 +6,12 @@ import { CACHE } from '../config/constants.js';
  * Cache-Control and ETag for public GETs.
  *
  * The ETag is computed from the serialised body, so a conditional request can
- * be answered 304 without the client re-downloading an unchanged page. Preview
- * responses are never cached: a draft must not sit in a CDN.
+ * be answered 304 without the client re-downloading an unchanged page.
+ *
+ * Three kinds of response are never cached: a preview, because a draft must
+ * not sit in a CDN; an error, because a 404 now may be a 200 in a minute; and
+ * anything a route has already marked `no-store`, which is every admin route
+ * and every form POST.
  */
 
 const PUBLIC_CACHE_CONTROL =
@@ -22,6 +26,18 @@ export function cacheHeaders(req: Request, res: Response, next: NextFunction): v
   const originalJson = res.json.bind(res);
 
   res.json = (body: unknown): Response => {
+    // Something upstream already said no-store, and it meant it.
+    //
+    // This is the important line in the file. `noStore` runs first in every
+    // admin guard chain, but it only sets a header — and this wrapper runs at
+    // `res.json()` time, after it, with `setHeader` replacing rather than
+    // merging. Overwriting it served every admin payload, including enquiries
+    // and applications, as `public, s-maxage=300`, which a CDN or a corporate
+    // proxy would then hand to a caller with no token at all.
+    if (res.getHeader('Cache-Control') === 'no-store') {
+      return originalJson(body);
+    }
+
     // Preview shows unpublished content to one authenticated user; caching it
     // anywhere shared would leak drafts to the public.
     //

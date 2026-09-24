@@ -9,7 +9,7 @@ import {
   WORK_MODES,
 } from '../constants/enums.js';
 import { sanitizeRichText } from '../helpers/sanitize.helper.js';
-import { objectId, objectIdRef, pagination, seoBasic, slug } from './common.validator.js';
+import { objectId, objectIdRef, pagination, safeUrl, seoBasic, slug } from './common.validator.js';
 import type { AdminCollection } from '../constants/content-collections.js';
 
 /**
@@ -59,7 +59,7 @@ const personCreate = z
     postNominals: optionalText(40).optional(),
     role: z.enum(PERSON_ROLES.values),
     photo: objectIdRef.optional(),
-    linkedinUrl: optionalText(2048).optional(),
+    linkedinUrl: safeUrl.nullable().optional(),
     email: z.string().trim().toLowerCase().email().max(254).nullable().optional(),
     bio: nullableRichText.optional(),
     quote: optionalText(600).optional(),
@@ -76,7 +76,7 @@ const insightBase = z
     excerpt: optionalText(1000).optional(),
     body: nullableRichText.optional(),
     format: z.enum(INSIGHT_FORMATS.values),
-    videoUrl: optionalText(2048).optional(),
+    videoUrl: safeUrl.nullable().optional(),
     categories: z.array(z.enum(INSIGHT_CATEGORIES.values)).min(1).max(7),
     practiceAreas: z.array(objectId).max(30).optional(),
     author: objectIdRef.optional(),
@@ -119,7 +119,7 @@ const officeCreate = z
       .strict()
       .nullable()
       .optional(),
-    directionsUrl: optionalText(2048).optional(),
+    directionsUrl: safeUrl.nullable().optional(),
     phone: optionalText(40).optional(),
     email: z.string().trim().toLowerCase().email().max(254).nullable().optional(),
   })
@@ -132,7 +132,7 @@ const recognitionCreate = z
     title: text(160),
     year: z.number().int().min(1900).max(2200).nullable().optional(),
     badge: objectIdRef.optional(),
-    url: optionalText(2048).optional(),
+    url: safeUrl.nullable().optional(),
     tab: z.enum(RECOGNITION_TABS.values),
   })
   .strict();

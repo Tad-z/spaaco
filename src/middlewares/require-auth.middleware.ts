@@ -63,6 +63,16 @@ export function requireAuth(options: RequireAuthOptions = {}): RequestHandler {
           return;
         }
 
+        // A token issued before the password last changed is dead, whatever
+        // its expiry says. Otherwise a password changed *because* of a
+        // compromise left the attacker's bearer token working for the rest of
+        // its fifteen minutes — against the whole admin API, including reading
+        // enquiries and minting CV links.
+        if (issuedBefore(claims.iat, user.credentialsChangedAt)) {
+          next(new UnauthenticatedError());
+          return;
+        }
+
         if (!user.totp.enabled && options.allowWithoutTotp !== true) {
           next(
             new ForbiddenError('Two-factor authentication must be enabled to use the admin API', [
@@ -80,4 +90,18 @@ export function requireAuth(options: RequireAuthOptions = {}): RequestHandler {
 
   // Named so the route inventory can see the guard; see namedHandler.
   return namedHandler('requireAuth', handler);
+}
+
+/**
+ * Whether a token predates the moment its user's credentials changed.
+ *
+ * `iat` is in whole seconds, so a token issued in the same second as the
+ * change is treated as older — erring towards refusing a token that might be
+ * valid rather than accepting one that might not be.
+ */
+function issuedBefore(iat: number | undefined, changedAt: Date | null | undefined): boolean {
+  if (changedAt === null || changedAt === undefined) return false;
+  if (iat === undefined) return true;
+
+  return iat * 1000 <= changedAt.getTime();
 }

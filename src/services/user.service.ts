@@ -57,7 +57,39 @@ export interface UpdateUserInput {
   readonly isActive?: boolean;
 }
 
+/**
+ * Would this change leave the firm with no way in?
+ *
+ * Demoting or deactivating the last administrator locks the firm out of its
+ * own dashboard, and the only remedy is a developer with database access. It
+ * is an easy mistake to make while tidying up accounts, so it is refused.
+ */
+async function wouldRemoveLastAdmin(id: string, input: UpdateUserInput): Promise<boolean> {
+  const losingAdmin =
+    input.isActive === false || (input.roles !== undefined && !input.roles.includes('admin'));
+
+  if (!losingAdmin) return false;
+
+  const target = await User.findById(id).select('roles isActive').lean<IUser | null>();
+  if (!target?.roles.includes('admin') || !target.isActive) return false;
+
+  const others = await User.countDocuments({
+    _id: { $ne: target._id },
+    roles: 'admin',
+    isActive: true,
+  });
+
+  return others === 0;
+}
+
 export async function updateUser(id: string, input: UpdateUserInput): Promise<IUser> {
+  if (await wouldRemoveLastAdmin(id, input)) {
+    throw new ConflictError(
+      'This is the only active administrator. Promote another account before changing this one.',
+      [{ path: 'roles', message: 'the last administrator cannot be removed' }]
+    );
+  }
+
   const updated = await User.findByIdAndUpdate(id, input, {
     new: true,
     runValidators: true,

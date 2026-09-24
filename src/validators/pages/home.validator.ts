@@ -5,6 +5,7 @@ import {
   nullableLink,
   objectIdRef,
   paragraphs,
+  safeUrl,
   sectionHeader,
   seo,
 } from '../common.validator.js';
@@ -22,7 +23,7 @@ export const homePageSchema = z
       .strict(),
     videoShowcase: z
       .object({
-        videoUrl: z.string().trim().max(2048).nullable(),
+        videoUrl: safeUrl.nullable(),
         poster: objectIdRef,
       })
       .strict(),

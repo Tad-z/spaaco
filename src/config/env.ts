@@ -43,6 +43,16 @@ const envSchema = z.object({
   NODE_ENV: z.enum(NODE_ENVS).default('development'),
   PORT: z.coerce.number().int().positive().max(65535).default(4000),
   API_BASE_URL: z.string().url().default('http://localhost:4000'),
+  /**
+   * How many reverse proxies sit in front of this API.
+   *
+   * It decides whether `req.ip` is the real client or an `X-Forwarded-For`
+   * value the caller chose. Too high and every per-IP rate limit is bypassable
+   * by rotating the header, and `ipHash` — the only abuse-investigation handle
+   * the NDPA design keeps — is poisoned at will. Too low and the limits apply
+   * to the load balancer instead of the visitor.
+   */
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
   CORS_ORIGINS: commaSeparated.default('http://localhost:3000,http://localhost:3001'),
 
   // --- database ---
@@ -100,6 +110,8 @@ const envSchema = z.object({
   // --- observability ---
   LOG_LEVEL: z.enum(LOG_LEVELS).default('info'),
   SENTRY_DSN: optionalString,
+  /** Tags error reports, so an issue can be traced to a deploy. */
+  RELEASE: optionalString,
 });
 
 /** Each driver that needs credentials, and the variables it cannot run without. */

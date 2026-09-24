@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
-import { signAccessToken } from '../../support/auth.js';
+import { createTestUser } from '../../support/auth.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { makeMedia } from '../../support/factories.js';
 import {
@@ -272,7 +272,7 @@ describe('the draft canary sweep', () => {
   it('does return the canary to a valid preview token, which proves it bites', async () => {
     // Without this the sweep above could pass because the canary was never in
     // the database at all. Preview is the one caller allowed to see it.
-    const token = signAccessToken();
+    const { token } = await createTestUser({ roles: ['editor'] });
     const found: string[] = [];
 
     for (const url of await concreteUrls()) {

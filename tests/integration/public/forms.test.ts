@@ -213,6 +213,27 @@ describe('what the firm is told', () => {
 });
 
 describe('what is stored about the sender', () => {
+  it('survives a User-Agent longer than the column, without losing the submission', async () => {
+    const logs = captureLogs();
+
+    const res = await request(app)
+      .post('/api/v1/enquiries')
+      .set('User-Agent', `Mozilla/5.0 ${'A'.repeat(600)}`)
+      .send(enquiry());
+
+    const written = logs.release();
+
+    // An over-long header used to fail the model and surface as a 500 — the
+    // enquiry lost, and the whole header echoed into the log through
+    // Mongoose's message template.
+    expect(res.status, JSON.stringify(res.body)).toBe(201);
+    expect(await Enquiry.countDocuments()).toBe(1);
+
+    const stored = await Enquiry.findOne().lean();
+    expect((stored?.userAgent ?? '').length).toBeLessThanOrEqual(400);
+    expect(written).not.toContain('AAAAAAAAAA');
+  });
+
   it('keeps a hashed IP, never the address itself', async () => {
     const res = await request(app)
       .post('/api/v1/enquiries')

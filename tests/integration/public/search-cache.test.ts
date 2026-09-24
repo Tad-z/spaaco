@@ -6,7 +6,7 @@ import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { Insight } from '../../../src/models/index.js';
-import { signAccessToken } from '../../support/auth.js';
+import { previewToken } from '../../support/auth.js';
 import * as cache from '../../../src/core/cache.js';
 import { invalidateEntity } from '../../../src/services/cache.service.js';
 import * as siteService from '../../../src/services/site.service.js';
@@ -104,7 +104,7 @@ describe('GET /api/v1/search', () => {
 
     const res = await request(app)
       .get('/api/v1/search?q=energy&preview=true')
-      .set('Authorization', `Bearer ${signAccessToken()}`);
+      .set('Authorization', `Bearer ${await previewToken()}`);
 
     expect(res.body.data.insights).toEqual([]);
   });
@@ -174,7 +174,7 @@ describe('caching', () => {
 
     await request(app)
       .get('/api/v1/pages/home?preview=true')
-      .set('Authorization', `Bearer ${signAccessToken()}`);
+      .set('Authorization', `Bearer ${await previewToken()}`);
 
     expect(cache.size()).toBe(0);
 
@@ -213,7 +213,7 @@ describe('cache headers', () => {
   it('never caches a preview response', async () => {
     const res = await request(app)
       .get('/api/v1/site?preview=true')
-      .set('Authorization', `Bearer ${signAccessToken()}`);
+      .set('Authorization', `Bearer ${await previewToken()}`);
 
     expect(res.headers['cache-control']).toBe('no-store');
     expect(res.headers.etag).toBeUndefined();

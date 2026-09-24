@@ -228,3 +228,28 @@ describe('collection-level access', () => {
     }
   });
 });
+
+describe('admin responses are never cacheable', () => {
+  /**
+   * `noStore` is first in every admin guard chain, but it sets a header and
+   * the cache middleware rewrites headers at `res.json()` time — so the guard
+   * being present proves nothing. What matters is the header on the way out,
+   * which is what a CDN or a corporate proxy actually sees.
+   *
+   * The exposure if this regresses: a shared cache storing
+   * `GET /admin/enquiries` — names, addresses, matter summaries — and serving
+   * it to a caller with no token at all.
+   */
+  it.each(
+    roleGoverned
+      .filter((route) => route.method === 'get')
+      .map((route) => ({ name: `${route.method.toUpperCase()} ${route.path}`, route }))
+  )('$name answers no-store', async ({ route }) => {
+    const { token } = await createTestUser({ roles: ['admin'] });
+
+    const res = await send(route, token);
+
+    expect(res.headers['cache-control'], `${route.path} sent ${res.status}`).toBe('no-store');
+    expect(res.headers.etag, 'an ETag invites a conditional cache').toBeUndefined();
+  });
+});

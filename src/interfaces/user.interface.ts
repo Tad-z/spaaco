@@ -20,6 +20,14 @@ export interface IUser {
   };
   isActive: boolean;
   lastLoginAt?: Date | null;
+  /**
+   * When the password last changed.
+   *
+   * An access token issued before this moment is refused, so revoking the
+   * refresh chain is not the only thing a password change accomplishes — the
+   * bearer token already in an attacker's hands stops working too.
+   */
+  credentialsChangedAt?: Date | null;
   /** Reset on success; drives the lockout. */
   failedLoginCount: number;
   lockedUntil?: Date | null;

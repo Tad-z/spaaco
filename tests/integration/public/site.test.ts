@@ -6,7 +6,7 @@ import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { Faq, PracticeArea } from '../../../src/models/index.js';
-import { expiredToken, signAccessToken, signWithWrongSecret } from '../../support/auth.js';
+import { expiredToken, previewToken, signWithWrongSecret } from '../../support/auth.js';
 
 /**
  * The global shell. Every page depends on it, so this is also where draft
@@ -131,7 +131,7 @@ describe('draft exclusion', () => {
 
     const res = await request(app)
       .get('/api/v1/site?preview=true')
-      .set('Authorization', `Bearer ${signAccessToken()}`);
+      .set('Authorization', `Bearer ${await previewToken()}`);
 
     expect(res.status).toBe(200);
     expect(res.body.data.faqSection.items).toHaveLength(5);
@@ -143,7 +143,7 @@ describe('draft exclusion', () => {
 
     const res = await request(app)
       .get('/api/v1/site')
-      .set('Authorization', `Bearer ${signAccessToken()}`);
+      .set('Authorization', `Bearer ${await previewToken()}`);
 
     expect(res.body.data.faqSection.items).toHaveLength(4);
   });

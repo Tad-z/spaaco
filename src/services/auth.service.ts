@@ -129,15 +129,31 @@ export async function login(input: LoginInput): Promise<{ user: IUser; tokens: S
     throw invalidCredentials();
   }
 
+  // The password is checked *before* the account's state, and every failure
+  // answers the same 401.
+  //
+  // The order matters more than it looks. Answering "this account is disabled"
+  // or "temporarily locked" before checking the password turns the login form
+  // into a directory: one request per candidate address tells an outsider who
+  // works at the firm, and the staff are named on this very site, so guessing
+  // the address format is easy. It also made a denial-of-service trivial —
+  // ten wrong passwords lock an account for fifteen minutes, and the locked
+  // response confirmed the attack was working.
+  const passwordMatches = await verifyPassword(user.passwordHash, input.password);
+
+  if (!passwordMatches) {
+    // Only a real account with a wrong password counts towards a lockout, so
+    // the counter cannot be driven by guessing at addresses.
+    if (user.isActive) await registerFailure(user);
+    throw invalidCredentials();
+  }
+
+  // Past this point the caller has proved they hold the password, so telling
+  // them the state of their own account discloses nothing they do not know.
   if (!user.isActive) throw new ForbiddenError('This account is disabled');
 
   if (user.lockedUntil && user.lockedUntil > new Date()) {
     throw new ForbiddenError('This account is temporarily locked. Try again later.');
-  }
-
-  if (!(await verifyPassword(user.passwordHash, input.password))) {
-    await registerFailure(user);
-    throw invalidCredentials();
   }
 
   if (user.totp.enabled) {
@@ -179,21 +195,43 @@ async function revokeChain(tokenId: Types.ObjectId): Promise<void> {
 }
 
 export async function refresh(presented: string): Promise<{ user: IUser; tokens: SessionTokens }> {
-  const existing = await RefreshToken.findOne({ tokenHash: sha256(presented) });
+  const tokenHash = sha256(presented);
 
-  if (!existing || existing.expiresAt < new Date())
-    throw new UnauthenticatedError('Session expired');
+  /**
+   * Claim the token and revoke it in one atomic operation.
+   *
+   * The revocation *is* the claim, which is what makes reuse detectable. Read,
+   * then issue, then revoke — the obvious order — let two simultaneous
+   * presentations of the same token both pass the `revokedAt` check, so a
+   * stolen token used alongside the real one produced two live chains and no
+   * detection at all. Here exactly one of the two wins the update.
+   */
+  const claimed = await RefreshToken.findOneAndUpdate(
+    { tokenHash, revokedAt: null },
+    { revokedAt: new Date() },
+    { new: false }
+  ).lean<{ _id: Types.ObjectId; user: Types.ObjectId; expiresAt: Date } | null>();
 
-  if (existing.revokedAt) {
-    // Someone is replaying a token that was already rotated away. Either it was
-    // stolen or the real session is confused; either way the safe move is to
-    // end every session in the chain and make them sign in again.
-    logger.warn({ userId: existing.user.toString() }, 'refresh token reuse detected');
-    await revokeChain(existing._id);
+  if (!claimed) {
+    // Either no such token, or somebody already claimed it. The second case is
+    // a replay: the token was stolen, or the real session is confused. Either
+    // way the safe move is to end every session in the chain.
+    const known = await RefreshToken.findOne({ tokenHash }).select('_id user').lean<{
+      _id: Types.ObjectId;
+      user: Types.ObjectId;
+    } | null>();
+
+    if (known) {
+      logger.warn({ userId: known.user.toString() }, 'refresh token reuse detected');
+      await revokeChain(known._id);
+    }
+
     throw new UnauthenticatedError('Session expired');
   }
 
-  const user = await User.findById(existing.user).lean<IUser | null>();
+  if (claimed.expiresAt < new Date()) throw new UnauthenticatedError('Session expired');
+
+  const user = await User.findById(claimed.user).lean<IUser | null>();
   if (!user?.isActive) throw new UnauthenticatedError('Session expired');
 
   const tokens = await issueSession(user);
@@ -201,9 +239,7 @@ export async function refresh(presented: string): Promise<{ user: IUser; tokens:
     .select('_id')
     .lean<{ _id: Types.ObjectId } | null>();
 
-  existing.revokedAt = new Date();
-  existing.replacedBy = replacement?._id ?? null;
-  await existing.save();
+  await RefreshToken.updateOne({ _id: claimed._id }, { replacedBy: replacement?._id ?? null });
 
   return { user, tokens };
 }
@@ -212,6 +248,19 @@ export async function logout(presented: string | undefined): Promise<void> {
   if (presented === undefined) return;
   await RefreshToken.updateOne({ tokenHash: sha256(presented) }, { revokedAt: new Date() });
 }
+
+/**
+ * Invalidate every access token issued so far for this user.
+ *
+ * Revoking refresh tokens alone left the bearer token already issued working
+ * for the rest of its fifteen minutes — so a password changed *because* of a
+ * compromise did not actually end the compromise. `requireAuth` compares the
+ * token's issue time against this, so the next request with an old token is
+ * refused.
+ */
+export const invalidateAccessTokens = async (userId: Types.ObjectId): Promise<void> => {
+  await User.updateOne({ _id: userId }, { credentialsChangedAt: new Date() });
+};
 
 export const revokeAllSessions = async (userId: Types.ObjectId): Promise<void> => {
   await RefreshToken.updateMany({ user: userId, revokedAt: null }, { revokedAt: new Date() });
@@ -284,9 +333,15 @@ export async function changePassword(
     throw new UnauthenticatedError('Current password is incorrect');
   }
 
-  await User.updateOne({ _id: userId }, { passwordHash: await hashPassword(newPassword) });
+  await User.updateOne(
+    {
+      _id: userId,
+    },
+    { passwordHash: await hashPassword(newPassword), credentialsChangedAt: new Date() }
+  );
 
-  // A session opened with the old password must not survive the change.
+  // A session opened with the old password must not survive the change —
+  // neither the refresh chain nor the access token already issued.
   await revokeAllSessions(userId);
 }
 

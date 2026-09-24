@@ -30,6 +30,7 @@ const userSchema = new Schema<IUser>(
     },
     isActive: { type: Boolean, default: true },
     lastLoginAt: { type: Date, default: null },
+    credentialsChangedAt: { type: Date, default: null },
     failedLoginCount: { type: Number, default: 0 },
     lockedUntil: { type: Date, default: null },
   },

@@ -76,3 +76,17 @@ export async function createTestUser(
   const user = created.toObject<IUser>();
   return { user, token: signAccessToken({ sub: user._id.toString(), roles: user.roles }) };
 }
+
+/**
+ * A token that actually grants preview.
+ *
+ * `signAccessToken()` alone no longer does: preview reloads the user and
+ * requires an active, TOTP-enrolled, content-capable account, so a
+ * signature-valid token with nothing behind it is treated as anonymous. Tests
+ * about preview want a real editor; tests about *refusing* preview still use
+ * the bare signer.
+ */
+export async function previewToken(): Promise<string> {
+  const { token } = await createTestUser({ roles: ['editor'] });
+  return token;
+}

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { link, nullableLink } from './common.validator.js';
+import { link, nullableLink, safeUrl } from './common.validator.js';
 
 /**
  * Site settings, in the shape a PUT must supply.
@@ -9,7 +9,8 @@ import { link, nullableLink } from './common.validator.js';
  * site-wide change the editor believes they made.
  */
 
-const url = z.string().trim().url().max(2048).nullable();
+// `z.string().url()` is `new URL()`, which happily accepts `javascript:`.
+const url = safeUrl.nullable();
 
 export const settingsWriteSchema = z
   .object({

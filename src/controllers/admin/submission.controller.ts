@@ -45,7 +45,9 @@ export async function updateEnquiryHandler(req: Request, res: Response): Promise
   const { id } = readParams(req, idParams);
   const patch = readBody(req, submissionPatch);
 
-  res.json({ data: toEnquiryAdmin(await updateSubmission('enquiry', id, patch)) });
+  res.json({
+    data: toEnquiryAdmin(await updateSubmission('enquiry', id, patch, actorContext(req))),
+  });
 }
 
 export async function listMessagesHandler(req: Request, res: Response): Promise<void> {
@@ -65,7 +67,9 @@ export async function updateMessageHandler(req: Request, res: Response): Promise
   const { id } = readParams(req, idParams);
   const patch = readBody(req, submissionPatch);
 
-  res.json({ data: toMessageAdmin(await updateSubmission('message', id, patch)) });
+  res.json({
+    data: toMessageAdmin(await updateSubmission('message', id, patch, actorContext(req))),
+  });
 }
 
 export async function listApplicationsHandler(req: Request, res: Response): Promise<void> {
@@ -90,7 +94,9 @@ export async function updateApplicationHandler(req: Request, res: Response): Pro
   const { id } = readParams(req, idParams);
   const patch = readBody(req, applicationPatch);
 
-  res.json({ data: toApplicationAdmin(await updateSubmission('application', id, patch)) });
+  res.json({
+    data: toApplicationAdmin(await updateSubmission('application', id, patch, actorContext(req))),
+  });
 }
 
 export async function getApplicationCvHandler(req: Request, res: Response): Promise<void> {

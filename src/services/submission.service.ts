@@ -55,6 +55,9 @@ export interface SubmissionResult {
 }
 
 /** A bot filled the hidden field. */
+/** The column width in every submission model. */
+const USER_AGENT_MAX = 400;
+
 const isBot = (website: string | undefined): boolean =>
   website !== undefined && website.trim() !== '';
 
@@ -145,7 +148,12 @@ function envelope(
     reference,
     consent: { given: true, textVersion: body.consentTextVersion, at: new Date() },
     ipHash: hashIp(context.ip, config.IP_HASH_SALT),
-    userAgent: context.userAgent ?? null,
+    // Truncated to the column width rather than passed through. A longer
+    // header made Mongoose reject the whole document, which lost the
+    // submission — and for an application, after the CV had already been
+    // stored — and put the raw header into the log and the error report
+    // through Mongoose's message template.
+    userAgent: context.userAgent?.slice(0, USER_AGENT_MAX) ?? null,
   };
 }
 

@@ -157,7 +157,8 @@ export interface SubmissionPatch {
 export async function updateSubmission<K extends Kind>(
   kind: K,
   id: string,
-  patch: SubmissionPatch
+  patch: SubmissionPatch,
+  context: ActorContext = {}
 ): Promise<SubmissionByKind[K]> {
   const updated = await MODELS[kind]
     .findByIdAndUpdate(id, { $set: patch }, { new: true, runValidators: true })
@@ -165,6 +166,17 @@ export async function updateSubmission<K extends Kind>(
     .lean<SubmissionByKind[K] | null>();
 
   if (!updated) throw new NotFoundError(LABELS[kind]);
+
+  // Who *read* an enquiry was answerable and who closed or reassigned it was
+  // not — which is the half a partner is more likely to ask about. The field
+  // names are recorded, never the values.
+  await record({
+    action: `${kind}.update`,
+    entity: kind,
+    entityId: updated._id,
+    actor: context.actorId ?? null,
+    meta: { changed: Object.keys(patch) },
+  });
 
   return updated;
 }

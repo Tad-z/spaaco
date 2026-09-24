@@ -2,17 +2,17 @@ import type { Server } from 'node:http';
 import { createApp } from './app.js';
 import { config } from './config/env.js';
 import { logger } from './core/logger.js';
+import { captureError } from './core/error-tracking.js';
+import { createServerLifecycle } from './core/lifecycle.js';
 import { startRetentionSweep } from './jobs/retention.job.js';
 
 /**
  * Process entry point: connect, listen, and shut down cleanly.
  *
- * Graceful shutdown matters in a container: on SIGTERM the platform stops
- * routing new traffic but existing requests are still in flight, so the server
- * stops accepting connections, drains, and only then closes the database.
+ * The shutdown sequence itself lives in `core/lifecycle.ts`, where it can be
+ * tested — the one path that must work during an incident is the worst one to
+ * leave unexercised.
  */
-
-const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 async function start(): Promise<void> {
   // Imported lazily so a config or DB failure is reported by this handler
@@ -31,42 +31,39 @@ async function start(): Promise<void> {
   // delays a shutdown.
   startRetentionSweep();
 
-  let shuttingDown = false;
-
-  const shutdown = (signal: string): void => {
-    if (shuttingDown) return;
-    shuttingDown = true;
-    logger.info({ signal }, 'shutting down');
-
-    // Stop accepting connections, then wait for in-flight requests to finish.
-    server.close((closeError) => {
-      if (closeError) logger.error({ err: closeError }, 'error closing server');
-
-      void disconnectDatabase()
-        .catch((error: unknown) => {
-          logger.error({ err: error }, 'error closing database connection');
-        })
-        .finally(() => {
-          process.exit(closeError ? 1 : 0);
-        });
-    });
-
-    // A connection that refuses to drain must not hold the process open forever.
-    setTimeout(() => {
-      logger.error({ timeoutMs: SHUTDOWN_TIMEOUT_MS }, 'forced shutdown after timeout');
-      process.exit(1);
-    }, SHUTDOWN_TIMEOUT_MS).unref();
-  };
-
-  process.on('SIGTERM', () => {
-    shutdown('SIGTERM');
+  const lifecycle = createServerLifecycle(server, {
+    onClose: disconnectDatabase,
+    exit: (code) => {
+      process.exit(code);
+    },
   });
-  process.on('SIGINT', () => {
-    shutdown('SIGINT');
+
+  for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+    process.on(signal, () => {
+      lifecycle.shutdown(signal);
+    });
+  }
+
+  /**
+   * A rejection nobody handled is a bug, and one that reaches here has already
+   * escaped every route's error handling — so it is reported and the process
+   * is brought down deliberately rather than left in an unknown state.
+   */
+  process.on('unhandledRejection', (reason: unknown) => {
+    logger.fatal({ err: reason }, 'unhandled rejection');
+    captureError({ error: reason });
+    lifecycle.shutdown('unhandledRejection');
+  });
+
+  process.on('uncaughtException', (error: Error) => {
+    logger.fatal({ err: error }, 'uncaught exception');
+    captureError({ error });
+    lifecycle.shutdown('uncaughtException');
   });
 }
 
 start().catch((error: unknown) => {
   logger.fatal({ err: error }, 'failed to start');
+  captureError({ error });
   process.exit(1);
 });

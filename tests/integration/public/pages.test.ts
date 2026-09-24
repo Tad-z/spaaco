@@ -8,7 +8,7 @@ import { expectToMatchContract } from '../../support/contract.js';
 import { FIXTURE_DIR } from '../../support/spec.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { Insight, Page, PracticeArea } from '../../../src/models/index.js';
-import { signAccessToken } from '../../support/auth.js';
+import { previewToken } from '../../support/auth.js';
 import { PAGE_KEYS } from '../../../src/constants/enums.js';
 
 /**
@@ -170,7 +170,7 @@ describe('preview', () => {
     const withoutPreview = await request(app).get('/api/v1/pages/home');
     const withPreview = await request(app)
       .get('/api/v1/pages/home?preview=true')
-      .set('Authorization', `Bearer ${signAccessToken()}`);
+      .set('Authorization', `Bearer ${await previewToken()}`);
 
     expect(withoutPreview.body.data.latestInsights).toHaveLength(0);
     expect(withPreview.body.data.latestInsights).toHaveLength(4);

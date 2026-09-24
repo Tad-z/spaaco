@@ -10,6 +10,7 @@ import {
 } from '../core/errors.js';
 import { toErrorDetails } from './validate.middleware.js';
 import { logger } from '../core/logger.js';
+import { captureError } from '../core/error-tracking.js';
 
 /**
  * The only place an error becomes an HTTP response.
@@ -30,6 +31,26 @@ interface BodyParserError extends Error {
 const asBodyParserError = (error: unknown): BodyParserError | undefined =>
   error instanceof Error && ('type' in error || 'status' in error || 'statusCode' in error)
     ? (error as BodyParserError)
+    : undefined;
+
+/**
+ * Mongoose's document validation error.
+ *
+ * Reaching here means a value passed the Zod schema but failed the model —
+ * which is a bug or an input the validator does not bound, and either way a
+ * 400 is a truer answer than the 500 it used to produce.
+ */
+interface MongooseValidationError {
+  readonly name: string;
+  readonly errors: Record<string, unknown>;
+}
+
+const asMongooseValidationError = (error: unknown): MongooseValidationError | undefined =>
+  error instanceof Error &&
+  error.name === 'ValidationError' &&
+  'errors' in error &&
+  typeof (error as { errors: unknown }).errors === 'object'
+    ? (error as unknown as MongooseValidationError)
     : undefined;
 
 /** MongoDB's duplicate-key error, which the driver raises with code 11000. */
@@ -69,6 +90,18 @@ function normalise(error: unknown): AppError | undefined {
     );
   }
 
+  const invalid = asMongooseValidationError(error);
+  if (invalid) {
+    // Mongoose's own message quotes the offending value — ``Path `userAgent`
+    // (`<the whole header>`) is longer than...`` — so only the field names are
+    // reported. The value came from the request and may be personal data; it
+    // must not travel into a response, a log or an error report.
+    return new ValidationError(
+      'Some values were not acceptable',
+      Object.keys(invalid.errors).map((path) => ({ path, message: 'invalid value' }))
+    );
+  }
+
   const parserError = asBodyParserError(error);
   if (!parserError) return undefined;
 
@@ -105,6 +138,7 @@ export function errorHandler(
   if (appError) {
     if (appError.statusCode >= 500) {
       logger.error({ err: appError, requestId: req.requestId }, 'request failed');
+      report(error, req);
     } else {
       logger.debug(
         { code: appError.code, status: appError.statusCode, requestId: req.requestId },
@@ -122,5 +156,29 @@ export function errorHandler(
   }
 
   logger.error({ err: error, requestId: req.requestId }, 'unhandled error');
+  report(error, req);
+
   res.status(500).json(GENERIC_INTERNAL_RESPONSE);
+}
+
+/**
+ * Send a genuine fault to the error tracker.
+ *
+ * Only 5xx: a 400 or a 404 is the API working correctly, and reporting those
+ * would bury the one thing worth waking somebody for. The route *pattern* is
+ * tagged rather than the path, because a concrete path carries ids — and an
+ * application id identifies a person's CV.
+ */
+function report(error: unknown, req: Request): void {
+  // `req.route` is only set once a route has matched; on a 404 or a failure in
+  // an earlier middleware there is none, and the mount path is the most that
+  // can be said without quoting the concrete URL.
+  const route = (req.route as { path?: string } | undefined)?.path;
+
+  captureError({
+    error,
+    requestId: req.requestId,
+    route: route ?? req.baseUrl,
+    method: req.method,
+  });
 }

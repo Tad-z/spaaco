@@ -4,6 +4,7 @@ import {
   iconItem,
   objectIdRef,
   paragraphs,
+  safeUrl,
   seo,
   stat,
   titledBody,
@@ -43,7 +44,7 @@ export const aboutPageSchema = z
             z
               .object({
                 name: z.string().trim().min(1).max(160),
-                url: z.string().trim().max(2048).nullable(),
+                url: safeUrl.nullable(),
               })
               .strict()
           )

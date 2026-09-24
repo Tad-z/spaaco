@@ -8,6 +8,7 @@ import { expectToMatchContract } from '../../support/contract.js';
 import { createTestUser, TEST_PASSWORD } from '../../support/auth.js';
 import { RefreshToken, User } from '../../../src/models/index.js';
 import { AUTH } from '../../../src/config/constants.js';
+import { hashPassword } from '../../../src/services/auth.service.js';
 import { decryptSecret } from '../../../src/helpers/crypto.helper.js';
 import { TEST_ENV } from '../../support/test-env.js';
 
@@ -99,6 +100,52 @@ describe('POST /api/v1/admin/auth/login', () => {
 
     expect(res.status).toBe(400);
     expectToMatchContract(res, 'post', '/api/v1/admin/auth/login');
+  });
+
+  it('answers a wrong password identically whatever the account state', async () => {
+    // The login form must not be a directory of who works at the firm. The
+    // staff are named on the public site, so an address format is easy to
+    // guess; distinguishable answers would turn that into a list of accounts.
+    const attempt = async (email: string): Promise<{ status: number; body: string }> => {
+      const res = await request(app)
+        .post('/api/v1/admin/auth/login')
+        .send({ email, password: 'definitely-not-the-password' });
+
+      return { status: res.status, body: JSON.stringify(res.body) };
+    };
+
+    await User.updateOne({ email: 'editor@spaajibade.test' }, { isActive: false });
+    await User.create({
+      name: 'Locked Out',
+      email: 'locked@spaajibade.test',
+      passwordHash: await hashPassword(TEST_PASSWORD),
+      roles: ['editor'],
+      isActive: true,
+      lockedUntil: new Date(Date.now() + 60_000),
+      totp: { enabled: true, secretEncrypted: null },
+    });
+
+    const unknown = await attempt('nobody-here@spaajibade.test');
+    const disabled = await attempt('editor@spaajibade.test');
+    const locked = await attempt('locked@spaajibade.test');
+
+    expect(unknown.status).toBe(401);
+    expect(disabled).toEqual(unknown);
+    expect(locked).toEqual(unknown);
+  });
+
+  it('does not let a stranger lock an account out by guessing at it', async () => {
+    // Failures only count against an account whose password was actually
+    // wrong *and* which is active — so a lockout cannot be driven by somebody
+    // who has never held the password, using a name from the website.
+    for (let attempt = 0; attempt < AUTH.maxFailedLogins + 5; attempt += 1) {
+      await request(app)
+        .post('/api/v1/admin/auth/login')
+        .send({ email: 'not-a-user@spaajibade.test', password: 'wrong' });
+    }
+
+    const stored = await User.findOne({ email: 'editor@spaajibade.test' }).lean();
+    expect(stored?.failedLoginCount ?? 0).toBe(0);
   });
 
   it('refuses a disabled account', async () => {
@@ -394,5 +441,33 @@ describe('two-factor enforcement', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
+  });
+});
+
+describe('a password change ends the sessions it was meant to end', () => {
+  it('stops an access token that was issued before it', async () => {
+    const { token } = await createTestUser({ roles: ['admin'], email: 'rotate@spaajibade.test' });
+
+    const before = await request(app)
+      .get('/api/v1/admin/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+    expect(before.status).toBe(200);
+
+    // A second of separation, because `iat` has whole-second resolution.
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+
+    const changed = await request(app)
+      .post('/api/v1/admin/auth/password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: TEST_PASSWORD, newPassword: 'a-brand-new-long-passphrase' });
+
+    expect(changed.status, JSON.stringify(changed.body)).toBe(204);
+
+    // The point: a password changed *because* of a compromise must not leave
+    // the attacker's bearer token working for the rest of its fifteen minutes.
+    const after = await request(app)
+      .get('/api/v1/admin/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+    expect(after.status).toBe(401);
   });
 });
