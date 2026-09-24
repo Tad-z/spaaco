@@ -4,6 +4,7 @@ coverage/
 .uploads/
 .uploads-test/
 .private-uploads/
+.private-uploads-test/
 .env*
 !.env.example
 CLAUDE.local.md

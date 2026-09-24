@@ -30,6 +30,7 @@ export const TEST_ENV: Readonly<Record<string, string>> = Object.freeze({
   // Written to by the real local driver, so uploads run the production path.
   UPLOAD_DIR: './.uploads-test',
   STORAGE_PRIVATE_DRIVER: 'local',
+  PRIVATE_UPLOAD_DIR: './.private-uploads-test',
   MAILER_DRIVER: 'log',
   CAPTCHA_DRIVER: 'noop',
   VIRUS_SCAN_DRIVER: 'noop',

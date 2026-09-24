@@ -1,11 +1,27 @@
 import type { Types } from 'mongoose';
 import { config } from '../config/env.js';
-import { ValidationError } from '../core/errors.js';
+import {
+  FileRejectedError,
+  NotFoundError,
+  UnsupportedMediaTypeError,
+  ValidationError,
+} from '../core/errors.js';
 import { logger } from '../core/logger.js';
 import { hashIp } from '../helpers/hash.helper.js';
 import { generateReference } from '../helpers/reference.helper.js';
 import type { ReferencePrefix } from '../helpers/reference.helper.js';
-import { Enquiry, Message, Office, PracticeArea, Settings } from '../models/index.js';
+import {
+  Application,
+  Enquiry,
+  Job,
+  Message,
+  Office,
+  PracticeArea,
+  Settings,
+} from '../models/index.js';
+import { privateStorage } from '../integrations/storage/private/index.js';
+import { scanFile } from './virus-scan.service.js';
+import { DOCX_MIME, PDF_MIME, sniffDocumentType } from '../helpers/document-type.helper.js';
 import { verifyCaptcha } from './captcha.service.js';
 import { sendMail } from './notify.service.js';
 import {
@@ -13,7 +29,11 @@ import {
   notificationEmail,
 } from '../templates/emails/submission.template.js';
 import type { SubmissionKind } from '../templates/emails/submission.template.js';
-import type { EnquiryBody, MessageBody } from '../validators/submission.validator.js';
+import type {
+  ApplicationBody,
+  EnquiryBody,
+  MessageBody,
+} from '../validators/submission.validator.js';
 
 /**
  * The two JSON forms.
@@ -164,6 +184,86 @@ export async function submitMessage(
   logger.info({ reference: created.reference, form: 'message' }, 'submission received');
 
   await notify('message', created.reference, body, config.NOTIFY_ENQUIRIES_TO);
+
+  return { reference: created.reference };
+}
+
+const CV_EXTENSIONS: Record<string, string> = { [PDF_MIME]: 'pdf', [DOCX_MIME]: 'docx' };
+
+export interface ApplicationUpload {
+  readonly buffer: Buffer;
+  readonly originalName: string;
+}
+
+/**
+ * Apply for a vacancy.
+ *
+ * The order is the security property: honeypot, captcha, vacancy, type, scan,
+ * *then* store. A file that fails any check never reaches the firm's storage,
+ * and nothing about the applicant is written until the file is known to be a
+ * genuine, clean CV.
+ */
+export async function submitApplication(
+  jobId: string,
+  body: ApplicationBody,
+  cv: ApplicationUpload,
+  context: RequestContext
+): Promise<SubmissionResult> {
+  if (isBot(body.website)) return silentlyAccept('APP');
+
+  await requireHuman(body.turnstileToken, context.ip);
+
+  // Only a vacancy the public can see and that is still taking applicants. A
+  // draft or closed job answers 404 rather than 403: whether it exists is not
+  // something an anonymous caller needs told.
+  const job = await Job.findOne({ _id: jobId, status: 'published', isOpen: true })
+    .select('_id title')
+    .lean<{ _id: Types.ObjectId; title: string } | null>();
+
+  if (!job) throw new NotFoundError('Vacancy');
+
+  const mimeType = sniffDocumentType(cv.buffer);
+  if (mimeType === undefined) {
+    throw new UnsupportedMediaTypeError('Upload your CV as a PDF or a Word (.docx) document.');
+  }
+
+  if ((await scanFile(cv.buffer)) === 'infected') {
+    // 422, not 400: the fields were fine, the file was not (ADR-026).
+    throw new FileRejectedError(
+      'That file did not pass our security scan. Please check it and try again.'
+    );
+  }
+
+  const storageKey = await privateStorage().put({
+    buffer: cv.buffer,
+    mimeType,
+    extension: CV_EXTENSIONS[mimeType] ?? 'bin',
+  });
+
+  const created = await Application.create({
+    ...envelope('APP', body, context),
+    job: job._id,
+    fullName: body.fullName,
+    email: body.email,
+    phone: body.phone,
+    coverNote: body.coverNote ?? null,
+    cv: {
+      storageKey,
+      originalName: cv.originalName,
+      mimeType,
+      bytes: cv.buffer.byteLength,
+      scanStatus: 'clean',
+    },
+  });
+
+  logger.info({ reference: created.reference, form: 'application' }, 'submission received');
+
+  await notify(
+    'application',
+    created.reference,
+    body,
+    config.NOTIFY_APPLICATIONS_TO ?? config.NOTIFY_ENQUIRIES_TO
+  );
 
   return { reference: created.reference };
 }

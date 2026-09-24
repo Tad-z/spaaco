@@ -21,3 +21,4 @@ export { RefreshToken } from './refresh-token.model.js';
 export { AuditLog } from './audit-log.model.js';
 export { Enquiry } from './enquiry.model.js';
 export { Message } from './message.model.js';
+export { Application } from './application.model.js';

@@ -73,5 +73,31 @@ export const messageBody = z
   })
   .strict();
 
+/**
+ * The application form, which arrives as multipart.
+ *
+ * Every field is a string here, because multipart has no types — which is why
+ * `consent` is the literal string `"true"` rather than a boolean (ADR-021).
+ * The spec says so explicitly, so the frontend does not have to discover it.
+ */
+export const applicationBody = z
+  .object({
+    fullName,
+    email,
+    phone: z
+      .string()
+      .trim()
+      .min(7)
+      .max(20)
+      .regex(/^[+0-9 ()-]{7,20}$/, 'phone must be a valid telephone number'),
+    coverNote: z.string().trim().max(2000).optional(),
+    consent: z.literal('true'),
+    consentTextVersion,
+    turnstileToken,
+    website,
+  })
+  .strict();
+
 export type EnquiryBody = z.infer<typeof enquiryBody>;
 export type MessageBody = z.infer<typeof messageBody>;
+export type ApplicationBody = z.infer<typeof applicationBody>;

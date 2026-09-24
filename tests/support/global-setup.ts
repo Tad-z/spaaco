@@ -13,9 +13,15 @@ import { TEST_ENV } from './test-env.js';
 
 let server: MongoMemoryServer | undefined;
 
-/** The media tests exercise the real local driver, which writes real files. */
-const clearUploads = (): Promise<void> =>
-  rm(TEST_ENV.UPLOAD_DIR ?? './.uploads-test', { recursive: true, force: true });
+/** The upload tests exercise the real local drivers, which write real files. */
+const clearUploads = async (): Promise<void> => {
+  await Promise.all(
+    [
+      TEST_ENV.UPLOAD_DIR ?? './.uploads-test',
+      TEST_ENV.PRIVATE_UPLOAD_DIR ?? './.private-uploads-test',
+    ].map((directory) => rm(directory, { recursive: true, force: true }))
+  );
+};
 
 export async function setup(): Promise<void> {
   // Started clean, so one run's uploads cannot be mistaken for another's.

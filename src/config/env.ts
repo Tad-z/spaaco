@@ -63,6 +63,8 @@ const envSchema = z.object({
   /** Where the local image driver writes. Served at /uploads outside production. */
   UPLOAD_DIR: z.string().trim().min(1).default('./.uploads'),
   STORAGE_PRIVATE_DRIVER: z.enum(['local', 's3']).default('local'),
+  /** Where the local private driver writes CVs. Never served statically. */
+  PRIVATE_UPLOAD_DIR: z.string().trim().min(1).default('./.private-uploads'),
   // No SMTP driver: see ADR-036. Resend is an HTTP API, so it needs no
   // mail-transport dependency.
   MAILER_DRIVER: z.enum(['log', 'resend']).default('log'),

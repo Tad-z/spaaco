@@ -1,12 +1,19 @@
 import { Router } from 'express';
 import {
+  createApplicationHandler,
   createEnquiryHandler,
   createMessageHandler,
 } from '../../controllers/public/submission.controller.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { formLimiter } from '../../middlewares/rate-limit.middleware.js';
 import { noStore } from '../../middlewares/cache-headers.middleware.js';
-import { enquiryBody, messageBody } from '../../validators/submission.validator.js';
+import { cvUpload } from '../../middlewares/cv-upload.middleware.js';
+import { idParams } from '../../validators/common.validator.js';
+import {
+  applicationBody,
+  enquiryBody,
+  messageBody,
+} from '../../validators/submission.validator.js';
 
 /**
  * The public forms.
@@ -31,4 +38,15 @@ submissionRoutes.post(
   formLimiter,
   validate({ body: messageBody }),
   createMessageHandler
+);
+
+// Multipart, so `cvUpload` runs before `validate`: until multer has parsed the
+// request there are no fields to validate.
+submissionRoutes.post(
+  '/jobs/:id/applications',
+  noStore,
+  formLimiter,
+  cvUpload(),
+  validate({ params: idParams, body: applicationBody }),
+  createApplicationHandler
 );
