@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { buildTestApp } from '../../support/build-app.js';
+import { expectToMatchContract } from '../../support/contract.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { AuditLog } from '../../../src/models/index.js';
 import { config } from '../../../src/config/env.js';
@@ -56,6 +57,10 @@ describe('a signed CV link', () => {
     const res = await request(app).get(link(KEY, 300)).buffer(true).parse(collect);
 
     expect(res.status).toBe(200);
+    // Not a JSON body, so the assertion checks the status is one the spec
+    // declares rather than a schema — which is the whole contract this route
+    // has, and more than it had when it was absent from the spec entirely.
+    expectToMatchContract(res, 'get', '/api/v1/files/cv/{key}');
     expect(Buffer.from(res.body as Buffer).toString('utf8')).toBe(CONTENTS);
     expect(res.headers['content-disposition']).toContain('attachment');
     // Never cached: a CV must not sit in a proxy or a browser's disk cache.
@@ -86,6 +91,7 @@ describe('a signed CV link', () => {
     const res = await request(app).get(tampered);
 
     expect(res.status).toBe(403);
+    expectToMatchContract(res, 'get', '/api/v1/files/cv/{key}');
   });
 
   it('refuses an expired one', async () => {

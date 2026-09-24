@@ -429,6 +429,7 @@ describe('deleting', () => {
     const res = await request(app).delete(`${base}/${id}`).set('Authorization', auth());
 
     expect(res.status).toBe(204);
+    expectToMatchContract(res, 'delete', '/api/v1/admin/media/{id}');
     expect(await Media.findById(id).lean()).toBeNull();
   });
 });

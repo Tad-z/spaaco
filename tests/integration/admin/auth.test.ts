@@ -215,6 +215,7 @@ describe('two-factor at sign-in', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ code: authenticator.generate(setup.body.data.secret) });
     expect(enabled.status).toBe(204);
+    expectToMatchContract(enabled, 'post', '/api/v1/admin/auth/2fa/enable');
 
     const login = await request(app)
       .post('/api/v1/admin/auth/login')
@@ -323,6 +324,7 @@ describe('refresh rotation', () => {
 
     const out = await request(app).post('/api/v1/admin/auth/logout').set('Cookie', cookie);
     expect(out.status).toBe(204);
+    expectToMatchContract(out, 'post', '/api/v1/admin/auth/logout');
 
     const after = await request(app).post('/api/v1/admin/auth/refresh').set('Cookie', cookie);
     expect(after.status).toBe(401);
@@ -385,6 +387,7 @@ describe('POST /api/v1/admin/auth/password', () => {
       .send({ currentPassword: TEST_PASSWORD, newPassword: 'a-brand-new-long-passphrase' });
 
     expect(res.status).toBe(204);
+    expectToMatchContract(res, 'post', '/api/v1/admin/auth/password');
 
     // A session opened with the old password must not survive the change.
     const after = await request(app)

@@ -120,4 +120,4 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 - [x] **7.3 Sentry integration (optional via env) + graceful shutdown test.**
 - [x] **7.4 `docs/RUNBOOK.md`:** deploy, rotate secrets, restore backup, create admin, rerun revalidation.
 - [x] **7.5 Launch content loader:** `scripts/load-launch-content.ts` loads the text from `fixtures/seed/*` into an **empty** production database (with no placeholder images, and image fields left empty) so the firm doesn't retype copy. It requires a `--confirm` flag and refuses to run if any content already exists. Everything is created as `draft`, so the firm reviews each item, uploads images through the admin UI, and publishes.
-- [ ] **7.6 Final contract audit:** every path in the spec has at least one passing contract test (`/contract-check`).
+- [x] **7.6 Final contract audit:** every path in the spec has at least one passing contract test (`/contract-check`).

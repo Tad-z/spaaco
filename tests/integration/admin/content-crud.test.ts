@@ -532,6 +532,7 @@ describe('every collection', () => {
 
       expect(published.status).toBe(200);
       expect(published.body.data.status).toBe('published');
+      expectToMatchContract(published, 'post', `/api/v1/admin/content/${collection}/{id}/publish`);
 
       // And the public read the test's name promises: publishing has to make
       // the record reachable without a token, which is the whole point of it.
@@ -542,6 +543,62 @@ describe('every collection', () => {
 
         expect(seen.status, `${publicPath}/${slugOrId}: ${JSON.stringify(seen.body)}`).toBe(200);
       }
+    }
+  );
+
+  /**
+   * The rest of each collection's operations, asserted against its own schema.
+   *
+   * One generic handler serves all seven, so this is not seven times the
+   * behavioural coverage — it is the contract half. ADR-033 gave every
+   * collection its own request and response schemas, and a schema nothing ever
+   * validates against is a promise to the frontend that nobody has checked.
+   */
+  it.each(ADMIN_COLLECTIONS.map((collection) => ({ collection })))(
+    '$collection matches its schema on list, read, reorder, unpublish and delete',
+    async ({ collection }) => {
+      const created = await request(app)
+        .post(`${base}/${collection}`)
+        .set('Authorization', auth())
+        .send(smokeBodies[collection]);
+
+      expect(created.status, JSON.stringify(created.body)).toBe(201);
+      const id: string = created.body.data.id;
+
+      const list = await request(app).get(`${base}/${collection}`).set('Authorization', auth());
+      expect(list.status).toBe(200);
+      expectToMatchContract(list, 'get', `/api/v1/admin/content/${collection}`);
+
+      const read = await request(app)
+        .get(`${base}/${collection}/${id}`)
+        .set('Authorization', auth());
+      expect(read.status).toBe(200);
+      expectToMatchContract(read, 'get', `/api/v1/admin/content/${collection}/{id}`);
+
+      const reordered = await request(app)
+        .patch(`${base}/${collection}/reorder`)
+        .set('Authorization', auth())
+        .send({ ids: [id] });
+      expect(reordered.status, JSON.stringify(reordered.body)).toBe(204);
+      expectToMatchContract(reordered, 'patch', `/api/v1/admin/content/${collection}/reorder`);
+
+      const unpublished = await request(app)
+        .post(`${base}/${collection}/${id}/unpublish`)
+        .set('Authorization', auth());
+      expect(unpublished.status).toBe(200);
+      expectToMatchContract(
+        unpublished,
+        'post',
+        `/api/v1/admin/content/${collection}/{id}/unpublish`
+      );
+
+      // Nothing references a record created moments ago, so this is the clean
+      // delete path rather than the 409.
+      const deleted = await request(app)
+        .delete(`${base}/${collection}/${id}`)
+        .set('Authorization', auth());
+      expect(deleted.status, JSON.stringify(deleted.body)).toBe(204);
+      expectToMatchContract(deleted, 'delete', `/api/v1/admin/content/${collection}/{id}`);
     }
   );
 });
