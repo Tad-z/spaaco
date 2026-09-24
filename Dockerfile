@@ -21,6 +21,8 @@ COPY src ./src
 # administrator and loading the launch content are all things an operator does
 # inside the running image, and none is reachable over HTTP.
 COPY scripts ./scripts
+# The build copies this into dist/, because /docs serves it at runtime.
+COPY openapi ./openapi
 
 RUN npm run build
 

@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import { config } from './config/env.js';
 import { UPLOAD_LIMITS } from './config/constants.js';
 import { API_PREFIX, apiRoutes } from './routes/index.js';
+import { docsRoutes } from './routes/docs.routes.js';
 import { requestId } from './middlewares/request-id.middleware.js';
 import { notFound } from './middlewares/not-found.middleware.js';
 import { errorHandler } from './middlewares/error-handler.middleware.js';
@@ -87,6 +88,9 @@ export function createApp(options: CreateAppOptions = {}): Express {
   if (config.STORAGE_PUBLIC_DRIVER === 'local' && config.NODE_ENV !== 'production') {
     app.use('/uploads', express.static(config.UPLOAD_DIR, { index: false, dotfiles: 'deny' }));
   }
+
+  // Outside the API prefix: the contract is documentation, not an endpoint.
+  app.use(docsRoutes);
 
   app.use(API_PREFIX, publicReadLimiter);
   app.use(API_PREFIX, cacheHeaders);

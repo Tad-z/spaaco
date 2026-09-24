@@ -4,6 +4,8 @@
 
 Base path: `/api/v1`. JSON everywhere except the CV upload (multipart).
 
+The running API serves the spec as browsable documentation at **`/docs`**, and the raw YAML at `/docs/openapi.yaml` (ADR-044) — so a deployment always documents itself rather than a built copy somebody has to remember to re-upload.
+
 ## Response conventions
 
 **Success, single resource:**

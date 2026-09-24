@@ -2,7 +2,7 @@
 
 Backend for the marketing website of SPA Ajibade & Co., a Nigerian law firm (founded 1967; offices in Lagos, Abuja, Ibadan). Almost all website content (pages, practice areas, attorneys, insights, jobs, offices, FAQs, awards, images) is served from this API and edited by the firm through an admin API. It also receives three forms: mandate enquiries, messages to the firm, and job applications with CV upload.
 
-**This repo is API only.** A separate frontend team builds the public site AND the admin dashboard. Never build HTML views, templates, or admin UI here.
+**This repo is API only.** A separate frontend team builds the public site AND the admin dashboard. Never build HTML views, templates, or admin UI here. The one exception is `/docs`, which renders the OpenAPI spec (ADR-044); don't extend it or add a second.
 
 ## Golden rules
 

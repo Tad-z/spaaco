@@ -170,6 +170,16 @@ One claim was corrected rather than fixed: the loader says it creates everything
 
 Also gone with it: `scripts/create-admin.ts`, which existed only to solve the chicken-and-egg problem the bootstrap now solves, and `helpers/crypto.helper.ts`, whose AES-GCM was only ever used for TOTP secrets.
 
+**ADR-044: The contract is served as documentation at `/docs`.** This is an exception to the API-only rule in `CLAUDE.md`, taken deliberately by the project lead rather than drifted into.
+
+The alternative was `npm run docs:build`, a self-contained HTML file somebody hosts. It was rejected for a specific reason: it is a copy, and a copy is stale from the first spec change nobody re-uploads. A frontend team building against a link that is quietly wrong is worse than no link.
+
+What keeps this from becoming a view layer. The page is a shell of about twenty lines with no content of its own — Redoc fetches `/docs/openapi.yaml` and renders it in the browser, so there is exactly one copy of the contract and `npm run spec:lint` still guards it. Nothing is templated, and no other route returns HTML.
+
+Two things it cost. The spec is not TypeScript, so `npm run build` now copies it into `dist/openapi/` — without that the page loads in production and then 404s on its own contract, which the integration test pins. And Redoc loads from a CDN and builds its search index in a blob worker, neither of which the default CSP allows; the relaxation is scoped to the `/docs` router, because a policy loosened globally to suit one page stops meaning anything.
+
+The spec documents the admin endpoints as well as the public ones, and `/docs` is open. That is a considered position rather than an oversight: the admin routes are protected by authentication and the role matrix, and a contract an attacker could reconstruct by reading the frontend bundle is not a control. The page carries `noindex`. If the firm later wants it closed, the router is the single place to gate.
+
 ## Known content conflicts (from the designs; the firm must resolve them)
 
 Seed them as designed. Don't silently "fix" them.
