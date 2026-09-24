@@ -48,4 +48,16 @@ describe('GET /docs/openapi.yaml', () => {
     expect(body).toContain('openapi:');
     expect(body).toContain('/api/v1/pages/{key}');
   });
+
+  it('inlines the response examples, which a browser cannot fetch', async () => {
+    const res = await request(app).get('/docs/openapi.yaml');
+    const body = res.text.length > 0 ? res.text : String(res.body);
+
+    // Serving the unbundled source renders every example as the literal
+    // `{ "$ref": "../fixtures/responses/site.json" }`, which is what the
+    // frontend team sees instead of a sample payload.
+    expect(body).not.toContain('fixtures/responses');
+    // A field that exists only inside the /site example payload.
+    expect(body).toContain('firmName:');
+  });
 });

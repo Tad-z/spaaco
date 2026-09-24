@@ -12,3 +12,4 @@ CLAUDE.local.md
 .DS_Store
 .vitest-cache/
 dist-docs/
+openapi/openapi.bundled.yaml

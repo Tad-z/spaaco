@@ -15,10 +15,16 @@ import helmet from 'helmet';
  * `/docs/openapi.yaml` and draws it — so there is no second copy of the
  * contract to drift, and `npm run spec:lint` still guards the only source.
  *
- * `../../openapi/openapi.yaml` resolves in both layouts by design:
- * `src/routes/` reaches the repository's copy, and `dist/src/routes/` reaches
- * the one `npm run build` places at `dist/openapi/`. The build must copy it,
- * because the spec is not TypeScript and `tsc` will not carry it.
+ * What is served is the *bundled* spec, not the source. The source keeps its
+ * 77 response examples in `fixtures/responses/*.json` and references them, so
+ * the contract tests and the spec share one copy of each; a browser cannot
+ * follow those references and would render the literal `$ref` instead of the
+ * example. `scripts/bundle-spec.mjs` inlines them.
+ *
+ * The path resolves in both layouts by design: `src/routes/` reaches the
+ * repository's `openapi/`, written by `predev`, and `dist/src/routes/` reaches
+ * `dist/openapi/`, written by `npm run build`. Neither is `tsc`'s doing — the
+ * spec is not TypeScript, so a build step has to carry it.
  */
 
 const SPEC_PATH = join(
@@ -26,7 +32,7 @@ const SPEC_PATH = join(
   '..',
   '..',
   'openapi',
-  'openapi.yaml'
+  'openapi.bundled.yaml'
 );
 
 /**
