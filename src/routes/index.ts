@@ -7,11 +7,14 @@ import { insightRoutes } from './public/insight.routes.js';
 import { pageRoutes } from './public/page.routes.js';
 import { searchRoutes } from './public/search.routes.js';
 import { submissionRoutes } from './public/submission.routes.js';
+import { fileRoutes } from './public/file.routes.js';
+import { config } from '../config/env.js';
 import { adminAuthRoutes } from './admin/auth.routes.js';
 import { adminUserRoutes } from './admin/user.routes.js';
 import { adminContentRoutes } from './admin/content.routes.js';
 import { adminSingletonRoutes } from './admin/singleton.routes.js';
 import { adminMediaRoutes } from './admin/media.routes.js';
+import { adminSubmissionRoutes } from './admin/submission.routes.js';
 
 /**
  * The one place routers are mounted.
@@ -34,8 +37,15 @@ apiRoutes.use(searchRoutes);
 // Admin routers deny by default: each states its own auth and roles.
 apiRoutes.use(submissionRoutes);
 
+// Only the local private driver hands out links this API has to redeem; with
+// S3 the presigned URL points at S3, so the route does not exist at all.
+if (config.STORAGE_PRIVATE_DRIVER === 'local') {
+  apiRoutes.use(fileRoutes);
+}
+
 apiRoutes.use('/admin', adminAuthRoutes);
 apiRoutes.use('/admin', adminUserRoutes);
 apiRoutes.use('/admin', adminContentRoutes);
 apiRoutes.use('/admin', adminSingletonRoutes);
 apiRoutes.use('/admin', adminMediaRoutes);
+apiRoutes.use('/admin', adminSubmissionRoutes);

@@ -3,6 +3,7 @@ import { adminUserRoutes } from '../../src/routes/admin/user.routes.js';
 import { adminContentRoutes } from '../../src/routes/admin/content.routes.js';
 import { adminSingletonRoutes } from '../../src/routes/admin/singleton.routes.js';
 import { adminMediaRoutes } from '../../src/routes/admin/media.routes.js';
+import { adminSubmissionRoutes } from '../../src/routes/admin/submission.routes.js';
 import { apiRoutes, API_PREFIX } from '../../src/routes/index.js';
 
 /**
@@ -57,6 +58,7 @@ export function registeredAdminRoutes(): RegisteredRoute[] {
     adminContentRoutes,
     adminSingletonRoutes,
     adminMediaRoutes,
+    adminSubmissionRoutes,
   ]) {
     collect((router as unknown as { stack: RouteLayer[] }).stack, `${API_PREFIX}/admin`, routes);
   }

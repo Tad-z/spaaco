@@ -109,7 +109,7 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 - [x] **6.1 Spec first** for the admin submission endpoints (the public form POSTs were already specced in 0.2).
 - [x] **6.2 Enquiries + messages:** validation, honeypot, Turnstile, rate limit, reference generation, ipHash (SHA-256 with a salt), acknowledgement + notification emails, TTL index.
 - [x] **6.3 Applications:** multipart via multer (memory storage, 5 MB), PDF/DOCX magic-byte check, virus scan adapter, private storage, and emails.
-- [ ] **6.4 Admin submissions endpoints:** list/detail/status update, a signed CV URL (5 min), and audit entries on every detail view and CV access.
+- [x] **6.4 Admin submissions endpoints:** list/detail/status update, a signed CV URL (5 min), and audit entries on every detail view and CV access.
 - [ ] **6.5 Retention job:** a daily job deleting CV files whose application has been TTL-deleted (orphan sweep).
   - **Accept (phase):** tests cover a bot (honeypot) getting 201 with nothing stored; an infected file getting 422; a CV URL for the HR role but 403 for editor; and PII absent from logs (assert on captured logger output).
 

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { objectId, slug } from './common.validator.js';
+import { APPLICATION_STATUSES, SUBMISSION_STATUSES } from '../constants/enums.js';
+import { PAGINATION } from '../config/constants.js';
 
 /**
  * The public form bodies.
@@ -101,3 +103,44 @@ export const applicationBody = z
 export type EnquiryBody = z.infer<typeof enquiryBody>;
 export type MessageBody = z.infer<typeof messageBody>;
 export type ApplicationBody = z.infer<typeof applicationBody>;
+
+/**
+ * The admin side: how a submission is handled, and nothing else.
+ *
+ * There is no schema here for editing what a submitter wrote, because there is
+ * no endpoint for it. `.strict()` means an attempt to send one is a 400 that
+ * names the field rather than a silently ignored key.
+ */
+export const submissionPatch = z
+  .object({
+    status: z.enum(SUBMISSION_STATUSES.values).optional(),
+    assignedTo: objectId.nullable().optional(),
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'at least one field is required',
+  });
+
+export const applicationPatch = z.object({ status: z.enum(APPLICATION_STATUSES.values) }).strict();
+
+export const listSubmissionsQuery = z
+  .object({
+    status: z.enum(SUBMISSION_STATUSES.values).optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(PAGINATION.maxPageSize).default(20),
+  })
+  .strict();
+
+export const listApplicationsQuery = z
+  .object({
+    status: z.enum(APPLICATION_STATUSES.values).optional(),
+    job: objectId.optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(PAGINATION.maxPageSize).default(20),
+  })
+  .strict();
+
+export type SubmissionPatchBody = z.infer<typeof submissionPatch>;
+export type ApplicationPatchBody = z.infer<typeof applicationPatch>;
+export type ListSubmissionsQuery = z.infer<typeof listSubmissionsQuery>;
+export type ListApplicationsQuery = z.infer<typeof listApplicationsQuery>;

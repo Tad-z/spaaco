@@ -44,6 +44,16 @@ const MATRIX: Record<string, readonly UserRole[]> = {
   '/api/v1/admin/media': ['editor'],
   '/api/v1/admin/media/:id': ['editor'],
   '/api/v1/admin/media/:id/file': ['editor'],
+
+  // Submissions are split by who handles them: business development takes
+  // client enquiries, HR takes applicants. Editors see neither.
+  '/api/v1/admin/enquiries': ['business_dev'],
+  '/api/v1/admin/enquiries/:id': ['business_dev'],
+  '/api/v1/admin/messages': ['business_dev'],
+  '/api/v1/admin/messages/:id': ['business_dev'],
+  '/api/v1/admin/applications': ['hr'],
+  '/api/v1/admin/applications/:id': ['hr'],
+  '/api/v1/admin/applications/:id/cv': ['hr'],
 };
 
 /** Auth routes are about having a session, not a role; auth.test.ts covers them. */
