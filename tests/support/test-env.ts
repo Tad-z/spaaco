@@ -27,6 +27,8 @@ export const TEST_ENV: Readonly<Record<string, string>> = Object.freeze({
   IP_HASH_SALT: 'test-ip-hash-salt-value',
 
   STORAGE_PUBLIC_DRIVER: 'local',
+  // Written to by the real local driver, so uploads run the production path.
+  UPLOAD_DIR: './.uploads-test',
   STORAGE_PRIVATE_DRIVER: 'local',
   MAILER_DRIVER: 'log',
   CAPTCHA_DRIVER: 'noop',

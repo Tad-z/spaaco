@@ -41,6 +41,9 @@ const MATRIX: Record<string, readonly UserRole[]> = {
   // HR, whose grant is the jobs collection rather than the pages it appears on.
   '/api/v1/admin/pages/:key': ['editor'],
   '/api/v1/admin/settings': ['editor'],
+  '/api/v1/admin/media': ['editor'],
+  '/api/v1/admin/media/:id': ['editor'],
+  '/api/v1/admin/media/:id/file': ['editor'],
 };
 
 /** Auth routes are about having a session, not a role; auth.test.ts covers them. */

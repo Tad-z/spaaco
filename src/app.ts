@@ -64,6 +64,13 @@ export function createApp(options: CreateAppOptions = {}): Express {
   // Only the admin refresh token is a cookie; nothing else reads one.
   app.use(cookieParser());
 
+  // The local image driver writes to disk, so something has to serve it. Never
+  // in production: there the driver is Cloudinary, and an open static mount
+  // over a writable directory would be a liability with nothing to gain.
+  if (config.STORAGE_PUBLIC_DRIVER === 'local' && config.NODE_ENV !== 'production') {
+    app.use('/uploads', express.static(config.UPLOAD_DIR, { index: false, dotfiles: 'deny' }));
+  }
+
   app.use(API_PREFIX, publicReadLimiter);
   app.use(API_PREFIX, cacheHeaders);
   app.use(API_PREFIX, apiRoutes);

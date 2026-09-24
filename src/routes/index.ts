@@ -10,6 +10,7 @@ import { adminAuthRoutes } from './admin/auth.routes.js';
 import { adminUserRoutes } from './admin/user.routes.js';
 import { adminContentRoutes } from './admin/content.routes.js';
 import { adminSingletonRoutes } from './admin/singleton.routes.js';
+import { adminMediaRoutes } from './admin/media.routes.js';
 
 /**
  * The one place routers are mounted.
@@ -34,3 +35,4 @@ apiRoutes.use('/admin', adminAuthRoutes);
 apiRoutes.use('/admin', adminUserRoutes);
 apiRoutes.use('/admin', adminContentRoutes);
 apiRoutes.use('/admin', adminSingletonRoutes);
+apiRoutes.use('/admin', adminMediaRoutes);

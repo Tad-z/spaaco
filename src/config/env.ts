@@ -60,6 +60,8 @@ const envSchema = z.object({
 
   // --- integration drivers ---
   STORAGE_PUBLIC_DRIVER: z.enum(['local', 'cloudinary']).default('local'),
+  /** Where the local image driver writes. Served at /uploads outside production. */
+  UPLOAD_DIR: z.string().trim().min(1).default('./.uploads'),
   STORAGE_PRIVATE_DRIVER: z.enum(['local', 's3']).default('local'),
   MAILER_DRIVER: z.enum(['log', 'resend', 'smtp']).default('log'),
   CAPTCHA_DRIVER: z.enum(['noop', 'turnstile']).default('noop'),

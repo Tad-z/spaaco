@@ -12,11 +12,9 @@ import { z } from 'zod';
 
 export const replaceBody = z.record(z.unknown());
 
-export const patchBody = z
-  .record(z.unknown())
-  .refine((value) => Object.keys(value).length > 0, {
-    message: 'at least one section is required',
-  });
+export const patchBody = z.record(z.unknown()).refine((value) => Object.keys(value).length > 0, {
+  message: 'at least one section is required',
+});
 
 export type ReplaceBody = z.infer<typeof replaceBody>;
 export type PatchBody = z.infer<typeof patchBody>;

@@ -1,0 +1,37 @@
+/**
+ * Public image storage.
+ *
+ * The three responsive widths are the driver's job, not the caller's, because
+ * that is precisely where the two drivers differ: the local driver renders
+ * them with sharp at upload time and stores three files, while Cloudinary
+ * serves them as transformation URLs off the one upload (ARCHITECTURE, "Media
+ * lifecycle"). A caller that built the URLs itself would be wrong for one of
+ * them.
+ */
+
+export interface ImageSizeUrls {
+  readonly sm: string;
+  readonly md: string;
+  readonly lg: string;
+}
+
+export interface PutImageInput {
+  readonly buffer: Buffer;
+  readonly mimeType: string;
+  /** Used only to make the stored key readable; never trusted. */
+  readonly originalFilename: string;
+}
+
+export interface StoredImage {
+  /** Internal path or public id. Never leaves the API (see `MediaAdmin`). */
+  readonly storageKey: string;
+  readonly url: string;
+  readonly sizes: ImageSizeUrls;
+}
+
+export interface IPublicStorage {
+  readonly name: string;
+  put(input: PutImageInput): Promise<StoredImage>;
+  /** Best effort: a failure is logged, never fatal (ARCHITECTURE step 4). */
+  remove(storageKey: string): Promise<void>;
+}
