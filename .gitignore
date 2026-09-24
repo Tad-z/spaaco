@@ -11,3 +11,4 @@ CLAUDE.local.md
 *.log
 .DS_Store
 .vitest-cache/
+dist-docs/
