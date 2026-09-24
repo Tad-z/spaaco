@@ -190,8 +190,20 @@ build, so they run with plain `node` and need no dev dependencies.
 | Apply database indexes  | `node dist/scripts/sync-indexes.js`                  |
 | Load the launch content | `node dist/scripts/load-launch-content.js --confirm` |
 
-On Render, use the **Shell** tab of the service (it runs in the deployed
-environment, so the variables are already set). With Docker:
+Render's Shell tab is a paid feature, so on the free plan run them **from your
+own machine instead** — they reach the database over the network and do not
+need to run on the server. Put the production `MONGODB_URI` in a local `.env`
+and use the npm scripts, which load it:
+
+```bash
+npm run db:sync-indexes
+npm run load-launch-content -- --confirm
+```
+
+Mind which database that `.env` points at: these are the same commands you
+would run against a local one.
+
+With Docker, or on a plan that has a shell:
 
 ```bash
 docker run --rm --env-file .env spa-ajibade-api:<sha>   node dist/scripts/sync-indexes.js
