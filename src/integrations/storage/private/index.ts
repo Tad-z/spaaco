@@ -26,6 +26,7 @@ export function createPrivateStorage(): IPrivateStorage {
       region: config.S3_REGION,
       accessKeyId: config.S3_ACCESS_KEY_ID,
       secretAccessKey: config.S3_SECRET_ACCESS_KEY,
+      endpoint: config.S3_ENDPOINT,
     });
   }
 

@@ -26,6 +26,17 @@ export interface S3Credentials {
   readonly region: string;
   readonly accessKeyId: string;
   readonly secretAccessKey: string;
+  /**
+   * An S3-compatible endpoint, for a provider that is not AWS — Cloudflare R2,
+   * Backblaze B2, Wasabi. Left unset, this talks to AWS.
+   *
+   * The protocol is the same; only two things differ. The bucket goes in the
+   * path rather than the hostname, because a third-party endpoint has no
+   * per-bucket subdomain. And `x-amz-acl` is not sent, because R2 has no ACLs
+   * and rejects the header — its buckets are private unless a public domain is
+   * attached to them, so nothing is given up by omitting it.
+   */
+  readonly endpoint?: string | undefined;
 }
 
 const SERVICE = 's3';
@@ -67,8 +78,21 @@ export function createS3PrivateStorage(
   fetchImpl: typeof fetch = fetch,
   now: () => Date = () => new Date()
 ): IPrivateStorage {
-  const host = `${credentials.bucket}.s3.${credentials.region}.amazonaws.com`;
+  const custom = credentials.endpoint !== undefined && credentials.endpoint.trim() !== '';
+  const host = custom
+    ? new URL(credentials.endpoint ?? '').host
+    : `${credentials.bucket}.s3.${credentials.region}.amazonaws.com`;
   const origin = `https://${host}`;
+
+  /**
+   * Empty on AWS, where the bucket is the subdomain; `/bucket` elsewhere.
+   *
+   * Every signed path has to agree with the path actually requested, or the
+   * signature covers a different object and the provider answers 403.
+   */
+  const basePath = custom ? `/${encodeURIComponent(credentials.bucket)}` : '';
+
+  const objectPath = (key: string): string => `${basePath}/${encodeKey(key)}`;
 
   const scopeFor = (dateStamp: string): string =>
     `${dateStamp}/${credentials.region}/${SERVICE}/aws4_request`;
@@ -106,7 +130,7 @@ export function createS3PrivateStorage(
 
     const canonicalRequest = [
       method,
-      `/${encodeKey(key)}`,
+      objectPath(key),
       '',
       canonicalHeaders,
       signedHeaders,
@@ -136,19 +160,20 @@ export function createS3PrivateStorage(
       const { amzDate, dateStamp } = timestamps(now());
       const payloadHash = sha256Hex(input.buffer);
 
-      const response = await fetchImpl(`${origin}/${encodeKey(key)}`, {
+      // Belt and braces alongside the bucket policy: a CV must never be
+      // readable without a signature, whatever the bucket defaults are. Only
+      // on AWS — R2 and the others have no ACLs and refuse the header.
+      const acl: Record<string, string> = custom ? {} : { 'x-amz-acl': 'private' };
+
+      const response = await fetchImpl(`${origin}${objectPath(key)}`, {
         method: 'PUT',
         headers: {
           host,
           'content-type': input.mimeType,
           'x-amz-content-sha256': payloadHash,
           'x-amz-date': amzDate,
-          // Belt and braces alongside the bucket policy: a CV must never be
-          // readable without a signature, whatever the bucket defaults are.
-          'x-amz-acl': 'private',
-          authorization: authorize('PUT', key, payloadHash, amzDate, dateStamp, {
-            'x-amz-acl': 'private',
-          }),
+          ...acl,
+          authorization: authorize('PUT', key, payloadHash, amzDate, dateStamp, acl),
         },
         body: new Uint8Array(input.buffer),
       });
@@ -184,7 +209,7 @@ export function createS3PrivateStorage(
 
       const canonicalRequest = [
         'GET',
-        `/${encodeKey(storageKey)}`,
+        objectPath(storageKey),
         canonicalQuery,
         `host:${host}\n`,
         'host',
@@ -201,7 +226,7 @@ export function createS3PrivateStorage(
       const signature = hmac(signingKey(credentials, dateStamp), stringToSign).toString('hex');
 
       return Promise.resolve({
-        url: `${origin}/${encodeKey(storageKey)}?${canonicalQuery}&X-Amz-Signature=${signature}`,
+        url: `${origin}${objectPath(storageKey)}?${canonicalQuery}&X-Amz-Signature=${signature}`,
         expiresAt: new Date(issuedAt.getTime() + ttlSeconds * 1000),
       });
     },
@@ -209,7 +234,7 @@ export function createS3PrivateStorage(
     async remove(storageKey: string): Promise<void> {
       const { amzDate, dateStamp } = timestamps(now());
 
-      const response = await fetchImpl(`${origin}/${encodeKey(storageKey)}`, {
+      const response = await fetchImpl(`${origin}${objectPath(storageKey)}`, {
         method: 'DELETE',
         headers: {
           host,
@@ -244,7 +269,7 @@ export function createS3PrivateStorage(
         const canonicalHeaders = `host:${host}\nx-amz-content-sha256:${UNSIGNED}\nx-amz-date:${amzDate}\n`;
         const canonicalRequest = [
           'GET',
-          '/',
+          `${basePath}/`,
           canonicalQuery,
           canonicalHeaders,
           'host;x-amz-content-sha256;x-amz-date',
@@ -260,7 +285,7 @@ export function createS3PrivateStorage(
 
         const signature = hmac(signingKey(credentials, dateStamp), stringToSign).toString('hex');
 
-        const response = await fetchImpl(`${origin}/?${canonicalQuery}`, {
+        const response = await fetchImpl(`${origin}${basePath}/?${canonicalQuery}`, {
           headers: {
             host,
             'x-amz-content-sha256': UNSIGNED,

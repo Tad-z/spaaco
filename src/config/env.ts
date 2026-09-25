@@ -109,6 +109,15 @@ const envSchema = z.object({
   S3_REGION: optionalString,
   S3_ACCESS_KEY_ID: optionalString,
   S3_SECRET_ACCESS_KEY: optionalString,
+  /**
+   * Set for an S3-compatible provider that is not AWS (Cloudflare R2 and the
+   * like); left unset, the driver talks to AWS. A URL rather than a hostname,
+   * since that is the form every provider documents.
+   */
+  S3_ENDPOINT: optionalString.refine(
+    (value) => value === undefined || /^https:\/\/[^/\s]+\/?$/.test(value),
+    'S3_ENDPOINT must be an https origin, with no path'
+  ),
   RESEND_API_KEY: optionalString,
   MAIL_FROM: z.string().trim().min(1).default('SPA Ajibade & Co. <no-reply@spaajibade.com>'),
   TURNSTILE_SECRET_KEY: optionalString,

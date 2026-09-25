@@ -212,3 +212,115 @@ describe('deleting', () => {
     await expect(driverWith(fetchImpl).remove('cv/gone.pdf')).resolves.toBeUndefined();
   });
 });
+
+/**
+ * Cloudflare R2, and the other S3-compatible providers.
+ *
+ * Two things differ from AWS, and both fail as a 403 rather than as anything
+ * readable: the bucket moves from the hostname into the path, and every signed
+ * path has to match the path actually requested. So each operation is checked
+ * for the bucket segment, and the upload's signature is recomputed over the
+ * path-style canonical request.
+ */
+describe('an S3-compatible endpoint', () => {
+  const R2 = {
+    ...CREDENTIALS,
+    region: 'auto',
+    endpoint: 'https://abc123.r2.cloudflarestorage.com',
+  };
+
+  const R2_SCOPE = `${DATE_STAMP}/auto/s3/aws4_request`;
+
+  const r2With = (fetchImpl: typeof fetch): ReturnType<typeof createS3PrivateStorage> =>
+    createS3PrivateStorage(R2, fetchImpl, () => NOW);
+
+  /** The chain again, for R2's `auto` region. */
+  function r2Signature(stringToSign: string): string {
+    const date = createHmac('sha256', `AWS4${R2.secretAccessKey}`).update(DATE_STAMP).digest();
+    const region = createHmac('sha256', date).update('auto').digest();
+    const service = createHmac('sha256', region).update('s3').digest();
+    const signing = createHmac('sha256', service).update('aws4_request').digest();
+
+    return createHmac('sha256', signing).update(stringToSign).digest('hex');
+  }
+
+  it('puts the bucket in the path and signs that path', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okResponse());
+
+    const key = await r2With(fetchImpl).put({
+      buffer: cv,
+      mimeType: 'application/pdf',
+      extension: 'pdf',
+    });
+
+    const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+    const path = `/${R2.bucket}/${key.split('/').map(encodeURIComponent).join('/')}`;
+
+    expect(url).toBe(`https://abc123.r2.cloudflarestorage.com${path}`);
+
+    const payloadHash = sha256Hex(cv);
+    const signedNames = Object.keys(headers)
+      .filter((name) => name === 'host' || name.startsWith('x-amz-'))
+      .map((name) => name.toLowerCase())
+      .sort();
+
+    const canonicalRequest = [
+      'PUT',
+      path,
+      '',
+      `${signedNames.map((name) => `${name}:${headers[name] ?? ''}`).join('\n')}\n`,
+      signedNames.join(';'),
+      payloadHash,
+    ].join('\n');
+
+    const signature = r2Signature(
+      ['AWS4-HMAC-SHA256', AMZ_DATE, R2_SCOPE, sha256Hex(canonicalRequest)].join('\n')
+    );
+
+    // Signing the AWS-style path would produce a different value here, and R2
+    // would answer 403 with nothing to say why.
+    expect(headers.authorization).toContain(`Signature=${signature}`);
+  });
+
+  it('sends no ACL header, which R2 rejects', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okResponse());
+
+    await r2With(fetchImpl).put({ buffer: cv, mimeType: 'application/pdf', extension: 'pdf' });
+
+    const [, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+
+    expect(headers['x-amz-acl']).toBeUndefined();
+    expect(headers.authorization).not.toContain('x-amz-acl');
+  });
+
+  it('keeps the bucket in the download link, the delete and the listing', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(okResponse('<ListBucketResult></ListBucketResult>'));
+    const driver = r2With(fetchImpl);
+
+    const { url } = await driver.signedUrl('cv/one.pdf', 300, 'cv.pdf');
+    expect(url.startsWith(`https://abc123.r2.cloudflarestorage.com/${R2.bucket}/cv/one.pdf?`)).toBe(
+      true
+    );
+
+    await driver.remove('cv/one.pdf');
+    expect((fetchImpl.mock.calls[0] as [string])[0]).toBe(
+      `https://abc123.r2.cloudflarestorage.com/${R2.bucket}/cv/one.pdf`
+    );
+
+    await driver.list();
+    expect((fetchImpl.mock.calls[1] as [string])[0]).toContain(`/${R2.bucket}/?`);
+  });
+
+  it('still uses the AWS hostname when no endpoint is set', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okResponse());
+
+    await driverWith(fetchImpl).put({ buffer: cv, mimeType: 'application/pdf', extension: 'pdf' });
+
+    const [url] = fetchImpl.mock.calls[0] as [string];
+    expect(url.startsWith('https://spa-ajibade-cvs.s3.eu-west-1.amazonaws.com/cv/')).toBe(true);
+  });
+});
