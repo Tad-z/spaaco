@@ -260,8 +260,37 @@ export class ConfigError extends Error {
  *
  * @throws {ConfigError} listing every problem at once, not just the first.
  */
+/**
+ * Accept Cloudinary's credentials in either form.
+ *
+ * The dashboard presents three separate values; `CLOUDINARY_URL` packs the
+ * same three into one string. Being handed the dashboard's own variables and
+ * having the API refuse to start is a poor first five minutes, so the three
+ * are folded into the one the rest of the code reads.
+ *
+ * An explicit `CLOUDINARY_URL` always wins. The key and secret are percent
+ * encoded, since they sit in the userinfo part of a URL.
+ */
+function withCloudinaryUrl(
+  source: Record<string, string | undefined>
+): Record<string, string | undefined> {
+  const existing = source.CLOUDINARY_URL?.trim() ?? '';
+  if (existing !== '') return source;
+
+  const cloudName = source.CLOUDINARY_CLOUD_NAME?.trim() ?? '';
+  const apiKey = source.CLOUDINARY_API_KEY?.trim() ?? '';
+  const apiSecret = source.CLOUDINARY_API_SECRET?.trim() ?? '';
+
+  if (cloudName === '' || apiKey === '' || apiSecret === '') return source;
+
+  return {
+    ...source,
+    CLOUDINARY_URL: `cloudinary://${encodeURIComponent(apiKey)}:${encodeURIComponent(apiSecret)}@${cloudName}`,
+  };
+}
+
 export function parseEnv(source: Record<string, string | undefined>): Config {
-  const result = refinedSchema.safeParse(source);
+  const result = refinedSchema.safeParse(withCloudinaryUrl(source));
 
   if (!result.success) {
     const issues = result.error.issues.map((issue) => {

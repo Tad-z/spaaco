@@ -155,6 +155,49 @@ describe('parseEnv', () => {
       expect(config.STORAGE_PUBLIC_DRIVER).toBe('cloudinary');
     });
 
+    it('accepts the three separate values the Cloudinary dashboard shows', () => {
+      const config = parseEnv(
+        withEnv({
+          STORAGE_PUBLIC_DRIVER: 'cloudinary',
+          CLOUDINARY_CLOUD_NAME: 'spaajibade',
+          CLOUDINARY_API_KEY: '123456789012345',
+          CLOUDINARY_API_SECRET: 'a-secret-with/a-slash',
+        })
+      );
+
+      // Encoded, because they sit in a URL's userinfo: a raw slash in the
+      // secret would end the authority and silently change the cloud name.
+      expect(config.CLOUDINARY_URL).toBe(
+        'cloudinary://123456789012345:a-secret-with%2Fa-slash@spaajibade'
+      );
+    });
+
+    it('prefers an explicit CLOUDINARY_URL over the three parts', () => {
+      const config = parseEnv(
+        withEnv({
+          STORAGE_PUBLIC_DRIVER: 'cloudinary',
+          CLOUDINARY_URL: 'cloudinary://key:secret@chosen',
+          CLOUDINARY_CLOUD_NAME: 'ignored',
+          CLOUDINARY_API_KEY: 'ignored',
+          CLOUDINARY_API_SECRET: 'ignored',
+        })
+      );
+
+      expect(config.CLOUDINARY_URL).toBe('cloudinary://key:secret@chosen');
+    });
+
+    it('does not half-build a URL from an incomplete set', () => {
+      const error = expectConfigError(
+        withEnv({
+          STORAGE_PUBLIC_DRIVER: 'cloudinary',
+          CLOUDINARY_CLOUD_NAME: 'spaajibade',
+          CLOUDINARY_API_KEY: '123456789012345',
+        })
+      );
+
+      expect(error.issues.join('\n')).toContain('CLOUDINARY_URL is required');
+    });
+
     it('names every missing S3 variable, not just the first', () => {
       const error = expectConfigError(withEnv({ STORAGE_PRIVATE_DRIVER: 's3' }));
       const joined = error.issues.join('\n');
