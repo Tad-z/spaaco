@@ -13,3 +13,4 @@ CLAUDE.local.md
 .vitest-cache/
 dist-docs/
 openapi/openapi.bundled.yaml
+images/

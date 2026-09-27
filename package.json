@@ -24,6 +24,7 @@
     "db:sync-indexes": "tsx --env-file-if-exists=.env scripts/sync-indexes.ts",
     "load-launch-content": "tsx --env-file-if-exists=.env scripts/load-launch-content.ts",
     "publish-all": "tsx --env-file-if-exists=.env scripts/publish-all.ts",
+    "upload-images": "tsx --env-file-if-exists=.env scripts/upload-images.ts",
     "mock": "prism mock openapi/openapi.yaml -p 4010",
     "spec:lint": "redocly lint openapi/openapi.yaml",
     "docs": "redocly preview-docs openapi/openapi.yaml",
