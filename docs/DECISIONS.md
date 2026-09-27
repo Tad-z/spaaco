@@ -193,6 +193,7 @@ Seed them as designed. Don't silently "fix" them.
 5. **Office order.** The footer lists Lagos, Ibadan, Abuja; the Offices page lists Lagos, Abuja, Ibadan. We use the page order everywhere.
 6. **The phone number is a placeholder and has too many digits.**
 7. **The design's office maps are placeholders** showing streets in Ukraine. Real coordinates are needed.
+8. **Is there an Offices page?** The project lead, working from the current Figma, says there is not — offices are listed in the footer only. But the transcription recorded a frame with its own copy ("Wherever You Find Us.", a subtitle and two CTAs), and two other pages link to `/offices`: the home hero's secondary CTA and a CTA on the FAQ page. So either the frame was removed after the transcription, or it is somewhere the lead has not seen. The page and its endpoint are left in place until the firm says otherwise: an unused endpoint costs nothing, while deleting it would break two links the design asks for and would be a contract change to undo. Its hero image slot stays empty.
 
 ## Open questions (with the default we build to until answered)
 
