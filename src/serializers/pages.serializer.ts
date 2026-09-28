@@ -63,6 +63,7 @@ function composeHome({
   const hero = required(toHero(page.hero), 'home', 'hero');
   const aboutFirm = required(page.aboutFirm, 'home', 'aboutFirm');
   const whyChooseUs = required(page.whyChooseUs, 'home', 'whyChooseUs');
+  const recognitionTabs = required(page.recognitionTabs, 'home', 'recognitionTabs');
 
   return {
     key: 'home',
@@ -77,10 +78,12 @@ function composeHome({
       poster: toNullableImage(page.videoShowcase?.poster),
     },
     recognitionTabs: {
-      achievementsLabel: required(page.recognitionTabs, 'home', 'recognitionTabs')
-        .achievementsLabel,
-      recognizedByLabel: required(page.recognitionTabs, 'home', 'recognitionTabs')
-        .recognizedByLabel,
+      eyebrow: recognitionTabs.eyebrow ?? null,
+      title: recognitionTabs.title,
+      image: toNullableImage(recognitionTabs.image),
+      cta: toLink(recognitionTabs.cta),
+      achievementsLabel: recognitionTabs.achievementsLabel,
+      recognizedByLabel: recognitionTabs.recognizedByLabel,
     },
     recognitions: {
       achievements: recognitions.filter((item) => item.tab === 'achievements').map(toRecognition),

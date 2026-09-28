@@ -2198,7 +2198,12 @@ export interface components {
             videoUrl: string | null;
             poster: components["schemas"]["NullableImage"];
         };
+        /** @description The Recognition band on the home page: a heading, a picture, the two tab labels for the badges beneath, and a link to the full list. */
         HomeRecognitionTabs: {
+            eyebrow: string | null;
+            title: string;
+            image: components["schemas"]["NullableImage"];
+            cta: components["schemas"]["NullableLink"];
             achievementsLabel: string;
             recognizedByLabel: string;
         };

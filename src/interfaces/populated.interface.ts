@@ -66,6 +66,7 @@ export interface IPageDoc extends Omit<
   | 'hero'
   | 'seo'
   | 'videoShowcase'
+  | 'recognitionTabs'
   | 'whyChooseUs'
   | 'story'
   | 'missionSection'
@@ -78,6 +79,7 @@ export interface IPageDoc extends Omit<
   seo: Omit<IPage['seo'], 'ogImage'> & { ogImage?: IMedia | null };
   videoShowcase?:
     (Omit<NonNullable<IPage['videoShowcase']>, 'poster'> & { poster?: IMedia | null }) | null;
+  recognitionTabs?: WithImage<NonNullable<IPage['recognitionTabs']>> | null;
   whyChooseUs?: WithImage<NonNullable<IPage['whyChooseUs']>> | null;
   story?:
     | (Omit<NonNullable<IPage['story']>, 'quotePerson'> & {

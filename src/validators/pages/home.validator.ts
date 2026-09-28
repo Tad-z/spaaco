@@ -29,6 +29,10 @@ export const homePageSchema = z
       .strict(),
     recognitionTabs: z
       .object({
+        eyebrow: z.string().trim().max(160).nullable(),
+        title: z.string().trim().min(1).max(200),
+        image: objectIdRef,
+        cta: nullableLink,
         achievementsLabel: z.string().trim().min(1).max(120),
         recognizedByLabel: z.string().trim().min(1).max(120),
       })

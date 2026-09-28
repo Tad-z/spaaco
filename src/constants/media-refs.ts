@@ -73,6 +73,13 @@ export const MEDIA_REFS: readonly MediaRef[] = [
   {
     model: 'Page',
     collection: 'pages',
+    path: 'recognitionTabs.image',
+    label: 'key',
+    tagField: 'key',
+  },
+  {
+    model: 'Page',
+    collection: 'pages',
     path: 'missionSection.image',
     label: 'key',
     tagField: 'key',

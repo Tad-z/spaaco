@@ -43,6 +43,19 @@
       }
     },
     "recognitionTabs": {
+      "eyebrow": "Recognition",
+      "title": "Ranked Among Nigeria's Top Firms By Key Global Legal Institutions.",
+      "image": {
+        "placeholder": "Recognition",
+        "width": 1024,
+        "height": 1024,
+        "alt": "An attorney of the firm at work"
+      },
+      "cta": {
+        "label": "View Our Recognitions",
+        "href": "/about",
+        "kind": "internal"
+      },
       "achievementsLabel": "Our Achievements",
       "recognizedByLabel": "Independently Recognized By"
     },

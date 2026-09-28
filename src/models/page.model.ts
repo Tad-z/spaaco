@@ -44,6 +44,10 @@ const videoShowcaseSchema = new Schema(
 
 const recognitionTabsSchema = new Schema(
   {
+    eyebrow: { type: String, default: null, trim: true, maxlength: 160 },
+    title: { type: String, required: true, trim: true, maxlength: 200 },
+    image: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
+    cta: { type: linkSchema, default: null },
     achievementsLabel: { type: String, required: true, trim: true, maxlength: 120 },
     recognizedByLabel: { type: String, required: true, trim: true, maxlength: 120 },
   },

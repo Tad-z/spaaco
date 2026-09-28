@@ -210,3 +210,11 @@ Seed them as designed. Don't silently "fix" them.
 | Q9  | Should attorney emails be public?                                                                                    | Firm          | No. The field exists but isn't returned publicly.                                  |
 | Q10 | Who confirms image licences (the stock photos, and any AI-generated hero scenes) and consent for attorney portraits? | Firm          | The firm, before publishing. Nothing to build.                                     |
 | Q11 | Who writes alt text for the real images?                                                                             | Firm/frontend | The admin UI requires it on upload; drafts can be suggested.                       |
+
+**ADR-045: The Home page's Recognition band gains a heading, a picture and a link.** The transcription captured only its two tab labels, so the contract had nowhere to put the rest of what the design shows. The frontend could not have built the section from the API at all — the band's headline, its photograph and its "View Our Recognitions" button were simply absent, which is why the picture appeared to be missing when it had in fact been uploaded and attached to the About page's awards section instead.
+
+`HomeRecognitionTabs` now carries `eyebrow`, `title`, `image` and `cta` alongside the two labels. Additive, so nothing the frontend already reads changes shape.
+
+The copy is transcribed from a screenshot of the frame, not invented: eyebrow "Recognition", title "Ranked Among Nigeria's Top Firms By Key Global Legal Institutions.", button "View Our Recognitions". **The button's destination is an assumption.** The design shows the label but not the target, and `/about` is where the full list lives, so that is what it points at. Worth confirming with the firm, since a wrong link is worse than an obvious gap.
+
+The About page keeps its own `awardsList.image`. The design calls for award trophies there and no such file exists, so it currently shares the Home band's photograph rather than showing nothing.

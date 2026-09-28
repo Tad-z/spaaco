@@ -31,6 +31,10 @@ export interface IHomeVideoShowcase {
 }
 
 export interface IHomeRecognitionTabs {
+  eyebrow?: string | null;
+  title: string;
+  image?: Types.ObjectId | null;
+  cta?: ILink | null;
   achievementsLabel: string;
   recognizedByLabel: string;
 }

@@ -32,6 +32,10 @@ const validHome = {
   aboutFirm: { title: 'A Firm Built On Integrity.', paragraphs: ['One.', 'Two.'], cta: link },
   videoShowcase: { videoUrl: null, poster: null },
   recognitionTabs: {
+    eyebrow: 'Recognition',
+    title: "Ranked Among Nigeria's Top Firms By Key Global Legal Institutions.",
+    image: null,
+    cta: link,
     achievementsLabel: 'Our Achievements',
     recognizedByLabel: 'Independently Recognized By',
   },

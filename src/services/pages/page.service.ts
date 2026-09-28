@@ -33,6 +33,7 @@ const POPULATE_PATHS = [
   'hero.image',
   'seo.ogImage',
   'videoShowcase.poster',
+  'recognitionTabs.image',
   'whyChooseUs.image',
   'missionSection.image',
   'principles.image',

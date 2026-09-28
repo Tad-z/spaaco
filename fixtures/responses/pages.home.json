@@ -61,6 +61,28 @@
       }
     },
     "recognitionTabs": {
+      "eyebrow": "Recognition",
+      "title": "Ranked Among Nigeria's Top Firms By Key Global Legal Institutions.",
+      "image": {
+        "url": "https://placehold.co/1024x1024?text=Recognition",
+        "alt": "An attorney of the firm at work",
+        "width": 1024,
+        "height": 1024,
+        "sizes": {
+          "sm": "https://placehold.co/480x480?text=Recognition",
+          "md": "https://placehold.co/960x960?text=Recognition",
+          "lg": "https://placehold.co/1024x1024?text=Recognition"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "cta": {
+        "label": "View Our Recognitions",
+        "href": "/about",
+        "kind": "internal"
+      },
       "achievementsLabel": "Our Achievements",
       "recognizedByLabel": "Independently Recognized By"
     },

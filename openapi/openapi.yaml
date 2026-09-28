@@ -5510,8 +5510,19 @@ components:
     HomeRecognitionTabs:
       type: object
       additionalProperties: false
-      required: [achievementsLabel, recognizedByLabel]
+      description: >-
+        The Recognition band on the home page: a heading, a picture, the two
+        tab labels for the badges beneath, and a link to the full list.
+      required: [eyebrow, title, image, cta, achievementsLabel, recognizedByLabel]
       properties:
+        eyebrow:
+          type: [string, 'null']
+        title:
+          type: string
+        image:
+          $ref: '#/components/schemas/NullableImage'
+        cta:
+          $ref: '#/components/schemas/NullableLink'
         achievementsLabel:
           type: string
         recognizedByLabel:
