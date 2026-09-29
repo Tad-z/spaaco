@@ -59,6 +59,7 @@ personSchema.virtual('fullNameForSlug').get(function (this: IPerson): string {
 personSchema.index({ status: 1, role: 1, order: 1 });
 // The directory's practice-area filter (ADR-054).
 personSchema.index({ status: 1, practiceAreas: 1 });
+personSchema.index({ status: 1, primaryPracticeArea: 1 });
 personSchema.index({ firstName: 'text', lastName: 'text', bio: 'text' });
 
 export const Person: Model<IPerson> = model<IPerson>('Person', personSchema);

@@ -4369,6 +4369,8 @@ paths:
           $ref: '#/components/responses/PayloadTooLarge'
         '415':
           $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -4496,6 +4498,8 @@ paths:
           $ref: '#/components/responses/PayloadTooLarge'
         '415':
           $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '428':
           $ref: '#/components/responses/PreconditionRequired'
         '500':
@@ -5147,7 +5151,7 @@ components:
     UnprocessableEntity:
       description: |
         The uploaded file was rejected after inspection and nothing was stored. Today this
-        means it failed the virus scan. Distinct from 400, which means a field was invalid.
+        means it failed the virus scan: a CV, or a PDF document for the media library. Distinct from 400, which means a field was invalid.
       content:
         application/json:
           schema:
@@ -8662,7 +8666,7 @@ components:
       properties:
         status: { type: string, enum: [draft, published] }
         title: { type: string, minLength: 1, maxLength: 200 }
-        body: { type: string, maxLength: 100000 }
+        body: { type: string, maxLength: 80000 }
 
     SubmissionStatus:
       type: string

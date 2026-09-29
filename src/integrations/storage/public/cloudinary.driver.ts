@@ -134,13 +134,31 @@ export function createCloudinaryStorage(
      */
     async putDocument(input: PutDocumentInput): Promise<StoredDocument> {
       const timestamp = String(Math.floor(Date.now() / 1000));
-      const params = { folder: 'spa-ajibade', timestamp };
+      // A raw public id keeps the uploaded filename's extension only when
+      // asked to, and without `.pdf` in the delivered URL a browser downloads
+      // the profile instead of opening it. `unique_filename` keeps two
+      // uploads of "profile.pdf" from colliding.
+      const params = {
+        folder: 'spa-ajibade',
+        timestamp,
+        unique_filename: 'true',
+        use_filename: 'true',
+      };
+      const filename = /\.pdf$/i.test(input.originalFilename)
+        ? input.originalFilename
+        : `${input.originalFilename}.pdf`;
 
       const form = new FormData();
-      form.set('file', new Blob([new Uint8Array(input.buffer)], { type: 'application/pdf' }));
+      form.set(
+        'file',
+        new Blob([new Uint8Array(input.buffer)], { type: 'application/pdf' }),
+        filename
+      );
       form.set('api_key', apiKey);
       form.set('timestamp', timestamp);
       form.set('folder', params.folder);
+      form.set('unique_filename', params.unique_filename);
+      form.set('use_filename', params.use_filename);
       form.set('signature', sign(params, apiSecret));
 
       const response = await fetchImpl(`https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`, {

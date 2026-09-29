@@ -2,7 +2,11 @@ import { Award, Page, RecognitionDirectory } from '../models/index.js';
 import { NotFoundError } from '../core/errors.js';
 import { publishedFilter, publishedPopulate } from '../helpers/published-filter.helper.js';
 import type { PreviewOptions } from '../helpers/published-filter.helper.js';
-import type { IAwardDoc, IRecognitionDirectoryDoc } from '../interfaces/populated.interface.js';
+import type {
+  IAwardDoc,
+  IRecognitionDirectoryDoc,
+  IRecognitionDirectoryListDoc,
+} from '../interfaces/populated.interface.js';
 import type { IRecognitionDirectoryLabels } from '../interfaces/page.interface.js';
 
 /**
@@ -14,12 +18,15 @@ import type { IRecognitionDirectoryLabels } from '../interfaces/page.interface.j
  */
 
 /** Every published directory, in order: the About awards list and the "Recognized By" tab. */
-export function listDirectories(options: PreviewOptions = {}): Promise<IRecognitionDirectoryDoc[]> {
+export function listDirectories(
+  options: PreviewOptions = {}
+): Promise<IRecognitionDirectoryListDoc[]> {
+  // Only what a list renders: the hero slides belong to the directory page.
   return RecognitionDirectory.find(publishedFilter(options))
+    .select('name slug logo order')
     .populate('logo')
-    .populate('heroImages')
     .sort({ order: 1, name: 1 })
-    .lean<IRecognitionDirectoryDoc[]>();
+    .lean<IRecognitionDirectoryListDoc[]>();
 }
 
 /** The Home badges and the "Our Achievements" tab: awards flagged for Home, in order. */
@@ -33,7 +40,7 @@ export function listFeaturedAwards(options: PreviewOptions = {}): Promise<IAward
 
 export async function getRecognitionsOverview(
   options: PreviewOptions = {}
-): Promise<{ directories: IRecognitionDirectoryDoc[]; achievements: IAwardDoc[] }> {
+): Promise<{ directories: IRecognitionDirectoryListDoc[]; achievements: IAwardDoc[] }> {
   const [directories, achievements] = await Promise.all([
     listDirectories(options),
     listFeaturedAwards(options),

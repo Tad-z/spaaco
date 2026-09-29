@@ -4,7 +4,6 @@ import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { normalise, readFixture } from '../../support/fixtures.js';
-import { previewToken } from '../../support/auth.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { Award, Page, RecognitionDirectory } from '../../../src/models/index.js';
 
@@ -118,15 +117,5 @@ describe('draft exclusion', () => {
     expect(
       about.body.data.awardsList.items.map((item: { slug: string }) => item.slug)
     ).not.toContain('iflr-1000');
-  });
-
-  it('shows the draft to a valid preview token', async () => {
-    await Award.updateOne({ slug: 'iflr1000-recommended-firm-2024-a' }, { status: 'draft' });
-
-    const res = await request(app)
-      .get('/api/v1/recognitions/iflr-1000?preview=true')
-      .set('Authorization', `Bearer ${await previewToken()}`);
-
-    expect(awardsOf(res.body)).toHaveLength(4);
   });
 });

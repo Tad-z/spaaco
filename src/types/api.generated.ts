@@ -4026,7 +4026,7 @@ export interface components {
         };
         /**
          * @description The uploaded file was rejected after inspection and nothing was stored. Today this
-         *     means it failed the virus scan. Distinct from 400, which means a field was invalid.
+         *     means it failed the virus scan: a CV, or a PDF document for the media library. Distinct from 400, which means a field was invalid.
          */
         UnprocessableEntity: {
             headers: {
@@ -8050,6 +8050,7 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             413: components["responses"]["PayloadTooLarge"];
             415: components["responses"]["UnsupportedMediaType"];
+            422: components["responses"]["UnprocessableEntity"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8171,6 +8172,7 @@ export interface operations {
             409: components["responses"]["Conflict"];
             413: components["responses"]["PayloadTooLarge"];
             415: components["responses"]["UnsupportedMediaType"];
+            422: components["responses"]["UnprocessableEntity"];
             428: components["responses"]["PreconditionRequired"];
             500: components["responses"]["InternalError"];
         };

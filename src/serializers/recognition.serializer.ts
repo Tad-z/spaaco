@@ -5,7 +5,11 @@ import type {
   RecognitionDirectoryRef,
   RecognitionsOverview,
 } from '../types/api.js';
-import type { IAwardDoc, IRecognitionDirectoryDoc } from '../interfaces/populated.interface.js';
+import type {
+  IAwardDoc,
+  IRecognitionDirectoryDoc,
+  IRecognitionDirectoryListDoc,
+} from '../interfaces/populated.interface.js';
 import type { IRecognitionDirectoryLabels } from '../interfaces/page.interface.js';
 import { toImages, toNullableImage } from './image.serializer.js';
 import { toLink } from './page.serializer.js';
@@ -19,7 +23,9 @@ export const toDirectoryLink = (
   directory: Pick<IRecognitionDirectoryDoc, 'name' | 'slug'>
 ): RecognitionDirectoryLink => ({ name: directory.name, slug: directory.slug });
 
-export const toDirectoryRef = (directory: IRecognitionDirectoryDoc): RecognitionDirectoryRef => ({
+export const toDirectoryRef = (
+  directory: IRecognitionDirectoryListDoc
+): RecognitionDirectoryRef => ({
   id: directory._id.toString(),
   name: directory.name,
   slug: directory.slug,
@@ -47,7 +53,7 @@ export const toAwards = (awards: readonly IAwardDoc[]): Award[] =>
 
 /** The two-tab recognition component. */
 export const toOverview = (
-  directories: readonly IRecognitionDirectoryDoc[],
+  directories: readonly IRecognitionDirectoryListDoc[],
   featured: readonly IAwardDoc[]
 ): RecognitionsOverview => ({
   directories: directories.map(toDirectoryRef),

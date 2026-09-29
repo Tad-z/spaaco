@@ -233,10 +233,17 @@ describe('PDF documents (ADR-053)', () => {
     const form = init.body as FormData;
 
     expect(url).toBe('https://api.cloudinary.com/v1_1/spa-demo/raw/upload');
+    // Every param sent is signed, sorted by name, or Cloudinary answers 401.
     const expected = createHash('sha1')
-      .update(`folder=spa-ajibade&timestamp=${field(form, 'timestamp')}shh-secret`)
+      .update(
+        `folder=spa-ajibade&timestamp=${field(form, 'timestamp')}` +
+          '&unique_filename=true&use_filename=true' +
+          'shh-secret'
+      )
       .digest('hex');
     expect(field(form, 'signature')).toBe(expected);
+    // Keeping the name is what keeps `.pdf` in the delivered URL.
+    expect((form.get('file') as File).name).toBe('firm-profile.pdf');
     expect(stored).toEqual({
       storageKey: 'spa-ajibade/firm-profile',
       url: 'https://res.cloudinary.com/spa-demo/raw/upload/spa-ajibade/firm-profile.pdf',

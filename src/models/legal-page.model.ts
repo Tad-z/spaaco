@@ -15,7 +15,7 @@ const legalPageSchema = new Schema<ILegalPage>(
     key: { type: String, required: true, unique: true, enum: LEGAL_PAGE_KEYS.values },
     title: { type: String, required: true, trim: true, maxlength: 200 },
     /** Sanitised HTML. */
-    body: { type: String, required: true, maxlength: 100_000 },
+    body: { type: String, required: true, maxlength: 80_000 },
     status: { type: String, required: true, enum: CONTENT_STATUSES.values, default: 'draft' },
     revision: { type: Number, default: 0 },
   },

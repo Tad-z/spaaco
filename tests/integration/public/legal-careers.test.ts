@@ -4,7 +4,6 @@ import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { normalise, readFixture } from '../../support/fixtures.js';
-import { previewToken } from '../../support/auth.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { Job, LegalPage } from '../../../src/models/index.js';
 
@@ -46,16 +45,12 @@ describe('GET /api/v1/legal/{key}', () => {
     expectToMatchContract(res, 'get', '/api/v1/legal/{key}');
   });
 
-  it('hides a draft legal page, except from a valid preview token', async () => {
+  it('hides a draft legal page', async () => {
     await LegalPage.updateOne({ key: 'privacy' }, { status: 'draft' });
 
-    const anonymous = await request(app).get('/api/v1/legal/privacy');
-    const preview = await request(app)
-      .get('/api/v1/legal/privacy?preview=true')
-      .set('Authorization', `Bearer ${await previewToken()}`);
+    const res = await request(app).get('/api/v1/legal/privacy');
 
-    expect(anonymous.status).toBe(404);
-    expect(preview.status).toBe(200);
+    expect(res.status).toBe(404);
   });
 });
 

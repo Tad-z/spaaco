@@ -11,6 +11,7 @@ import { createTestUser } from '../../support/auth.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { AuditLog, Media, PracticeArea } from '../../../src/models/index.js';
 import { setRevalidator } from '../../../src/services/cache.service.js';
+import { setVirusScanner } from '../../../src/services/virus-scan.service.js';
 import { config } from '../../../src/config/env.js';
 import { UPLOAD_LIMITS } from '../../../src/config/constants.js';
 import * as cache from '../../../src/core/cache.js';
@@ -482,6 +483,21 @@ describe('PDF documents (ADR-053)', () => {
     expect(res.status).toBe(415);
     expect(res.body.error.code).toBe('UNSUPPORTED_MEDIA_TYPE');
     expectToMatchContract(res, 'post', '/api/v1/admin/media');
+  });
+
+  it('refuses an infected PDF with 422 and stores nothing, since it would be public', async () => {
+    setVirusScanner({ name: 'test', scan: () => Promise.resolve('infected') });
+    const before = await Media.countDocuments();
+    const filesBefore = (await storedFiles()).length;
+
+    const res = await uploadDocument();
+
+    setVirusScanner(undefined);
+    expect(res.status).toBe(422);
+    expect(res.body.error.code).toBe('FILE_REJECTED');
+    expectToMatchContract(res, 'post', '/api/v1/admin/media');
+    expect(await Media.countDocuments()).toBe(before);
+    expect(await storedFiles()).toHaveLength(filesBefore);
   });
 
   it('refuses an image uploaded as a document, and a PDF uploaded as an image', async () => {

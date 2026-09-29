@@ -27,7 +27,7 @@ import type {
   IPersonWithPhoto,
   IPracticeAreaRefDoc,
   IPracticeAreaWithImage,
-  IRecognitionDirectoryDoc,
+  IRecognitionDirectoryListDoc,
 } from '../../interfaces/populated.interface.js';
 
 /**
@@ -95,7 +95,7 @@ async function loadFor(
         ? listFeaturedInsights(options)
         : none<IInsightDoc>(),
     key === 'home' ? listFeaturedAwards(options) : none<IAwardDoc>(),
-    key === 'about' ? listDirectories(options) : none<IRecognitionDirectoryDoc>(),
+    key === 'about' ? listDirectories(options) : none<IRecognitionDirectoryListDoc>(),
     key === 'offices' ? listOffices(options) : none<IOfficeDoc>(),
     key === 'careers' ? listJobs(options) : none<IJobDoc>(),
     needsCounts ? Office.countDocuments(publishedFilter(options)) : Promise.resolve(0),

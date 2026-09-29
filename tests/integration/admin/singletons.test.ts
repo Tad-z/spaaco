@@ -383,6 +383,20 @@ describe('legal pages (ADR-057)', () => {
     expect((await request(app).get('/api/v1/legal/terms')).status).toBe(404);
   });
 
+  it('returns 400 naming the field for a status that does not exist', async () => {
+    const { body } = await getLegal();
+
+    const res = await request(app)
+      .put('/api/v1/admin/legal/terms')
+      .set('Authorization', auth())
+      .set('If-Match', String(body.data.revision))
+      .send({ status: 'archived', title: 'Terms of Service', body: '<p>Terms.</p>' });
+
+    expect(res.status).toBe(400);
+    expectToMatchContract(res, 'put', '/api/v1/admin/legal/{key}');
+    expect(res.body.error.details.map((d: { path: string }) => d.path)).toContain('status');
+  });
+
   it('returns 409 when someone else saved first', async () => {
     const res = await request(app)
       .put('/api/v1/admin/legal/terms')

@@ -1,5 +1,6 @@
 import type { Types } from 'mongoose';
-import { Insight, PracticeArea } from '../models/index.js';
+import { Insight } from '../models/index.js';
+import { findPracticeAreaId } from './practice-area-lookup.service.js';
 import { NotFoundError } from '../core/errors.js';
 import {
   personCardPopulate,
@@ -77,13 +78,6 @@ function findCards(
   );
 }
 
-async function resolvePracticeAreaId(slug: string): Promise<Types.ObjectId | null> {
-  const area = await PracticeArea.findOne({ slug })
-    .select('_id')
-    .lean<{ _id: Types.ObjectId } | null>();
-  return area?._id ?? null;
-}
-
 export async function listInsights(
   options: ListInsightsOptions
 ): Promise<{ items: IInsightDoc[]; total: number }> {
@@ -93,7 +87,7 @@ export async function listInsights(
   };
 
   if (options.practiceArea !== undefined) {
-    const areaId = await resolvePracticeAreaId(options.practiceArea);
+    const areaId = await findPracticeAreaId(options.practiceArea, options);
     // An unknown practice area is an empty result, not an error: the value
     // comes from a filter control, and a 404 there would be hostile.
     if (areaId === null) return { items: [], total: 0 };

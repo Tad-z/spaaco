@@ -8,7 +8,7 @@ import type {
 } from '../types/api.js';
 import type { IInsight } from '../interfaces/insight.interface.js';
 import type { IMedia } from '../interfaces/media.interface.js';
-import { INSIGHT_CATEGORIES } from '../constants/enums.js';
+import { EXCLUDED_FROM_MAIN_LISTING, INSIGHT_CATEGORIES } from '../constants/enums.js';
 import { toNullableDocument, toNullableImage } from './image.serializer.js';
 import { toRef as practiceAreaRef } from './practice-area.serializer.js';
 import type { PracticeAreaRefSource } from './practice-area.serializer.js';
@@ -125,7 +125,8 @@ export function toDetailCta(insight: InsightDetailSource): InsightDetailCta | nu
 
 /** Pro bono stories belong to the Responsible Business page; everything else to the listing. */
 export function toBackLink(insight: Pick<InsightCardSource, 'categories'>): Link {
-  return insight.categories.includes('pro_bono')
+  // The one excluded category is the Responsible Business grid (ADR-049).
+  return insight.categories.some((category) => EXCLUDED_FROM_MAIN_LISTING.includes(category))
     ? {
         label: 'Back to Pro Bono & Community Commitment',
         href: '/responsible-business',

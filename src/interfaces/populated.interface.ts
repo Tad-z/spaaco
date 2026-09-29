@@ -80,6 +80,12 @@ export type IRecognitionDirectoryDoc = Omit<IRecognitionDirectory, 'logo' | 'her
   heroImages: IMedia[];
 };
 
+/** A directory as a list shows it: a row on About, a tile in "Recognized By". */
+export type IRecognitionDirectoryListDoc = Pick<
+  IRecognitionDirectoryDoc,
+  '_id' | 'name' | 'slug' | 'logo'
+>;
+
 export type IAwardDoc = Omit<IAward, 'badge' | 'directory'> & {
   _id: Types.ObjectId;
   badge: IMedia | null;
@@ -146,7 +152,7 @@ export interface IPageSources {
   /** The awards flagged for Home, in order. */
   awards: IAwardDoc[];
   /** Every published recognition directory, in order: the About awards list. */
-  directories: IRecognitionDirectoryDoc[];
+  directories: IRecognitionDirectoryListDoc[];
   offices: IOfficeDoc[];
   jobs: IJobDoc[];
   counts: { officeCount: number; practiceAreaCount: number };

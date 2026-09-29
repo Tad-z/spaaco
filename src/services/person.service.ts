@@ -1,5 +1,6 @@
-import type { PipelineStage, Types } from 'mongoose';
-import { Person, PracticeArea } from '../models/index.js';
+import type { PipelineStage } from 'mongoose';
+import { Person } from '../models/index.js';
+import { findPracticeAreaId } from './practice-area-lookup.service.js';
 import { NotFoundError } from '../core/errors.js';
 import { listInsightsByAuthor } from './insight.service.js';
 import type {
@@ -52,16 +53,15 @@ function roleFilter(role: PersonRole | undefined): Record<string, unknown> {
  * dropdown.
  */
 async function practiceAreaFilter(
-  slug: string | undefined
+  slug: string | undefined,
+  options: PreviewOptions
 ): Promise<Record<string, unknown> | null | undefined> {
   if (slug === undefined) return undefined;
 
-  const area = await PracticeArea.findOne({ slug })
-    .select('_id')
-    .lean<{ _id: Types.ObjectId } | null>();
-  if (!area) return null;
+  const areaId = await findPracticeAreaId(slug, options);
+  if (areaId === null) return null;
 
-  return { $or: [{ practiceAreas: area._id }, { primaryPracticeArea: area._id }] };
+  return { $or: [{ practiceAreas: areaId }, { primaryPracticeArea: areaId }] };
 }
 
 /**
@@ -74,10 +74,14 @@ async function practiceAreaFilter(
 export async function listPeople(
   options: ListPeopleOptions
 ): Promise<{ items: PersonWithPhoto[]; total: number }> {
-  const areaFilter = await practiceAreaFilter(options.practiceArea);
+  const areaFilter = await practiceAreaFilter(options.practiceArea, options);
   if (areaFilter === null) return { items: [], total: 0 };
 
-  const match = { ...publishedFilter(options), ...roleFilter(options.role), ...areaFilter };
+  // `$and`, not a spread: two filters that each used `$or` would otherwise
+  // silently overwrite one another.
+  const match = {
+    $and: [publishedFilter(options), roleFilter(options.role), areaFilter ?? {}],
+  };
 
   let sortStage: PipelineStage.Sort['$sort'] = { roleRank: 1, order: 1, lastName: 1 };
   if (options.sort === 'name_asc') sortStage = { lastName: 1, firstName: 1 };

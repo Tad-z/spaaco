@@ -10,6 +10,32 @@ What _is_ provisional is some of the content, which is flagged under
 
 ---
 
+## What changed in the design update (29 Sep 2026)
+
+The second design drop changed the contract. `openapi/openapi.yaml` and the fixtures are current; this list is what to change on your side. Each item has an ADR in `docs/DECISIONS.md`.
+
+**Breaking**
+
+- Every `hero.image` is now `hero.images`, an array of slides (Home has three; empty until the firm uploads). The CSR banner is `csrBanner.images` (ADR-046).
+- Home's `recognitionTabs` and `recognitions` are replaced by `recognitionSection` (heading, image, a `PendingLink` CTA whose `href` is null for now, and `badges`) (ADR-056).
+- About's `awardsList.items` are `{ name, slug }`, linking to `/recognition/{slug}`.
+- `PracticeAreaDetail` is the designed page: `homeSummary`, `heroIntro`, `heroImages`, `overview`, `coreServices`, `approach`, `industries`, `lead`, `siblings`, `recentPublications`. `body`, `keyServices`, `contacts` and `relatedInsights` are gone (ADR-047).
+- `PersonDetail.insights` is now `recentPublications` (6), `PersonDetail.practiceAreas` is `{ slug, title }[]`, and `email` is public (ADR-052).
+- The insight detail's `cta` is `{ label, url }` or null ("Read Article" / "Watch Video"), not the card's `{ label, kind }`; it also has a `backLink` (ADR-051).
+- Role `nysc_associate` is now `trainee_associate` (ADR-055). Categories `media_coverage` and `webinar_resources` are gone; `events` and `pro_bono` are new.
+- The footer's `offices` carry `address`, `phone` and `email`; `links` are the Quick Links from settings, not the nav.
+- Admin: `MediaAdmin` has `kind`, and a document's image-only fields are null; `recognitions` is replaced by `recognition-directories`, `awards` and `industries`.
+
+**New**
+
+- `GET /recognitions`, `GET /recognitions/{slug}`, `GET /legal/{key}` (`terms`, `privacy`), and page keys `recognition` and `responsible-business`.
+- Every `PersonSummary` carries its card back (`cardBio`, practice-area chips), so cards flip without another request.
+- `?practiceArea=<slug>` on `/people`, combinable with `role`; `practiceAreaFilters` on the People and Insights pages for the "Sort By" dropdown (ADR-054).
+- Pro bono stories appear only with `?category=pro_bono` — the Responsible Business grid (ADR-049).
+- `footer.legalLinks`, `footer.newsletter` (copy only; no subscribe endpoint), and the About dropdown in `nav`.
+
+**Not built, on purpose:** the chat assistant, newsletter subscribe, what "Discuss a Mandate" does on an attorney card, where "View Our Recognitions" goes, and CV submissions with no open job.
+
 ## Running the mock
 
 ```bash

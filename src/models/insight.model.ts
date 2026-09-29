@@ -25,7 +25,10 @@ const insightSchema = new Schema<IInsight>(
       ],
     },
     // The article's "Read Article" link: an external URL or an uploaded PDF,
-    // never both (ADR-051).
+    // never both (ADR-051). This validator only sees a whole document (create
+    // and save); under `findOneAndUpdate`, `this` is the Query and it passes,
+    // so a partial update is checked by `assertOneArticleTarget` in the
+    // content service instead.
     externalUrl: { type: String, default: null, trim: true, maxlength: 2048 },
     document: {
       type: Schema.Types.ObjectId,

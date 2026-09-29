@@ -5,6 +5,7 @@ import { MEDIA_REFS, MEDIA_REF_MODELS, mediaRefsFor } from '../constants/media-r
 import { UPLOAD_LIMITS } from '../config/constants.js';
 import {
   ConflictError,
+  FileRejectedError,
   NotFoundError,
   PayloadTooLargeError,
   UnsupportedMediaTypeError,
@@ -17,6 +18,7 @@ import { toSkip } from '../helpers/pagination.helper.js';
 import { Media } from '../models/index.js';
 import { publicStorage } from '../integrations/storage/public/index.js';
 import { invalidate } from './cache.service.js';
+import { scanFile } from './virus-scan.service.js';
 import { record } from './audit.service.js';
 import { tagsFor } from '../constants/cache-tags.js';
 import type { CacheEntity } from '../constants/cache-tags.js';
@@ -111,7 +113,7 @@ function acceptedType(buffer: Buffer): AcceptedImageType {
  * declared type claim. A "PDF" that is not one is refused before anything is
  * stored (ADR-053).
  */
-function assertDocument(buffer: Buffer): void {
+async function assertDocument(buffer: Buffer): Promise<void> {
   if (sniffDocumentType(buffer) !== PDF_MIME) {
     throw new UnsupportedMediaTypeError('Upload a PDF. Only PDF documents are accepted.');
   }
@@ -120,6 +122,13 @@ function assertDocument(buffer: Buffer): void {
     throw new PayloadTooLargeError(
       `The document must be ${String(UPLOAD_LIMITS.documentMaxBytes / (1024 * 1024))} MB or smaller.`
     );
+  }
+
+  // A PDF goes out at a public URL for every visitor to open, so it is
+  // scanned like a CV before anything is stored — through the same adapter,
+  // with the same opt-out rules (ADR-041).
+  if ((await scanFile(buffer)) === 'infected') {
+    throw new FileRejectedError('That document did not pass the security scan.');
   }
 }
 
@@ -174,7 +183,7 @@ const providerName = (): 'cloudinary' | 'local' =>
   publicStorage().name === 'cloudinary' ? 'cloudinary' : 'local';
 
 async function uploadDocument(input: UploadInput, context: ActorContext): Promise<MediaDoc> {
-  assertDocument(input.buffer);
+  await assertDocument(input.buffer);
 
   const stored = await publicStorage().putDocument({
     buffer: input.buffer,
@@ -381,7 +390,7 @@ export async function replaceMediaFile(
   let storedKey: string;
 
   if (existing.kind === 'document') {
-    assertDocument(buffer);
+    await assertDocument(buffer);
     const stored = await publicStorage().putDocument({ buffer, originalFilename });
     storedKey = stored.storageKey;
     changes = { url: stored.url, mimeType: PDF_MIME };
