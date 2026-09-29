@@ -4,21 +4,23 @@
     "hero": {
       "title": "Wherever You Find Us.",
       "subtitle": "Three offices, one standard of counsel, direct access to the team handling your matter, no matter which door you walk through.",
-      "image": {
-        "url": "https://placehold.co/1440x662?text=Offices%20hero",
-        "alt": "The entrance to SPAACO House in Lagos",
-        "width": 1440,
-        "height": 662,
-        "sizes": {
-          "sm": "https://placehold.co/480x221?text=Offices%20hero",
-          "md": "https://placehold.co/960x441?text=Offices%20hero",
-          "lg": "https://placehold.co/1440x662?text=Offices%20hero"
-        },
-        "focalPoint": {
-          "x": 0.5,
-          "y": 0.5
+      "images": [
+        {
+          "url": "https://placehold.co/1440x662?text=Offices%20hero",
+          "alt": "The entrance to SPAACO House in Lagos",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=Offices%20hero",
+            "md": "https://placehold.co/960x441?text=Offices%20hero",
+            "lg": "https://placehold.co/1440x662?text=Offices%20hero"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
         }
-      },
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",

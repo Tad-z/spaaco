@@ -1,6 +1,6 @@
 {
   "data": {
-    "id": "665f0000000000000000001f",
+    "id": "665f00000000000000001015",
     "slug": "babatunde-ajibade",
     "displayName": "Dr. Babatunde Ajibade, SAN",
     "role": "managing_partner",
@@ -21,18 +21,63 @@
       }
     },
     "linkedinUrl": null,
+    "cardBio": "A well-regarded authority in international arbitration, bringing decades of experience to the firm's most complex disputes.",
+    "practiceAreas": [
+      {
+        "slug": "dispute-resolution-arbitration",
+        "title": "Dispute Resolution & Arbitration"
+      },
+      {
+        "slug": "corporate-finance-capital-markets",
+        "title": "Corporate Finance & Capital Markets"
+      }
+    ],
     "firstName": "Babatunde",
     "lastName": "Ajibade",
     "honorific": "Dr.",
     "postNominals": "SAN",
-    "bio": null,
+    "instagramUrl": null,
+    "email": null,
+    "bio": "<p>Dr. Ajibade is a well-regarded authority in International Civil Litigation and Arbitration. His expertise spans both domestic and international arbitration, including investment treaty arbitration, and he has built a career representing clients in some of the region's most complex disputes.</p><p>As an International Practice Fellow of the International Bar Association and a Fellow of the Chartered Institute of Arbitrators, United Kingdom, Dr. Ajibade brings decades of experience to bear on every matter he handles. Clients and peers alike describe him as thorough, calm under pressure, and an exceptional advocate.</p>",
     "quote": "law is a profession, not an occupation.",
-    "practiceAreas": [],
+    "primaryPracticeArea": {
+      "slug": "dispute-resolution-arbitration",
+      "title": "Dispute Resolution & Arbitration"
+    },
+    "education": {
+      "intro": "Dr. Ajibade holds a Doctor of Philosophy in Private International Law from King's College, University of London, along with a Master of Laws in Corporate Commercial Law from the same institution. He was called to the Nigerian Bar in 1989, after completing his legal education at Obafemi Awolowo University.",
+      "entries": [
+        {
+          "qualification": "Ph.D. in Private International Law, King's College, University of London",
+          "year": 1996
+        },
+        {
+          "qualification": "LL.M., Corporate Commercial Law, King's College, University of London",
+          "year": 1990
+        },
+        {
+          "qualification": "Barrister at Law (BL), Nigerian Law School",
+          "year": 1989
+        },
+        {
+          "qualification": "LL.B., Obafemi Awolowo University (formerly University of Ife), Nigeria",
+          "year": 1988
+        }
+      ]
+    },
+    "memberships": [
+      "Nigerian Bar Association (NBA)",
+      "International Bar Association (IBA)",
+      "Chartered Institute of Arbitrators (UK)",
+      "Lagos Court of Arbitration (LCA)",
+      "Capital Market Solicitors Association (CMSA)",
+      "Chartered Institute of Taxation (CITN)"
+    ],
     "office": {
-      "id": "665f00000000000000000013",
+      "id": "665f00000000000000001009",
       "slug": "lagos",
       "name": "Lagos"
     },
-    "insights": []
+    "recentPublications": []
   }
 }

@@ -16,10 +16,18 @@
       "role": "managing_partner",
       "photo": "665f00000000000000000101",
       "linkedinUrl": null,
+      "instagramUrl": null,
       "email": null,
+      "cardBio": "A well-regarded authority in international arbitration, bringing decades of experience to the firm's most complex disputes.",
       "bio": null,
       "quote": "law is a profession, not an occupation.",
+      "primaryPracticeArea": null,
       "practiceAreas": [],
+      "education": {
+        "intro": null,
+        "entries": []
+      },
+      "memberships": ["Nigerian Bar Association (NBA)"],
       "office": null,
       "featuredInLeadership": true,
       "_expanded": {

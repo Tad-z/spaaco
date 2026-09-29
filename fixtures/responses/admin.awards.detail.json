@@ -8,12 +8,11 @@
     "revision": 3,
     "createdAt": "2026-01-01T00:00:00.000Z",
     "updatedAt": "2026-06-01T00:00:00.000Z",
-    "organization": "IFLR1000",
-    "title": "Recommended Firm",
+    "directory": "665f00000000000000000104",
+    "title": "IFLR1000: Recommended Firm",
     "year": 2024,
     "badge": "665f00000000000000000101",
-    "url": null,
-    "tab": "achievements",
+    "featuredOnHome": true,
     "_expanded": {
       "665f00000000000000000101": {
         "kind": "media",

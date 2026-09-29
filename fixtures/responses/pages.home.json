@@ -4,21 +4,53 @@
     "hero": {
       "title": "Counsel To The Institutions Building Nigeria's Economy.",
       "subtitle": "For over five decades, we have advised governments, financial institutions and multinational corporations on capital markets transactions, complex disputes and the regulatory frameworks that shape commerce in Nigeria.",
-      "image": {
-        "url": "https://placehold.co/1440x662?text=Home%20hero",
-        "alt": "Lady Justice statue against the Lagos skyline",
-        "width": 1440,
-        "height": 662,
-        "sizes": {
-          "sm": "https://placehold.co/480x221?text=Home%20hero",
-          "md": "https://placehold.co/960x441?text=Home%20hero",
-          "lg": "https://placehold.co/1440x662?text=Home%20hero"
+      "images": [
+        {
+          "url": "https://placehold.co/1440x662?text=Home%20hero",
+          "alt": "Lady Justice statue against the Lagos skyline",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=Home%20hero",
+            "md": "https://placehold.co/960x441?text=Home%20hero",
+            "lg": "https://placehold.co/1440x662?text=Home%20hero"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
         },
-        "focalPoint": {
-          "x": 0.5,
-          "y": 0.5
+        {
+          "url": "https://placehold.co/1440x662?text=Home%20hero%202",
+          "alt": "Home hero, slide 2 (placeholder)",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=Home%20hero%202",
+            "md": "https://placehold.co/960x441?text=Home%20hero%202",
+            "lg": "https://placehold.co/1440x662?text=Home%20hero%202"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "url": "https://placehold.co/1440x662?text=Home%20hero%203",
+          "alt": "Home hero, slide 3 (placeholder)",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=Home%20hero%203",
+            "md": "https://placehold.co/960x441?text=Home%20hero%203",
+            "lg": "https://placehold.co/1440x662?text=Home%20hero%203"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
         }
-      },
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -58,9 +90,10 @@
           "x": 0.5,
           "y": 0.5
         }
-      }
+      },
+      "caption": "Our Managing Partner on what fifty-nine years of practice has taught us."
     },
-    "recognitionTabs": {
+    "recognitionSection": {
       "eyebrow": "Recognition",
       "title": "Ranked Among Nigeria's Top Firms By Key Global Legal Institutions.",
       "image": {
@@ -71,7 +104,7 @@
         "sizes": {
           "sm": "https://placehold.co/480x480?text=Recognition",
           "md": "https://placehold.co/960x960?text=Recognition",
-          "lg": "https://placehold.co/1024x1024?text=Recognition"
+          "lg": "https://placehold.co/1440x1440?text=Recognition"
         },
         "focalPoint": {
           "x": 0.5,
@@ -80,18 +113,13 @@
       },
       "cta": {
         "label": "View Our Recognitions",
-        "href": "/about",
-        "kind": "internal"
+        "href": null,
+        "kind": null
       },
-      "achievementsLabel": "Our Achievements",
-      "recognizedByLabel": "Independently Recognized By"
-    },
-    "recognitions": {
-      "achievements": [
+      "badges": [
         {
-          "id": "665f0000000000000000001b",
-          "organization": "IFLR1000",
-          "title": "Recommended Firm",
+          "id": "665f00000000000000001011",
+          "title": "IFLR1000: Recommended Firm",
           "year": 2024,
           "badge": {
             "url": "https://placehold.co/400x400?text=IFLR1000%20A",
@@ -108,13 +136,14 @@
               "y": 0.5
             }
           },
-          "url": null,
-          "tab": "achievements"
+          "directory": {
+            "name": "IFLR 1000",
+            "slug": "iflr-1000"
+          }
         },
         {
-          "id": "665f0000000000000000001c",
-          "organization": "IFLR1000",
-          "title": "Recommended Firm",
+          "id": "665f00000000000000001012",
+          "title": "IFLR1000: Recommended Firm",
           "year": 2024,
           "badge": {
             "url": "https://placehold.co/400x400?text=IFLR1000%20B",
@@ -131,13 +160,14 @@
               "y": 0.5
             }
           },
-          "url": null,
-          "tab": "achievements"
+          "directory": {
+            "name": "IFLR 1000",
+            "slug": "iflr-1000"
+          }
         },
         {
-          "id": "665f0000000000000000001d",
-          "organization": "Chambers Global",
-          "title": "Ranked in Global",
+          "id": "665f00000000000000001013",
+          "title": "Chambers Global: Ranked in Global",
           "year": 2026,
           "badge": {
             "url": "https://placehold.co/400x400?text=Chambers%20A",
@@ -154,13 +184,14 @@
               "y": 0.5
             }
           },
-          "url": null,
-          "tab": "achievements"
+          "directory": {
+            "name": "Chambers Global",
+            "slug": "chambers-global"
+          }
         },
         {
-          "id": "665f0000000000000000001e",
-          "organization": "Chambers Global",
-          "title": "Ranked in Global",
+          "id": "665f00000000000000001014",
+          "title": "Chambers Global: Ranked in Global",
           "year": 2026,
           "badge": {
             "url": "https://placehold.co/400x400?text=Chambers%20B",
@@ -177,11 +208,12 @@
               "y": 0.5
             }
           },
-          "url": null,
-          "tab": "achievements"
+          "directory": {
+            "name": "Chambers Global",
+            "slug": "chambers-global"
+          }
         }
-      ],
-      "recognizedBy": []
+      ]
     },
     "practiceSection": {
       "eyebrow": "Services",
@@ -194,7 +226,7 @@
     },
     "practiceAreas": [
       {
-        "id": "665f0000000000000000000e",
+        "id": "665f00000000000000001001",
         "slug": "corporate-finance-capital-markets",
         "title": "Corporate Finance & Capital Markets",
         "shortLabel": "Corporate",
@@ -216,29 +248,7 @@
         }
       },
       {
-        "id": "665f0000000000000000000f",
-        "slug": "data-protection-privacy",
-        "title": "Data Protection & Privacy",
-        "shortLabel": "Data Privacy",
-        "summary": "When a company collects or manages personal data, it ensures compliance with the Nigeria Data Protection Act 2023 by providing comprehensive support, including conducting audits, drafting policies, and managing responses in the event of a data breach.",
-        "image": {
-          "url": "https://placehold.co/1200x900?text=Data%20Privacy",
-          "alt": "Photograph representing the Data Protection & Privacy practice",
-          "width": 1200,
-          "height": 900,
-          "sizes": {
-            "sm": "https://placehold.co/480x360?text=Data%20Privacy",
-            "md": "https://placehold.co/960x720?text=Data%20Privacy",
-            "lg": "https://placehold.co/1440x1080?text=Data%20Privacy"
-          },
-          "focalPoint": {
-            "x": 0.5,
-            "y": 0.5
-          }
-        }
-      },
-      {
-        "id": "665f00000000000000000002",
+        "id": "665f00000000000000001004",
         "slug": "energy-natural-resources",
         "title": "Energy & Natural Resources",
         "shortLabel": "Energy",
@@ -260,7 +270,7 @@
         }
       },
       {
-        "id": "665f00000000000000000008",
+        "id": "665f00000000000000001003",
         "slug": "dispute-resolution-arbitration",
         "title": "Dispute Resolution & Arbitration",
         "shortLabel": "Dispute Resolution",
@@ -282,11 +292,11 @@
         }
       },
       {
-        "id": "665f00000000000000000010",
+        "id": "665f00000000000000001005",
         "slug": "intellectual-property",
         "title": "Intellectual Property",
         "shortLabel": "Intellectual Property",
-        "summary": "When a business wants to protect its creations such as a brand, invention, or original content, our firm expertly handles the full process of registration, licensing, and enforcement to keep ownership rights fully protected and secure.",
+        "summary": "When a business needs to protect what it's created, whether a brand, an invention, or content, the firm handles the registration, licensing, and enforcement that keeps that ownership secure.",
         "image": {
           "url": "https://placehold.co/1200x900?text=Intellectual%20Property",
           "alt": "Photograph representing the Intellectual Property practice",
@@ -304,7 +314,7 @@
         }
       },
       {
-        "id": "665f00000000000000000011",
+        "id": "665f00000000000000001006",
         "slug": "real-estate-succession",
         "title": "Real Estate & Succession",
         "shortLabel": "Real Estate",
@@ -326,7 +336,29 @@
         }
       },
       {
-        "id": "665f00000000000000000012",
+        "id": "665f00000000000000001002",
+        "slug": "data-protection-privacy",
+        "title": "Data Protection & Privacy",
+        "shortLabel": "Data Privacy",
+        "summary": "When a company collects or manages personal data, it ensures compliance with the Nigeria Data Protection Act 2023 by providing comprehensive support, including conducting audits, drafting policies, and managing responses in the event of a data breach.",
+        "image": {
+          "url": "https://placehold.co/1200x900?text=Data%20Privacy",
+          "alt": "Photograph representing the Data Protection & Privacy practice",
+          "width": 1200,
+          "height": 900,
+          "sizes": {
+            "sm": "https://placehold.co/480x360?text=Data%20Privacy",
+            "md": "https://placehold.co/960x720?text=Data%20Privacy",
+            "lg": "https://placehold.co/1440x1080?text=Data%20Privacy"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      },
+      {
+        "id": "665f00000000000000001007",
         "slug": "tax",
         "title": "Tax",
         "shortLabel": "Tax",
@@ -359,7 +391,7 @@
     },
     "leadership": [
       {
-        "id": "665f0000000000000000001f",
+        "id": "665f00000000000000001015",
         "slug": "babatunde-ajibade",
         "displayName": "Dr. Babatunde Ajibade, SAN",
         "role": "managing_partner",
@@ -379,10 +411,21 @@
             "y": 0.5
           }
         },
-        "linkedinUrl": null
+        "linkedinUrl": null,
+        "cardBio": "A well-regarded authority in international arbitration, bringing decades of experience to the firm's most complex disputes.",
+        "practiceAreas": [
+          {
+            "slug": "dispute-resolution-arbitration",
+            "title": "Dispute Resolution & Arbitration"
+          },
+          {
+            "slug": "corporate-finance-capital-markets",
+            "title": "Corporate Finance & Capital Markets"
+          }
+        ]
       },
       {
-        "id": "665f00000000000000000003",
+        "id": "665f00000000000000001016",
         "slug": "john-onyido",
         "displayName": "Dr. John Onyido",
         "role": "partner",
@@ -402,10 +445,21 @@
             "y": 0.5
           }
         },
-        "linkedinUrl": null
+        "linkedinUrl": null,
+        "cardBio": "[PENDING FROM FIRM]",
+        "practiceAreas": [
+          {
+            "slug": "data-protection-privacy",
+            "title": "Data Protection & Privacy"
+          },
+          {
+            "slug": "intellectual-property",
+            "title": "Intellectual Property"
+          }
+        ]
       },
       {
-        "id": "665f00000000000000000020",
+        "id": "665f00000000000000001017",
         "slug": "kolawole-mayomi",
         "displayName": "Dr. Kolawole Mayomi",
         "role": "partner",
@@ -425,7 +479,14 @@
             "y": 0.5
           }
         },
-        "linkedinUrl": null
+        "linkedinUrl": null,
+        "cardBio": "[PENDING FROM FIRM]",
+        "practiceAreas": [
+          {
+            "slug": "dispute-resolution-arbitration",
+            "title": "Dispute Resolution & Arbitration"
+          }
+        ]
       }
     ],
     "whyChooseUs": {
@@ -481,7 +542,7 @@
     },
     "latestInsights": [
       {
-        "id": "665f00000000000000000004",
+        "id": "665f00000000000000001018",
         "slug": "the-rural-electrification-agency-renewable-electricity-and-the-mini-grid-regulation-2026-updates-and-prospects-for-investors",
         "title": "The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors.",
         "excerpt": null,
@@ -490,7 +551,7 @@
         "categoryLabels": ["Articles"],
         "practiceAreas": [
           {
-            "id": "665f00000000000000000002",
+            "id": "665f00000000000000001004",
             "slug": "energy-natural-resources",
             "title": "Energy & Natural Resources",
             "shortLabel": "Energy"
@@ -500,7 +561,7 @@
         "author": {
           "type": "person",
           "person": {
-            "id": "665f00000000000000000005",
+            "id": "665f00000000000000001019",
             "slug": "peter-olalere",
             "displayName": "Peter Olalere",
             "role": "associate_partner",
@@ -520,7 +581,14 @@
                 "y": 0.5
               }
             },
-            "linkedinUrl": null
+            "linkedinUrl": null,
+            "cardBio": "[PENDING FROM FIRM]",
+            "practiceAreas": [
+              {
+                "slug": "energy-natural-resources",
+                "title": "Energy & Natural Resources"
+              }
+            ]
           }
         },
         "coverImage": {
@@ -546,7 +614,7 @@
         }
       },
       {
-        "id": "665f00000000000000000001",
+        "id": "665f0000000000000000101a",
         "slug": "repositioning-and-promoting-energy-investments-between-south-africa-and-nigeria-a-perspective-on-trade-secrets",
         "title": "Repositioning and Promoting Energy Investments Between South Africa and Nigeria: A Perspective on Trade Secrets.",
         "excerpt": "The focus of this brief is specifically on a bilateral energy investment relationship between Nigeria and South Africa: two nations that represent, by any objective commercial assessment, the most logical and most strategically significant energy partnership on the African continent…",
@@ -555,7 +623,7 @@
         "categoryLabels": ["Articles"],
         "practiceAreas": [
           {
-            "id": "665f00000000000000000002",
+            "id": "665f00000000000000001004",
             "slug": "energy-natural-resources",
             "title": "Energy & Natural Resources",
             "shortLabel": "Energy"
@@ -565,7 +633,7 @@
         "author": {
           "type": "person",
           "person": {
-            "id": "665f00000000000000000003",
+            "id": "665f00000000000000001016",
             "slug": "john-onyido",
             "displayName": "Dr. John Onyido",
             "role": "partner",
@@ -585,7 +653,18 @@
                 "y": 0.5
               }
             },
-            "linkedinUrl": null
+            "linkedinUrl": null,
+            "cardBio": "[PENDING FROM FIRM]",
+            "practiceAreas": [
+              {
+                "slug": "data-protection-privacy",
+                "title": "Data Protection & Privacy"
+              },
+              {
+                "slug": "intellectual-property",
+                "title": "Intellectual Property"
+              }
+            ]
           }
         },
         "coverImage": {
@@ -611,15 +690,15 @@
         }
       },
       {
-        "id": "665f00000000000000000006",
+        "id": "665f0000000000000000101b",
         "slug": "inside-the-2025-annual-business-luncheon-what-industry-leaders-are-saying-about-nigerias-economy",
         "title": "Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy",
         "excerpt": null,
         "format": "article",
-        "categories": ["webinar_resources", "firm_news"],
-        "categoryLabels": ["Webinar Resources", "Firm News"],
+        "categories": ["events", "firm_news"],
+        "categoryLabels": ["Events", "Firm News"],
         "practiceAreas": [],
-        "chips": ["Webinar Resources", "Firm News"],
+        "chips": ["Events", "Firm News"],
         "author": {
           "type": "firm",
           "name": "SPA AJIBADE & Co.",
@@ -648,7 +727,7 @@
         }
       },
       {
-        "id": "665f00000000000000000007",
+        "id": "665f0000000000000000101c",
         "slug": "regulatory-update-on-the-2026-supreme-court-practice-directions",
         "title": "Regulatory Update On The 2026 Supreme Court Practice Directions",
         "excerpt": null,
@@ -657,7 +736,7 @@
         "categoryLabels": ["Regulatory Updates"],
         "practiceAreas": [
           {
-            "id": "665f00000000000000000008",
+            "id": "665f00000000000000001003",
             "slug": "dispute-resolution-arbitration",
             "title": "Dispute Resolution & Arbitration",
             "shortLabel": "Dispute Resolution"

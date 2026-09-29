@@ -1,0 +1,86 @@
+[
+  {
+    "slug": "iflr-1000",
+    "name": "IFLR 1000",
+    "logo": {
+      "placeholder": "IFLR 1000 logo",
+      "width": 400,
+      "height": 160,
+      "alt": "IFLR 1000 wordmark"
+    },
+    "heroSubtitle": "Recognized by one of the legal industry's leading directories for the quality and consistency of our work.",
+    "heroImages": [
+      {
+        "placeholder": "Recognition hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Award trophies displayed in the office of the firm"
+      }
+    ],
+    "order": 0,
+    "status": "published"
+  },
+  {
+    "slug": "chambers-global",
+    "name": "Chambers Global",
+    "logo": {
+      "placeholder": "Chambers Global logo",
+      "width": 400,
+      "height": 160,
+      "alt": "Chambers Global wordmark"
+    },
+    "heroSubtitle": "Recognized by one of the legal industry's leading directories for the quality and consistency of our work.",
+    "heroImages": [
+      {
+        "placeholder": "Recognition hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Award trophies displayed in the office of the firm"
+      }
+    ],
+    "order": 1,
+    "status": "published"
+  },
+  {
+    "slug": "legal-500",
+    "name": "Legal 500",
+    "logo": {
+      "placeholder": "Legal 500 logo",
+      "width": 400,
+      "height": 160,
+      "alt": "Legal 500 wordmark"
+    },
+    "heroSubtitle": "Recognized by one of the legal industry's leading directories for the quality and consistency of our work.",
+    "heroImages": [
+      {
+        "placeholder": "Recognition hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Award trophies displayed in the office of the firm"
+      }
+    ],
+    "order": 2,
+    "status": "published"
+  },
+  {
+    "slug": "whos-who-legal",
+    "name": "Who's Who Legal",
+    "logo": {
+      "placeholder": "Who's Who Legal logo",
+      "width": 400,
+      "height": 160,
+      "alt": "Who's Who Legal wordmark"
+    },
+    "heroSubtitle": "Recognized by one of the legal industry's leading directories for the quality and consistency of our work.",
+    "heroImages": [
+      {
+        "placeholder": "Recognition hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Award trophies displayed in the office of the firm"
+      }
+    ],
+    "order": 3,
+    "status": "published"
+  }
+]

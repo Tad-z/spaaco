@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "id": "665f0000000000000000001f",
+      "id": "665f00000000000000001015",
       "slug": "babatunde-ajibade",
       "displayName": "Dr. Babatunde Ajibade, SAN",
       "role": "managing_partner",
@@ -21,10 +21,21 @@
           "y": 0.5
         }
       },
-      "linkedinUrl": null
+      "linkedinUrl": null,
+      "cardBio": "A well-regarded authority in international arbitration, bringing decades of experience to the firm's most complex disputes.",
+      "practiceAreas": [
+        {
+          "slug": "dispute-resolution-arbitration",
+          "title": "Dispute Resolution & Arbitration"
+        },
+        {
+          "slug": "corporate-finance-capital-markets",
+          "title": "Corporate Finance & Capital Markets"
+        }
+      ]
     },
     {
-      "id": "665f00000000000000000003",
+      "id": "665f00000000000000001016",
       "slug": "john-onyido",
       "displayName": "Dr. John Onyido",
       "role": "partner",
@@ -44,10 +55,21 @@
           "y": 0.5
         }
       },
-      "linkedinUrl": null
+      "linkedinUrl": null,
+      "cardBio": "[PENDING FROM FIRM]",
+      "practiceAreas": [
+        {
+          "slug": "data-protection-privacy",
+          "title": "Data Protection & Privacy"
+        },
+        {
+          "slug": "intellectual-property",
+          "title": "Intellectual Property"
+        }
+      ]
     },
     {
-      "id": "665f00000000000000000020",
+      "id": "665f00000000000000001017",
       "slug": "kolawole-mayomi",
       "displayName": "Dr. Kolawole Mayomi",
       "role": "partner",
@@ -67,10 +89,17 @@
           "y": 0.5
         }
       },
-      "linkedinUrl": null
+      "linkedinUrl": null,
+      "cardBio": "[PENDING FROM FIRM]",
+      "practiceAreas": [
+        {
+          "slug": "dispute-resolution-arbitration",
+          "title": "Dispute Resolution & Arbitration"
+        }
+      ]
     },
     {
-      "id": "665f00000000000000000005",
+      "id": "665f00000000000000001019",
       "slug": "peter-olalere",
       "displayName": "Peter Olalere",
       "role": "associate_partner",
@@ -90,10 +119,17 @@
           "y": 0.5
         }
       },
-      "linkedinUrl": null
+      "linkedinUrl": null,
+      "cardBio": "[PENDING FROM FIRM]",
+      "practiceAreas": [
+        {
+          "slug": "energy-natural-resources",
+          "title": "Energy & Natural Resources"
+        }
+      ]
     },
     {
-      "id": "665f00000000000000000025",
+      "id": "665f00000000000000001024",
       "slug": "bolaji-gabari",
       "displayName": "Bolaji Gabari",
       "role": "associate_partner",
@@ -113,10 +149,12 @@
           "y": 0.5
         }
       },
-      "linkedinUrl": null
+      "linkedinUrl": null,
+      "cardBio": "[PENDING FROM FIRM]",
+      "practiceAreas": []
     },
     {
-      "id": "665f00000000000000000026",
+      "id": "665f00000000000000001025",
       "slug": "magnus-ejelonu",
       "displayName": "Dr. Magnus Ejelonu",
       "role": "associate_partner",
@@ -136,10 +174,12 @@
           "y": 0.5
         }
       },
-      "linkedinUrl": null
+      "linkedinUrl": null,
+      "cardBio": "[PENDING FROM FIRM]",
+      "practiceAreas": []
     },
     {
-      "id": "665f00000000000000000027",
+      "id": "665f00000000000000001026",
       "slug": "moruf-sowunmi",
       "displayName": "Moruf Sowunmi",
       "role": "associate_partner",
@@ -159,10 +199,17 @@
           "y": 0.5
         }
       },
-      "linkedinUrl": null
+      "linkedinUrl": null,
+      "cardBio": "[PENDING FROM FIRM]",
+      "practiceAreas": [
+        {
+          "slug": "real-estate-succession",
+          "title": "Real Estate & Succession"
+        }
+      ]
     },
     {
-      "id": "665f00000000000000000028",
+      "id": "665f00000000000000001027",
       "slug": "emmanuel-bassey",
       "displayName": "Emmanuel Bassey",
       "role": "senior_associate",
@@ -182,10 +229,12 @@
           "y": 0.5
         }
       },
-      "linkedinUrl": null
+      "linkedinUrl": null,
+      "cardBio": "[PENDING FROM FIRM]",
+      "practiceAreas": []
     },
     {
-      "id": "665f00000000000000000029",
+      "id": "665f00000000000000001028",
       "slug": "david-essien",
       "displayName": "David Essien",
       "role": "senior_associate",
@@ -205,7 +254,9 @@
           "y": 0.5
         }
       },
-      "linkedinUrl": null
+      "linkedinUrl": null,
+      "cardBio": "[PENDING FROM FIRM]",
+      "practiceAreas": []
     }
   ],
   "meta": {

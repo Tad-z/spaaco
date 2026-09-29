@@ -2,7 +2,7 @@
   "data": {
     "practiceAreas": [
       {
-        "id": "665f00000000000000000008",
+        "id": "665f00000000000000001003",
         "slug": "dispute-resolution-arbitration",
         "title": "Dispute Resolution & Arbitration",
         "shortLabel": "Dispute Resolution",
@@ -24,10 +24,45 @@
         }
       }
     ],
-    "people": [],
+    "people": [
+      {
+        "id": "665f00000000000000001015",
+        "slug": "babatunde-ajibade",
+        "displayName": "Dr. Babatunde Ajibade, SAN",
+        "role": "managing_partner",
+        "roleLabel": "Managing Partner",
+        "photo": {
+          "url": "https://placehold.co/800x1000?text=Babatunde%20Ajibade",
+          "alt": "Portrait of Dr. Babatunde Ajibade, SAN, Managing Partner",
+          "width": 800,
+          "height": 1000,
+          "sizes": {
+            "sm": "https://placehold.co/480x600?text=Babatunde%20Ajibade",
+            "md": "https://placehold.co/960x1200?text=Babatunde%20Ajibade",
+            "lg": "https://placehold.co/1440x1800?text=Babatunde%20Ajibade"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        "linkedinUrl": null,
+        "cardBio": "A well-regarded authority in international arbitration, bringing decades of experience to the firm's most complex disputes.",
+        "practiceAreas": [
+          {
+            "slug": "dispute-resolution-arbitration",
+            "title": "Dispute Resolution & Arbitration"
+          },
+          {
+            "slug": "corporate-finance-capital-markets",
+            "title": "Corporate Finance & Capital Markets"
+          }
+        ]
+      }
+    ],
     "insights": [
       {
-        "id": "665f00000000000000000007",
+        "id": "665f0000000000000000101c",
         "slug": "regulatory-update-on-the-2026-supreme-court-practice-directions",
         "title": "Regulatory Update On The 2026 Supreme Court Practice Directions",
         "excerpt": null,
@@ -36,7 +71,7 @@
         "categoryLabels": ["Regulatory Updates"],
         "practiceAreas": [
           {
-            "id": "665f00000000000000000008",
+            "id": "665f00000000000000001003",
             "slug": "dispute-resolution-arbitration",
             "title": "Dispute Resolution & Arbitration",
             "shortLabel": "Dispute Resolution"

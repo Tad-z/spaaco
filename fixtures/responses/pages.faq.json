@@ -4,21 +4,23 @@
     "hero": {
       "title": "Frequently Asked Questions",
       "subtitle": "Straight answers to what people most often ask before reaching out, about the firm, how matters work, and what to expect.",
-      "image": {
-        "url": "https://placehold.co/1440x662?text=FAQ%20hero",
-        "alt": "A member of the front office team on a call",
-        "width": 1440,
-        "height": 662,
-        "sizes": {
-          "sm": "https://placehold.co/480x221?text=FAQ%20hero",
-          "md": "https://placehold.co/960x441?text=FAQ%20hero",
-          "lg": "https://placehold.co/1440x662?text=FAQ%20hero"
-        },
-        "focalPoint": {
-          "x": 0.5,
-          "y": 0.5
+      "images": [
+        {
+          "url": "https://placehold.co/1440x662?text=FAQ%20hero",
+          "alt": "A member of the front office team on a call",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=FAQ%20hero",
+            "md": "https://placehold.co/960x441?text=FAQ%20hero",
+            "lg": "https://placehold.co/1440x662?text=FAQ%20hero"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
         }
-      },
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",

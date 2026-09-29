@@ -4,21 +4,23 @@
     "hero": {
       "title": "Practice Law, Not Just A Role.",
       "subtitle": "At SPA Ajibade, associates work directly with partners on matters that matter, not behind layers of a rotating team.",
-      "image": {
-        "url": "https://placehold.co/1440x662?text=Careers%20hero",
-        "alt": "A junior associate working alongside a partner",
-        "width": 1440,
-        "height": 662,
-        "sizes": {
-          "sm": "https://placehold.co/480x221?text=Careers%20hero",
-          "md": "https://placehold.co/960x441?text=Careers%20hero",
-          "lg": "https://placehold.co/1440x662?text=Careers%20hero"
-        },
-        "focalPoint": {
-          "x": 0.5,
-          "y": 0.5
+      "images": [
+        {
+          "url": "https://placehold.co/1440x662?text=Careers%20hero",
+          "alt": "A junior associate working alongside a partner",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=Careers%20hero",
+            "md": "https://placehold.co/960x441?text=Careers%20hero",
+            "lg": "https://placehold.co/1440x662?text=Careers%20hero"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
         }
-      },
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -33,7 +35,8 @@
     "jobsSection": {
       "eyebrow": null,
       "title": "Careers",
-      "cta": null
+      "cta": null,
+      "emptyState": null
     },
     "jobs": [
       {

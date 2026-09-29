@@ -48,6 +48,10 @@ tags:
     description: Articles, firm news and video content.
   - name: Offices
     description: Lagos, Abuja and Ibadan.
+  - name: Recognition
+    description: The directories that rank the firm, and the awards each has given.
+  - name: Legal
+    description: The Terms of Service and Privacy Policy pages.
   - name: Jobs
     description: Open vacancies.
   - name: FAQs
@@ -62,12 +66,12 @@ tags:
     description: Managing admin accounts and reading the audit log. Administrators only.
   - name: Admin content
     description: |
-      CRUD for the seven content collections. Every collection shares the same
-      operations, so they share one set of paths, keyed by `collection`.
+      CRUD for the nine content collections. One handler serves them all, but each
+      collection has its own explicit paths and schemas (ADR-033).
   - name: Admin singletons
-    description: Site settings and the eight page documents.
+    description: Site settings, the ten page documents and the two legal pages.
   - name: Admin media
-    description: The image library the firm uploads through.
+    description: The media library the firm uploads through — images, and PDF documents.
 
 paths:
   /api/v1/health:
@@ -209,6 +213,14 @@ paths:
                   summary: offices
                   value:
                     $ref: '../fixtures/responses/pages.offices.json'
+                recognition:
+                  summary: recognition
+                  value:
+                    $ref: '../fixtures/responses/pages.recognition.json'
+                responsible-business:
+                  summary: responsible-business
+                  value:
+                    $ref: '../fixtures/responses/pages.responsible-business.json'
         '400':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -260,9 +272,10 @@ paths:
       operationId: getPracticeArea
       summary: Practice area detail
       description: |
-        Full practice area, including the attorneys to contact and the three most recent related
-        insights. This page is not designed yet, so the shape may gain fields once the design
-        lands.
+        The practice area detail page: the hero copy and images, the overview, core services,
+        approach and industries, the Practice Lead card, the sidebar list of every published
+        area (`siblings`), and the six most recent publications tagged with this area. Pro bono
+        insights are never among them (see `GET /insights`).
       security:
         - {}
         - bearerAuth: []
@@ -301,12 +314,16 @@ paths:
       summary: Attorney directory
       description: |
         Paginated attorney directory. The default sort is `seniority`: role rank first
-        (managing partner through NYSC associate), then the manual order, then last name.
+        (managing partner through trainee associate), then the manual order, then last name.
+
+        `role` and `practiceArea` combine: the designs' role tabs sit alongside a "Practice Area"
+        dropdown (labelled "Sort By" on screen), and both apply at once.
       security:
         - {}
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/PersonRole'
+        - $ref: '#/components/parameters/PracticeAreaFilter'
         - $ref: '#/components/parameters/PersonSort'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
@@ -343,7 +360,10 @@ paths:
       tags: [People]
       operationId: getPerson
       summary: Attorney profile
-      description: Full profile, practice areas, office and the three latest insights they wrote.
+      description: |
+        The full profile: bio, education, memberships, contact links (email is public), the
+        primary practice area shown under the portrait, and the six latest insights they wrote.
+        Pro bono insights are never among them.
       security:
         - {}
         - bearerAuth: []
@@ -380,13 +400,21 @@ paths:
       tags: [Insights]
       operationId: listInsights
       summary: Insights and news listing
-      description: Paginated insight cards, newest first by default.
+      description: |
+        Paginated insight cards, newest first by default.
+
+        `pro_bono` insights appear **only** when `category=pro_bono` is requested explicitly —
+        that is the Responsible Business grid. Every other listing, including the unfiltered
+        "All insights & news" tab, leaves them out, as the designs do.
+
+        `category` and `practiceArea` combine: the category tabs sit alongside a "Practice Area"
+        dropdown (labelled "Sort By" on screen).
       security:
         - {}
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/InsightCategory'
-        - $ref: '#/components/parameters/InsightPracticeArea'
+        - $ref: '#/components/parameters/PracticeAreaFilter'
         - $ref: '#/components/parameters/InsightSort'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
@@ -426,6 +454,11 @@ paths:
       description: |
         The full article body, or the video URL for video content, plus the author block,
         practice areas and three related insights.
+
+        `cta` is the link rendered after the body: "Read Article" (to the external article or
+        the uploaded PDF) for an article, "Watch Video" for a video, and null for an article
+        with neither. `backLink` returns to the listing the insight belongs to — the Responsible
+        Business page for a pro bono story, Insights & News for everything else.
       security:
         - {}
         - bearerAuth: []
@@ -489,6 +522,122 @@ paths:
                     $ref: '../fixtures/responses/offices.list.json'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/recognitions:
+    get:
+      tags: [Recognition]
+      operationId: listRecognitions
+      summary: Recognition directories and featured awards
+      description: |
+        Serves the two-tab recognition component ("Our Achievements" / "Independently
+        Recognized By"): every published directory with its wordmark, and the awards flagged
+        for Home. The component exists in the designs but is not placed on a page yet.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: Directories and featured awards.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RecognitionsOverview'
+              examples:
+                recognitions:
+                  value:
+                    $ref: '../fixtures/responses/recognitions.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/recognitions/{slug}:
+    get:
+      tags: [Recognition]
+      operationId: getRecognitionDirectory
+      summary: One directory's recognition page
+      description: |
+        The page behind each About "View Awards" row: a hero titled with the directory's name,
+        and every published award it has given, newest year first. The eyebrow and the two hero
+        CTAs are shared by every directory and edited in the `recognition` page document.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: The directory page.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RecognitionDirectoryPage'
+              examples:
+                iflr1000:
+                  value:
+                    $ref: '../fixtures/responses/recognitions.detail.iflr-1000.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/legal/{key}:
+    get:
+      tags: [Legal]
+      operationId: getLegalPage
+      summary: A legal page
+      description: |
+        The Terms of Service (`terms`) or the Privacy Policy (`privacy`), linked from the
+        footer. Any other key, or a page the firm has not published, returns 404.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LegalKey'
+        - $ref: '#/components/parameters/Preview'
+      responses:
+        '200':
+          description: The legal page.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LegalPage'
+              examples:
+                terms:
+                  value:
+                    $ref: '../fixtures/responses/legal.detail.terms.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/RateLimited'
         '500':
@@ -1210,7 +1359,7 @@ paths:
       description: |-
         Every status, not just published.
 
-        The Home tab bar uses `homeOrder`, which differs from the page order.
+        The Home tab bar uses `homeOrder`, which differs from the page order. `summary`, `homeSummary` and `heroIntro` are three different texts: the grid card, the Home card and the detail hero.
       security: &a1
         - bearerAuth: []
       parameters:
@@ -1256,7 +1405,7 @@ paths:
       description: |-
         A slug is generated when none is given.
 
-        The Home tab bar uses `homeOrder`, which differs from the page order.
+        The Home tab bar uses `homeOrder`, which differs from the page order. `summary`, `homeSummary` and `heroIntro` are three different texts: the grid card, the Home card and the detail hero.
       security: *a1
       requestBody:
         required: true
@@ -1328,7 +1477,7 @@ paths:
       description: |-
         References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
 
-        The Home tab bar uses `homeOrder`, which differs from the page order.
+        The Home tab bar uses `homeOrder`, which differs from the page order. `summary`, `homeSummary` and `heroIntro` are three different texts: the grid card, the Home card and the detail hero.
       security: *a1
       responses:
         '200':
@@ -1504,7 +1653,7 @@ paths:
       description: |-
         Every status, not just published.
 
-        Carries `email`, which the public API never returns.
+        `email` is public: it is shown on the profile and on the practice-lead card.
       security: &a3
         - bearerAuth: []
       parameters:
@@ -1550,7 +1699,7 @@ paths:
       description: |-
         A slug is generated when none is given.
 
-        Carries `email`, which the public API never returns.
+        `email` is public: it is shown on the profile and on the practice-lead card.
       security: *a3
       requestBody:
         required: true
@@ -1622,7 +1771,7 @@ paths:
       description: |-
         References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
 
-        Carries `email`, which the public API never returns.
+        `email` is public: it is shown on the profile and on the practice-lead card.
       security: *a3
       responses:
         '200':
@@ -1798,7 +1947,7 @@ paths:
       description: |-
         Every status, not just published.
 
-        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
       security: &a5
         - bearerAuth: []
       parameters:
@@ -1844,7 +1993,7 @@ paths:
       description: |-
         A slug is generated when none is given.
 
-        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
       security: *a5
       requestBody:
         required: true
@@ -1916,7 +2065,7 @@ paths:
       description: |-
         References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
 
-        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
       security: *a5
       responses:
         '200':
@@ -2377,13 +2526,16 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/v1/admin/content/recognitions:
+  /api/v1/admin/content/recognition-directories:
     get:
       tags:
         - Admin content
-      operationId: listRecognitionAdmin
-      summary: List recognitions
-      description: Every status, not just published.
+      operationId: listRecognitionDirectoryAdmin
+      summary: List recognition directories
+      description: |-
+        Every status, not just published.
+
+        Each directory has its own page, `GET /recognitions/{slug}`, listing its awards.
       security: &a9
         - bearerAuth: []
       parameters:
@@ -2393,7 +2545,7 @@ paths:
         - $ref: '#/components/parameters/PageSize'
       responses:
         '200':
-          description: A page of recognitions in their editable shape.
+          description: A page of recognition directories in their editable shape.
           content:
             application/json:
               schema:
@@ -2406,13 +2558,13 @@ paths:
                   data:
                     type: array
                     items: &a10
-                      $ref: '#/components/schemas/RecognitionAdmin'
+                      $ref: '#/components/schemas/RecognitionDirectoryAdmin'
                   meta:
                     $ref: '#/components/schemas/PaginationMeta'
               examples:
-                recognitions:
+                recognition-directories:
                   value:
-                    $ref: ../fixtures/responses/admin.recognitions.list.json
+                    $ref: ../fixtures/responses/admin.recognition-directories.list.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -2424,19 +2576,22 @@ paths:
     post:
       tags:
         - Admin content
-      operationId: createRecognition
-      summary: Create a recognition
-      description: A slug is generated when none is given.
+      operationId: createRecognitionDirectory
+      summary: Create a recognition directory
+      description: |-
+        A slug is generated when none is given.
+
+        Each directory has its own page, `GET /recognitions/{slug}`, listing its awards.
       security: *a9
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecognitionCreate'
+              $ref: '#/components/schemas/RecognitionDirectoryCreate'
       responses:
         '201':
-          description: The created recognition.
+          description: The created recognition directory.
           content:
             application/json:
               schema:
@@ -2447,9 +2602,9 @@ paths:
                 properties:
                   data: *a10
               examples:
-                recognitions:
+                recognition-directories:
                   value:
-                    $ref: ../fixtures/responses/admin.recognitions.detail.json
+                    $ref: ../fixtures/responses/admin.recognition-directories.detail.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -2460,12 +2615,12 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/v1/admin/content/recognitions/reorder:
+  /api/v1/admin/content/recognition-directories/reorder:
     patch:
       tags:
         - Admin content
-      operationId: reorderRecognition
-      summary: Reorder recognitions
+      operationId: reorderRecognitionDirectory
+      summary: Reorder recognition directories
       description: Sets `order` from each id’s position. Ids not listed keep their order.
       security: *a9
       requestBody:
@@ -2487,19 +2642,22 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/v1/admin/content/recognitions/{id}:
+  /api/v1/admin/content/recognition-directories/{id}:
     parameters:
       - $ref: '#/components/parameters/ObjectId'
     get:
       tags:
         - Admin content
-      operationId: getRecognitionAdmin
-      summary: Get one recognition in its editable shape
-      description: References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+      operationId: getRecognitionDirectoryAdmin
+      summary: Get one recognition directory in its editable shape
+      description: |-
+        References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+
+        Each directory has its own page, `GET /recognitions/{slug}`, listing its awards.
       security: *a9
       responses:
         '200':
-          description: The recognition.
+          description: The recognition directory.
           content:
             application/json:
               schema:
@@ -2510,9 +2668,9 @@ paths:
                 properties:
                   data: *a10
               examples:
-                recognitions:
+                recognition-directories:
                   value:
-                    $ref: ../fixtures/responses/admin.recognitions.detail.json
+                    $ref: ../fixtures/responses/admin.recognition-directories.detail.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -2526,8 +2684,8 @@ paths:
     patch:
       tags:
         - Admin content
-      operationId: updateRecognition
-      summary: Update a recognition
+      operationId: updateRecognitionDirectory
+      summary: Update a recognition directory
       description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
       security: *a9
       parameters:
@@ -2537,10 +2695,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecognitionUpdate'
+              $ref: '#/components/schemas/RecognitionDirectoryUpdate'
       responses:
         '200':
-          description: The updated recognition.
+          description: The updated recognition directory.
           content:
             application/json:
               schema:
@@ -2551,9 +2709,9 @@ paths:
                 properties:
                   data: *a10
               examples:
-                recognitions:
+                recognition-directories:
                   value:
-                    $ref: ../fixtures/responses/admin.recognitions.detail.json
+                    $ref: ../fixtures/responses/admin.recognition-directories.detail.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -2571,8 +2729,8 @@ paths:
     delete:
       tags:
         - Admin content
-      operationId: deleteRecognition
-      summary: Delete a recognition
+      operationId: deleteRecognitionDirectory
+      summary: Delete a recognition directory
       description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
       security: *a9
       responses:
@@ -2590,19 +2748,19 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/v1/admin/content/recognitions/{id}/publish:
+  /api/v1/admin/content/recognition-directories/{id}/publish:
     post:
       tags:
         - Admin content
-      operationId: publishRecognition
-      summary: Publish a recognition
+      operationId: publishRecognitionDirectory
+      summary: Publish a recognition directory
       description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
       security: *a9
       parameters:
         - $ref: '#/components/parameters/ObjectId'
       responses:
         '200':
-          description: The published recognition.
+          description: The published recognition directory.
           content:
             application/json:
               schema:
@@ -2613,9 +2771,9 @@ paths:
                 properties:
                   data: *a10
               examples:
-                recognitions:
+                recognition-directories:
                   value:
-                    $ref: ../fixtures/responses/admin.recognitions.detail.json
+                    $ref: ../fixtures/responses/admin.recognition-directories.detail.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -2626,19 +2784,19 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/v1/admin/content/recognitions/{id}/unpublish:
+  /api/v1/admin/content/recognition-directories/{id}/unpublish:
     post:
       tags:
         - Admin content
-      operationId: unpublishRecognition
-      summary: Unpublish a recognition
+      operationId: unpublishRecognitionDirectory
+      summary: Unpublish a recognition directory
       description: Returns it to draft. The original `publishedAt` is kept.
       security: *a9
       parameters:
         - $ref: '#/components/parameters/ObjectId'
       responses:
         '200':
-          description: The unpublished recognition.
+          description: The unpublished recognition directory.
           content:
             application/json:
               schema:
@@ -2649,9 +2807,597 @@ paths:
                 properties:
                   data: *a10
               examples:
-                recognitions:
+                recognition-directories:
                   value:
-                    $ref: ../fixtures/responses/admin.recognitions.detail.json
+                    $ref: ../fixtures/responses/admin.recognition-directories.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/awards:
+    get:
+      tags:
+        - Admin content
+      operationId: listAwardAdmin
+      summary: List awards
+      description: |-
+        Every status, not just published.
+
+        `featuredOnHome` puts the badge in the Home Recognition band.
+      security: &a11
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminStatus'
+        - $ref: '#/components/parameters/AdminSearch'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of awards in their editable shape.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    type: array
+                    items: &a12
+                      $ref: '#/components/schemas/AwardAdmin'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                awards:
+                  value:
+                    $ref: ../fixtures/responses/admin.awards.list.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Admin content
+      operationId: createAward
+      summary: Create a award
+      description: |-
+        A slug is generated when none is given.
+
+        `featuredOnHome` puts the badge in the Home Recognition band.
+      security: *a11
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AwardCreate'
+      responses:
+        '201':
+          description: The created award.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a12
+              examples:
+                awards:
+                  value:
+                    $ref: ../fixtures/responses/admin.awards.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/awards/reorder:
+    patch:
+      tags:
+        - Admin content
+      operationId: reorderAward
+      summary: Reorder awards
+      description: Sets `order` from each id’s position. Ids not listed keep their order.
+      security: *a11
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '204':
+          description: Reordered.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/awards/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - Admin content
+      operationId: getAwardAdmin
+      summary: Get one award in its editable shape
+      description: |-
+        References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+
+        `featuredOnHome` puts the badge in the Home Recognition band.
+      security: *a11
+      responses:
+        '200':
+          description: The award.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a12
+              examples:
+                awards:
+                  value:
+                    $ref: ../fixtures/responses/admin.awards.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags:
+        - Admin content
+      operationId: updateAward
+      summary: Update a award
+      description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+      security: *a11
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AwardUpdate'
+      responses:
+        '200':
+          description: The updated award.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a12
+              examples:
+                awards:
+                  value:
+                    $ref: ../fixtures/responses/admin.awards.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - Admin content
+      operationId: deleteAward
+      summary: Delete a award
+      description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+      security: *a11
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/awards/{id}/publish:
+    post:
+      tags:
+        - Admin content
+      operationId: publishAward
+      summary: Publish a award
+      description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
+      security: *a11
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The published award.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a12
+              examples:
+                awards:
+                  value:
+                    $ref: ../fixtures/responses/admin.awards.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/awards/{id}/unpublish:
+    post:
+      tags:
+        - Admin content
+      operationId: unpublishAward
+      summary: Unpublish a award
+      description: Returns it to draft. The original `publishedAt` is kept.
+      security: *a11
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The unpublished award.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a12
+              examples:
+                awards:
+                  value:
+                    $ref: ../fixtures/responses/admin.awards.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/industries:
+    get:
+      tags:
+        - Admin content
+      operationId: listIndustryAdmin
+      summary: List industries
+      description: |-
+        Every status, not just published.
+
+        The shared list practice areas pick their industries from.
+      security: &a13
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdminStatus'
+        - $ref: '#/components/parameters/AdminSearch'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of industries in their editable shape.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    type: array
+                    items: &a14
+                      $ref: '#/components/schemas/IndustryAdmin'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                industries:
+                  value:
+                    $ref: ../fixtures/responses/admin.industries.list.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Admin content
+      operationId: createIndustry
+      summary: Create a industry
+      description: |-
+        A slug is generated when none is given.
+
+        The shared list practice areas pick their industries from.
+      security: *a13
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndustryCreate'
+      responses:
+        '201':
+          description: The created industry.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a14
+              examples:
+                industries:
+                  value:
+                    $ref: ../fixtures/responses/admin.industries.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/industries/reorder:
+    patch:
+      tags:
+        - Admin content
+      operationId: reorderIndustry
+      summary: Reorder industries
+      description: Sets `order` from each id’s position. Ids not listed keep their order.
+      security: *a13
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '204':
+          description: Reordered.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/industries/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ObjectId'
+    get:
+      tags:
+        - Admin content
+      operationId: getIndustryAdmin
+      summary: Get one industry in its editable shape
+      description: |-
+        References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+
+        The shared list practice areas pick their industries from.
+      security: *a13
+      responses:
+        '200':
+          description: The industry.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a14
+              examples:
+                industries:
+                  value:
+                    $ref: ../fixtures/responses/admin.industries.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags:
+        - Admin content
+      operationId: updateIndustry
+      summary: Update a industry
+      description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+      security: *a13
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndustryUpdate'
+      responses:
+        '200':
+          description: The updated industry.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a14
+              examples:
+                industries:
+                  value:
+                    $ref: ../fixtures/responses/admin.industries.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - Admin content
+      operationId: deleteIndustry
+      summary: Delete a industry
+      description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+      security: *a13
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/industries/{id}/publish:
+    post:
+      tags:
+        - Admin content
+      operationId: publishIndustry
+      summary: Publish a industry
+      description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
+      security: *a13
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The published industry.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a14
+              examples:
+                industries:
+                  value:
+                    $ref: ../fixtures/responses/admin.industries.detail.json
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/admin/content/industries/{id}/unpublish:
+    post:
+      tags:
+        - Admin content
+      operationId: unpublishIndustry
+      summary: Unpublish a industry
+      description: Returns it to draft. The original `publishedAt` is kept.
+      security: *a13
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: The unpublished industry.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data: *a14
+              examples:
+                industries:
+                  value:
+                    $ref: ../fixtures/responses/admin.industries.detail.json
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -2669,7 +3415,7 @@ paths:
       operationId: listFaqAdmin
       summary: List FAQs
       description: Every status, not just published.
-      security: &a11
+      security: &a15
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AdminStatus'
@@ -2690,7 +3436,7 @@ paths:
                 properties:
                   data:
                     type: array
-                    items: &a12
+                    items: &a16
                       $ref: '#/components/schemas/FaqAdmin'
                   meta:
                     $ref: '#/components/schemas/PaginationMeta'
@@ -2712,7 +3458,7 @@ paths:
       operationId: createFaq
       summary: Create a FAQ
       description: A slug is generated when none is given.
-      security: *a11
+      security: *a15
       requestBody:
         required: true
         content:
@@ -2730,7 +3476,7 @@ paths:
                 required:
                   - data
                 properties:
-                  data: *a12
+                  data: *a16
               examples:
                 faqs:
                   value:
@@ -2752,7 +3498,7 @@ paths:
       operationId: reorderFaq
       summary: Reorder FAQs
       description: Sets `order` from each id’s position. Ids not listed keep their order.
-      security: *a11
+      security: *a15
       requestBody:
         required: true
         content:
@@ -2781,7 +3527,7 @@ paths:
       operationId: getFaqAdmin
       summary: Get one FAQ in its editable shape
       description: References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
-      security: *a11
+      security: *a15
       responses:
         '200':
           description: The FAQ.
@@ -2793,7 +3539,7 @@ paths:
                 required:
                   - data
                 properties:
-                  data: *a12
+                  data: *a16
               examples:
                 faqs:
                   value:
@@ -2814,7 +3560,7 @@ paths:
       operationId: updateFaq
       summary: Update a FAQ
       description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
-      security: *a11
+      security: *a15
       parameters:
         - $ref: '#/components/parameters/IfMatch'
       requestBody:
@@ -2834,7 +3580,7 @@ paths:
                 required:
                   - data
                 properties:
-                  data: *a12
+                  data: *a16
               examples:
                 faqs:
                   value:
@@ -2859,7 +3605,7 @@ paths:
       operationId: deleteFaq
       summary: Delete a FAQ
       description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
-      security: *a11
+      security: *a15
       responses:
         '204':
           description: Deleted.
@@ -2882,7 +3628,7 @@ paths:
       operationId: publishFaq
       summary: Publish a FAQ
       description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
-      security: *a11
+      security: *a15
       parameters:
         - $ref: '#/components/parameters/ObjectId'
       responses:
@@ -2896,7 +3642,7 @@ paths:
                 required:
                   - data
                 properties:
-                  data: *a12
+                  data: *a16
               examples:
                 faqs:
                   value:
@@ -2918,7 +3664,7 @@ paths:
       operationId: unpublishFaq
       summary: Unpublish a FAQ
       description: Returns it to draft. The original `publishedAt` is kept.
-      security: *a11
+      security: *a15
       parameters:
         - $ref: '#/components/parameters/ObjectId'
       responses:
@@ -2932,7 +3678,7 @@ paths:
                 required:
                   - data
                 properties:
-                  data: *a12
+                  data: *a16
               examples:
                 faqs:
                   value:
@@ -2957,7 +3703,7 @@ paths:
         Every status, not just published.
 
         A vacancy leaves the public API when `isOpen` is false or `closingDate` has passed.
-      security: &a13
+      security: &a17
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AdminStatus'
@@ -2978,7 +3724,7 @@ paths:
                 properties:
                   data:
                     type: array
-                    items: &a14
+                    items: &a18
                       $ref: '#/components/schemas/JobAdmin'
                   meta:
                     $ref: '#/components/schemas/PaginationMeta'
@@ -3003,7 +3749,7 @@ paths:
         A slug is generated when none is given.
 
         A vacancy leaves the public API when `isOpen` is false or `closingDate` has passed.
-      security: *a13
+      security: *a17
       requestBody:
         required: true
         content:
@@ -3021,7 +3767,7 @@ paths:
                 required:
                   - data
                 properties:
-                  data: *a14
+                  data: *a18
               examples:
                 jobs:
                   value:
@@ -3043,7 +3789,7 @@ paths:
       operationId: reorderJob
       summary: Reorder jobs
       description: Sets `order` from each id’s position. Ids not listed keep their order.
-      security: *a13
+      security: *a17
       requestBody:
         required: true
         content:
@@ -3075,7 +3821,7 @@ paths:
         References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
 
         A vacancy leaves the public API when `isOpen` is false or `closingDate` has passed.
-      security: *a13
+      security: *a17
       responses:
         '200':
           description: The job.
@@ -3087,7 +3833,7 @@ paths:
                 required:
                   - data
                 properties:
-                  data: *a14
+                  data: *a18
               examples:
                 jobs:
                   value:
@@ -3108,7 +3854,7 @@ paths:
       operationId: updateJob
       summary: Update a job
       description: Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
-      security: *a13
+      security: *a17
       parameters:
         - $ref: '#/components/parameters/IfMatch'
       requestBody:
@@ -3128,7 +3874,7 @@ paths:
                 required:
                   - data
                 properties:
-                  data: *a14
+                  data: *a18
               examples:
                 jobs:
                   value:
@@ -3153,7 +3899,7 @@ paths:
       operationId: deleteJob
       summary: Delete a job
       description: Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
-      security: *a13
+      security: *a17
       responses:
         '204':
           description: Deleted.
@@ -3176,7 +3922,7 @@ paths:
       operationId: publishJob
       summary: Publish a job
       description: Stamps `publishedAt` on first publish only, so republishing keeps the date.
-      security: *a13
+      security: *a17
       parameters:
         - $ref: '#/components/parameters/ObjectId'
       responses:
@@ -3190,7 +3936,7 @@ paths:
                 required:
                   - data
                 properties:
-                  data: *a14
+                  data: *a18
               examples:
                 jobs:
                   value:
@@ -3212,7 +3958,7 @@ paths:
       operationId: unpublishJob
       summary: Unpublish a job
       description: Returns it to draft. The original `publishedAt` is kept.
-      security: *a13
+      security: *a17
       parameters:
         - $ref: '#/components/parameters/ObjectId'
       responses:
@@ -3226,7 +3972,7 @@ paths:
                 required:
                   - data
                 properties:
-                  data: *a14
+                  data: *a18
               examples:
                 jobs:
                   value:
@@ -3460,6 +4206,69 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/v1/admin/legal/{key}:
+    parameters:
+      - $ref: '#/components/parameters/LegalKey'
+    get:
+      tags: [Admin singletons]
+      operationId: getAdminLegalPage
+      summary: Get a legal page in its editable shape
+      description: |
+        Minus `id`, `key`, `revision` and `updatedAt`, the body is a valid PUT body.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminLegalPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags: [Admin singletons]
+      operationId: replaceAdminLegalPage
+      summary: Replace a legal page
+      description: |
+        Whole-document replace, including `status`: setting it to `draft` takes the page off the
+        public site. Requires `If-Match`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LegalPageWrite'
+            example:
+              status: published
+              title: Terms of Service
+              body: <p>[PENDING FROM FIRM]</p>
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminLegalPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/admin/media:
     get:
       tags: [Admin media]
@@ -3476,9 +4285,15 @@ paths:
         - name: unused
           in: query
           required: false
-          description: Only images nothing references, for finding what is safe to delete.
+          description: Only media nothing references, for finding what is safe to delete.
           schema:
             type: boolean
+        - name: kind
+          in: query
+          required: false
+          description: Only images, or only documents. Omit for both.
+          schema:
+            $ref: '#/components/schemas/MediaKind'
         - name: sort
           in: query
           required: false
@@ -3526,11 +4341,13 @@ paths:
     post:
       tags: [Admin media]
       operationId: uploadMedia
-      summary: Upload an image
+      summary: Upload an image or a PDF document
       description: |
-        JPEG, PNG, WebP or AVIF, at most 10 MB, type checked by magic bytes
-        rather than by extension. SVG is rejected because it can carry scripts;
-        export badges as PNG (ADR-016). Alt text is required on upload.
+        An image is a JPEG, PNG, WebP or AVIF of at most 10 MB, and needs alt
+        text. A document (`kind: document`) is a PDF of at most 20 MB, and needs
+        a title. The type is checked by magic bytes rather than by extension,
+        and must match the `kind` asked for. SVG is rejected because it can
+        carry scripts; export badges as PNG (ADR-016).
       security:
         - bearerAuth: []
       requestBody:
@@ -3646,7 +4463,8 @@ paths:
       operationId: replaceMediaFile
       summary: Replace the file, keeping the id
       description: |
-        The id and alt text stay, so every page using this image updates at
+        The replacement must be the same kind: an image for an image, a PDF for
+        a document. The id and alt text stay, so every page using this media updates at
         once. The new file gets a new URL, so no cache can serve the old one;
         the old file is deleted after the swap succeeds, every referencing
         entity is invalidated, and the action is audit-logged (ADR-013).
@@ -4201,11 +5019,14 @@ components:
       description: Filter by category. Omit for all categories.
       schema:
         $ref: '#/components/schemas/InsightCategory'
-    InsightPracticeArea:
+    PracticeAreaFilter:
       name: practiceArea
       in: query
       required: false
-      description: Filter by practice area slug.
+      description: |
+        Filter by practice area slug — the "Practice Area" dropdown. On `/people` it matches an
+        attorney's `practiceAreas` or `primaryPracticeArea`. An unknown slug returns an empty
+        page, not a 404, because the value comes from a filter control.
       schema:
         type: string
         pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
@@ -4219,6 +5040,16 @@ components:
         type: string
         enum: [newest, oldest]
         default: newest
+    LegalKey:
+      name: key
+      in: path
+      required: true
+      description: Which legal page. `terms` and `privacy` exist; any other key is a 404.
+      schema:
+        type: string
+        pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+        maxLength: 40
+      example: terms
     SearchQuery:
       name: q
       in: query
@@ -4290,7 +5121,9 @@ components:
               value:
                 $ref: '../fixtures/responses/error.not-found.json'
     PayloadTooLarge:
-      description: The upload exceeds the 5 MB limit.
+      description: |
+        The upload exceeds the limit for what it is: 5 MB for a CV, 10 MB for an image, 20 MB
+        for a PDF document.
       content:
         application/json:
           schema:
@@ -4300,7 +5133,9 @@ components:
               code: PAYLOAD_TOO_LARGE
               message: The uploaded file exceeds the 5 MB limit.
     UnsupportedMediaType:
-      description: The uploaded file is not a PDF or DOCX.
+      description: |
+        The file's bytes are not a type this upload accepts: a PDF or DOCX for a CV; a JPEG, PNG,
+        WebP or AVIF for an image; a PDF for a document.
       content:
         application/json:
           schema:
@@ -4393,6 +5228,21 @@ components:
             home:
               value:
                 $ref: '../fixtures/responses/admin.pages.home.json'
+    AdminLegalPage:
+      description: A legal page in its editable shape.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/LegalPageAdmin'
+          examples:
+            terms:
+              value:
+                $ref: '../fixtures/responses/admin.legal.terms.json'
     AdminMedia:
       description: One media record, with everywhere it is used.
       content:
@@ -4632,6 +5482,31 @@ components:
         - type: 'null'
       description: Null until the firm uploads an image through the admin UI.
 
+    Document:
+      type: object
+      additionalProperties: false
+      required: [url, title, bytes, mimeType]
+      description: |
+        An uploaded PDF from the media library, such as the firm profile. Documents have no
+        responsive sizes and no alt text; `title` is what a link to one should read.
+      properties:
+        url:
+          type: string
+        title:
+          type: string
+        bytes:
+          type: integer
+          minimum: 1
+        mimeType:
+          type: string
+          enum: [application/pdf]
+
+    NullableDocument:
+      oneOf:
+        - $ref: '#/components/schemas/Document'
+        - type: 'null'
+      description: Null until the firm uploads the document through the admin UI.
+
     LinkKind:
       type: string
       enum: [internal, external, action]
@@ -4656,6 +5531,24 @@ components:
       oneOf:
         - $ref: '#/components/schemas/Link'
         - type: 'null'
+
+    PendingLink:
+      type: object
+      additionalProperties: false
+      required: [label, href, kind]
+      description: |
+        A call to action the design shows before its destination is decided. The label is real
+        copy; `href` and `kind` are both null until the firm decides where it goes, and are
+        then both set, exactly as on a `Link`.
+      properties:
+        label:
+          type: string
+        href:
+          type: [string, 'null']
+        kind:
+          oneOf:
+            - $ref: '#/components/schemas/LinkKind'
+            - type: 'null'
 
     SectionHeader:
       type: object
@@ -4726,14 +5619,20 @@ components:
     Hero:
       type: object
       additionalProperties: false
-      required: [title, subtitle, image, primaryCta, secondaryCta]
+      required: [title, subtitle, images, primaryCta, secondaryCta]
       properties:
         title:
           type: string
         subtitle:
           type: [string, 'null']
-        image:
-          $ref: '#/components/schemas/NullableImage'
+        images:
+          type: array
+          description: |
+            The hero's background slides. Only the image changes between slides; the title,
+            subtitle and CTAs are shared. Home has three in the designs and every other hero
+            one. Empty until the firm uploads a picture, the way a single image used to be null.
+          items:
+            $ref: '#/components/schemas/Image'
         primaryCta:
           $ref: '#/components/schemas/NullableLink'
         secondaryCta:
@@ -4758,7 +5657,7 @@ components:
         - associate_partner
         - senior_associate
         - associate
-        - nysc_associate
+        - trainee_associate
 
     PersonRoleFilter:
       type: string
@@ -4768,7 +5667,7 @@ components:
         - associate_partner
         - senior_associate
         - associate
-        - nysc_associate
+        - trainee_associate
       description: |
         The accepted values of the `role` query parameter. Same values as `PersonRole`, but
         `partner` behaves as a group and also matches `managing_partner`, mirroring the
@@ -4783,8 +5682,12 @@ components:
         - insights
         - regulatory_updates
         - news_updates
-        - media_coverage
-        - webinar_resources
+        - events
+        - pro_bono
+      description: |
+        `pro_bono` ("Pro Bono & Community Commitment") is not a listing tab: those insights are
+        the Responsible Business page's stories, and appear in a listing only when
+        `category=pro_bono` is asked for explicitly.
 
     InsightFormat:
       type: string
@@ -4799,13 +5702,23 @@ components:
       type: string
       enum: [onsite, hybrid, remote]
 
-    RecognitionTab:
-      type: string
-      enum: [achievements, recognized_by]
-
     PageKey:
       type: string
-      enum: [home, about, practice-areas, people, insights, careers, faq, offices]
+      enum:
+        - home
+        - about
+        - practice-areas
+        - people
+        - insights
+        - careers
+        - faq
+        - offices
+        - recognition
+        - responsible-business
+
+    LegalPageKey:
+      type: string
+      enum: [terms, privacy]
 
     PracticeAreaRef:
       type: object
@@ -4822,6 +5735,50 @@ components:
         shortLabel:
           type: string
           description: The compact label used on the Home tab bar.
+
+    PracticeAreaLink:
+      type: object
+      additionalProperties: false
+      required: [slug, title]
+      description: A practice area as a chip or a link — `/practice-areas/{slug}`.
+      properties:
+        slug:
+          $ref: '#/components/schemas/Slug'
+        title:
+          type: string
+
+    IndustryRef:
+      type: object
+      additionalProperties: false
+      required: [name, slug]
+      description: An industry from the shared list practice areas pick from.
+      properties:
+        name:
+          type: string
+        slug:
+          $ref: '#/components/schemas/Slug'
+
+    CoreService:
+      type: object
+      additionalProperties: false
+      required: [title, description]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+
+    PracticeAreaApproach:
+      type: object
+      additionalProperties: false
+      required: [text, points]
+      properties:
+        text:
+          type: string
+        points:
+          type: array
+          items:
+            type: string
 
     PracticeAreaCard:
       type: object
@@ -4845,19 +5802,27 @@ components:
       type: object
       additionalProperties: false
       required:
-        [
-          id,
-          slug,
-          title,
-          shortLabel,
-          summary,
-          image,
-          body,
-          keyServices,
-          contacts,
-          relatedInsights,
-          seo,
-        ]
+        - id
+        - slug
+        - title
+        - shortLabel
+        - summary
+        - homeSummary
+        - heroIntro
+        - image
+        - heroImages
+        - overview
+        - coreServices
+        - approach
+        - industries
+        - lead
+        - siblings
+        - recentPublications
+        - seo
+      description: |
+        The practice area detail page. The three texts differ by where they appear: `summary`
+        on the Practice Areas grid card, `homeSummary` on the Home carousel card, and
+        `heroIntro` in this page's hero.
       properties:
         id:
           $ref: '#/components/schemas/ObjectId'
@@ -4869,35 +5834,96 @@ components:
           type: string
         summary:
           type: string
+        homeSummary:
+          type: string
+        heroIntro:
+          type: string
         image:
           $ref: '#/components/schemas/NullableImage'
-        body:
+        heroImages:
+          type: array
+          description: The detail hero's slides. Empty until the firm uploads them.
+          items:
+            $ref: '#/components/schemas/Image'
+        overview:
           type: [string, 'null']
-          description: Sanitised HTML. Null until the firm supplies detail-page copy.
-        keyServices:
+          description: The first paragraph of the page, as plain text.
+        coreServices:
+          type: array
+          minItems: 1
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/CoreService'
+        approach:
+          oneOf:
+            - $ref: '#/components/schemas/PracticeAreaApproach'
+            - type: 'null'
+        industries:
           type: array
           items:
-            type: string
-        contacts:
+            $ref: '#/components/schemas/IndustryRef'
+        lead:
+          oneOf:
+            - $ref: '#/components/schemas/PracticeAreaLead'
+            - type: 'null'
+          description: The "Practice Lead" card. Null when no published attorney is assigned.
+        siblings:
           type: array
-          description: The attorneys to contact about this practice area.
+          description: Every published practice area, in order, for the sidebar.
           items:
-            $ref: '#/components/schemas/PersonSummary'
-        relatedInsights:
+            $ref: '#/components/schemas/PracticeAreaLink'
+        recentPublications:
           type: array
-          maxItems: 3
+          maxItems: 6
+          description: The latest insights tagged with this area, never pro bono stories.
           items:
             $ref: '#/components/schemas/InsightCard'
         seo:
           $ref: '#/components/schemas/SeoBasic'
 
+    PracticeAreaLead:
+      type: object
+      additionalProperties: false
+      required:
+        [id, slug, displayName, role, roleLabel, photo, linkedinUrl, cardBio, practiceAreas, email]
+      description: |
+        The Practice Lead card: a person summary plus the email address behind the card's
+        email icon. Photo and name always come from the linked attorney, so the card cannot
+        disagree with their profile.
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        displayName:
+          type: string
+        role:
+          $ref: '#/components/schemas/PersonRole'
+        roleLabel:
+          type: string
+        photo:
+          $ref: '#/components/schemas/NullableImage'
+        linkedinUrl:
+          type: [string, 'null']
+        cardBio:
+          type: [string, 'null']
+        practiceAreas:
+          type: array
+          items:
+            $ref: '#/components/schemas/PracticeAreaLink'
+        email:
+          type: [string, 'null']
+
     PersonSummary:
       type: object
       additionalProperties: false
-      required: [id, slug, displayName, role, roleLabel, photo, linkedinUrl]
+      required: [id, slug, displayName, role, roleLabel, photo, linkedinUrl, cardBio, practiceAreas]
       description: |
         Used on directory cards, author blocks and the leadership row. `displayName` includes the
         honorific only when it is "Dr.", matching the designs, and appends any post-nominals.
+
+        It carries the card's back face too — `cardBio` and the practice-area chips — so every
+        card can flip without another request.
       properties:
         id:
           $ref: '#/components/schemas/ObjectId'
@@ -4915,6 +5941,35 @@ components:
           $ref: '#/components/schemas/NullableImage'
         linkedinUrl:
           type: [string, 'null']
+        cardBio:
+          type: [string, 'null']
+          description: The short italic line on the back of the card.
+        practiceAreas:
+          type: array
+          description: The chips on the back of the card.
+          items:
+            $ref: '#/components/schemas/PracticeAreaLink'
+
+    PersonEducation:
+      type: object
+      additionalProperties: false
+      required: [intro, entries]
+      properties:
+        intro:
+          type: [string, 'null']
+        entries:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [qualification, year]
+            properties:
+              qualification:
+                type: string
+                examples:
+                  ["Ph.D. in Private International Law, King's College, University of London"]
+              year:
+                type: [integer, 'null']
 
     PersonDetail:
       type: object
@@ -4931,12 +5986,18 @@ components:
         - roleLabel
         - photo
         - linkedinUrl
+        - instagramUrl
+        - email
+        - cardBio
         - bio
         - quote
+        - primaryPracticeArea
         - practiceAreas
+        - education
+        - memberships
         - office
-        - insights
-      description: The attorney bio. Email is deliberately never exposed publicly.
+        - recentPublications
+      description: The attorney profile. Email is public, shown on the profile.
       properties:
         id:
           $ref: '#/components/schemas/ObjectId'
@@ -4960,22 +6021,40 @@ components:
           $ref: '#/components/schemas/NullableImage'
         linkedinUrl:
           type: [string, 'null']
+        instagramUrl:
+          type: [string, 'null']
+        email:
+          type: [string, 'null']
+        cardBio:
+          type: [string, 'null']
         bio:
           type: [string, 'null']
-          description: Sanitised HTML.
+          description: Sanitised HTML, two or more paragraphs.
         quote:
           type: [string, 'null']
+        primaryPracticeArea:
+          oneOf:
+            - $ref: '#/components/schemas/PracticeAreaLink'
+            - type: 'null'
+          description: Shown under the portrait.
         practiceAreas:
           type: array
           items:
-            $ref: '#/components/schemas/PracticeAreaRef'
+            $ref: '#/components/schemas/PracticeAreaLink'
+        education:
+          $ref: '#/components/schemas/PersonEducation'
+        memberships:
+          type: array
+          items:
+            type: string
         office:
           oneOf:
             - $ref: '#/components/schemas/OfficeRef'
             - type: 'null'
-        insights:
+        recentPublications:
           type: array
-          maxItems: 3
+          maxItems: 6
+          description: The latest insights they wrote, never pro bono stories.
           items:
             $ref: '#/components/schemas/InsightCard'
 
@@ -5028,6 +6107,20 @@ components:
         kind:
           type: string
           enum: [read_more, watch_video]
+
+    InsightDetailCta:
+      type: object
+      additionalProperties: false
+      required: [label, url]
+      description: |
+        The link at the end of an article or video: "Read Article" to the external article or
+        uploaded PDF, or "Watch Video" to the video.
+      properties:
+        label:
+          type: string
+          examples: ['Read Article', 'Watch Video']
+        url:
+          type: string
 
     InsightCard:
       type: object
@@ -5110,6 +6203,7 @@ components:
         - publishedAt
         - featured
         - cta
+        - backLink
         - body
         - videoUrl
         - related
@@ -5153,7 +6247,14 @@ components:
         featured:
           type: boolean
         cta:
-          $ref: '#/components/schemas/InsightCta'
+          oneOf:
+            - $ref: '#/components/schemas/InsightDetailCta'
+            - type: 'null'
+          description: |
+            Unlike a card's `cta`, a link with a destination. Null for an article with neither an
+            external URL nor an uploaded document.
+        backLink:
+          $ref: '#/components/schemas/Link'
         body:
           type: [string, 'null']
           description: Sanitised HTML. Null for video insights.
@@ -5222,27 +6323,87 @@ components:
         directionsUrl:
           type: [string, 'null']
 
-    Recognition:
+    RecognitionDirectoryLink:
       type: object
       additionalProperties: false
-      required: [id, organization, title, year, badge, url, tab]
+      required: [name, slug]
+      description: A directory as a link to its recognition page, `/recognition/{slug}`.
+      properties:
+        name:
+          type: string
+          examples: ['IFLR 1000']
+        slug:
+          $ref: '#/components/schemas/Slug'
+
+    RecognitionDirectoryRef:
+      type: object
+      additionalProperties: false
+      required: [id, name, slug, logo]
       properties:
         id:
           $ref: '#/components/schemas/ObjectId'
-        organization:
+        name:
           type: string
-          examples: ['IFLR1000']
+        slug:
+          $ref: '#/components/schemas/Slug'
+        logo:
+          $ref: '#/components/schemas/NullableImage'
+          description: The wordmark in the "Independently Recognized By" tile.
+
+    Award:
+      type: object
+      additionalProperties: false
+      required: [id, title, year, badge, directory]
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
         title:
           type: string
-          examples: ['Recommended Firm']
+          examples: ['Chambers Global: Top Ranked Leading Firm']
         year:
-          type: [integer, 'null']
+          type: integer
         badge:
           $ref: '#/components/schemas/NullableImage'
-        url:
-          type: [string, 'null']
-        tab:
-          $ref: '#/components/schemas/RecognitionTab'
+        directory:
+          $ref: '#/components/schemas/RecognitionDirectoryLink'
+
+    RecognitionsOverview:
+      type: object
+      additionalProperties: false
+      required: [directories, achievements]
+      description: The two tabs of the recognition component.
+      properties:
+        directories:
+          type: array
+          description: '"Independently Recognized By": every published directory, in order.'
+          items:
+            $ref: '#/components/schemas/RecognitionDirectoryRef'
+        achievements:
+          type: array
+          description: '"Our Achievements": the awards flagged for Home, in order.'
+          items:
+            $ref: '#/components/schemas/Award'
+
+    RecognitionDirectoryPage:
+      type: object
+      additionalProperties: false
+      required: [directory, hero, awardsEyebrow, awards]
+      properties:
+        directory:
+          $ref: '#/components/schemas/RecognitionDirectoryRef'
+        hero:
+          $ref: '#/components/schemas/Hero'
+          description: |
+            Titled with the directory's name, with its own subtitle and slides, and the CTAs
+            every directory page shares.
+        awardsEyebrow:
+          type: string
+          examples: ['Awards by the years']
+        awards:
+          type: array
+          description: Every published award from this directory, newest year first.
+          items:
+            $ref: '#/components/schemas/Award'
 
     Faq:
       type: object
@@ -5356,8 +6517,9 @@ components:
       additionalProperties: false
       required: [label, href, kind, children]
       description: |
-        Dropdown contents are not designed yet. The Practice Areas dropdown is generated from the
-        practice areas collection; other dropdowns currently have an empty `children` array.
+        Two entries have dropdowns. About Us lists anchors into the About page, edited in
+        settings. Insights & News lists the public insight categories, each linking to
+        `/insights?category=<value>`. Every other entry has an empty `children` array.
       properties:
         label:
           type: string
@@ -5373,13 +6535,13 @@ components:
     SiteFooter:
       type: object
       additionalProperties: false
-      required: [tagline, links, practiceAreas, offices, socials, copyright]
+      required: [tagline, links, practiceAreas, offices, legalLinks, newsletter, socials, copyright]
       properties:
         tagline:
           type: string
         links:
           type: array
-          description: Mirrors the main nav.
+          description: The "Quick Links" column, edited in settings.
           items:
             $ref: '#/components/schemas/Link'
         practiceAreas:
@@ -5390,11 +6552,54 @@ components:
         offices:
           type: array
           items:
-            $ref: '#/components/schemas/OfficeRef'
+            $ref: '#/components/schemas/FooterOffice'
+        legalLinks:
+          type: array
+          description: Terms of Service and Privacy Policy.
+          items:
+            $ref: '#/components/schemas/Link'
+        newsletter:
+          $ref: '#/components/schemas/SiteNewsletter'
         socials:
           $ref: '#/components/schemas/Socials'
         copyright:
           type: string
+
+    FooterOffice:
+      type: object
+      additionalProperties: false
+      required: [id, slug, name, address, phone, email]
+      description: |
+        An office in the footer column. `phone` and `email` fall back to the site-wide values
+        when the office has none of its own.
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        slug:
+          $ref: '#/components/schemas/Slug'
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: [string, 'null']
+        email:
+          type: [string, 'null']
+
+    SiteNewsletter:
+      type: object
+      additionalProperties: false
+      required: [title, note, enabled]
+      description: |
+        The footer newsletter block's copy. There is no subscribe endpoint: while `enabled` is
+        false the frontend shows no form.
+      properties:
+        title:
+          type: string
+        note:
+          type: string
+        enabled:
+          type: boolean
 
     StillHaveQuestions:
       type: object
@@ -5500,20 +6705,20 @@ components:
     HomeVideoShowcase:
       type: object
       additionalProperties: false
-      required: [videoUrl, poster]
+      required: [videoUrl, poster, caption]
       properties:
         videoUrl:
           type: [string, 'null']
         poster:
           $ref: '#/components/schemas/NullableImage'
+        caption:
+          type: [string, 'null']
 
-    HomeRecognitionTabs:
+    HomeRecognitionSection:
       type: object
       additionalProperties: false
-      description: >-
-        The Recognition band on the home page: a heading, a picture, the two
-        tab labels for the badges beneath, and a link to the full list.
-      required: [eyebrow, title, image, cta, achievementsLabel, recognizedByLabel]
+      required: [eyebrow, title, image, cta, badges]
+      description: The Recognition band on the home page.
       properties:
         eyebrow:
           type: [string, 'null']
@@ -5522,25 +6727,13 @@ components:
         image:
           $ref: '#/components/schemas/NullableImage'
         cta:
-          $ref: '#/components/schemas/NullableLink'
-        achievementsLabel:
-          type: string
-        recognizedByLabel:
-          type: string
-
-    HomeRecognitions:
-      type: object
-      additionalProperties: false
-      required: [achievements, recognizedBy]
-      properties:
-        achievements:
+          $ref: '#/components/schemas/PendingLink'
+          description: '"View Our Recognitions". Its destination is not decided yet.'
+        badges:
           type: array
+          description: The awards flagged for Home, in order.
           items:
-            $ref: '#/components/schemas/Recognition'
-        recognizedBy:
-          type: array
-          items:
-            $ref: '#/components/schemas/Recognition'
+            $ref: '#/components/schemas/Award'
 
     HomeWhyChooseUs:
       type: object
@@ -5568,8 +6761,7 @@ components:
         - hero
         - aboutFirm
         - videoShowcase
-        - recognitionTabs
-        - recognitions
+        - recognitionSection
         - practiceSection
         - practiceAreas
         - leadershipSection
@@ -5588,21 +6780,22 @@ components:
           $ref: '#/components/schemas/HomeAboutFirm'
         videoShowcase:
           $ref: '#/components/schemas/HomeVideoShowcase'
-        recognitionTabs:
-          $ref: '#/components/schemas/HomeRecognitionTabs'
-        recognitions:
-          $ref: '#/components/schemas/HomeRecognitions'
+        recognitionSection:
+          $ref: '#/components/schemas/HomeRecognitionSection'
         practiceSection:
           $ref: '#/components/schemas/SectionHeader'
         practiceAreas:
           type: array
-          description: Practice areas flagged for the Home tab bar, in order.
+          description: |
+            Practice areas flagged for the Home tab bar, in tab order. On these cards `summary`
+            carries the area's Home text (`homeSummary`), which differs from the grid card's.
           items:
             $ref: '#/components/schemas/PracticeAreaCard'
         leadershipSection:
           $ref: '#/components/schemas/SectionHeader'
         leadership:
           type: array
+          description: Each summary carries its card-back data (`cardBio`, practice-area chips).
           items:
             $ref: '#/components/schemas/PersonSummary'
         whyChooseUs:
@@ -5617,10 +6810,25 @@ components:
         seo:
           $ref: '#/components/schemas/Seo'
 
+    AboutProfileDownload:
+      type: object
+      additionalProperties: false
+      required: [leadText, linkLabel, document]
+      description: |
+        "To learn more about the firm, you may download a copy of our profile here", where
+        `linkLabel` is the linked word.
+      properties:
+        leadText:
+          type: string
+        linkLabel:
+          type: string
+        document:
+          $ref: '#/components/schemas/NullableDocument'
+
     AboutStory:
       type: object
       additionalProperties: false
-      required: [eyebrow, title, paragraphs, quote, quotePerson]
+      required: [eyebrow, title, paragraphs, quote, quotePerson, profileDownload]
       properties:
         eyebrow:
           type: [string, 'null']
@@ -5635,6 +6843,10 @@ components:
         quotePerson:
           oneOf:
             - $ref: '#/components/schemas/PersonSummary'
+            - type: 'null'
+        profileDownload:
+          oneOf:
+            - $ref: '#/components/schemas/AboutProfileDownload'
             - type: 'null'
 
     AboutStats:
@@ -5658,6 +6870,7 @@ components:
           type: string
         body:
           type: string
+          description: Sanitised HTML ("Our Asset" has bold phrases).
 
     AboutMissionSection:
       type: object
@@ -5692,16 +6905,6 @@ components:
           items:
             $ref: '#/components/schemas/IconItem'
 
-    AwardListItem:
-      type: object
-      additionalProperties: false
-      required: [name, url]
-      properties:
-        name:
-          type: string
-        url:
-          type: [string, 'null']
-
     AboutAwardsList:
       type: object
       additionalProperties: false
@@ -5715,8 +6918,11 @@ components:
           $ref: '#/components/schemas/NullableImage'
         items:
           type: array
+          description: |
+            One row per published recognition directory, in order, each linking to
+            `/recognition/{slug}`. Taken from the directories collection, not stored on the page.
           items:
-            $ref: '#/components/schemas/AwardListItem'
+            $ref: '#/components/schemas/RecognitionDirectoryLink'
 
     AboutPage:
       type: object
@@ -5744,16 +6950,20 @@ components:
     CsrBanner:
       type: object
       additionalProperties: false
-      required: [title, text, image, cta]
+      required: [title, text, images, cta]
+      description: The Pro Bono & Community Commitment carousel. Only the image changes per slide.
       properties:
         title:
           type: string
         text:
           type: string
-        image:
-          $ref: '#/components/schemas/NullableImage'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
         cta:
           $ref: '#/components/schemas/NullableLink'
+          description: '"Learn About Our CSR", to `/responsible-business`.'
 
     PracticeAreasPage:
       type: object
@@ -5779,7 +6989,7 @@ components:
     PeoplePage:
       type: object
       additionalProperties: false
-      required: [key, hero, directorySection, roleFilters, seo]
+      required: [key, hero, directorySection, roleFilters, practiceAreaFilters, seo]
       description: The attorney grid itself is fetched from `GET /people`.
       properties:
         key:
@@ -5793,13 +7003,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FilterOption'
+        practiceAreaFilters:
+          type: array
+          description: |
+            The "Practice Area" dropdown: every published area, `value` being the slug to pass
+            as `?practiceArea=`. It combines with the role tabs.
+          items:
+            $ref: '#/components/schemas/FilterOption'
         seo:
           $ref: '#/components/schemas/Seo'
 
     InsightsPage:
       type: object
       additionalProperties: false
-      required: [key, hero, featured, categoryFilters, listingSection, seo]
+      required: [key, hero, featured, categoryFilters, practiceAreaFilters, listingSection, seo]
       description: The listing grid itself is fetched from `GET /insights`.
       properties:
         key:
@@ -5818,12 +7035,51 @@ components:
             $ref: '#/components/schemas/InsightCard'
         categoryFilters:
           type: array
+          description: The public category tabs. `pro_bono` is not one of them.
+          items:
+            $ref: '#/components/schemas/FilterOption'
+        practiceAreaFilters:
+          type: array
+          description: The "Sort By" dropdown, which filters by practice area slug.
           items:
             $ref: '#/components/schemas/FilterOption'
         listingSection:
           $ref: '#/components/schemas/SectionHeader'
         seo:
           $ref: '#/components/schemas/Seo'
+
+    CareersEmptyState:
+      type: object
+      additionalProperties: false
+      required: [title, body, ctaLabel]
+      description: |
+        Shown in place of the job cards when nothing is open. The CTA's behaviour is not
+        decided yet, so only its label is served.
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+          description: Sanitised HTML, with a mailto link.
+        ctaLabel:
+          type: string
+
+    CareersJobsSection:
+      type: object
+      additionalProperties: false
+      required: [eyebrow, title, cta, emptyState]
+      properties:
+        eyebrow:
+          type: [string, 'null']
+        title:
+          type: string
+        cta:
+          $ref: '#/components/schemas/NullableLink'
+        emptyState:
+          oneOf:
+            - $ref: '#/components/schemas/CareersEmptyState'
+            - type: 'null'
+          description: Present only when there are no open jobs; null otherwise.
 
     CareersPage:
       type: object
@@ -5836,7 +7092,7 @@ components:
         hero:
           $ref: '#/components/schemas/Hero'
         jobsSection:
-          $ref: '#/components/schemas/SectionHeader'
+          $ref: '#/components/schemas/CareersJobsSection'
         jobs:
           type: array
           items:
@@ -5875,6 +7131,77 @@ components:
         seo:
           $ref: '#/components/schemas/Seo'
 
+    RecognitionDirectoryLabels:
+      type: object
+      additionalProperties: false
+      required: [awardsEyebrow, primaryCta, secondaryCta]
+      description: What every directory's recognition page shares.
+      properties:
+        awardsEyebrow:
+          type: string
+        primaryCta:
+          $ref: '#/components/schemas/NullableLink'
+        secondaryCta:
+          $ref: '#/components/schemas/NullableLink'
+
+    RecognitionPage:
+      type: object
+      additionalProperties: false
+      required: [key, directoryPage, seo]
+      description: |
+        The labels shared by every `GET /recognitions/{slug}` page. The frontend renders those
+        pages from that endpoint, which already embeds these; this document exists so the firm
+        can edit them.
+      properties:
+        key:
+          type: string
+          enum: [recognition]
+        directoryPage:
+          $ref: '#/components/schemas/RecognitionDirectoryLabels'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    ResponsibleBusinessPage:
+      type: object
+      additionalProperties: false
+      required: [key, title, images, backLink, seo]
+      description: |
+        The CSR page. Its grid is `GET /insights?category=pro_bono`, 9 per page. The nav
+        highlights Practice Areas while it is open.
+      properties:
+        key:
+          type: string
+          enum: [responsible-business]
+        title:
+          type: string
+          examples: ['RESPONSIBLE BUSINESS']
+        images:
+          type: array
+          description: The carousel. Empty until the firm uploads them.
+          items:
+            $ref: '#/components/schemas/Image'
+        backLink:
+          $ref: '#/components/schemas/Link'
+        seo:
+          $ref: '#/components/schemas/Seo'
+
+    LegalPage:
+      type: object
+      additionalProperties: false
+      required: [key, title, body, updatedAt]
+      properties:
+        key:
+          $ref: '#/components/schemas/LegalPageKey'
+        title:
+          type: string
+        body:
+          type: string
+          description: Sanitised HTML.
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the page was last edited, for a "Last updated" line.
+
     Page:
       oneOf:
         - $ref: '#/components/schemas/HomePage'
@@ -5885,6 +7212,8 @@ components:
         - $ref: '#/components/schemas/CareersPage'
         - $ref: '#/components/schemas/FaqPage'
         - $ref: '#/components/schemas/OfficesPage'
+        - $ref: '#/components/schemas/RecognitionPage'
+        - $ref: '#/components/schemas/ResponsibleBusinessPage'
       discriminator:
         propertyName: key
         mapping:
@@ -5896,6 +7225,8 @@ components:
           careers: '#/components/schemas/CareersPage'
           faq: '#/components/schemas/FaqPage'
           offices: '#/components/schemas/OfficesPage'
+          recognition: '#/components/schemas/RecognitionPage'
+          responsible-business: '#/components/schemas/ResponsibleBusinessPage'
 
     SubmissionReceipt:
       type: object
@@ -6232,6 +7563,7 @@ components:
       type: object
       additionalProperties: false
       required: [kind, url, alt]
+      description: A media preview. For a document, `alt` carries its title.
       properties:
         kind:
           type: string
@@ -6288,10 +7620,15 @@ components:
         - title
         - shortLabel
         - summary
+        - homeSummary
+        - heroIntro
         - image
-        - body
-        - keyServices
-        - contacts
+        - heroImages
+        - overview
+        - coreServices
+        - approach
+        - industries
+        - lead
         - featuredOnHome
         - homeOrder
         - showInFooter
@@ -6308,18 +7645,40 @@ components:
         updatedAt: { type: string, format: date-time }
         title: { type: string }
         shortLabel: { type: string }
-        summary: { type: string }
+        summary:
+          type: string
+          description: The Practice Areas grid card.
+        homeSummary:
+          type: string
+          description: The Home carousel card.
+        heroIntro:
+          type: string
+          description: The detail page's hero paragraph.
         image:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
-        body: { type: [string, 'null'] }
-        keyServices:
-          type: array
-          items: { type: string }
-        contacts:
+        heroImages:
           type: array
           items: { $ref: '#/components/schemas/ObjectId' }
+        overview: { type: [string, 'null'] }
+        coreServices:
+          type: array
+          minItems: 1
+          maxItems: 6
+          items: { $ref: '#/components/schemas/CoreService' }
+        approach:
+          oneOf:
+            - $ref: '#/components/schemas/PracticeAreaApproach'
+            - type: 'null'
+        industries:
+          type: array
+          items: { $ref: '#/components/schemas/ObjectId' }
+        lead:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: The attorney on the "Practice Lead" card.
         featuredOnHome: { type: boolean }
         homeOrder: { type: [integer, 'null'] }
         showInFooter: { type: boolean }
@@ -6345,14 +7704,18 @@ components:
         - role
         - photo
         - linkedinUrl
+        - instagramUrl
         - email
+        - cardBio
         - bio
         - quote
+        - primaryPracticeArea
         - practiceAreas
+        - education
+        - memberships
         - office
         - featuredInLeadership
         - _expanded
-      description: Unlike the public shape, this carries `email`, which the site never shows.
       properties:
         id: { $ref: '#/components/schemas/ObjectId' }
         slug: { $ref: '#/components/schemas/Slug' }
@@ -6372,12 +7735,24 @@ components:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
         linkedinUrl: { type: [string, 'null'] }
-        email: { type: [string, 'null'] }
+        instagramUrl: { type: [string, 'null'] }
+        email:
+          type: [string, 'null']
+          description: Public — shown on the profile and the practice-lead card.
+        cardBio: { type: [string, 'null'] }
         bio: { type: [string, 'null'] }
         quote: { type: [string, 'null'] }
+        primaryPracticeArea:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
         practiceAreas:
           type: array
           items: { $ref: '#/components/schemas/ObjectId' }
+        education: { $ref: '#/components/schemas/PersonEducation' }
+        memberships:
+          type: array
+          items: { type: string }
         office:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
@@ -6406,6 +7781,8 @@ components:
         - practiceAreas
         - author
         - coverImage
+        - externalUrl
+        - document
         - featured
         - _expanded
       properties:
@@ -6438,6 +7815,14 @@ components:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
+        externalUrl:
+          type: [string, 'null']
+          description: Where "Read Article" goes. At most one of `externalUrl` and `document`.
+        document:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: An uploaded PDF (a document in the media library) that "Read Article" opens.
         featured: { type: boolean }
         _expanded: { $ref: '#/components/schemas/Expanded' }
 
@@ -6499,7 +7884,7 @@ components:
           items:
             type: number
 
-    RecognitionAdmin:
+    RecognitionDirectoryAdmin:
       type: object
       additionalProperties: false
       required:
@@ -6511,12 +7896,10 @@ components:
         - revision
         - createdAt
         - updatedAt
-        - organization
-        - title
-        - year
-        - badge
-        - url
-        - tab
+        - name
+        - logo
+        - heroSubtitle
+        - heroImages
         - _expanded
       properties:
         id: { $ref: '#/components/schemas/ObjectId' }
@@ -6527,15 +7910,83 @@ components:
         revision: { type: integer }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
-        organization: { type: string }
+        name: { type: string }
+        logo:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: The wordmark in the "Independently Recognized By" tile.
+        heroSubtitle: { type: [string, 'null'] }
+        heroImages:
+          type: array
+          items: { $ref: '#/components/schemas/ObjectId' }
+        _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    AwardAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - status
+        - publishedAt
+        - order
+        - revision
+        - createdAt
+        - updatedAt
+        - directory
+        - title
+        - year
+        - badge
+        - featuredOnHome
+        - _expanded
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        slug: { $ref: '#/components/schemas/Slug' }
+        status: { type: string, enum: [draft, published] }
+        publishedAt: { type: [string, 'null'], format: date-time }
+        order: { type: integer }
+        revision: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        directory:
+          $ref: '#/components/schemas/ObjectId'
+          description: The recognition directory that gave the award.
         title: { type: string }
-        year: { type: [integer, 'null'] }
+        year: { type: integer }
         badge:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
-        url: { type: [string, 'null'] }
-        tab: { $ref: '#/components/schemas/RecognitionTab' }
+        featuredOnHome:
+          type: boolean
+          description: Shown as a badge in the Home Recognition band and the Achievements tab.
+        _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    IndustryAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - status
+        - publishedAt
+        - order
+        - revision
+        - createdAt
+        - updatedAt
+        - name
+        - _expanded
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        slug: { $ref: '#/components/schemas/Slug' }
+        status: { type: string, enum: [draft, published] }
+        publishedAt: { type: [string, 'null'], format: date-time }
+        order: { type: integer }
+        revision: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        name: { type: string }
         _expanded: { $ref: '#/components/schemas/Expanded' }
 
     FaqAdmin:
@@ -6624,6 +8075,9 @@ components:
         - title
         - shortLabel
         - summary
+        - homeSummary
+        - heroIntro
+        - coreServices
       description: Creates a practice area. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
       properties: &a1
         slug:
@@ -6634,22 +8088,44 @@ components:
           type: string
         summary:
           type: string
+          description: The Practice Areas grid card.
+        homeSummary:
+          type: string
+          description: The Home carousel card.
+        heroIntro:
+          type: string
+          description: The detail page's hero paragraph.
         image:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
-        body:
-          type:
-            - string
-            - 'null'
-        keyServices:
-          type: array
-          items:
-            type: string
-        contacts:
+        heroImages:
           type: array
           items:
             $ref: '#/components/schemas/ObjectId'
+        overview:
+          type:
+            - string
+            - 'null'
+        coreServices:
+          type: array
+          minItems: 1
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/CoreService'
+        approach:
+          oneOf:
+            - $ref: '#/components/schemas/PracticeAreaApproach'
+            - type: 'null'
+        industries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectId'
+        lead:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: The attorney on the "Practice Lead" card.
         featuredOnHome:
           type: boolean
         homeOrder:
@@ -6699,7 +8175,16 @@ components:
           type:
             - string
             - 'null'
+        instagramUrl:
+          type:
+            - string
+            - 'null'
         email:
+          type:
+            - string
+            - 'null'
+          description: Public — shown on the profile and the practice-lead card.
+        cardBio:
           type:
             - string
             - 'null'
@@ -6711,10 +8196,20 @@ components:
           type:
             - string
             - 'null'
+        primaryPracticeArea:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
         practiceAreas:
           type: array
           items:
             $ref: '#/components/schemas/ObjectId'
+        education:
+          $ref: '#/components/schemas/PersonEducation'
+        memberships:
+          type: array
+          items:
+            type: string
         office:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
@@ -6772,6 +8267,16 @@ components:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
+        externalUrl:
+          type:
+            - string
+            - 'null'
+          description: Where "Read Article" goes. At most one of `externalUrl` and `document`.
+        document:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: An uploaded PDF (a document in the media library) that "Read Article" opens.
         featured:
           type: boolean
     InsightUpdate:
@@ -6820,41 +8325,84 @@ components:
       minProperties: 1
       description: Any subset of the office fields. Requires `If-Match`.
       properties: *a4
-    RecognitionCreate:
+    RecognitionDirectoryCreate:
       type: object
       additionalProperties: false
       required:
-        - organization
-        - title
-        - tab
-      description: Creates a recognition. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
+        - name
+      description: Creates a recognition directory. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
       properties: &a5
         slug:
           $ref: '#/components/schemas/Slug'
-        organization:
+        name:
           type: string
+        logo:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: The wordmark in the "Independently Recognized By" tile.
+        heroSubtitle:
+          type:
+            - string
+            - 'null'
+        heroImages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectId'
+    RecognitionDirectoryUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: Any subset of the recognition directory fields. Requires `If-Match`.
+      properties: *a5
+    AwardCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - directory
+        - title
+        - year
+      description: Creates a award. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
+      properties: &a6
+        slug:
+          $ref: '#/components/schemas/Slug'
+        directory:
+          $ref: '#/components/schemas/ObjectId'
+          description: The recognition directory that gave the award.
         title:
           type: string
         year:
-          type:
-            - integer
-            - 'null'
+          type: integer
         badge:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
-        url:
-          type:
-            - string
-            - 'null'
-        tab:
-          $ref: '#/components/schemas/RecognitionTab'
-    RecognitionUpdate:
+        featuredOnHome:
+          type: boolean
+          description: Shown as a badge in the Home Recognition band and the Achievements tab.
+    AwardUpdate:
       type: object
       additionalProperties: false
       minProperties: 1
-      description: Any subset of the recognition fields. Requires `If-Match`.
-      properties: *a5
+      description: Any subset of the award fields. Requires `If-Match`.
+      properties: *a6
+    IndustryCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      description: Creates a industry. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
+      properties: &a7
+        slug:
+          $ref: '#/components/schemas/Slug'
+        name:
+          type: string
+    IndustryUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: Any subset of the industry fields. Requires `If-Match`.
+      properties: *a7
     FaqCreate:
       type: object
       additionalProperties: false
@@ -6862,7 +8410,7 @@ components:
         - question
         - answer
       description: Creates a FAQ. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
-      properties: &a6
+      properties: &a8
         slug:
           $ref: '#/components/schemas/Slug'
         question:
@@ -6875,7 +8423,7 @@ components:
       additionalProperties: false
       minProperties: 1
       description: Any subset of the FAQ fields. Requires `If-Match`.
-      properties: *a6
+      properties: *a8
     JobCreate:
       type: object
       additionalProperties: false
@@ -6885,7 +8433,7 @@ components:
         - employmentType
         - workMode
       description: Creates a job. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back.
-      properties: &a7
+      properties: &a9
         slug:
           $ref: '#/components/schemas/Slug'
         title:
@@ -6920,7 +8468,7 @@ components:
       additionalProperties: false
       minProperties: 1
       description: Any subset of the job fields. Requires `If-Match`.
-      properties: *a7
+      properties: *a9
     # --- END GENERATED admin content schemas ---
 
     ReorderRequest:
@@ -6952,6 +8500,10 @@ components:
         - faqSection
         - stillHaveQuestions
         - contactCallout
+        - aboutAnchors
+        - footerLinks
+        - legalLinks
+        - newsletter
       properties:
         id: { $ref: '#/components/schemas/ObjectId' }
         revision: { type: integer }
@@ -6972,6 +8524,19 @@ components:
             title: { type: string }
         stillHaveQuestions: { $ref: '#/components/schemas/StillHaveQuestions' }
         contactCallout: { $ref: '#/components/schemas/ContactCallout' }
+        aboutAnchors:
+          type: array
+          description: The About Us dropdown, as anchors into the About page (`/about#story`).
+          items: { $ref: '#/components/schemas/Link' }
+        footerLinks:
+          type: array
+          description: The footer's Quick Links column.
+          items: { $ref: '#/components/schemas/Link' }
+        legalLinks:
+          type: array
+          description: The footer's Terms of Service and Privacy Policy links.
+          items: { $ref: '#/components/schemas/Link' }
+        newsletter: { $ref: '#/components/schemas/SiteNewsletter' }
 
     SettingsWrite:
       type: object
@@ -6988,6 +8553,10 @@ components:
         - faqSection
         - stillHaveQuestions
         - contactCallout
+        - aboutAnchors
+        - footerLinks
+        - legalLinks
+        - newsletter
       properties:
         firmName: { type: string, minLength: 1, maxLength: 160 }
         legalDescriptor: { type: string, minLength: 1, maxLength: 200 }
@@ -7006,6 +8575,19 @@ components:
             title: { type: string }
         stillHaveQuestions: { $ref: '#/components/schemas/StillHaveQuestions' }
         contactCallout: { $ref: '#/components/schemas/ContactCallout' }
+        aboutAnchors:
+          type: array
+          description: The About Us dropdown, as anchors into the About page (`/about#story`).
+          items: { $ref: '#/components/schemas/Link' }
+        footerLinks:
+          type: array
+          description: The footer's Quick Links column.
+          items: { $ref: '#/components/schemas/Link' }
+        legalLinks:
+          type: array
+          description: The footer's Terms of Service and Privacy Policy links.
+          items: { $ref: '#/components/schemas/Link' }
+        newsletter: { $ref: '#/components/schemas/SiteNewsletter' }
 
     SettingsPatch:
       type: object
@@ -7018,9 +8600,9 @@ components:
     PageAdmin:
       type: object
       description: |
-        The stored page document: every reference is an id, and only the
-        sections that page key uses are present. `_expanded` previews the
-        referenced media and people.
+        The stored page document: every reference is an id (image lists are id
+        arrays), and only the sections that page key uses are present.
+        `_expanded` previews the referenced media and people.
       additionalProperties: true
       required: [id, key, revision, seo, _expanded]
       properties:
@@ -7053,6 +8635,34 @@ components:
       minProperties: 1
       description: Any subset of the page's sections. Each key replaces that section entirely.
       additionalProperties: true
+
+    LegalPageAdmin:
+      type: object
+      additionalProperties: false
+      required: [id, key, revision, status, title, body, updatedAt]
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        key: { $ref: '#/components/schemas/LegalPageKey' }
+        revision: { type: integer }
+        status:
+          type: string
+          enum: [draft, published]
+          description: A draft legal page is a 404 on the public site.
+        title: { type: string }
+        body:
+          type: string
+          description: Sanitised HTML on write.
+        updatedAt: { type: string, format: date-time }
+
+    LegalPageWrite:
+      type: object
+      additionalProperties: false
+      required: [status, title, body]
+      description: The whole page. What a GET returns, minus `id`, `key`, `revision` and `updatedAt`.
+      properties:
+        status: { type: string, enum: [draft, published] }
+        title: { type: string, minLength: 1, maxLength: 200 }
+        body: { type: string, maxLength: 100000 }
 
     SubmissionStatus:
       type: string
@@ -7253,11 +8863,19 @@ components:
         label: { type: string }
         field: { type: string }
 
+    MediaKind:
+      type: string
+      enum: [image, document]
+      description: |
+        `image` is a JPEG, PNG, WebP or AVIF with responsive sizes and alt text. `document` is a
+        PDF — the firm profile, an article's PDF — with a title and no sizes.
+
     MediaAdmin:
       type: object
       additionalProperties: false
       required:
         - id
+        - kind
         - revision
         - url
         - sizes
@@ -7271,29 +8889,38 @@ components:
         - createdAt
         - updatedAt
         - usedBy
-      description: The storage key is deliberately absent; it is an internal path.
+      description: |
+        The storage key is deliberately absent; it is an internal path. The image-only fields
+        (`sizes`, `alt`, `width`, `height`, `focalPoint`) are null for a document, and a
+        document's `title` is never null.
       properties:
         id: { $ref: '#/components/schemas/ObjectId' }
+        kind: { $ref: '#/components/schemas/MediaKind' }
         revision:
           type: integer
           description: |
             Send it back as `If-Match` on a metadata edit or a file
             replacement, so two editors cannot silently overwrite each other.
         url: { type: string }
-        sizes: { $ref: '#/components/schemas/ImageSizes' }
-        alt: { type: string }
+        sizes:
+          oneOf:
+            - $ref: '#/components/schemas/ImageSizes'
+            - type: 'null'
+        alt: { type: [string, 'null'] }
         title: { type: [string, 'null'] }
-        width: { type: integer }
-        height: { type: integer }
+        width: { type: [integer, 'null'] }
+        height: { type: [integer, 'null'] }
         mimeType: { type: string }
         bytes: { type: integer }
         focalPoint:
-          type: object
-          additionalProperties: false
-          required: [x, y]
-          properties:
-            x: { type: number, minimum: 0, maximum: 1 }
-            y: { type: number, minimum: 0, maximum: 1 }
+          oneOf:
+            - type: object
+              additionalProperties: false
+              required: [x, y]
+              properties:
+                x: { type: number, minimum: 0, maximum: 1 }
+                y: { type: number, minimum: 0, maximum: 1 }
+            - type: 'null'
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
         usedBy:
@@ -7305,19 +8932,29 @@ components:
     MediaUploadRequest:
       type: object
       additionalProperties: false
-      required: [file, alt]
+      required: [file]
+      description: |
+        An image needs `alt`; a document needs `title`. Omitting the one the kind needs is a 400.
       properties:
         file:
           type: string
           format: binary
-          description: JPEG, PNG, WebP or AVIF, at most 10 MB, verified by magic bytes.
+          description: |
+            An image: JPEG, PNG, WebP or AVIF, at most 10 MB. A document: a PDF, at most 20 MB.
+            Either way the type is verified by magic bytes, never by name or declared type.
+        kind:
+          type: string
+          enum: [image, document]
+          default: image
         alt:
           type: string
           minLength: 1
           maxLength: 300
+          description: Required for an image. Not accepted for a document.
         title:
           type: string
           maxLength: 200
+          description: Required for a document — it is the link text.
 
     MediaReplaceRequest:
       type: object
@@ -7332,6 +8969,9 @@ components:
       type: object
       additionalProperties: false
       minProperties: 1
+      description: |
+        `alt` and `focalPoint` apply to images only; sending them for a document is a 400. A
+        document's `title` cannot be cleared.
       properties:
         alt: { type: string, minLength: 1, maxLength: 300 }
         title: { type: [string, 'null'], maxLength: 200 }

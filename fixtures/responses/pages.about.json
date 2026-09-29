@@ -4,21 +4,23 @@
     "hero": {
       "title": "Who We Are",
       "subtitle": "Integrity isn't a value we list, it's the reason clients keep coming back.",
-      "image": {
-        "url": "https://placehold.co/1440x662?text=About%20hero",
-        "alt": "The reception of the Lagos office of the firm",
-        "width": 1440,
-        "height": 662,
-        "sizes": {
-          "sm": "https://placehold.co/480x221?text=About%20hero",
-          "md": "https://placehold.co/960x441?text=About%20hero",
-          "lg": "https://placehold.co/1440x662?text=About%20hero"
-        },
-        "focalPoint": {
-          "x": 0.5,
-          "y": 0.5
+      "images": [
+        {
+          "url": "https://placehold.co/1440x662?text=About%20hero",
+          "alt": "The reception of the Lagos office of the firm",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=About%20hero",
+            "md": "https://placehold.co/960x441?text=About%20hero",
+            "lg": "https://placehold.co/1440x662?text=About%20hero"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
         }
-      },
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -41,7 +43,7 @@
       ],
       "quote": "law is a profession, not an occupation.",
       "quotePerson": {
-        "id": "665f0000000000000000001f",
+        "id": "665f00000000000000001015",
         "slug": "babatunde-ajibade",
         "displayName": "Dr. Babatunde Ajibade, SAN",
         "role": "managing_partner",
@@ -61,7 +63,28 @@
             "y": 0.5
           }
         },
-        "linkedinUrl": null
+        "linkedinUrl": null,
+        "cardBio": "A well-regarded authority in international arbitration, bringing decades of experience to the firm's most complex disputes.",
+        "practiceAreas": [
+          {
+            "slug": "dispute-resolution-arbitration",
+            "title": "Dispute Resolution & Arbitration"
+          },
+          {
+            "slug": "corporate-finance-capital-markets",
+            "title": "Corporate Finance & Capital Markets"
+          }
+        ]
+      },
+      "profileDownload": {
+        "leadText": "To learn more about the firm, you may download a copy of our profile",
+        "linkLabel": "here",
+        "document": {
+          "url": "https://placehold.co/600x800?text=Firm%20profile",
+          "title": "SPA Ajibade & Co. firm profile",
+          "bytes": 1024,
+          "mimeType": "application/pdf"
+        }
       }
     },
     "stats": {
@@ -110,19 +133,19 @@
       "items": [
         {
           "title": "Our Mission",
-          "body": "Our mission is to provide legal counsel clients can trust, with clarity, integrity, and commitment. We measure success by outcomes that serve clients' interests, not transaction size or dispute complexity. As Nigeria's commercial landscape evolves, our guidance adapts, but our legal standards remain constant."
+          "body": "<p>We aim to continuously provide high quality legal services to clients that need them globally. We will do this promptly, ethically, and effectively to ensure their satisfaction every time.</p>"
         },
         {
           "title": "Our Vision",
-          "body": "[PENDING FROM FIRM]"
+          "body": "<p>To become the foremost legal industry influence in the establishment and sustenance of healthy corporate and commercial environments that are characterized by integrity and innovation.</p>"
         },
         {
           "title": "Our Values",
-          "body": "[PENDING FROM FIRM]"
+          "body": "<p>Our corporate goals and objectives are distilled into a number of corporate values that guide the way we conduct our business, provide solutions and add value to the environment.</p>"
         },
         {
           "title": "Our Asset",
-          "body": "[PENDING FROM FIRM]"
+          "body": "<p>Our strength rests on five things: <strong>our people</strong>, <strong>our goodwill</strong>, and <strong>our clients</strong>, built over decades of trust. It shows equally in the <strong>quality of our work</strong> and the <strong>infrastructure</strong> behind it.</p>"
         }
       ]
     },
@@ -198,19 +221,19 @@
       "items": [
         {
           "name": "IFLR 1000",
-          "url": null
+          "slug": "iflr-1000"
         },
         {
           "name": "Chambers Global",
-          "url": null
+          "slug": "chambers-global"
         },
         {
           "name": "Legal 500",
-          "url": null
+          "slug": "legal-500"
         },
         {
           "name": "Who's Who Legal",
-          "url": null
+          "slug": "whos-who-legal"
         }
       ]
     },

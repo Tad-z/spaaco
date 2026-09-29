@@ -4,17 +4,55 @@
     "title": "Company Secretarial",
     "shortLabel": "Company Secretarial",
     "summary": "When a business must fulfill its statutory obligations, the firm expertly manages all company secretarial duties, including board and shareholder governance, comprehensive CAC filings, and ensuring full regulatory compliance with laws and standards.",
+    "homeSummary": "When a business must fulfill its statutory obligations, the firm expertly manages all company secretarial duties, including board and shareholder governance, comprehensive CAC filings, and ensuring full regulatory compliance with laws and standards.",
+    "heroIntro": "When a business needs to meet its statutory obligations, the firm handles company secretarial work, from board and shareholder governance to CAC filings and regulatory compliance.",
     "image": {
       "placeholder": "Company Secretarial",
       "width": 1200,
       "height": 900,
       "alt": "Photograph representing the Company Secretarial practice"
     },
-    "body": null,
-    "keyServices": [],
-    "contacts": [],
+    "heroImages": [
+      {
+        "placeholder": "Company Secretarial hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Hero image for the Company Secretarial practice"
+      }
+    ],
+    "overview": "Our team supports clients throughout the full lifecycle of their business, from incorporation through to ongoing governance. This includes company formation, joint ventures, registration of incorporated trustees and charitable trusts, and the ancillary company secretarial work that keeps a business compliant as it grows.",
+    "coreServices": [
+      {
+        "title": "Company Incorporation",
+        "description": "Incorporation of companies, establishment of joint ventures, and registration of incorporated trustees and charitable trusts."
+      },
+      {
+        "title": "Share Reconstructions",
+        "description": "Structuring and executing share reconstructions, including increases and reductions in share capital."
+      },
+      {
+        "title": "Corporate Filings",
+        "description": "Handling alterations of name, objects, and articles of association, and other statutory filings required by corporate entities."
+      }
+    ],
+    "approach": {
+      "text": "We work alongside our clients throughout the life of their business, not just at moments of transaction. That means understanding a company's structure and objectives well enough to advise on governance and compliance before they become urgent.",
+      "points": [
+        "Practical, business minded structuring advice",
+        "Clear guidance through statutory and regulatory obligations",
+        "Support across the full company lifecycle, from incorporation to governance",
+        "Responsive counsel on complex corporate transactions"
+      ]
+    },
+    "industries": [
+      "financial-services",
+      "real-estate-construction",
+      "hospitality-leisure",
+      "manufacturing-fmcg"
+    ],
+    "lead": "babatunde-ajibade",
     "featuredOnHome": false,
-    "showInFooter": false,
+    "showInFooter": true,
     "homeOrder": null,
     "order": 0,
     "status": "published",
@@ -28,15 +66,53 @@
     "title": "Corporate Finance & Capital Markets",
     "shortLabel": "Corporate",
     "summary": "When a business needs to raise capital, restructure, or meet regulatory requirements, the firm guides it through securities issuance, corporate restructuring, and filings with the Securities and Exchange Commission.",
+    "homeSummary": "When a business needs to raise capital, restructure, or meet regulatory requirements, the firm guides it through securities issuance, corporate restructuring, and filings with the Securities and Exchange Commission.",
+    "heroIntro": "When a business needs to raise capital, restructure, or meet regulatory requirements, the firm guides it through securities issuance, corporate restructuring, and filings with the Securities and Exchange Commission.",
     "image": {
       "placeholder": "Corporate",
       "width": 1200,
       "height": 900,
       "alt": "Photograph representing the Corporate Finance & Capital Markets practice"
     },
-    "body": null,
-    "keyServices": [],
-    "contacts": [],
+    "heroImages": [
+      {
+        "placeholder": "Corporate hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Hero image for the Corporate Finance & Capital Markets practice"
+      }
+    ],
+    "overview": "We are one of the leading firms in our region advising on capital markets and corporate finance, from equity and debt offerings to complex, cross-border mergers, acquisitions, and restructurings. Our clients include public and private companies, investment banks, private equity firms, and governments navigating today's regulatory environment.",
+    "coreServices": [
+      {
+        "title": "Equity & Debt Offerings",
+        "description": "Advising issuers and investment banks on equity offerings, debt offerings, and structured securities transactions."
+      },
+      {
+        "title": "Mergers & Acquisitions",
+        "description": "Structuring and executing domestic and cross-border mergers, acquisitions, and joint ventures."
+      },
+      {
+        "title": "Corporate Restructuring",
+        "description": "Guiding clients through restructurings, divestments, and change of control transactions."
+      }
+    ],
+    "approach": {
+      "text": "We work closely with listing authorities, regulators, and investment banks to bring complex transactions to market. Our strong relationships across the capital markets ecosystem mean we can move quickly and navigate regulatory requirements without losing sight of our clients' commercial objectives.",
+      "points": [
+        "Close collaboration with listing authorities and regulators",
+        "Strong relationships with investment banks and corporate issuers",
+        "Experience across equity, debt, and structured finance transactions",
+        "Comprehensive advice across multiple jurisdictions"
+      ]
+    },
+    "industries": [
+      "banking-finance",
+      "government-public-sector",
+      "energy-natural-resources",
+      "insurance-reinsurance"
+    ],
+    "lead": "babatunde-ajibade",
     "featuredOnHome": true,
     "showInFooter": true,
     "homeOrder": 0,
@@ -52,18 +128,56 @@
     "title": "Data Protection & Privacy",
     "shortLabel": "Data Privacy",
     "summary": "When a company collects or manages personal data, it ensures compliance with the Nigeria Data Protection Act 2023 by providing comprehensive support, including conducting audits, drafting policies, and managing responses in the event of a data breach.",
+    "homeSummary": "When a company collects or manages personal data, it ensures compliance with the Nigeria Data Protection Act 2023 by providing comprehensive support, including conducting audits, drafting policies, and managing responses in the event of a data breach.",
+    "heroIntro": "When a company collects or manages personal data, it ensures compliance with the Nigeria Data Protection Act 2023 by providing comprehensive support, including conducting audits, drafting policies, and managing responses in the event of a data breach.",
     "image": {
       "placeholder": "Data Privacy",
       "width": 1200,
       "height": 900,
       "alt": "Photograph representing the Data Protection & Privacy practice"
     },
-    "body": null,
-    "keyServices": [],
-    "contacts": [],
+    "heroImages": [
+      {
+        "placeholder": "Data Privacy hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Hero image for the Data Protection & Privacy practice"
+      }
+    ],
+    "overview": "Beyond being a licensed Data Protection Compliance Organisation in Nigeria, we advise businesses that process large amounts of customer personal data on privacy obligations, regulatory compliance, and breach response. Our team also acts as outsourced data protection officers for clients who need ongoing, hands-on support.",
+    "coreServices": [
+      {
+        "title": "Compliance & Advisory",
+        "description": "Data protection and privacy advisory services, regulatory compliance support, and breach remediation planning."
+      },
+      {
+        "title": "Privacy Audits",
+        "description": "Conducting information privacy audits and data privacy breach impact assessments for client organisations."
+      },
+      {
+        "title": "DPO Services",
+        "description": "Data protection training and acting as outsourced data protection officers for businesses that need dedicated oversight."
+      }
+    ],
+    "approach": {
+      "text": "We treat data protection as an ongoing discipline, not a one-time audit. Our role includes interfacing directly with regulators like NITDA on our clients' behalf, so businesses can focus on operating while we manage regulatory exposure.",
+      "points": [
+        "Regulatory compliance auditing against Nigerian and applicable foreign data protection laws",
+        "Direct representation before NITDA",
+        "Ad-hoc legal advice and contract drafting for data-related agreements",
+        "Licensed Data Protection Compliance Organisation status"
+      ]
+    },
+    "industries": [
+      "financial-services-fintech",
+      "technology-telecommunications",
+      "healthcare-insurance",
+      "e-commerce-data-platforms"
+    ],
+    "lead": "john-onyido",
     "featuredOnHome": true,
     "showInFooter": true,
-    "homeOrder": 1,
+    "homeOrder": 5,
     "order": 2,
     "status": "published",
     "seo": {
@@ -76,18 +190,56 @@
     "title": "Dispute Resolution & Arbitration",
     "shortLabel": "Dispute Resolution",
     "summary": "When a disagreement threatens to disrupt a business, a contract, or a relationship, the firm steps in to resolve it, whether that means representing a client in court, before an arbitral tribunal, or through negotiated settlement, across commercial, shareholder, and regulatory disputes.",
+    "homeSummary": "When a disagreement threatens to disrupt a business, a contract, or a relationship, the firm steps in to resolve it, whether that means representing a client in court, before an arbitral tribunal, or through negotiated settlement, across commercial, shareholder, and regulatory disputes.",
+    "heroIntro": "When a disagreement threatens to disrupt a business, a contract, or a relationship, the firm steps in to resolve it, whether that means representing a client in court, before an arbitral tribunal, or through negotiated settlement, across commercial, shareholder, and regulatory disputes.",
     "image": {
       "placeholder": "Dispute Resolution",
       "width": 1200,
       "height": 900,
       "alt": "Photograph representing the Dispute Resolution & Arbitration practice"
     },
-    "body": null,
-    "keyServices": [],
-    "contacts": [],
+    "heroImages": [
+      {
+        "placeholder": "Dispute Resolution hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Hero image for the Dispute Resolution & Arbitration practice"
+      }
+    ],
+    "overview": "Our dynamic Dispute Resolution practice handles cases in trial and appellate courts across Nigeria, as well as local and international arbitration proceedings under institutional rules including the ICC, UNCITRAL, and LCIA. We focus on achieving timely, efficient outcomes, resorting to litigation only when it cannot be avoided.",
+    "coreServices": [
+      {
+        "title": "Litigation",
+        "description": "Representing clients in trial and appellate courts across Nigeria, with a focus on timely and cost-effective outcomes."
+      },
+      {
+        "title": "Arbitration",
+        "description": "Conducting domestic and international arbitrations under ICC, UNCITRAL, and LCIA rules, as well as ad-hoc references."
+      },
+      {
+        "title": "Enforcement",
+        "description": "Enforcing arbitral awards and foreign judgments, including multi-jurisdictional enforcement proceedings."
+      }
+    ],
+    "approach": {
+      "text": "We provide top-tier legal advice designed to help clients avoid unnecessary cost where possible, and when litigation is unavoidable, we focus on achieving swift, effective resolution. Our access to an extensive base of resources means we can offer solutions, not just advice.",
+      "points": [
+        "Extensive experience across trial, appellate, and arbitral proceedings",
+        "Fellows and Members of the Chartered Institute of Arbitrators, UK",
+        "Multi-jurisdictional litigation and enforcement capability",
+        "Focus on efficient, commercially sound outcomes"
+      ]
+    },
+    "industries": [
+      "hospitality-leisure",
+      "banking-finance",
+      "energy-natural-resources",
+      "manufacturing-fmcg"
+    ],
+    "lead": "kolawole-mayomi",
     "featuredOnHome": true,
     "showInFooter": true,
-    "homeOrder": 3,
+    "homeOrder": 2,
     "order": 3,
     "status": "published",
     "seo": {
@@ -100,18 +252,51 @@
     "title": "Energy & Natural Resources",
     "shortLabel": "Energy",
     "summary": "When a project involves power generation, distribution, or oil and gas, the firm advises on the regulatory approvals and compliance needed to get it built and keep it running, from electricity sector rules to mini-grid and rural electrification.",
+    "homeSummary": "When a project involves power generation, distribution, or oil and gas, the firm advises on the regulatory approvals and compliance needed to get it built and keep it running, from electricity sector rules to mini-grid and rural electrification.",
+    "heroIntro": "When a project involves power generation, distribution, or oil and gas, the firm advises on the regulatory approvals and compliance needed to get it built and keep it running, from electricity sector rules to mini-grid and rural electrification.",
     "image": {
       "placeholder": "Energy",
       "width": 1200,
       "height": 900,
       "alt": "Photograph representing the Energy & Natural Resources practice"
     },
-    "body": null,
-    "keyServices": [],
-    "contacts": [],
+    "heroImages": [
+      {
+        "placeholder": "Energy hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Hero image for the Energy & Natural Resources practice"
+      }
+    ],
+    "overview": "Our Energy and Natural Resources team advises on the development, financing, and acquisition of oil and gas assets, electric power projects, and mineral and precious stone transactions. We provide regulatory and project advisory from conception to decommissioning, for both companies and regulators across the Nigerian energy sector.",
+    "coreServices": [
+      {
+        "title": "Oil & Gas",
+        "description": "Advising on acquisition, disposal of oil and gas assets, decommissioning, carbon capture, storage, and regulatory matters."
+      },
+      {
+        "title": "Power & Utilities",
+        "description": "Advisory on power generation and distribution, Independent Power Producers, and supply and distribution activities."
+      },
+      {
+        "title": "Minerals & Renewables",
+        "description": "Advising on minerals and precious stones transactions, and renewable energy including wind, solar, and biofuels."
+      }
+    ],
+    "approach": {
+      "text": "We provide guidance to both regulators and companies, offering us a unique perspective on both sides of the energy sector. This dual insight enables us to foresee regulatory issues early on and design transactions that withstand thorough examination and scrutiny.",
+      "points": [
+        "Advisory experience across oil and gas, power, and minerals",
+        "Regulatory and policy advisory alongside transactional work",
+        "Experience with Independent Power Producers and mini-grid projects",
+        "Growing capability in renewable and clean energy technologies"
+      ]
+    },
+    "industries": ["oil-gas", "power-utilities", "mining-minerals", "renewable-energy"],
+    "lead": "peter-olalere",
     "featuredOnHome": true,
     "showInFooter": true,
-    "homeOrder": 2,
+    "homeOrder": 1,
     "order": 4,
     "status": "published",
     "seo": {
@@ -124,18 +309,56 @@
     "title": "Intellectual Property",
     "shortLabel": "Intellectual Property",
     "summary": "When a business wants to protect its creations such as a brand, invention, or original content, our firm expertly handles the full process of registration, licensing, and enforcement to keep ownership rights fully protected and secure.",
+    "homeSummary": "When a business needs to protect what it's created, whether a brand, an invention, or content, the firm handles the registration, licensing, and enforcement that keeps that ownership secure.",
+    "heroIntro": "When a business wants to protect its creations such as a brand, invention, or original content, our firm expertly handles the full process of registration, licensing, and enforcement to keep ownership rights fully protected and secure.",
     "image": {
       "placeholder": "Intellectual Property",
       "width": 1200,
       "height": 900,
       "alt": "Photograph representing the Intellectual Property practice"
     },
-    "body": null,
-    "keyServices": [],
-    "contacts": [],
+    "heroImages": [
+      {
+        "placeholder": "Intellectual Property hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Hero image for the Intellectual Property practice"
+      }
+    ],
+    "overview": "Our Intellectual Property team protects clients' industrial and intellectual property rights, handling trademark and patent registration and anti-counterfeiting. We collaborate with Dispute Resolution and have a strong record with creative, entertainment, and sports clients.",
+    "coreServices": [
+      {
+        "title": "Trademarks & Patents",
+        "description": "Applying for, registering, and renewing trademarks and patents, including assignment to third parties or subsidiaries."
+      },
+      {
+        "title": "Enforcement",
+        "description": "Handling copyright, trademark, and patent infringement cases, including injunctions and anti-counterfeiting actions."
+      },
+      {
+        "title": "Licensing & Transfers",
+        "description": "Drafting licensing agreements and copyright transfer agreements between clients and creative collaborators."
+      }
+    ],
+    "approach": {
+      "text": "Our Intellectual Property team works closely with Dispute Resolution to address protection and enforcement together. This unified approach lets clients benefit from one team handling both rights acquisition and defense strategically.",
+      "points": [
+        "Full lifecycle IP management, from filing to enforcement",
+        "Multi-jurisdictional trademark portfolio management",
+        "Experience with NAFDAC and NOTAP applications",
+        "Close coordination with our Dispute Resolution practice"
+      ]
+    },
+    "industries": [
+      "entertainment-media",
+      "technology-telecommunications",
+      "sports",
+      "consumer-retail"
+    ],
+    "lead": "john-onyido",
     "featuredOnHome": true,
     "showInFooter": true,
-    "homeOrder": 4,
+    "homeOrder": 3,
     "order": 5,
     "status": "published",
     "seo": {
@@ -148,18 +371,56 @@
     "title": "Real Estate & Succession",
     "shortLabel": "Real Estate",
     "summary": "When a client is buying property, resolving a landlord-tenant dispute, or planning what happens to their estate, the firm manages the legal work that makes the transaction or transition sound.",
+    "homeSummary": "When a client is buying property, resolving a landlord-tenant dispute, or planning what happens to their estate, the firm manages the legal work that makes the transaction or transition sound.",
+    "heroIntro": "When a client is buying property, resolving a landlord-tenant dispute, or planning what happens to their estate, the firm manages the legal work that makes the transaction or transition sound.",
     "image": {
       "placeholder": "Real Estate",
       "width": 1200,
       "height": 900,
       "alt": "Photograph representing the Real Estate & Succession practice"
     },
-    "body": null,
-    "keyServices": [],
-    "contacts": [],
+    "heroImages": [
+      {
+        "placeholder": "Real Estate hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Hero image for the Real Estate & Succession practice"
+      }
+    ],
+    "overview": "Our Real Estate and Succession practice specialises in the sale, acquisition, and perfecting of title to landed property in Nigeria. In succession matters, we handle both contentious and non-contentious work, from drafting wills and obtaining probate to resolving disputes when they arise.",
+    "coreServices": [
+      {
+        "title": "Real Estate Transactions",
+        "description": "Due diligence on title and occupancy, perfecting mortgages, and structuring real estate financing arrangements."
+      },
+      {
+        "title": "Succession Planning",
+        "description": "Drafting wills, obtaining probate and letters of administration, and re-sealing probate for estates outside Nigeria."
+      },
+      {
+        "title": "Contentious Probate",
+        "description": "Handling disputes in succession matters, including appointment of administrators pendente lite."
+      }
+    ],
+    "approach": {
+      "text": "We approach real estate and succession as intertwined fields because property frequently plays a central role in both areas. This means we focus on safeguarding a client's ownership rights now, while also carefully planning for the smooth and efficient transfer of that asset when the time comes, ensuring peace of mind for the future.",
+      "points": [
+        "Full due diligence on title and occupancy before transactions close",
+        "Experience with Real Estate Investment Trusts and joint ventures",
+        "Both contentious and non-contentious succession work",
+        "Cross-border support for estates with assets outside Nigeria"
+      ]
+    },
+    "industries": [
+      "hospitality-leisure",
+      "real-estate-construction",
+      "manufacturing-fmcg",
+      "financial-services"
+    ],
+    "lead": "moruf-sowunmi",
     "featuredOnHome": true,
     "showInFooter": true,
-    "homeOrder": 5,
+    "homeOrder": 4,
     "order": 6,
     "status": "published",
     "seo": {
@@ -172,15 +433,53 @@
     "title": "Tax",
     "shortLabel": "Tax",
     "summary": "When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.",
+    "homeSummary": "When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.",
+    "heroIntro": "When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.",
     "image": {
       "placeholder": "Tax",
       "width": 1200,
       "height": 900,
       "alt": "Photograph representing the Tax practice"
     },
-    "body": null,
-    "keyServices": [],
-    "contacts": [],
+    "heroImages": [
+      {
+        "placeholder": "Tax hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Hero image for the Tax practice"
+      }
+    ],
+    "overview": "Our Tax practice advises businesses on compliance with Nigerian tax law and represents clients in disputes with tax authorities. We work alongside our Corporate Finance and Dispute Resolution teams where tax issues intersect with transactions or litigation.",
+    "coreServices": [
+      {
+        "title": "Tax Advisory",
+        "description": "Advising businesses on compliance with Nigerian tax obligations and regulatory requirements."
+      },
+      {
+        "title": "Tax Disputes",
+        "description": "Expert representation for clients in tax disputes and negotiations to ensure favorable outcomes and compliance."
+      },
+      {
+        "title": "Tax Support",
+        "description": "Advising on the tax implications of corporate transactions, restructurings, and cross-border deals."
+      }
+    ],
+    "approach": {
+      "text": "We treat tax as something that touches nearly every transaction, not a standalone concern. That means working closely with our other practice groups so tax exposure is addressed early, not discovered late.",
+      "points": [
+        "Advisory across compliance, disputes, and transactions",
+        "Coordination with Corporate Finance and Dispute Resolution teams",
+        "Focus on protecting clients' financial position",
+        "Practical guidance suited to Nigeria's regulatory environment"
+      ]
+    },
+    "industries": [
+      "financial-services",
+      "manufacturing-fmcg",
+      "energy-natural-resources",
+      "real-estate-construction"
+    ],
+    "lead": "babatunde-ajibade",
     "featuredOnHome": true,
     "showInFooter": true,
     "homeOrder": 6,
@@ -196,17 +495,55 @@
     "title": "Telecommunications Regulatory",
     "shortLabel": "Telecoms",
     "summary": "When a business operates in or enters the telecommunications sector, the firm advises on licensing, spectrum, and compliance with NCC regulations, from market entry to ongoing regulatory obligations.",
+    "homeSummary": "When a business operates in or enters the telecommunications sector, the firm advises on licensing, spectrum, and compliance with NCC regulations, from market entry to ongoing regulatory obligations.",
+    "heroIntro": "When a business operates in or enters the telecommunications sector, the firm advises on licensing, spectrum, and compliance with NCC regulations, from market entry to ongoing regulatory obligations.",
     "image": {
       "placeholder": "Telecoms",
       "width": 1200,
       "height": 900,
       "alt": "Photograph representing the Telecommunications Regulatory practice"
     },
-    "body": null,
-    "keyServices": [],
-    "contacts": [],
+    "heroImages": [
+      {
+        "placeholder": "Telecoms hero",
+        "width": 1440,
+        "height": 662,
+        "alt": "Hero image for the Telecommunications Regulatory practice"
+      }
+    ],
+    "overview": "Our telecommunications regulatory team advises on licensing and compliance across the sector, including broadband, fibre optic installations, spectrum allocation, and rights of way. We support clients under the Nigerian Communications Commission, including operators, manufacturers, and service providers.",
+    "coreServices": [
+      {
+        "title": "Licensing & Compliance",
+        "description": "Securing operating licenses and advising on regulatory compliance under NCC supervision."
+      },
+      {
+        "title": "Infrastructure & Access",
+        "description": "Helping out with collocation, sharing infrastructure, fiber connections, and rights of way."
+      },
+      {
+        "title": "Spectrum & Competition",
+        "description": "Advising on spectrum allocation, type-approval of equipment, and antitrust and competition issues."
+      }
+    ],
+    "approach": {
+      "text": "We provide expert advice across the entire telecoms value chain, working with operators, support service providers, and equipment manufacturers alike. This comprehensive approach gives us a wide perspective on how regulatory decisions in one segment of the sector can impact other areas, allowing us to offer well-rounded guidance.",
+      "points": [
+        "Advisory experience across licensing, infrastructure, and spectrum",
+        "Clients spanning operators, manufacturers, and service providers",
+        "Coordination with our Data Privacy practice on telecoms-related compliance",
+        "Direct experience with NCC regulatory processes"
+      ]
+    },
+    "industries": [
+      "financial-services-fintech",
+      "technology-telecommunications",
+      "media-broadcasting",
+      "infrastructure-construction"
+    ],
+    "lead": "babatunde-ajibade",
     "featuredOnHome": false,
-    "showInFooter": false,
+    "showInFooter": true,
     "homeOrder": null,
     "order": 8,
     "status": "published",

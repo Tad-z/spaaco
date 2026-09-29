@@ -48,9 +48,85 @@
       "kind": "action"
     },
     "secondaryCta": {
-      "label": "View our offices",
-      "href": "/offices",
+      "label": "Explore Our Practice Areas",
+      "href": "/practice-areas",
       "kind": "internal"
     }
+  },
+  "aboutAnchors": [
+    {
+      "label": "Our Story",
+      "href": "/about#story",
+      "kind": "internal"
+    },
+    {
+      "label": "Mission, Vision & Values",
+      "href": "/about#mission",
+      "kind": "internal"
+    },
+    {
+      "label": "Our Principles",
+      "href": "/about#principles",
+      "kind": "internal"
+    },
+    {
+      "label": "Recognition",
+      "href": "/about#recognition",
+      "kind": "internal"
+    }
+  ],
+  "footerLinks": [
+    {
+      "label": "Home",
+      "href": "/",
+      "kind": "internal"
+    },
+    {
+      "label": "About Us",
+      "href": "/about",
+      "kind": "internal"
+    },
+    {
+      "label": "Practice Areas",
+      "href": "/practice-areas",
+      "kind": "internal"
+    },
+    {
+      "label": "Our People",
+      "href": "/people",
+      "kind": "internal"
+    },
+    {
+      "label": "Insights & News",
+      "href": "/insights",
+      "kind": "internal"
+    },
+    {
+      "label": "Careers",
+      "href": "/careers",
+      "kind": "internal"
+    },
+    {
+      "label": "FAQ's",
+      "href": "/faq",
+      "kind": "internal"
+    }
+  ],
+  "legalLinks": [
+    {
+      "label": "Terms of Service",
+      "href": "/legal/terms",
+      "kind": "internal"
+    },
+    {
+      "label": "Privacy Policy",
+      "href": "/legal/privacy",
+      "kind": "internal"
+    }
+  ],
+  "newsletter": {
+    "title": "Subscribe for legal insights",
+    "note": "Your information is kept confidential",
+    "enabled": false
   }
 }

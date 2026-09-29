@@ -1,0 +1,154 @@
+{
+  "data": {
+    "directory": {
+      "id": "665f0000000000000000101d",
+      "name": "IFLR 1000",
+      "slug": "iflr-1000",
+      "logo": {
+        "url": "https://placehold.co/400x160?text=IFLR%201000%20logo",
+        "alt": "IFLR 1000 wordmark",
+        "width": 400,
+        "height": 160,
+        "sizes": {
+          "sm": "https://placehold.co/480x192?text=IFLR%201000%20logo",
+          "md": "https://placehold.co/960x384?text=IFLR%201000%20logo",
+          "lg": "https://placehold.co/1440x576?text=IFLR%201000%20logo"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    "hero": {
+      "title": "IFLR 1000",
+      "subtitle": "Recognized by one of the legal industry's leading directories for the quality and consistency of our work.",
+      "images": [
+        {
+          "url": "https://placehold.co/1440x662?text=Recognition%20hero",
+          "alt": "Award trophies displayed in the office of the firm",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=Recognition%20hero",
+            "md": "https://placehold.co/960x441?text=Recognition%20hero",
+            "lg": "https://placehold.co/1440x662?text=Recognition%20hero"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ],
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Meet Our People",
+        "href": "/people",
+        "kind": "internal"
+      }
+    },
+    "awardsEyebrow": "Awards by the years",
+    "awards": [
+      {
+        "id": "665f00000000000000001021",
+        "title": "Chambers Global: Top Ranked Leading Firm",
+        "year": 2026,
+        "badge": {
+          "url": "https://placehold.co/400x400?text=Chambers%20A",
+          "alt": "Chambers Global Ranked in Global 2026 badge",
+          "width": 400,
+          "height": 400,
+          "sizes": {
+            "sm": "https://placehold.co/480x480?text=Chambers%20A",
+            "md": "https://placehold.co/960x960?text=Chambers%20A",
+            "lg": "https://placehold.co/1440x1440?text=Chambers%20A"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        "directory": {
+          "name": "IFLR 1000",
+          "slug": "iflr-1000"
+        }
+      },
+      {
+        "id": "665f00000000000000001022",
+        "title": "Chambers Global: Top Ranked Leading Firm",
+        "year": 2025,
+        "badge": {
+          "url": "https://placehold.co/400x400?text=Chambers%20A",
+          "alt": "Chambers Global Ranked in Global 2026 badge",
+          "width": 400,
+          "height": 400,
+          "sizes": {
+            "sm": "https://placehold.co/480x480?text=Chambers%20A",
+            "md": "https://placehold.co/960x960?text=Chambers%20A",
+            "lg": "https://placehold.co/1440x1440?text=Chambers%20A"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        "directory": {
+          "name": "IFLR 1000",
+          "slug": "iflr-1000"
+        }
+      },
+      {
+        "id": "665f00000000000000001011",
+        "title": "IFLR1000: Recommended Firm",
+        "year": 2024,
+        "badge": {
+          "url": "https://placehold.co/400x400?text=IFLR1000%20A",
+          "alt": "IFLR1000 Recommended Firm 2024 badge",
+          "width": 400,
+          "height": 400,
+          "sizes": {
+            "sm": "https://placehold.co/480x480?text=IFLR1000%20A",
+            "md": "https://placehold.co/960x960?text=IFLR1000%20A",
+            "lg": "https://placehold.co/1440x1440?text=IFLR1000%20A"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        "directory": {
+          "name": "IFLR 1000",
+          "slug": "iflr-1000"
+        }
+      },
+      {
+        "id": "665f00000000000000001012",
+        "title": "IFLR1000: Recommended Firm",
+        "year": 2024,
+        "badge": {
+          "url": "https://placehold.co/400x400?text=IFLR1000%20B",
+          "alt": "IFLR1000 Recommended Firm 2024 badge",
+          "width": 400,
+          "height": 400,
+          "sizes": {
+            "sm": "https://placehold.co/480x480?text=IFLR1000%20B",
+            "md": "https://placehold.co/960x960?text=IFLR1000%20B",
+            "lg": "https://placehold.co/1440x1440?text=IFLR1000%20B"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        "directory": {
+          "name": "IFLR 1000",
+          "slug": "iflr-1000"
+        }
+      }
+    ]
+  }
+}

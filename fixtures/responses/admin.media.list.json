@@ -2,6 +2,7 @@
   "data": [
     {
       "id": "665f00000000000000000101",
+      "kind": "image",
       "revision": 3,
       "url": "https://placehold.co/1200x900?text=Tax",
       "sizes": {
@@ -29,12 +30,36 @@
           "field": "image"
         }
       ]
+    },
+    {
+      "id": "665f00000000000000000140",
+      "kind": "document",
+      "revision": 0,
+      "url": "https://res.cloudinary.com/spa-ajibade/raw/upload/spa-ajibade/firm-profile.pdf",
+      "sizes": null,
+      "alt": null,
+      "title": "SPA Ajibade & Co. firm profile",
+      "width": null,
+      "height": null,
+      "mimeType": "application/pdf",
+      "bytes": 2481152,
+      "focalPoint": null,
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "usedBy": [
+        {
+          "collection": "pages",
+          "id": "665f00000000000000000131",
+          "label": "about",
+          "field": "story.profileDownload.document"
+        }
+      ]
     }
   ],
   "meta": {
     "page": 1,
     "pageSize": 24,
-    "total": 1,
+    "total": 2,
     "totalPages": 1
   }
 }

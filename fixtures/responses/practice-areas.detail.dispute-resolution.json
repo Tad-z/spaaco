@@ -1,6 +1,6 @@
 {
   "data": {
-    "id": "665f00000000000000000008",
+    "id": "665f00000000000000001003",
     "slug": "dispute-resolution-arbitration",
     "title": "Dispute Resolution & Arbitration",
     "shortLabel": "Dispute Resolution",
@@ -20,12 +20,139 @@
         "y": 0.5
       }
     },
-    "body": null,
-    "keyServices": [],
-    "contacts": [],
-    "relatedInsights": [
+    "homeSummary": "When a disagreement threatens to disrupt a business, a contract, or a relationship, the firm steps in to resolve it, whether that means representing a client in court, before an arbitral tribunal, or through negotiated settlement, across commercial, shareholder, and regulatory disputes.",
+    "heroIntro": "When a disagreement threatens to disrupt a business, a contract, or a relationship, the firm steps in to resolve it, whether that means representing a client in court, before an arbitral tribunal, or through negotiated settlement, across commercial, shareholder, and regulatory disputes.",
+    "heroImages": [
       {
-        "id": "665f00000000000000000007",
+        "url": "https://placehold.co/1440x662?text=Dispute%20Resolution%20hero",
+        "alt": "Hero image for the Dispute Resolution & Arbitration practice",
+        "width": 1440,
+        "height": 662,
+        "sizes": {
+          "sm": "https://placehold.co/480x221?text=Dispute%20Resolution%20hero",
+          "md": "https://placehold.co/960x441?text=Dispute%20Resolution%20hero",
+          "lg": "https://placehold.co/1440x662?text=Dispute%20Resolution%20hero"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    ],
+    "overview": "Our dynamic Dispute Resolution practice handles cases in trial and appellate courts across Nigeria, as well as local and international arbitration proceedings under institutional rules including the ICC, UNCITRAL, and LCIA. We focus on achieving timely, efficient outcomes, resorting to litigation only when it cannot be avoided.",
+    "coreServices": [
+      {
+        "title": "Litigation",
+        "description": "Representing clients in trial and appellate courts across Nigeria, with a focus on timely and cost-effective outcomes."
+      },
+      {
+        "title": "Arbitration",
+        "description": "Conducting domestic and international arbitrations under ICC, UNCITRAL, and LCIA rules, as well as ad-hoc references."
+      },
+      {
+        "title": "Enforcement",
+        "description": "Enforcing arbitral awards and foreign judgments, including multi-jurisdictional enforcement proceedings."
+      }
+    ],
+    "approach": {
+      "text": "We provide top-tier legal advice designed to help clients avoid unnecessary cost where possible, and when litigation is unavoidable, we focus on achieving swift, effective resolution. Our access to an extensive base of resources means we can offer solutions, not just advice.",
+      "points": [
+        "Extensive experience across trial, appellate, and arbitral proceedings",
+        "Fellows and Members of the Chartered Institute of Arbitrators, UK",
+        "Multi-jurisdictional litigation and enforcement capability",
+        "Focus on efficient, commercially sound outcomes"
+      ]
+    },
+    "industries": [
+      {
+        "name": "Hospitality & Leisure",
+        "slug": "hospitality-leisure"
+      },
+      {
+        "name": "Banking & Finance",
+        "slug": "banking-finance"
+      },
+      {
+        "name": "Energy & Natural Resources",
+        "slug": "energy-natural-resources"
+      },
+      {
+        "name": "Manufacturing & FMCG",
+        "slug": "manufacturing-fmcg"
+      }
+    ],
+    "lead": {
+      "id": "665f00000000000000001017",
+      "slug": "kolawole-mayomi",
+      "displayName": "Dr. Kolawole Mayomi",
+      "role": "partner",
+      "roleLabel": "Partner",
+      "photo": {
+        "url": "https://placehold.co/800x1000?text=Kolawole%20Mayomi",
+        "alt": "Portrait of Dr. Kolawole Mayomi, Partner",
+        "width": 800,
+        "height": 1000,
+        "sizes": {
+          "sm": "https://placehold.co/480x600?text=Kolawole%20Mayomi",
+          "md": "https://placehold.co/960x1200?text=Kolawole%20Mayomi",
+          "lg": "https://placehold.co/1440x1800?text=Kolawole%20Mayomi"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "linkedinUrl": null,
+      "cardBio": "[PENDING FROM FIRM]",
+      "practiceAreas": [
+        {
+          "slug": "dispute-resolution-arbitration",
+          "title": "Dispute Resolution & Arbitration"
+        }
+      ],
+      "email": null
+    },
+    "siblings": [
+      {
+        "slug": "company-secretarial",
+        "title": "Company Secretarial"
+      },
+      {
+        "slug": "corporate-finance-capital-markets",
+        "title": "Corporate Finance & Capital Markets"
+      },
+      {
+        "slug": "data-protection-privacy",
+        "title": "Data Protection & Privacy"
+      },
+      {
+        "slug": "dispute-resolution-arbitration",
+        "title": "Dispute Resolution & Arbitration"
+      },
+      {
+        "slug": "energy-natural-resources",
+        "title": "Energy & Natural Resources"
+      },
+      {
+        "slug": "intellectual-property",
+        "title": "Intellectual Property"
+      },
+      {
+        "slug": "real-estate-succession",
+        "title": "Real Estate & Succession"
+      },
+      {
+        "slug": "tax",
+        "title": "Tax"
+      },
+      {
+        "slug": "telecommunications-regulatory",
+        "title": "Telecommunications Regulatory"
+      }
+    ],
+    "recentPublications": [
+      {
+        "id": "665f0000000000000000101c",
         "slug": "regulatory-update-on-the-2026-supreme-court-practice-directions",
         "title": "Regulatory Update On The 2026 Supreme Court Practice Directions",
         "excerpt": null,
@@ -34,7 +161,7 @@
         "categoryLabels": ["Regulatory Updates"],
         "practiceAreas": [
           {
-            "id": "665f00000000000000000008",
+            "id": "665f00000000000000001003",
             "slug": "dispute-resolution-arbitration",
             "title": "Dispute Resolution & Arbitration",
             "shortLabel": "Dispute Resolution"

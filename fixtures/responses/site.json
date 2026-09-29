@@ -27,59 +27,34 @@
         "label": "About Us",
         "href": "/about",
         "kind": "internal",
-        "children": []
+        "children": [
+          {
+            "label": "Our Story",
+            "href": "/about#story",
+            "kind": "internal"
+          },
+          {
+            "label": "Mission, Vision & Values",
+            "href": "/about#mission",
+            "kind": "internal"
+          },
+          {
+            "label": "Our Principles",
+            "href": "/about#principles",
+            "kind": "internal"
+          },
+          {
+            "label": "Recognition",
+            "href": "/about#recognition",
+            "kind": "internal"
+          }
+        ]
       },
       {
         "label": "Practice Areas",
         "href": "/practice-areas",
         "kind": "internal",
-        "children": [
-          {
-            "label": "Company Secretarial",
-            "href": "/practice-areas/company-secretarial",
-            "kind": "internal"
-          },
-          {
-            "label": "Corporate Finance & Capital Markets",
-            "href": "/practice-areas/corporate-finance-capital-markets",
-            "kind": "internal"
-          },
-          {
-            "label": "Data Protection & Privacy",
-            "href": "/practice-areas/data-protection-privacy",
-            "kind": "internal"
-          },
-          {
-            "label": "Dispute Resolution & Arbitration",
-            "href": "/practice-areas/dispute-resolution-arbitration",
-            "kind": "internal"
-          },
-          {
-            "label": "Energy & Natural Resources",
-            "href": "/practice-areas/energy-natural-resources",
-            "kind": "internal"
-          },
-          {
-            "label": "Intellectual Property",
-            "href": "/practice-areas/intellectual-property",
-            "kind": "internal"
-          },
-          {
-            "label": "Real Estate & Succession",
-            "href": "/practice-areas/real-estate-succession",
-            "kind": "internal"
-          },
-          {
-            "label": "Tax",
-            "href": "/practice-areas/tax",
-            "kind": "internal"
-          },
-          {
-            "label": "Telecommunications Regulatory",
-            "href": "/practice-areas/telecommunications-regulatory",
-            "kind": "internal"
-          }
-        ]
+        "children": []
       },
       {
         "label": "Our People",
@@ -91,23 +66,42 @@
         "label": "Insights & News",
         "href": "/insights",
         "kind": "internal",
-        "children": []
+        "children": [
+          {
+            "label": "Firm News",
+            "href": "/insights?category=firm_news",
+            "kind": "internal"
+          },
+          {
+            "label": "Articles",
+            "href": "/insights?category=articles",
+            "kind": "internal"
+          },
+          {
+            "label": "Insights",
+            "href": "/insights?category=insights",
+            "kind": "internal"
+          },
+          {
+            "label": "Regulatory Updates",
+            "href": "/insights?category=regulatory_updates",
+            "kind": "internal"
+          },
+          {
+            "label": "News Updates",
+            "href": "/insights?category=news_updates",
+            "kind": "internal"
+          },
+          {
+            "label": "Events",
+            "href": "/insights?category=events",
+            "kind": "internal"
+          }
+        ]
       },
       {
         "label": "Careers",
         "href": "/careers",
-        "kind": "internal",
-        "children": []
-      },
-      {
-        "label": "FAQ's",
-        "href": "/faq",
-        "kind": "internal",
-        "children": []
-      },
-      {
-        "label": "Our Offices",
-        "href": "/offices",
         "kind": "internal",
         "children": []
       }
@@ -149,74 +143,107 @@
           "label": "FAQ's",
           "href": "/faq",
           "kind": "internal"
-        },
-        {
-          "label": "Our Offices",
-          "href": "/offices",
-          "kind": "internal"
         }
       ],
       "practiceAreas": [
         {
-          "id": "665f0000000000000000000e",
+          "id": "665f00000000000000001000",
+          "slug": "company-secretarial",
+          "title": "Company Secretarial",
+          "shortLabel": "Company Secretarial"
+        },
+        {
+          "id": "665f00000000000000001001",
           "slug": "corporate-finance-capital-markets",
           "title": "Corporate Finance & Capital Markets",
           "shortLabel": "Corporate"
         },
         {
-          "id": "665f0000000000000000000f",
+          "id": "665f00000000000000001002",
           "slug": "data-protection-privacy",
           "title": "Data Protection & Privacy",
           "shortLabel": "Data Privacy"
         },
         {
-          "id": "665f00000000000000000008",
+          "id": "665f00000000000000001003",
           "slug": "dispute-resolution-arbitration",
           "title": "Dispute Resolution & Arbitration",
           "shortLabel": "Dispute Resolution"
         },
         {
-          "id": "665f00000000000000000002",
+          "id": "665f00000000000000001004",
           "slug": "energy-natural-resources",
           "title": "Energy & Natural Resources",
           "shortLabel": "Energy"
         },
         {
-          "id": "665f00000000000000000010",
+          "id": "665f00000000000000001005",
           "slug": "intellectual-property",
           "title": "Intellectual Property",
           "shortLabel": "Intellectual Property"
         },
         {
-          "id": "665f00000000000000000011",
+          "id": "665f00000000000000001006",
           "slug": "real-estate-succession",
           "title": "Real Estate & Succession",
           "shortLabel": "Real Estate"
         },
         {
-          "id": "665f00000000000000000012",
+          "id": "665f00000000000000001007",
           "slug": "tax",
           "title": "Tax",
           "shortLabel": "Tax"
+        },
+        {
+          "id": "665f00000000000000001008",
+          "slug": "telecommunications-regulatory",
+          "title": "Telecommunications Regulatory",
+          "shortLabel": "Telecoms"
         }
       ],
       "offices": [
         {
-          "id": "665f00000000000000000013",
+          "id": "665f00000000000000001009",
           "slug": "lagos",
-          "name": "Lagos"
+          "name": "Lagos",
+          "address": "Suite 201, SPAACO House, 27A Macarthy Street, Onikan",
+          "phone": "(+234) 80000000000",
+          "email": "frontoffice@spaajibade.com"
         },
         {
-          "id": "665f00000000000000000014",
+          "id": "665f0000000000000000100a",
           "slug": "abuja",
-          "name": "Abuja"
+          "name": "Abuja",
+          "address": "2nd Floor, Left Wing, Commercial Plaza, Gudu",
+          "phone": "(+234) 80000000000",
+          "email": "frontoffice@spaajibade.com"
         },
         {
-          "id": "665f00000000000000000015",
+          "id": "665f0000000000000000100b",
           "slug": "ibadan",
-          "name": "Ibadan"
+          "name": "Ibadan",
+          "address": "Top Floor Suite, SPAACO House, 138 Liberty Stadium Road",
+          "phone": "(+234) 80000000000",
+          "email": "frontoffice@spaajibade.com"
         }
       ],
+      "legalLinks": [
+        {
+          "label": "Terms of Service",
+          "href": "/legal/terms",
+          "kind": "internal"
+        },
+        {
+          "label": "Privacy Policy",
+          "href": "/legal/privacy",
+          "kind": "internal"
+        }
+      ],
+      "newsletter": {
+        "title": "Subscribe for legal insights",
+        "note": "Your information is kept confidential",
+        "enabled": false
+      },
       "socials": {
         "instagram": null,
         "facebook": null,
@@ -231,27 +258,27 @@
       "title": "Answers Before You Reach Out.",
       "items": [
         {
-          "id": "665f00000000000000000016",
+          "id": "665f0000000000000000100c",
           "question": "How do I schedule a consultation?",
-          "answer": "<p>[PENDING FROM FIRM]</p>"
+          "answer": "<p>Clients have the option to schedule a consultation by directly reaching out through the Discuss a Mandate feature, or by contacting any of our three offices via phone or email. When doing so, they can provide a brief overview of their issue. A dedicated member of our team will then promptly follow up to arrange a convenient time for the client to speak with the most appropriate lawyer who specializes in that particular area of law.</p>"
         },
         {
-          "id": "665f00000000000000000017",
+          "id": "665f0000000000000000100d",
           "question": "What types of matters does the firm handle?",
           "answer": "<p>The firm provides expert advice on a wide range of legal matters including dispute resolution and arbitration, corporate finance and capital markets, real estate and succession planning, energy and natural resources, intellectual property rights, data protection regulations, and tax law. Their comprehensive services are designed to support clients through complex legal challenges in these diverse areas.</p>"
         },
         {
-          "id": "665f00000000000000000018",
+          "id": "665f0000000000000000100e",
           "question": "Does the firm work with international clients?",
           "answer": "<p>[PENDING FROM FIRM]</p>"
         },
         {
-          "id": "665f00000000000000000019",
+          "id": "665f0000000000000000100f",
           "question": "How is client confidentiality handled?",
           "answer": "<p>[PENDING FROM FIRM]</p>"
         },
         {
-          "id": "665f0000000000000000001a",
+          "id": "665f00000000000000001010",
           "question": "How long does a typical matter take?",
           "answer": "<p>[PENDING FROM FIRM]</p>"
         }
@@ -287,8 +314,8 @@
         "kind": "action"
       },
       "secondaryCta": {
-        "label": "View our offices",
-        "href": "/offices",
+        "label": "Explore Our Practice Areas",
+        "href": "/practice-areas",
         "kind": "internal"
       }
     }

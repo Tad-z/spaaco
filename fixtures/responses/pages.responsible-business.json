@@ -1,0 +1,63 @@
+{
+  "data": {
+    "key": "responsible-business",
+    "title": "RESPONSIBLE BUSINESS",
+    "images": [
+      {
+        "url": "https://placehold.co/1440x662?text=Responsible%20business%201",
+        "alt": "Responsible business, slide 1 (placeholder)",
+        "width": 1440,
+        "height": 662,
+        "sizes": {
+          "sm": "https://placehold.co/480x221?text=Responsible%20business%201",
+          "md": "https://placehold.co/960x441?text=Responsible%20business%201",
+          "lg": "https://placehold.co/1440x662?text=Responsible%20business%201"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      {
+        "url": "https://placehold.co/1440x662?text=Responsible%20business%202",
+        "alt": "Responsible business, slide 2 (placeholder)",
+        "width": 1440,
+        "height": 662,
+        "sizes": {
+          "sm": "https://placehold.co/480x221?text=Responsible%20business%202",
+          "md": "https://placehold.co/960x441?text=Responsible%20business%202",
+          "lg": "https://placehold.co/1440x662?text=Responsible%20business%202"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      {
+        "url": "https://placehold.co/1440x662?text=Responsible%20business%203",
+        "alt": "Responsible business, slide 3 (placeholder)",
+        "width": 1440,
+        "height": 662,
+        "sizes": {
+          "sm": "https://placehold.co/480x221?text=Responsible%20business%203",
+          "md": "https://placehold.co/960x441?text=Responsible%20business%203",
+          "lg": "https://placehold.co/1440x662?text=Responsible%20business%203"
+        },
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    ],
+    "backLink": {
+      "label": "Back to Practice Areas",
+      "href": "/practice-areas",
+      "kind": "internal"
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  }
+}

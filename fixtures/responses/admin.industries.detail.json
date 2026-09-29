@@ -1,0 +1,14 @@
+{
+  "data": {
+    "id": "665f1a2b3c4d5e6f70819293",
+    "slug": "example",
+    "status": "published",
+    "publishedAt": "2026-06-01T00:00:00.000Z",
+    "order": 0,
+    "revision": 3,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-06-01T00:00:00.000Z",
+    "name": "Financial Services",
+    "_expanded": {}
+  }
+}

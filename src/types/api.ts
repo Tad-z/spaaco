@@ -25,9 +25,12 @@ export type PaginationMeta = Schemas['PaginationMeta'];
 export type ImageSizes = Schemas['ImageSizes'];
 export type Image = Schemas['Image'];
 export type NullableImage = Schemas['NullableImage'];
+export type Document = Schemas['Document'];
+export type NullableDocument = Schemas['NullableDocument'];
 export type LinkKind = Schemas['LinkKind'];
 export type Link = Schemas['Link'];
 export type NullableLink = Schemas['NullableLink'];
+export type PendingLink = Schemas['PendingLink'];
 export type SectionHeader = Schemas['SectionHeader'];
 export type IconItem = Schemas['IconItem'];
 export type Stat = Schemas['Stat'];
@@ -43,17 +46,24 @@ export type InsightCategory = Schemas['InsightCategory'];
 export type InsightFormat = Schemas['InsightFormat'];
 export type EmploymentType = Schemas['EmploymentType'];
 export type WorkMode = Schemas['WorkMode'];
-export type RecognitionTab = Schemas['RecognitionTab'];
 export type PageKey = Schemas['PageKey'];
+export type LegalPageKey = Schemas['LegalPageKey'];
+export type MediaKind = Schemas['MediaKind'];
 
 // --- practice areas ---
 export type PracticeAreaRef = Schemas['PracticeAreaRef'];
+export type PracticeAreaLink = Schemas['PracticeAreaLink'];
 export type PracticeAreaCard = Schemas['PracticeAreaCard'];
 export type PracticeAreaDetail = Schemas['PracticeAreaDetail'];
+export type PracticeAreaLead = Schemas['PracticeAreaLead'];
+export type IndustryRef = Schemas['IndustryRef'];
+export type CoreService = Schemas['CoreService'];
+export type PracticeAreaApproach = Schemas['PracticeAreaApproach'];
 
 // --- people ---
 export type PersonSummary = Schemas['PersonSummary'];
 export type PersonDetail = Schemas['PersonDetail'];
+export type PersonEducation = Schemas['PersonEducation'];
 
 // --- insights ---
 export type InsightAuthor = Schemas['InsightAuthor'];
@@ -62,11 +72,17 @@ export type InsightAuthorFirm = Schemas['InsightAuthorFirm'];
 export type InsightCta = Schemas['InsightCta'];
 export type InsightCard = Schemas['InsightCard'];
 export type InsightDetail = Schemas['InsightDetail'];
+export type InsightDetailCta = Schemas['InsightDetailCta'];
 
-// --- offices, recognitions, faqs, jobs ---
+// --- offices, recognition, faqs, jobs, legal pages ---
 export type OfficeRef = Schemas['OfficeRef'];
 export type Office = Schemas['Office'];
-export type Recognition = Schemas['Recognition'];
+export type RecognitionDirectoryLink = Schemas['RecognitionDirectoryLink'];
+export type RecognitionDirectoryRef = Schemas['RecognitionDirectoryRef'];
+export type Award = Schemas['Award'];
+export type RecognitionsOverview = Schemas['RecognitionsOverview'];
+export type RecognitionDirectoryPage = Schemas['RecognitionDirectoryPage'];
+export type LegalPage = Schemas['LegalPage'];
 export type Faq = Schemas['Faq'];
 export type Job = Schemas['Job'];
 
@@ -75,6 +91,8 @@ export type Socials = Schemas['Socials'];
 export type SiteSettings = Schemas['SiteSettings'];
 export type NavItem = Schemas['NavItem'];
 export type SiteFooter = Schemas['SiteFooter'];
+export type FooterOffice = Schemas['FooterOffice'];
+export type SiteNewsletter = Schemas['SiteNewsletter'];
 export type StillHaveQuestions = Schemas['StillHaveQuestions'];
 export type SiteFaqSection = Schemas['SiteFaqSection'];
 export type ContactCallout = Schemas['ContactCallout'];
@@ -86,16 +104,18 @@ export type SearchResults = Schemas['SearchResults'];
 // --- page sections ---
 export type HomeAboutFirm = Schemas['HomeAboutFirm'];
 export type HomeVideoShowcase = Schemas['HomeVideoShowcase'];
-export type HomeRecognitionTabs = Schemas['HomeRecognitionTabs'];
-export type HomeRecognitions = Schemas['HomeRecognitions'];
+export type HomeRecognitionSection = Schemas['HomeRecognitionSection'];
 export type HomeWhyChooseUs = Schemas['HomeWhyChooseUs'];
 export type AboutStory = Schemas['AboutStory'];
+export type AboutProfileDownload = Schemas['AboutProfileDownload'];
 export type AboutStats = Schemas['AboutStats'];
 export type AboutMissionSection = Schemas['AboutMissionSection'];
 export type AboutPrinciples = Schemas['AboutPrinciples'];
-export type AwardListItem = Schemas['AwardListItem'];
 export type AboutAwardsList = Schemas['AboutAwardsList'];
 export type CsrBanner = Schemas['CsrBanner'];
+export type CareersJobsSection = Schemas['CareersJobsSection'];
+export type CareersEmptyState = Schemas['CareersEmptyState'];
+export type RecognitionDirectoryLabels = Schemas['RecognitionDirectoryLabels'];
 
 // --- composed pages ---
 export type HomePage = Schemas['HomePage'];
@@ -106,6 +126,8 @@ export type InsightsPage = Schemas['InsightsPage'];
 export type CareersPage = Schemas['CareersPage'];
 export type FaqPage = Schemas['FaqPage'];
 export type OfficesPage = Schemas['OfficesPage'];
+export type RecognitionPage = Schemas['RecognitionPage'];
+export type ResponsibleBusinessPage = Schemas['ResponsibleBusinessPage'];
 export type Page = Schemas['Page'];
 
 // --- forms ---
@@ -138,7 +160,9 @@ export type PracticeAreaUpdate = Schemas['PracticeAreaUpdate'];
 export type PersonAdmin = Schemas['PersonAdmin'];
 export type InsightAdmin = Schemas['InsightAdmin'];
 export type OfficeAdmin = Schemas['OfficeAdmin'];
-export type RecognitionAdmin = Schemas['RecognitionAdmin'];
+export type RecognitionDirectoryAdmin = Schemas['RecognitionDirectoryAdmin'];
+export type AwardAdmin = Schemas['AwardAdmin'];
+export type IndustryAdmin = Schemas['IndustryAdmin'];
 export type FaqAdmin = Schemas['FaqAdmin'];
 export type JobAdmin = Schemas['JobAdmin'];
 export type ReorderRequest = Schemas['ReorderRequest'];
@@ -148,6 +172,8 @@ export type PageAdmin = Schemas['PageAdmin'];
 export type MediaAdmin = Schemas['MediaAdmin'];
 export type MediaUsage = Schemas['MediaUsage'];
 export type MediaPatch = Schemas['MediaPatch'];
+export type LegalPageAdmin = Schemas['LegalPageAdmin'];
+export type LegalPageWrite = Schemas['LegalPageWrite'];
 
 // Submissions (personal data; see .claude/rules/submissions.md).
 export type SubmissionStatus = Schemas['SubmissionStatus'];

@@ -96,10 +96,37 @@ Work top to bottom. Do one task per session where possible. Tick `[x]` only when
 - [x] **5.1 Spec first:** add the admin content, pages, settings and media endpoints to the spec.
 - [x] **5.2 Generic CRUD factory:** list/get/create/update/delete/publish/unpublish/reorder for a model, plus its schemas. Use it for all 7 content collections. Admin GETs use the editable shape (IDs + `_expanded`); see "Editable shape vs public shape" in API.md.
   - **Accept:** each collection has CRUD tests; publish sets publishedAt once; delete is blocked (409) when the record is referenced; a round-trip test (admin GET → PUT the same body) succeeds unchanged for every collection; a stale `If-Match` returns 409.
-- [x] **5.3 Pages + settings: GET (editable shape), PUT (replace) and PATCH (section-level merge)**, validated against the per-key schemas after merge, with `revision` + `If-Match` optimistic locking.
-  - **Accept:** PATCHing `hero` leaves every other section byte-identical; an invalid merged result returns 400 with the section path; a stale revision returns 409; a round-trip GET → PUT succeeds for all 8 page keys and for settings.
-- [x] **5.4 Media library:** upload, list/search, get with `usedBy`, PATCH metadata, **replace file in place**, and delete (blocked when in use). Includes `services/media.service.ts#findUsages` over the `constants/media-refs.ts` registry, the local driver's sharp-generated sizes, and the Cloudinary driver. Follow "Media lifecycle" in ARCHITECTURE.md.
-  - **Accept:** an SVG or a renamed .exe is rejected (415); a missing alt returns 400; replacing a file keeps the ID, changes the URL, deletes the old stored file and invalidates the tags of every entity using it; deleting an in-use image returns 409 listing `usedBy`; a test fails if a model has a Media ref field that isn't in the registry.
+
+### Phase D: Design update v2 (do before continuing 5.3)
+
+The second design drop (29 Sep 2026) changes the page schemas and the media kinds that 5.3 and 5.4 are built on, so it comes first. Full detail, decisions and field tables: `docs/DESIGN_UPDATE_V2.md`; copy: `docs/SEED_CONTENT_V2.md`. Where they conflict with earlier docs, they win. Nothing in §14 of DESIGN_UPDATE_V2 (chat, newsletter subscribe, the pending CTAs' behaviour, general CV submissions) goes into the spec or the code. Every task follows the standard loop: spec first, then types:gen, tests, implementation, `check`, tick, commit.
+
+- [x] **D.1 Docs and spec.** Fold DESIGN_UPDATE_V2 into DATA_MODEL, API, PROJECT_BRIEF and SEED_CONTENT, and add ADRs for decisions 5, 6, 9, 10, 14 and 15, plus the Hero `images` change and PDF documents. Update `openapi.yaml` for every public change, then regenerate the types and update the fixtures from `SEED_CONTENT_V2.md`.
+  - **Accept:** spec:lint, types:check and fixture validation pass.
+- [ ] **D.2 Hero, settings and FAQ.** Change Hero `image` to `images`. Add the nav, footer, legal-link and newsletter-copy changes, and the new contact callout CTA.
+  - **Accept:** every page composer returns `hero.images`, and `/site` matches its fixture.
+- [ ] **D.3 Recognition rebuild.** Build `recognitionDirectories` and `awards`, the `recognition` page singleton, `GET /recognitions` and `GET /recognitions/:slug`, Home `recognitionSection`, and About `awardsList` from directories. Remove the old `recognitions` model.
+  - **Accept:** the draft canary covers both new collections; a draft award never appears on Home or on a directory page.
+- [ ] **D.4 Practice areas.** Add the new fields, the `industries` collection, and the detail endpoint with siblings, lead, industries and recentPublications. Home uses `homeSummary`, and the CSR banner uses images.
+  - **Accept:** the detail response for all 9 seeded areas matches the spec; a draft lead or industry is excluded (publishedPopulate).
+- [ ] **D.5 People.** Rename the enum to trainee_associate. Add the practiceArea filter and `practiceAreaFilters`, the new person fields, card-back data in PersonSummary, and profile `recentPublications`.
+  - **Accept:** role + practiceArea filters combine correctly with pagination meta; the Partners filter includes the MP.
+- [ ] **D.6 Insights and Responsible Business.** Apply the new categories and relabelling, add `externalUrl` and `document`, and implement the detail `cta` and `backLink`, `practiceAreaFilters`, the `pro_bono` exclusion rule, and `GET /pages/responsible-business`.
+  - **Accept:** pro_bono is absent from every default listing and present with `category=pro_bono`; the article CTA resolves from externalUrl or document; the video CTA resolves from videoUrl.
+- [ ] **D.7 Careers empty state and legal pages.** Add `jobsSection.emptyState`, the `legalPages` collection, `GET /legal/:key`, and the admin GET/PUT.
+  - **Accept:** careers returns the empty state when no jobs are open; an unknown legal key returns 404.
+- [ ] **D.8 Media documents.** Only if 5.4 isn't done yet: fold PDF support into 5.4's spec (kind filter, 20 MB, magic bytes). Otherwise, add it now.
+  - **Accept:** an uploaded PDF works as the profile download and as an insight document; a fake PDF returns 415; an in-use document can't be deleted.
+- [ ] **D.9 Reseed and review.** Reseed; confirm every `/pages/:key` fixture round-trip passes; run the api-reviewer on Phase D and fix its blockers.
+
+### Phase 5 (continued)
+
+5.3 and 5.4 were built before the design update and are reopened by it: both must now work with the updated page schemas (ten page keys, `images` arrays, the new sections) and with PDF documents in the media library. Re-verify them against the criteria below once Phase D is done.
+
+- [ ] **5.3 Pages + settings: GET (editable shape), PUT (replace) and PATCH (section-level merge)**, validated against the per-key schemas after merge, with `revision` + `If-Match` optimistic locking. _(Built before Phase D; reopened to re-verify against the v2 page schemas.)_
+  - **Accept:** PATCHing `hero` leaves every other section byte-identical; an invalid merged result returns 400 with the section path; a stale revision returns 409; a round-trip GET → PUT succeeds for all 10 page keys (including `recognition` and `responsible-business`), for settings, and for both legal pages.
+- [ ] **5.4 Media library:** upload, list/search, get with `usedBy`, PATCH metadata, **replace file in place**, and delete (blocked when in use). Includes `services/media.service.ts#findUsages` over the `constants/media-refs.ts` registry, the local driver's sharp-generated sizes, and the Cloudinary driver. Follow "Media lifecycle" in ARCHITECTURE.md. _(Built before Phase D; reopened for PDF documents.)_
+  - **Accept:** an SVG or a renamed .exe is rejected (415); a missing alt returns 400; replacing a file keeps the ID, changes the URL, deletes the old stored file and invalidates the tags of every entity using it; deleting an in-use image returns 409 listing `usedBy`; a test fails if a model has a Media ref field that isn't in the registry. **Documents:** a PDF uploads as `kind: document` (≤ 20 MB, `%PDF` magic bytes, `title` required, no `sizes`); the library filters by `kind`; `usedBy` and the delete guard see media ids held in arrays and in document fields.
 - [x] **5.5 HTML sanitisation on write:** an allow-list of tags suitable for legal articles (p, h2–h4, ul/ol/li, a[href], strong, em, blockquote, table basics).
 - [x] **5.6 Invalidation + revalidation webhook** on every write.
   - **Accept:** updating a practice area clears the `site`, `page:home` and `page:practice-areas` caches, and the webhook adapter is called with the correct tags.

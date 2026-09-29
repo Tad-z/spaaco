@@ -13,10 +13,42 @@
       "alt": "Portrait of Dr. Babatunde Ajibade, SAN, Managing Partner"
     },
     "linkedinUrl": null,
+    "instagramUrl": null,
     "email": null,
-    "bio": null,
+    "cardBio": "A well-regarded authority in international arbitration, bringing decades of experience to the firm's most complex disputes.",
+    "bio": "<p>Dr. Ajibade is a well-regarded authority in International Civil Litigation and Arbitration. His expertise spans both domestic and international arbitration, including investment treaty arbitration, and he has built a career representing clients in some of the region's most complex disputes.</p><p>As an International Practice Fellow of the International Bar Association and a Fellow of the Chartered Institute of Arbitrators, United Kingdom, Dr. Ajibade brings decades of experience to bear on every matter he handles. Clients and peers alike describe him as thorough, calm under pressure, and an exceptional advocate.</p>",
     "quote": "law is a profession, not an occupation.",
-    "practiceAreas": [],
+    "primaryPracticeArea": "dispute-resolution-arbitration",
+    "practiceAreas": ["dispute-resolution-arbitration", "corporate-finance-capital-markets"],
+    "education": {
+      "intro": "Dr. Ajibade holds a Doctor of Philosophy in Private International Law from King's College, University of London, along with a Master of Laws in Corporate Commercial Law from the same institution. He was called to the Nigerian Bar in 1989, after completing his legal education at Obafemi Awolowo University.",
+      "entries": [
+        {
+          "qualification": "Ph.D. in Private International Law, King's College, University of London",
+          "year": 1996
+        },
+        {
+          "qualification": "LL.M., Corporate Commercial Law, King's College, University of London",
+          "year": 1990
+        },
+        {
+          "qualification": "Barrister at Law (BL), Nigerian Law School",
+          "year": 1989
+        },
+        {
+          "qualification": "LL.B., Obafemi Awolowo University (formerly University of Ife), Nigeria",
+          "year": 1988
+        }
+      ]
+    },
+    "memberships": [
+      "Nigerian Bar Association (NBA)",
+      "International Bar Association (IBA)",
+      "Chartered Institute of Arbitrators (UK)",
+      "Lagos Court of Arbitration (LCA)",
+      "Capital Market Solicitors Association (CMSA)",
+      "Chartered Institute of Taxation (CITN)"
+    ],
     "office": "lagos",
     "featuredInLeadership": true,
     "order": 0,
@@ -36,10 +68,18 @@
       "alt": "Portrait of Dr. John Onyido, Partner"
     },
     "linkedinUrl": null,
+    "instagramUrl": null,
     "email": null,
-    "bio": null,
+    "cardBio": "[PENDING FROM FIRM]",
+    "bio": "<p>[PENDING FROM FIRM]</p>",
     "quote": null,
-    "practiceAreas": [],
+    "primaryPracticeArea": null,
+    "practiceAreas": ["data-protection-privacy", "intellectual-property"],
+    "education": {
+      "intro": "[PENDING FROM FIRM]",
+      "entries": []
+    },
+    "memberships": [],
     "office": "lagos",
     "featuredInLeadership": true,
     "order": 1,
@@ -59,10 +99,18 @@
       "alt": "Portrait of Dr. Kolawole Mayomi, Partner"
     },
     "linkedinUrl": null,
+    "instagramUrl": null,
     "email": null,
-    "bio": null,
+    "cardBio": "[PENDING FROM FIRM]",
+    "bio": "<p>[PENDING FROM FIRM]</p>",
     "quote": null,
-    "practiceAreas": [],
+    "primaryPracticeArea": null,
+    "practiceAreas": ["dispute-resolution-arbitration"],
+    "education": {
+      "intro": "[PENDING FROM FIRM]",
+      "entries": []
+    },
+    "memberships": [],
     "office": "lagos",
     "featuredInLeadership": true,
     "order": 2,
@@ -82,10 +130,18 @@
       "alt": "Portrait of Peter Olalere, Associate Partner"
     },
     "linkedinUrl": null,
+    "instagramUrl": null,
     "email": null,
-    "bio": null,
+    "cardBio": "[PENDING FROM FIRM]",
+    "bio": "<p>[PENDING FROM FIRM]</p>",
     "quote": null,
-    "practiceAreas": [],
+    "primaryPracticeArea": null,
+    "practiceAreas": ["energy-natural-resources"],
+    "education": {
+      "intro": "[PENDING FROM FIRM]",
+      "entries": []
+    },
+    "memberships": [],
     "office": "lagos",
     "featuredInLeadership": false,
     "order": 3,
@@ -105,10 +161,18 @@
       "alt": "Portrait of Bolaji Gabari, Associate Partner"
     },
     "linkedinUrl": null,
+    "instagramUrl": null,
     "email": null,
-    "bio": null,
+    "cardBio": "[PENDING FROM FIRM]",
+    "bio": "<p>[PENDING FROM FIRM]</p>",
     "quote": null,
+    "primaryPracticeArea": null,
     "practiceAreas": [],
+    "education": {
+      "intro": "[PENDING FROM FIRM]",
+      "entries": []
+    },
+    "memberships": [],
     "office": "lagos",
     "featuredInLeadership": false,
     "order": 4,
@@ -128,10 +192,18 @@
       "alt": "Portrait of Dr. Magnus Ejelonu, Associate Partner"
     },
     "linkedinUrl": null,
+    "instagramUrl": null,
     "email": null,
-    "bio": null,
+    "cardBio": "[PENDING FROM FIRM]",
+    "bio": "<p>[PENDING FROM FIRM]</p>",
     "quote": null,
+    "primaryPracticeArea": null,
     "practiceAreas": [],
+    "education": {
+      "intro": "[PENDING FROM FIRM]",
+      "entries": []
+    },
+    "memberships": [],
     "office": "lagos",
     "featuredInLeadership": false,
     "order": 5,
@@ -151,10 +223,18 @@
       "alt": "Portrait of Moruf Sowunmi, Associate Partner"
     },
     "linkedinUrl": null,
+    "instagramUrl": null,
     "email": null,
-    "bio": null,
+    "cardBio": "[PENDING FROM FIRM]",
+    "bio": "<p>[PENDING FROM FIRM]</p>",
     "quote": null,
-    "practiceAreas": [],
+    "primaryPracticeArea": null,
+    "practiceAreas": ["real-estate-succession"],
+    "education": {
+      "intro": "[PENDING FROM FIRM]",
+      "entries": []
+    },
+    "memberships": [],
     "office": "lagos",
     "featuredInLeadership": false,
     "order": 6,
@@ -174,10 +254,18 @@
       "alt": "Portrait of Emmanuel Bassey, Senior Associate"
     },
     "linkedinUrl": null,
+    "instagramUrl": null,
     "email": null,
-    "bio": null,
+    "cardBio": "[PENDING FROM FIRM]",
+    "bio": "<p>[PENDING FROM FIRM]</p>",
     "quote": null,
+    "primaryPracticeArea": null,
     "practiceAreas": [],
+    "education": {
+      "intro": "[PENDING FROM FIRM]",
+      "entries": []
+    },
+    "memberships": [],
     "office": "lagos",
     "featuredInLeadership": false,
     "order": 7,
@@ -197,10 +285,18 @@
       "alt": "Portrait of David Essien, Senior Associate"
     },
     "linkedinUrl": null,
+    "instagramUrl": null,
     "email": null,
-    "bio": null,
+    "cardBio": "[PENDING FROM FIRM]",
+    "bio": "<p>[PENDING FROM FIRM]</p>",
     "quote": null,
+    "primaryPracticeArea": null,
     "practiceAreas": [],
+    "education": {
+      "intro": "[PENDING FROM FIRM]",
+      "entries": []
+    },
+    "memberships": [],
     "office": "lagos",
     "featuredInLeadership": false,
     "order": 8,

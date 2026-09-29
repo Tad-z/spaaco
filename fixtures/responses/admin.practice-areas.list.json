@@ -12,10 +12,23 @@
       "title": "Tax",
       "shortLabel": "Tax",
       "summary": "When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.",
+      "homeSummary": "When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.",
+      "heroIntro": "When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.",
       "image": "665f00000000000000000101",
-      "body": null,
-      "keyServices": [],
-      "contacts": ["665f00000000000000000102"],
+      "heroImages": ["665f00000000000000000101"],
+      "overview": "Our Tax practice advises businesses on compliance with Nigerian tax law and represents clients in disputes with tax authorities. We work alongside our Corporate Finance and Dispute Resolution teams where tax issues intersect with transactions or litigation.",
+      "coreServices": [
+        {
+          "title": "Tax Advisory",
+          "description": "Advising businesses on compliance with Nigerian tax obligations and regulatory requirements."
+        }
+      ],
+      "approach": {
+        "text": "We treat tax as something that touches nearly every transaction, not a standalone concern. That means working closely with our other practice groups so tax exposure is addressed early, not discovered late.",
+        "points": ["Advisory across compliance, disputes, and transactions"]
+      },
+      "industries": ["665f00000000000000000103"],
+      "lead": "665f00000000000000000102",
       "featuredOnHome": true,
       "homeOrder": 6,
       "showInFooter": true,

@@ -2,7 +2,7 @@
 /**
  * Generates the admin content paths and write schemas in `openapi/openapi.yaml`.
  *
- * The seven content collections are served by one CRUD factory, but the
+ * The nine content collections are served by one CRUD factory, but the
  * *contract* lists them explicitly: the dashboard needs a concrete request and
  * response type per collection, not a union it has to narrow (ADR-033). Writing
  * 63 operations by hand would guarantee they drift, so they are generated from
@@ -67,6 +67,8 @@ interface CollectionSpec {
 
 const MEDIA_ID = '665f00000000000000000101';
 const PERSON_ID = '665f00000000000000000102';
+const INDUSTRY_ID = '665f00000000000000000103';
+const DIRECTORY_ID = '665f00000000000000000104';
 
 const MEDIA_PREVIEW = {
   [MEDIA_ID]: {
@@ -86,17 +88,44 @@ const COLLECTIONS: readonly CollectionSpec[] = [
     name: 'PracticeArea',
     label: 'practice area',
     plural: 'practice areas',
-    requiredOnCreate: ['title', 'shortLabel', 'summary'],
-    note: 'The Home tab bar uses `homeOrder`, which differs from the page order.',
+    requiredOnCreate: [
+      'title',
+      'shortLabel',
+      'summary',
+      'homeSummary',
+      'heroIntro',
+      'coreServices',
+    ],
+    note:
+      'The Home tab bar uses `homeOrder`, which differs from the page order. `summary`, ' +
+      '`homeSummary` and `heroIntro` are three different texts: the grid card, the Home card and ' +
+      'the detail hero.',
     sample: {
       title: 'Tax',
       shortLabel: 'Tax',
       summary:
         'When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.',
+      homeSummary:
+        'When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.',
+      heroIntro:
+        'When a business needs to understand or meet its tax obligations, the firm advises on compliance and represents clients in disputes with tax authorities, protecting their financial position along the way.',
       image: MEDIA_ID,
-      body: null,
-      keyServices: [],
-      contacts: [PERSON_ID],
+      heroImages: [MEDIA_ID],
+      overview:
+        'Our Tax practice advises businesses on compliance with Nigerian tax law and represents clients in disputes with tax authorities. We work alongside our Corporate Finance and Dispute Resolution teams where tax issues intersect with transactions or litigation.',
+      coreServices: [
+        {
+          title: 'Tax Advisory',
+          description:
+            'Advising businesses on compliance with Nigerian tax obligations and regulatory requirements.',
+        },
+      ],
+      approach: {
+        text: 'We treat tax as something that touches nearly every transaction, not a standalone concern. That means working closely with our other practice groups so tax exposure is addressed early, not discovered late.',
+        points: ['Advisory across compliance, disputes, and transactions'],
+      },
+      industries: [INDUSTRY_ID],
+      lead: PERSON_ID,
       featuredOnHome: true,
       homeOrder: 6,
       showInFooter: true,
@@ -110,7 +139,7 @@ const COLLECTIONS: readonly CollectionSpec[] = [
     label: 'attorney',
     plural: 'attorneys',
     requiredOnCreate: ['firstName', 'lastName', 'role'],
-    note: 'Carries `email`, which the public API never returns.',
+    note: '`email` is public: it is shown on the profile and on the practice-lead card.',
     sample: {
       honorific: 'Dr.',
       firstName: 'Babatunde',
@@ -119,10 +148,16 @@ const COLLECTIONS: readonly CollectionSpec[] = [
       role: 'managing_partner',
       photo: MEDIA_ID,
       linkedinUrl: null,
+      instagramUrl: null,
       email: null,
+      cardBio:
+        "A well-regarded authority in international arbitration, bringing decades of experience to the firm's most complex disputes.",
       bio: null,
       quote: 'law is a profession, not an occupation.',
+      primaryPracticeArea: null,
       practiceAreas: [],
+      education: { intro: null, entries: [] },
+      memberships: ['Nigerian Bar Association (NBA)'],
       office: null,
       featuredInLeadership: true,
     },
@@ -134,7 +169,9 @@ const COLLECTIONS: readonly CollectionSpec[] = [
     label: 'insight',
     plural: 'insights',
     requiredOnCreate: ['title', 'format', 'categories'],
-    note: 'A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.',
+    note:
+      'A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. ' +
+      'At most one of `externalUrl` and `document` may be set.',
     sample: {
       title: 'Regulatory Update On The 2026 Supreme Court Practice Directions',
       excerpt: null,
@@ -145,6 +182,8 @@ const COLLECTIONS: readonly CollectionSpec[] = [
       practiceAreas: [],
       author: null,
       coverImage: MEDIA_ID,
+      externalUrl: null,
+      document: null,
       featured: false,
     },
     expanded: MEDIA_PREVIEW,
@@ -167,20 +206,45 @@ const COLLECTIONS: readonly CollectionSpec[] = [
     },
   },
   {
-    slug: 'recognitions',
-    name: 'Recognition',
-    label: 'recognition',
-    plural: 'recognitions',
-    requiredOnCreate: ['organization', 'title', 'tab'],
+    slug: 'recognition-directories',
+    name: 'RecognitionDirectory',
+    label: 'recognition directory',
+    plural: 'recognition directories',
+    requiredOnCreate: ['name'],
+    note: 'Each directory has its own page, `GET /recognitions/{slug}`, listing its awards.',
     sample: {
-      organization: 'IFLR1000',
-      title: 'Recommended Firm',
-      year: 2024,
-      badge: MEDIA_ID,
-      url: null,
-      tab: 'achievements',
+      name: 'IFLR 1000',
+      logo: MEDIA_ID,
+      heroSubtitle:
+        "Recognized by one of the legal industry's leading directories for the quality and consistency of our work.",
+      heroImages: [MEDIA_ID],
     },
     expanded: MEDIA_PREVIEW,
+  },
+  {
+    slug: 'awards',
+    name: 'Award',
+    label: 'award',
+    plural: 'awards',
+    requiredOnCreate: ['directory', 'title', 'year'],
+    note: '`featuredOnHome` puts the badge in the Home Recognition band.',
+    sample: {
+      directory: DIRECTORY_ID,
+      title: 'IFLR1000: Recommended Firm',
+      year: 2024,
+      badge: MEDIA_ID,
+      featuredOnHome: true,
+    },
+    expanded: MEDIA_PREVIEW,
+  },
+  {
+    slug: 'industries',
+    name: 'Industry',
+    label: 'industry',
+    plural: 'industries',
+    requiredOnCreate: ['name'],
+    note: 'The shared list practice areas pick their industries from.',
+    sample: { name: 'Financial Services' },
   },
   {
     slug: 'faqs',

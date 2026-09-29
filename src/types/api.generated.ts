@@ -99,9 +99,10 @@ export interface paths {
         };
         /**
          * Practice area detail
-         * @description Full practice area, including the attorneys to contact and the three most recent related
-         *     insights. This page is not designed yet, so the shape may gain fields once the design
-         *     lands.
+         * @description The practice area detail page: the hero copy and images, the overview, core services,
+         *     approach and industries, the Practice Lead card, the sidebar list of every published
+         *     area (`siblings`), and the six most recent publications tagged with this area. Pro bono
+         *     insights are never among them (see `GET /insights`).
          */
         get: operations["getPracticeArea"];
         put?: never;
@@ -122,7 +123,10 @@ export interface paths {
         /**
          * Attorney directory
          * @description Paginated attorney directory. The default sort is `seniority`: role rank first
-         *     (managing partner through NYSC associate), then the manual order, then last name.
+         *     (managing partner through trainee associate), then the manual order, then last name.
+         *
+         *     `role` and `practiceArea` combine: the designs' role tabs sit alongside a "Practice Area"
+         *     dropdown (labelled "Sort By" on screen), and both apply at once.
          */
         get: operations["listPeople"];
         put?: never;
@@ -142,7 +146,9 @@ export interface paths {
         };
         /**
          * Attorney profile
-         * @description Full profile, practice areas, office and the three latest insights they wrote.
+         * @description The full profile: bio, education, memberships, contact links (email is public), the
+         *     primary practice area shown under the portrait, and the six latest insights they wrote.
+         *     Pro bono insights are never among them.
          */
         get: operations["getPerson"];
         put?: never;
@@ -163,6 +169,13 @@ export interface paths {
         /**
          * Insights and news listing
          * @description Paginated insight cards, newest first by default.
+         *
+         *     `pro_bono` insights appear **only** when `category=pro_bono` is requested explicitly —
+         *     that is the Responsible Business grid. Every other listing, including the unfiltered
+         *     "All insights & news" tab, leaves them out, as the designs do.
+         *
+         *     `category` and `practiceArea` combine: the category tabs sit alongside a "Practice Area"
+         *     dropdown (labelled "Sort By" on screen).
          */
         get: operations["listInsights"];
         put?: never;
@@ -184,6 +197,11 @@ export interface paths {
          * Insight detail
          * @description The full article body, or the video URL for video content, plus the author block,
          *     practice areas and three related insights.
+         *
+         *     `cta` is the link rendered after the body: "Read Article" (to the external article or
+         *     the uploaded PDF) for an article, "Watch Video" for a video, and null for an article
+         *     with neither. `backLink` returns to the listing the insight belongs to — the Responsible
+         *     Business page for a pro bono story, Insights & News for everything else.
          */
         get: operations["getInsight"];
         put?: never;
@@ -206,6 +224,71 @@ export interface paths {
          * @description Every published office, in the order used across the site: Lagos, Abuja, Ibadan.
          */
         get: operations["listOffices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recognitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recognition directories and featured awards
+         * @description Serves the two-tab recognition component ("Our Achievements" / "Independently
+         *     Recognized By"): every published directory with its wordmark, and the awards flagged
+         *     for Home. The component exists in the designs but is not placed on a page yet.
+         */
+        get: operations["listRecognitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recognitions/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One directory's recognition page
+         * @description The page behind each About "View Awards" row: a hero titled with the directory's name,
+         *     and every published award it has given, newest year first. The eyebrow and the two hero
+         *     CTAs are shared by every directory and edited in the `recognition` page document.
+         */
+        get: operations["getRecognitionDirectory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/legal/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A legal page
+         * @description The Terms of Service (`terms`) or the Privacy Policy (`privacy`), linked from the
+         *     footer. Any other key, or a page the firm has not published, returns 404.
+         */
+        get: operations["getLegalPage"];
         put?: never;
         post?: never;
         delete?: never;
@@ -575,7 +658,7 @@ export interface paths {
          * List practice areas
          * @description Every status, not just published.
          *
-         *     The Home tab bar uses `homeOrder`, which differs from the page order.
+         *     The Home tab bar uses `homeOrder`, which differs from the page order. `summary`, `homeSummary` and `heroIntro` are three different texts: the grid card, the Home card and the detail hero.
          */
         get: operations["listPracticeAreaAdmin"];
         put?: never;
@@ -583,7 +666,7 @@ export interface paths {
          * Create a practice area
          * @description A slug is generated when none is given.
          *
-         *     The Home tab bar uses `homeOrder`, which differs from the page order.
+         *     The Home tab bar uses `homeOrder`, which differs from the page order. `summary`, `homeSummary` and `heroIntro` are three different texts: the grid card, the Home card and the detail hero.
          */
         post: operations["createPracticeArea"];
         delete?: never;
@@ -626,7 +709,7 @@ export interface paths {
          * Get one practice area in its editable shape
          * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
          *
-         *     The Home tab bar uses `homeOrder`, which differs from the page order.
+         *     The Home tab bar uses `homeOrder`, which differs from the page order. `summary`, `homeSummary` and `heroIntro` are three different texts: the grid card, the Home card and the detail hero.
          */
         get: operations["getPracticeAreaAdmin"];
         put?: never;
@@ -696,7 +779,7 @@ export interface paths {
          * List attorneys
          * @description Every status, not just published.
          *
-         *     Carries `email`, which the public API never returns.
+         *     `email` is public: it is shown on the profile and on the practice-lead card.
          */
         get: operations["listPersonAdmin"];
         put?: never;
@@ -704,7 +787,7 @@ export interface paths {
          * Create a attorney
          * @description A slug is generated when none is given.
          *
-         *     Carries `email`, which the public API never returns.
+         *     `email` is public: it is shown on the profile and on the practice-lead card.
          */
         post: operations["createPerson"];
         delete?: never;
@@ -747,7 +830,7 @@ export interface paths {
          * Get one attorney in its editable shape
          * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
          *
-         *     Carries `email`, which the public API never returns.
+         *     `email` is public: it is shown on the profile and on the practice-lead card.
          */
         get: operations["getPersonAdmin"];
         put?: never;
@@ -817,7 +900,7 @@ export interface paths {
          * List insights
          * @description Every status, not just published.
          *
-         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
          */
         get: operations["listInsightAdmin"];
         put?: never;
@@ -825,7 +908,7 @@ export interface paths {
          * Create a insight
          * @description A slug is generated when none is given.
          *
-         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
          */
         post: operations["createInsight"];
         delete?: never;
@@ -868,7 +951,7 @@ export interface paths {
          * Get one insight in its editable shape
          * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
          *
-         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`.
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
          */
         get: operations["getInsightAdmin"];
         put?: never;
@@ -1048,7 +1131,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/content/recognitions": {
+    "/api/v1/admin/content/recognition-directories": {
         parameters: {
             query?: never;
             header?: never;
@@ -1056,23 +1139,27 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List recognitions
+         * List recognition directories
          * @description Every status, not just published.
+         *
+         *     Each directory has its own page, `GET /recognitions/{slug}`, listing its awards.
          */
-        get: operations["listRecognitionAdmin"];
+        get: operations["listRecognitionDirectoryAdmin"];
         put?: never;
         /**
-         * Create a recognition
+         * Create a recognition directory
          * @description A slug is generated when none is given.
+         *
+         *     Each directory has its own page, `GET /recognitions/{slug}`, listing its awards.
          */
-        post: operations["createRecognition"];
+        post: operations["createRecognitionDirectory"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/content/recognitions/reorder": {
+    "/api/v1/admin/content/recognition-directories/reorder": {
         parameters: {
             query?: never;
             header?: never;
@@ -1086,13 +1173,13 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Reorder recognitions
+         * Reorder recognition directories
          * @description Sets `order` from each id’s position. Ids not listed keep their order.
          */
-        patch: operations["reorderRecognition"];
+        patch: operations["reorderRecognitionDirectory"];
         trace?: never;
     };
-    "/api/v1/admin/content/recognitions/{id}": {
+    "/api/v1/admin/content/recognition-directories/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1103,27 +1190,29 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get one recognition in its editable shape
+         * Get one recognition directory in its editable shape
          * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+         *
+         *     Each directory has its own page, `GET /recognitions/{slug}`, listing its awards.
          */
-        get: operations["getRecognitionAdmin"];
+        get: operations["getRecognitionDirectoryAdmin"];
         put?: never;
         post?: never;
         /**
-         * Delete a recognition
+         * Delete a recognition directory
          * @description Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
          */
-        delete: operations["deleteRecognition"];
+        delete: operations["deleteRecognitionDirectory"];
         options?: never;
         head?: never;
         /**
-         * Update a recognition
+         * Update a recognition directory
          * @description Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
          */
-        patch: operations["updateRecognition"];
+        patch: operations["updateRecognitionDirectory"];
         trace?: never;
     };
-    "/api/v1/admin/content/recognitions/{id}/publish": {
+    "/api/v1/admin/content/recognition-directories/{id}/publish": {
         parameters: {
             query?: never;
             header?: never;
@@ -1133,17 +1222,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Publish a recognition
+         * Publish a recognition directory
          * @description Stamps `publishedAt` on first publish only, so republishing keeps the date.
          */
-        post: operations["publishRecognition"];
+        post: operations["publishRecognitionDirectory"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/content/recognitions/{id}/unpublish": {
+    "/api/v1/admin/content/recognition-directories/{id}/unpublish": {
         parameters: {
             query?: never;
             header?: never;
@@ -1153,10 +1242,252 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Unpublish a recognition
+         * Unpublish a recognition directory
          * @description Returns it to draft. The original `publishedAt` is kept.
          */
-        post: operations["unpublishRecognition"];
+        post: operations["unpublishRecognitionDirectory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/awards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List awards
+         * @description Every status, not just published.
+         *
+         *     `featuredOnHome` puts the badge in the Home Recognition band.
+         */
+        get: operations["listAwardAdmin"];
+        put?: never;
+        /**
+         * Create a award
+         * @description A slug is generated when none is given.
+         *
+         *     `featuredOnHome` puts the badge in the Home Recognition band.
+         */
+        post: operations["createAward"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/awards/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reorder awards
+         * @description Sets `order` from each id’s position. Ids not listed keep their order.
+         */
+        patch: operations["reorderAward"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/awards/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get one award in its editable shape
+         * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+         *
+         *     `featuredOnHome` puts the badge in the Home Recognition band.
+         */
+        get: operations["getAwardAdmin"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a award
+         * @description Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+         */
+        delete: operations["deleteAward"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a award
+         * @description Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+         */
+        patch: operations["updateAward"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/awards/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a award
+         * @description Stamps `publishedAt` on first publish only, so republishing keeps the date.
+         */
+        post: operations["publishAward"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/awards/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish a award
+         * @description Returns it to draft. The original `publishedAt` is kept.
+         */
+        post: operations["unpublishAward"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/industries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List industries
+         * @description Every status, not just published.
+         *
+         *     The shared list practice areas pick their industries from.
+         */
+        get: operations["listIndustryAdmin"];
+        put?: never;
+        /**
+         * Create a industry
+         * @description A slug is generated when none is given.
+         *
+         *     The shared list practice areas pick their industries from.
+         */
+        post: operations["createIndustry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/industries/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reorder industries
+         * @description Sets `order` from each id’s position. Ids not listed keep their order.
+         */
+        patch: operations["reorderIndustry"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/industries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get one industry in its editable shape
+         * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
+         *
+         *     The shared list practice areas pick their industries from.
+         */
+        get: operations["getIndustryAdmin"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a industry
+         * @description Refused with 409 when something still references it, listing what, so the dashboard can show where it is still used.
+         */
+        delete: operations["deleteIndustry"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a industry
+         * @description Requires `If-Match` carrying the revision read. A stale revision returns 409 with the current one, so two editors cannot silently overwrite each other (ADR-015).
+         */
+        patch: operations["updateIndustry"];
+        trace?: never;
+    };
+    "/api/v1/admin/content/industries/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a industry
+         * @description Stamps `publishedAt` on first publish only, so republishing keeps the date.
+         */
+        post: operations["publishIndustry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content/industries/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish a industry
+         * @description Returns it to draft. The original `publishedAt` is kept.
+         */
+        post: operations["unpublishIndustry"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1467,6 +1798,37 @@ export interface paths {
         patch: operations["patchAdminPage"];
         trace?: never;
     };
+    "/api/v1/admin/legal/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Which legal page. `terms` and `privacy` exist; any other key is a 404.
+                 * @example terms
+                 */
+                key: components["parameters"]["LegalKey"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get a legal page in its editable shape
+         * @description Minus `id`, `key`, `revision` and `updatedAt`, the body is a valid PUT body.
+         */
+        get: operations["getAdminLegalPage"];
+        /**
+         * Replace a legal page
+         * @description Whole-document replace, including `status`: setting it to `draft` takes the page off the
+         *     public site. Requires `If-Match`.
+         */
+        put: operations["replaceAdminLegalPage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/media": {
         parameters: {
             query?: never;
@@ -1483,10 +1845,12 @@ export interface paths {
         get: operations["listMedia"];
         put?: never;
         /**
-         * Upload an image
-         * @description JPEG, PNG, WebP or AVIF, at most 10 MB, type checked by magic bytes
-         *     rather than by extension. SVG is rejected because it can carry scripts;
-         *     export badges as PNG (ADR-016). Alt text is required on upload.
+         * Upload an image or a PDF document
+         * @description An image is a JPEG, PNG, WebP or AVIF of at most 10 MB, and needs alt
+         *     text. A document (`kind: document`) is a PDF of at most 20 MB, and needs
+         *     a title. The type is checked by magic bytes rather than by extension,
+         *     and must match the `kind` asked for. SVG is rejected because it can
+         *     carry scripts; export badges as PNG (ADR-016).
          */
         post: operations["uploadMedia"];
         delete?: never;
@@ -1538,7 +1902,8 @@ export interface paths {
         get?: never;
         /**
          * Replace the file, keeping the id
-         * @description The id and alt text stay, so every page using this image updates at
+         * @description The replacement must be the same kind: an image for an image, a PDF for
+         *     a document. The id and alt text stay, so every page using this media updates at
          *     once. The new file gets a new URL, so no cache can serve the old one;
          *     the old file is deleted after the swap succeeds, every referencing
          *     entity is invalidated, and the action is audit-logged (ADR-013).
@@ -1840,6 +2205,19 @@ export interface components {
         /** @description Null until the firm uploads an image through the admin UI. */
         NullableImage: components["schemas"]["Image"] | null;
         /**
+         * @description An uploaded PDF from the media library, such as the firm profile. Documents have no
+         *     responsive sizes and no alt text; `title` is what a link to one should read.
+         */
+        Document: {
+            url: string;
+            title: string;
+            bytes: number;
+            /** @enum {string} */
+            mimeType: "application/pdf";
+        };
+        /** @description Null until the firm uploads the document through the admin UI. */
+        NullableDocument: components["schemas"]["Document"] | null;
+        /**
          * @description `internal` is a path on the site, `external` an absolute URL, and `action` one of the
          *     frontend-resolved actions: `action:mandate`, `action:chat`, `action:message`,
          *     `action:call`.
@@ -1852,6 +2230,16 @@ export interface components {
             kind: components["schemas"]["LinkKind"];
         };
         NullableLink: components["schemas"]["Link"] | null;
+        /**
+         * @description A call to action the design shows before its destination is decided. The label is real
+         *     copy; `href` and `kind` are both null until the firm decides where it goes, and are
+         *     then both set, exactly as on a `Link`.
+         */
+        PendingLink: {
+            label: string;
+            href: string | null;
+            kind: components["schemas"]["LinkKind"] | null;
+        };
         /** @description The eyebrow/title/CTA trio that opens most sections. Unused parts are null. */
         SectionHeader: {
             eyebrow: string | null;
@@ -1887,7 +2275,12 @@ export interface components {
         Hero: {
             title: string;
             subtitle: string | null;
-            image: components["schemas"]["NullableImage"];
+            /**
+             * @description The hero's background slides. Only the image changes between slides; the title,
+             *     subtitle and CTAs are shared. Home has three in the designs and every other hero
+             *     one. Empty until the firm uploads a picture, the way a single image used to be null.
+             */
+            images: components["schemas"]["Image"][];
             primaryCta: components["schemas"]["NullableLink"];
             secondaryCta: components["schemas"]["NullableLink"];
         };
@@ -1897,7 +2290,7 @@ export interface components {
             label: string;
         };
         /** @enum {string} */
-        PersonRole: "managing_partner" | "partner" | "associate_partner" | "senior_associate" | "associate" | "nysc_associate";
+        PersonRole: "managing_partner" | "partner" | "associate_partner" | "senior_associate" | "associate" | "trainee_associate";
         /**
          * @description The accepted values of the `role` query parameter. Same values as `PersonRole`, but
          *     `partner` behaves as a group and also matches `managing_partner`, mirroring the
@@ -1905,9 +2298,14 @@ export interface components {
          *     though the directory shows no tab for it.
          * @enum {string}
          */
-        PersonRoleFilter: "managing_partner" | "partner" | "associate_partner" | "senior_associate" | "associate" | "nysc_associate";
-        /** @enum {string} */
-        InsightCategory: "firm_news" | "articles" | "insights" | "regulatory_updates" | "news_updates" | "media_coverage" | "webinar_resources";
+        PersonRoleFilter: "managing_partner" | "partner" | "associate_partner" | "senior_associate" | "associate" | "trainee_associate";
+        /**
+         * @description `pro_bono` ("Pro Bono & Community Commitment") is not a listing tab: those insights are
+         *     the Responsible Business page's stories, and appear in a listing only when
+         *     `category=pro_bono` is asked for explicitly.
+         * @enum {string}
+         */
+        InsightCategory: "firm_news" | "articles" | "insights" | "regulatory_updates" | "news_updates" | "events" | "pro_bono";
         /**
          * @description Controls whether the card reads "Read More" or "Watch Video".
          * @enum {string}
@@ -1918,9 +2316,9 @@ export interface components {
         /** @enum {string} */
         WorkMode: "onsite" | "hybrid" | "remote";
         /** @enum {string} */
-        RecognitionTab: "achievements" | "recognized_by";
+        PageKey: "home" | "about" | "practice-areas" | "people" | "insights" | "careers" | "faq" | "offices" | "recognition" | "responsible-business";
         /** @enum {string} */
-        PageKey: "home" | "about" | "practice-areas" | "people" | "insights" | "careers" | "faq" | "offices";
+        LegalPageKey: "terms" | "privacy";
         /** @description A minimal practice area, used for chips and links. */
         PracticeAreaRef: {
             id: components["schemas"]["ObjectId"];
@@ -1928,6 +2326,24 @@ export interface components {
             title: string;
             /** @description The compact label used on the Home tab bar. */
             shortLabel: string;
+        };
+        /** @description A practice area as a chip or a link — `/practice-areas/{slug}`. */
+        PracticeAreaLink: {
+            slug: components["schemas"]["Slug"];
+            title: string;
+        };
+        /** @description An industry from the shared list practice areas pick from. */
+        IndustryRef: {
+            name: string;
+            slug: components["schemas"]["Slug"];
+        };
+        CoreService: {
+            title: string;
+            description: string;
+        };
+        PracticeAreaApproach: {
+            text: string;
+            points: string[];
         };
         PracticeAreaCard: {
             id: components["schemas"]["ObjectId"];
@@ -1937,24 +2353,58 @@ export interface components {
             summary: string;
             image: components["schemas"]["NullableImage"];
         };
+        /**
+         * @description The practice area detail page. The three texts differ by where they appear: `summary`
+         *     on the Practice Areas grid card, `homeSummary` on the Home carousel card, and
+         *     `heroIntro` in this page's hero.
+         */
         PracticeAreaDetail: {
             id: components["schemas"]["ObjectId"];
             slug: components["schemas"]["Slug"];
             title: string;
             shortLabel: string;
             summary: string;
+            homeSummary: string;
+            heroIntro: string;
             image: components["schemas"]["NullableImage"];
-            /** @description Sanitised HTML. Null until the firm supplies detail-page copy. */
-            body: string | null;
-            keyServices: string[];
-            /** @description The attorneys to contact about this practice area. */
-            contacts: components["schemas"]["PersonSummary"][];
-            relatedInsights: components["schemas"]["InsightCard"][];
+            /** @description The detail hero's slides. Empty until the firm uploads them. */
+            heroImages: components["schemas"]["Image"][];
+            /** @description The first paragraph of the page, as plain text. */
+            overview: string | null;
+            coreServices: components["schemas"]["CoreService"][];
+            approach: components["schemas"]["PracticeAreaApproach"] | null;
+            industries: components["schemas"]["IndustryRef"][];
+            /** @description The "Practice Lead" card. Null when no published attorney is assigned. */
+            lead: components["schemas"]["PracticeAreaLead"] | null;
+            /** @description Every published practice area, in order, for the sidebar. */
+            siblings: components["schemas"]["PracticeAreaLink"][];
+            /** @description The latest insights tagged with this area, never pro bono stories. */
+            recentPublications: components["schemas"]["InsightCard"][];
             seo: components["schemas"]["SeoBasic"];
+        };
+        /**
+         * @description The Practice Lead card: a person summary plus the email address behind the card's
+         *     email icon. Photo and name always come from the linked attorney, so the card cannot
+         *     disagree with their profile.
+         */
+        PracticeAreaLead: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            displayName: string;
+            role: components["schemas"]["PersonRole"];
+            roleLabel: string;
+            photo: components["schemas"]["NullableImage"];
+            linkedinUrl: string | null;
+            cardBio: string | null;
+            practiceAreas: components["schemas"]["PracticeAreaLink"][];
+            email: string | null;
         };
         /**
          * @description Used on directory cards, author blocks and the leadership row. `displayName` includes the
          *     honorific only when it is "Dr.", matching the designs, and appends any post-nominals.
+         *
+         *     It carries the card's back face too — `cardBio` and the practice-area chips — so every
+         *     card can flip without another request.
          */
         PersonSummary: {
             id: components["schemas"]["ObjectId"];
@@ -1966,8 +2416,20 @@ export interface components {
             roleLabel: string;
             photo: components["schemas"]["NullableImage"];
             linkedinUrl: string | null;
+            /** @description The short italic line on the back of the card. */
+            cardBio: string | null;
+            /** @description The chips on the back of the card. */
+            practiceAreas: components["schemas"]["PracticeAreaLink"][];
         };
-        /** @description The attorney bio. Email is deliberately never exposed publicly. */
+        PersonEducation: {
+            intro: string | null;
+            entries: {
+                /** @example Ph.D. in Private International Law, King's College, University of London */
+                qualification: string;
+                year: number | null;
+            }[];
+        };
+        /** @description The attorney profile. Email is public, shown on the profile. */
         PersonDetail: {
             id: components["schemas"]["ObjectId"];
             slug: components["schemas"]["Slug"];
@@ -1980,12 +2442,20 @@ export interface components {
             roleLabel: string;
             photo: components["schemas"]["NullableImage"];
             linkedinUrl: string | null;
-            /** @description Sanitised HTML. */
+            instagramUrl: string | null;
+            email: string | null;
+            cardBio: string | null;
+            /** @description Sanitised HTML, two or more paragraphs. */
             bio: string | null;
             quote: string | null;
-            practiceAreas: components["schemas"]["PracticeAreaRef"][];
+            /** @description Shown under the portrait. */
+            primaryPracticeArea: components["schemas"]["PracticeAreaLink"] | null;
+            practiceAreas: components["schemas"]["PracticeAreaLink"][];
+            education: components["schemas"]["PersonEducation"];
+            memberships: string[];
             office: components["schemas"]["OfficeRef"] | null;
-            insights: components["schemas"]["InsightCard"][];
+            /** @description The latest insights they wrote, never pro bono stories. */
+            recentPublications: components["schemas"]["InsightCard"][];
         };
         /** @description An insight is written either by an attorney or by the firm itself. */
         InsightAuthor: components["schemas"]["InsightAuthorPerson"] | components["schemas"]["InsightAuthorFirm"];
@@ -2014,6 +2484,18 @@ export interface components {
             label: string;
             /** @enum {string} */
             kind: "read_more" | "watch_video";
+        };
+        /**
+         * @description The link at the end of an article or video: "Read Article" to the external article or
+         *     uploaded PDF, or "Watch Video" to the video.
+         */
+        InsightDetailCta: {
+            /**
+             * @example Read Article
+             * @example Watch Video
+             */
+            label: string;
+            url: string;
         };
         InsightCard: {
             id: components["schemas"]["ObjectId"];
@@ -2051,7 +2533,12 @@ export interface components {
             /** Format: date-time */
             publishedAt: string | null;
             featured: boolean;
-            cta: components["schemas"]["InsightCta"];
+            /**
+             * @description Unlike a card's `cta`, a link with a destination. Null for an article with neither an
+             *     external URL nor an uploaded document.
+             */
+            cta: components["schemas"]["InsightDetailCta"] | null;
+            backLink: components["schemas"]["Link"];
             /** @description Sanitised HTML. Null for video insights. */
             body: string | null;
             /** @description Set when `format` is `video`. */
@@ -2082,16 +2569,45 @@ export interface components {
             coordinates: components["schemas"]["Coordinates"] | null;
             directionsUrl: string | null;
         };
-        Recognition: {
+        /** @description A directory as a link to its recognition page, `/recognition/{slug}`. */
+        RecognitionDirectoryLink: {
+            /** @example IFLR 1000 */
+            name: string;
+            slug: components["schemas"]["Slug"];
+        };
+        RecognitionDirectoryRef: {
             id: components["schemas"]["ObjectId"];
-            /** @example IFLR1000 */
-            organization: string;
-            /** @example Recommended Firm */
+            name: string;
+            slug: components["schemas"]["Slug"];
+            /** @description The wordmark in the "Independently Recognized By" tile. */
+            logo: components["schemas"]["NullableImage"];
+        };
+        Award: {
+            id: components["schemas"]["ObjectId"];
+            /** @example Chambers Global: Top Ranked Leading Firm */
             title: string;
-            year: number | null;
+            year: number;
             badge: components["schemas"]["NullableImage"];
-            url: string | null;
-            tab: components["schemas"]["RecognitionTab"];
+            directory: components["schemas"]["RecognitionDirectoryLink"];
+        };
+        /** @description The two tabs of the recognition component. */
+        RecognitionsOverview: {
+            /** @description "Independently Recognized By": every published directory, in order. */
+            directories: components["schemas"]["RecognitionDirectoryRef"][];
+            /** @description "Our Achievements": the awards flagged for Home, in order. */
+            achievements: components["schemas"]["Award"][];
+        };
+        RecognitionDirectoryPage: {
+            directory: components["schemas"]["RecognitionDirectoryRef"];
+            /**
+             * @description Titled with the directory's name, with its own subtitle and slides, and the CTAs
+             *     every directory page shares.
+             */
+            hero: components["schemas"]["Hero"];
+            /** @example Awards by the years */
+            awardsEyebrow: string;
+            /** @description Every published award from this directory, newest year first. */
+            awards: components["schemas"]["Award"][];
         };
         Faq: {
             id: components["schemas"]["ObjectId"];
@@ -2136,8 +2652,9 @@ export interface components {
             copyright: string;
         };
         /**
-         * @description Dropdown contents are not designed yet. The Practice Areas dropdown is generated from the
-         *     practice areas collection; other dropdowns currently have an empty `children` array.
+         * @description Two entries have dropdowns. About Us lists anchors into the About page, edited in
+         *     settings. Insights & News lists the public insight categories, each linking to
+         *     `/insights?category=<value>`. Every other entry has an empty `children` array.
          */
         NavItem: {
             label: string;
@@ -2147,13 +2664,37 @@ export interface components {
         };
         SiteFooter: {
             tagline: string;
-            /** @description Mirrors the main nav. */
+            /** @description The "Quick Links" column, edited in settings. */
             links: components["schemas"]["Link"][];
             /** @description Only practice areas flagged for the footer. */
             practiceAreas: components["schemas"]["PracticeAreaRef"][];
-            offices: components["schemas"]["OfficeRef"][];
+            offices: components["schemas"]["FooterOffice"][];
+            /** @description Terms of Service and Privacy Policy. */
+            legalLinks: components["schemas"]["Link"][];
+            newsletter: components["schemas"]["SiteNewsletter"];
             socials: components["schemas"]["Socials"];
             copyright: string;
+        };
+        /**
+         * @description An office in the footer column. `phone` and `email` fall back to the site-wide values
+         *     when the office has none of its own.
+         */
+        FooterOffice: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            name: string;
+            address: string;
+            phone: string | null;
+            email: string | null;
+        };
+        /**
+         * @description The footer newsletter block's copy. There is no subscribe endpoint: while `enabled` is
+         *     false the frontend shows no form.
+         */
+        SiteNewsletter: {
+            title: string;
+            note: string;
+            enabled: boolean;
         };
         StillHaveQuestions: {
             title: string;
@@ -2197,19 +2738,17 @@ export interface components {
         HomeVideoShowcase: {
             videoUrl: string | null;
             poster: components["schemas"]["NullableImage"];
+            caption: string | null;
         };
-        /** @description The Recognition band on the home page: a heading, a picture, the two tab labels for the badges beneath, and a link to the full list. */
-        HomeRecognitionTabs: {
+        /** @description The Recognition band on the home page. */
+        HomeRecognitionSection: {
             eyebrow: string | null;
             title: string;
             image: components["schemas"]["NullableImage"];
-            cta: components["schemas"]["NullableLink"];
-            achievementsLabel: string;
-            recognizedByLabel: string;
-        };
-        HomeRecognitions: {
-            achievements: components["schemas"]["Recognition"][];
-            recognizedBy: components["schemas"]["Recognition"][];
+            /** @description "View Our Recognitions". Its destination is not decided yet. */
+            cta: components["schemas"]["PendingLink"];
+            /** @description The awards flagged for Home, in order. */
+            badges: components["schemas"]["Award"][];
         };
         HomeWhyChooseUs: {
             eyebrow: string | null;
@@ -2227,17 +2766,29 @@ export interface components {
             hero: components["schemas"]["Hero"];
             aboutFirm: components["schemas"]["HomeAboutFirm"];
             videoShowcase: components["schemas"]["HomeVideoShowcase"];
-            recognitionTabs: components["schemas"]["HomeRecognitionTabs"];
-            recognitions: components["schemas"]["HomeRecognitions"];
+            recognitionSection: components["schemas"]["HomeRecognitionSection"];
             practiceSection: components["schemas"]["SectionHeader"];
-            /** @description Practice areas flagged for the Home tab bar, in order. */
+            /**
+             * @description Practice areas flagged for the Home tab bar, in tab order. On these cards `summary`
+             *     carries the area's Home text (`homeSummary`), which differs from the grid card's.
+             */
             practiceAreas: components["schemas"]["PracticeAreaCard"][];
             leadershipSection: components["schemas"]["SectionHeader"];
+            /** @description Each summary carries its card-back data (`cardBio`, practice-area chips). */
             leadership: components["schemas"]["PersonSummary"][];
             whyChooseUs: components["schemas"]["HomeWhyChooseUs"];
             insightsSection: components["schemas"]["SectionHeader"];
             latestInsights: components["schemas"]["InsightCard"][];
             seo: components["schemas"]["Seo"];
+        };
+        /**
+         * @description "To learn more about the firm, you may download a copy of our profile here", where
+         *     `linkLabel` is the linked word.
+         */
+        AboutProfileDownload: {
+            leadText: string;
+            linkLabel: string;
+            document: components["schemas"]["NullableDocument"];
         };
         AboutStory: {
             eyebrow: string | null;
@@ -2245,6 +2796,7 @@ export interface components {
             paragraphs: string[];
             quote: string | null;
             quotePerson: components["schemas"]["PersonSummary"] | null;
+            profileDownload: components["schemas"]["AboutProfileDownload"] | null;
         };
         AboutStats: {
             title: string;
@@ -2252,6 +2804,7 @@ export interface components {
         };
         TitledBody: {
             title: string;
+            /** @description Sanitised HTML ("Our Asset" has bold phrases). */
             body: string;
         };
         AboutMissionSection: {
@@ -2267,15 +2820,15 @@ export interface components {
             image: components["schemas"]["NullableImage"];
             items: components["schemas"]["IconItem"][];
         };
-        AwardListItem: {
-            name: string;
-            url: string | null;
-        };
         AboutAwardsList: {
             eyebrow: string | null;
             title: string;
             image: components["schemas"]["NullableImage"];
-            items: components["schemas"]["AwardListItem"][];
+            /**
+             * @description One row per published recognition directory, in order, each linking to
+             *     `/recognition/{slug}`. Taken from the directories collection, not stored on the page.
+             */
+            items: components["schemas"]["RecognitionDirectoryLink"][];
         };
         AboutPage: {
             /**
@@ -2291,10 +2844,12 @@ export interface components {
             awardsList: components["schemas"]["AboutAwardsList"];
             seo: components["schemas"]["Seo"];
         };
+        /** @description The Pro Bono & Community Commitment carousel. Only the image changes per slide. */
         CsrBanner: {
             title: string;
             text: string;
-            image: components["schemas"]["NullableImage"];
+            images: components["schemas"]["Image"][];
+            /** @description "Learn About Our CSR", to `/responsible-business`. */
             cta: components["schemas"]["NullableLink"];
         };
         PracticeAreasPage: {
@@ -2319,6 +2874,11 @@ export interface components {
             hero: components["schemas"]["Hero"];
             directorySection: components["schemas"]["SectionHeader"];
             roleFilters: components["schemas"]["FilterOption"][];
+            /**
+             * @description The "Practice Area" dropdown: every published area, `value` being the slug to pass
+             *     as `?practiceArea=`. It combines with the role tabs.
+             */
+            practiceAreaFilters: components["schemas"]["FilterOption"][];
             seo: components["schemas"]["Seo"];
         };
         /** @description The listing grid itself is fetched from `GET /insights`. */
@@ -2331,9 +2891,29 @@ export interface components {
             /** @description Null by design: the page opens with the featured carousel. */
             hero: components["schemas"]["Hero"] | null;
             featured: components["schemas"]["InsightCard"][];
+            /** @description The public category tabs. `pro_bono` is not one of them. */
             categoryFilters: components["schemas"]["FilterOption"][];
+            /** @description The "Sort By" dropdown, which filters by practice area slug. */
+            practiceAreaFilters: components["schemas"]["FilterOption"][];
             listingSection: components["schemas"]["SectionHeader"];
             seo: components["schemas"]["Seo"];
+        };
+        /**
+         * @description Shown in place of the job cards when nothing is open. The CTA's behaviour is not
+         *     decided yet, so only its label is served.
+         */
+        CareersEmptyState: {
+            title: string;
+            /** @description Sanitised HTML, with a mailto link. */
+            body: string;
+            ctaLabel: string;
+        };
+        CareersJobsSection: {
+            eyebrow: string | null;
+            title: string;
+            cta: components["schemas"]["NullableLink"];
+            /** @description Present only when there are no open jobs; null otherwise. */
+            emptyState: components["schemas"]["CareersEmptyState"] | null;
         };
         CareersPage: {
             /**
@@ -2342,7 +2922,7 @@ export interface components {
              */
             key: "careers";
             hero: components["schemas"]["Hero"];
-            jobsSection: components["schemas"]["SectionHeader"];
+            jobsSection: components["schemas"]["CareersJobsSection"];
             jobs: components["schemas"]["Job"][];
             seo: components["schemas"]["Seo"];
         };
@@ -2366,7 +2946,55 @@ export interface components {
             offices: components["schemas"]["Office"][];
             seo: components["schemas"]["Seo"];
         };
-        Page: components["schemas"]["HomePage"] | components["schemas"]["AboutPage"] | components["schemas"]["PracticeAreasPage"] | components["schemas"]["PeoplePage"] | components["schemas"]["InsightsPage"] | components["schemas"]["CareersPage"] | components["schemas"]["FaqPage"] | components["schemas"]["OfficesPage"];
+        /** @description What every directory's recognition page shares. */
+        RecognitionDirectoryLabels: {
+            awardsEyebrow: string;
+            primaryCta: components["schemas"]["NullableLink"];
+            secondaryCta: components["schemas"]["NullableLink"];
+        };
+        /**
+         * @description The labels shared by every `GET /recognitions/{slug}` page. The frontend renders those
+         *     pages from that endpoint, which already embeds these; this document exists so the firm
+         *     can edit them.
+         */
+        RecognitionPage: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            key: "recognition";
+            directoryPage: components["schemas"]["RecognitionDirectoryLabels"];
+            seo: components["schemas"]["Seo"];
+        };
+        /**
+         * @description The CSR page. Its grid is `GET /insights?category=pro_bono`, 9 per page. The nav
+         *     highlights Practice Areas while it is open.
+         */
+        ResponsibleBusinessPage: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            key: "responsible-business";
+            /** @example RESPONSIBLE BUSINESS */
+            title: string;
+            /** @description The carousel. Empty until the firm uploads them. */
+            images: components["schemas"]["Image"][];
+            backLink: components["schemas"]["Link"];
+            seo: components["schemas"]["Seo"];
+        };
+        LegalPage: {
+            key: components["schemas"]["LegalPageKey"];
+            title: string;
+            /** @description Sanitised HTML. */
+            body: string;
+            /**
+             * Format: date-time
+             * @description When the page was last edited, for a "Last updated" line.
+             */
+            updatedAt: string;
+        };
+        Page: components["schemas"]["HomePage"] | components["schemas"]["AboutPage"] | components["schemas"]["PracticeAreasPage"] | components["schemas"]["PeoplePage"] | components["schemas"]["InsightsPage"] | components["schemas"]["CareersPage"] | components["schemas"]["FaqPage"] | components["schemas"]["OfficesPage"] | components["schemas"]["RecognitionPage"] | components["schemas"]["ResponsibleBusinessPage"];
         /** @description The only thing a form returns. Nothing the submitter typed is echoed back. */
         SubmissionReceipt: {
             /** @example ENQ-7F3K2A */
@@ -2538,6 +3166,7 @@ export interface components {
             /** Format: date-time */
             at: string;
         };
+        /** @description A media preview. For a document, `alt` carries its title. */
         ExpandedMedia: {
             /** @enum {string} */
             kind: "media";
@@ -2576,18 +3205,26 @@ export interface components {
             updatedAt: string;
             title: string;
             shortLabel: string;
+            /** @description The Practice Areas grid card. */
             summary: string;
+            /** @description The Home carousel card. */
+            homeSummary: string;
+            /** @description The detail page's hero paragraph. */
+            heroIntro: string;
             image: components["schemas"]["ObjectId"] | null;
-            body: string | null;
-            keyServices: string[];
-            contacts: components["schemas"]["ObjectId"][];
+            heroImages: components["schemas"]["ObjectId"][];
+            overview: string | null;
+            coreServices: components["schemas"]["CoreService"][];
+            approach: components["schemas"]["PracticeAreaApproach"] | null;
+            industries: components["schemas"]["ObjectId"][];
+            /** @description The attorney on the "Practice Lead" card. */
+            lead: components["schemas"]["ObjectId"] | null;
             featuredOnHome: boolean;
             homeOrder: number | null;
             showInFooter: boolean;
             seo: components["schemas"]["SeoWrite"];
             _expanded: components["schemas"]["Expanded"];
         };
-        /** @description Unlike the public shape, this carries `email`, which the site never shows. */
         PersonAdmin: {
             id: components["schemas"]["ObjectId"];
             slug: components["schemas"]["Slug"];
@@ -2608,10 +3245,16 @@ export interface components {
             role: components["schemas"]["PersonRole"];
             photo: components["schemas"]["ObjectId"] | null;
             linkedinUrl: string | null;
+            instagramUrl: string | null;
+            /** @description Public — shown on the profile and the practice-lead card. */
             email: string | null;
+            cardBio: string | null;
             bio: string | null;
             quote: string | null;
+            primaryPracticeArea: components["schemas"]["ObjectId"] | null;
             practiceAreas: components["schemas"]["ObjectId"][];
+            education: components["schemas"]["PersonEducation"];
+            memberships: string[];
             office: components["schemas"]["ObjectId"] | null;
             featuredInLeadership: boolean;
             _expanded: components["schemas"]["Expanded"];
@@ -2639,6 +3282,10 @@ export interface components {
             /** @description Null means the firm is the author. */
             author: components["schemas"]["ObjectId"] | null;
             coverImage: components["schemas"]["ObjectId"] | null;
+            /** @description Where "Read Article" goes. At most one of `externalUrl` and `document`. */
+            externalUrl: string | null;
+            /** @description An uploaded PDF (a document in the media library) that "Read Article" opens. */
+            document: components["schemas"]["ObjectId"] | null;
             featured: boolean;
             _expanded: components["schemas"]["Expanded"];
         };
@@ -2671,7 +3318,7 @@ export interface components {
             /** @description [longitude, latitude], in GeoJSON order. */
             coordinates: number[];
         };
-        RecognitionAdmin: {
+        RecognitionDirectoryAdmin: {
             id: components["schemas"]["ObjectId"];
             slug: components["schemas"]["Slug"];
             /** @enum {string} */
@@ -2684,12 +3331,49 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
-            organization: string;
+            name: string;
+            /** @description The wordmark in the "Independently Recognized By" tile. */
+            logo: components["schemas"]["ObjectId"] | null;
+            heroSubtitle: string | null;
+            heroImages: components["schemas"]["ObjectId"][];
+            _expanded: components["schemas"]["Expanded"];
+        };
+        AwardAdmin: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            publishedAt: string | null;
+            order: number;
+            revision: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @description The recognition directory that gave the award. */
+            directory: components["schemas"]["ObjectId"];
             title: string;
-            year: number | null;
+            year: number;
             badge: components["schemas"]["ObjectId"] | null;
-            url: string | null;
-            tab: components["schemas"]["RecognitionTab"];
+            /** @description Shown as a badge in the Home Recognition band and the Achievements tab. */
+            featuredOnHome: boolean;
+            _expanded: components["schemas"]["Expanded"];
+        };
+        IndustryAdmin: {
+            id: components["schemas"]["ObjectId"];
+            slug: components["schemas"]["Slug"];
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            publishedAt: string | null;
+            order: number;
+            revision: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            name: string;
             _expanded: components["schemas"]["Expanded"];
         };
         FaqAdmin: {
@@ -2740,11 +3424,20 @@ export interface components {
             slug?: components["schemas"]["Slug"];
             title: string;
             shortLabel: string;
+            /** @description The Practice Areas grid card. */
             summary: string;
+            /** @description The Home carousel card. */
+            homeSummary: string;
+            /** @description The detail page's hero paragraph. */
+            heroIntro: string;
             image?: components["schemas"]["ObjectId"] | null;
-            body?: string | null;
-            keyServices?: string[];
-            contacts?: components["schemas"]["ObjectId"][];
+            heroImages?: components["schemas"]["ObjectId"][];
+            overview?: string | null;
+            coreServices: components["schemas"]["CoreService"][];
+            approach?: components["schemas"]["PracticeAreaApproach"] | null;
+            industries?: components["schemas"]["ObjectId"][];
+            /** @description The attorney on the "Practice Lead" card. */
+            lead?: components["schemas"]["ObjectId"] | null;
             featuredOnHome?: boolean;
             homeOrder?: number | null;
             showInFooter?: boolean;
@@ -2755,11 +3448,20 @@ export interface components {
             slug?: components["schemas"]["Slug"];
             title?: string;
             shortLabel?: string;
+            /** @description The Practice Areas grid card. */
             summary?: string;
+            /** @description The Home carousel card. */
+            homeSummary?: string;
+            /** @description The detail page's hero paragraph. */
+            heroIntro?: string;
             image?: components["schemas"]["ObjectId"] | null;
-            body?: string | null;
-            keyServices?: string[];
-            contacts?: components["schemas"]["ObjectId"][];
+            heroImages?: components["schemas"]["ObjectId"][];
+            overview?: string | null;
+            coreServices?: components["schemas"]["CoreService"][];
+            approach?: components["schemas"]["PracticeAreaApproach"] | null;
+            industries?: components["schemas"]["ObjectId"][];
+            /** @description The attorney on the "Practice Lead" card. */
+            lead?: components["schemas"]["ObjectId"] | null;
             featuredOnHome?: boolean;
             homeOrder?: number | null;
             showInFooter?: boolean;
@@ -2775,10 +3477,16 @@ export interface components {
             role: components["schemas"]["PersonRole"];
             photo?: components["schemas"]["ObjectId"] | null;
             linkedinUrl?: string | null;
+            instagramUrl?: string | null;
+            /** @description Public — shown on the profile and the practice-lead card. */
             email?: string | null;
+            cardBio?: string | null;
             bio?: string | null;
             quote?: string | null;
+            primaryPracticeArea?: components["schemas"]["ObjectId"] | null;
             practiceAreas?: components["schemas"]["ObjectId"][];
+            education?: components["schemas"]["PersonEducation"];
+            memberships?: string[];
             office?: components["schemas"]["ObjectId"] | null;
             featuredInLeadership?: boolean;
         };
@@ -2792,10 +3500,16 @@ export interface components {
             role?: components["schemas"]["PersonRole"];
             photo?: components["schemas"]["ObjectId"] | null;
             linkedinUrl?: string | null;
+            instagramUrl?: string | null;
+            /** @description Public — shown on the profile and the practice-lead card. */
             email?: string | null;
+            cardBio?: string | null;
             bio?: string | null;
             quote?: string | null;
+            primaryPracticeArea?: components["schemas"]["ObjectId"] | null;
             practiceAreas?: components["schemas"]["ObjectId"][];
+            education?: components["schemas"]["PersonEducation"];
+            memberships?: string[];
             office?: components["schemas"]["ObjectId"] | null;
             featuredInLeadership?: boolean;
         };
@@ -2812,6 +3526,10 @@ export interface components {
             /** @description Null means the firm is the author. */
             author?: components["schemas"]["ObjectId"] | null;
             coverImage?: components["schemas"]["ObjectId"] | null;
+            /** @description Where "Read Article" goes. At most one of `externalUrl` and `document`. */
+            externalUrl?: string | null;
+            /** @description An uploaded PDF (a document in the media library) that "Read Article" opens. */
+            document?: components["schemas"]["ObjectId"] | null;
             featured?: boolean;
         };
         /** @description Any subset of the insight fields. Requires `If-Match`. */
@@ -2827,6 +3545,10 @@ export interface components {
             /** @description Null means the firm is the author. */
             author?: components["schemas"]["ObjectId"] | null;
             coverImage?: components["schemas"]["ObjectId"] | null;
+            /** @description Where "Read Article" goes. At most one of `externalUrl` and `document`. */
+            externalUrl?: string | null;
+            /** @description An uploaded PDF (a document in the media library) that "Read Article" opens. */
+            document?: components["schemas"]["ObjectId"] | null;
             featured?: boolean;
         };
         /** @description Creates a office. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
@@ -2853,25 +3575,55 @@ export interface components {
             phone?: string | null;
             email?: string | null;
         };
-        /** @description Creates a recognition. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
-        RecognitionCreate: {
+        /** @description Creates a recognition directory. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
+        RecognitionDirectoryCreate: {
             slug?: components["schemas"]["Slug"];
-            organization: string;
-            title: string;
-            year?: number | null;
-            badge?: components["schemas"]["ObjectId"] | null;
-            url?: string | null;
-            tab: components["schemas"]["RecognitionTab"];
+            name: string;
+            /** @description The wordmark in the "Independently Recognized By" tile. */
+            logo?: components["schemas"]["ObjectId"] | null;
+            heroSubtitle?: string | null;
+            heroImages?: components["schemas"]["ObjectId"][];
         };
-        /** @description Any subset of the recognition fields. Requires `If-Match`. */
-        RecognitionUpdate: {
+        /** @description Any subset of the recognition directory fields. Requires `If-Match`. */
+        RecognitionDirectoryUpdate: {
             slug?: components["schemas"]["Slug"];
-            organization?: string;
-            title?: string;
-            year?: number | null;
+            name?: string;
+            /** @description The wordmark in the "Independently Recognized By" tile. */
+            logo?: components["schemas"]["ObjectId"] | null;
+            heroSubtitle?: string | null;
+            heroImages?: components["schemas"]["ObjectId"][];
+        };
+        /** @description Creates a award. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
+        AwardCreate: {
+            slug?: components["schemas"]["Slug"];
+            /** @description The recognition directory that gave the award. */
+            directory: components["schemas"]["ObjectId"];
+            title: string;
+            year: number;
             badge?: components["schemas"]["ObjectId"] | null;
-            url?: string | null;
-            tab?: components["schemas"]["RecognitionTab"];
+            /** @description Shown as a badge in the Home Recognition band and the Achievements tab. */
+            featuredOnHome?: boolean;
+        };
+        /** @description Any subset of the award fields. Requires `If-Match`. */
+        AwardUpdate: {
+            slug?: components["schemas"]["Slug"];
+            /** @description The recognition directory that gave the award. */
+            directory?: components["schemas"]["ObjectId"];
+            title?: string;
+            year?: number;
+            badge?: components["schemas"]["ObjectId"] | null;
+            /** @description Shown as a badge in the Home Recognition band and the Achievements tab. */
+            featuredOnHome?: boolean;
+        };
+        /** @description Creates a industry. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
+        IndustryCreate: {
+            slug?: components["schemas"]["Slug"];
+            name: string;
+        };
+        /** @description Any subset of the industry fields. Requires `If-Match`. */
+        IndustryUpdate: {
+            slug?: components["schemas"]["Slug"];
+            name?: string;
         };
         /** @description Creates a FAQ. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
         FaqCreate: {
@@ -2935,6 +3687,13 @@ export interface components {
             };
             stillHaveQuestions: components["schemas"]["StillHaveQuestions"];
             contactCallout: components["schemas"]["ContactCallout"];
+            /** @description The About Us dropdown, as anchors into the About page (`/about#story`). */
+            aboutAnchors: components["schemas"]["Link"][];
+            /** @description The footer's Quick Links column. */
+            footerLinks: components["schemas"]["Link"][];
+            /** @description The footer's Terms of Service and Privacy Policy links. */
+            legalLinks: components["schemas"]["Link"][];
+            newsletter: components["schemas"]["SiteNewsletter"];
         };
         SettingsWrite: {
             firmName: string;
@@ -2951,6 +3710,13 @@ export interface components {
             };
             stillHaveQuestions: components["schemas"]["StillHaveQuestions"];
             contactCallout: components["schemas"]["ContactCallout"];
+            /** @description The About Us dropdown, as anchors into the About page (`/about#story`). */
+            aboutAnchors: components["schemas"]["Link"][];
+            /** @description The footer's Quick Links column. */
+            footerLinks: components["schemas"]["Link"][];
+            /** @description The footer's Terms of Service and Privacy Policy links. */
+            legalLinks: components["schemas"]["Link"][];
+            newsletter: components["schemas"]["SiteNewsletter"];
         };
         /**
          * @description Any subset of the settings sections. Each key given replaces that
@@ -2960,9 +3726,9 @@ export interface components {
             [key: string]: unknown;
         };
         /**
-         * @description The stored page document: every reference is an id, and only the
-         *     sections that page key uses are present. `_expanded` previews the
-         *     referenced media and people.
+         * @description The stored page document: every reference is an id (image lists are id
+         *     arrays), and only the sections that page key uses are present.
+         *     `_expanded` previews the referenced media and people.
          */
         PageAdmin: {
             id: components["schemas"]["ObjectId"];
@@ -2988,6 +3754,28 @@ export interface components {
         /** @description Any subset of the page's sections. Each key replaces that section entirely. */
         PagePatch: {
             [key: string]: unknown;
+        };
+        LegalPageAdmin: {
+            id: components["schemas"]["ObjectId"];
+            key: components["schemas"]["LegalPageKey"];
+            revision: number;
+            /**
+             * @description A draft legal page is a 404 on the public site.
+             * @enum {string}
+             */
+            status: "draft" | "published";
+            title: string;
+            /** @description Sanitised HTML on write. */
+            body: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @description The whole page. What a GET returns, minus `id`, `key`, `revision` and `updatedAt`. */
+        LegalPageWrite: {
+            /** @enum {string} */
+            status: "draft" | "published";
+            title: string;
+            body: string;
         };
         /** @enum {string} */
         SubmissionStatus: "new" | "in_review" | "closed";
@@ -3104,26 +3892,37 @@ export interface components {
             label: string;
             field: string;
         };
-        /** @description The storage key is deliberately absent; it is an internal path. */
+        /**
+         * @description `image` is a JPEG, PNG, WebP or AVIF with responsive sizes and alt text. `document` is a
+         *     PDF — the firm profile, an article's PDF — with a title and no sizes.
+         * @enum {string}
+         */
+        MediaKind: "image" | "document";
+        /**
+         * @description The storage key is deliberately absent; it is an internal path. The image-only fields
+         *     (`sizes`, `alt`, `width`, `height`, `focalPoint`) are null for a document, and a
+         *     document's `title` is never null.
+         */
         MediaAdmin: {
             id: components["schemas"]["ObjectId"];
+            kind: components["schemas"]["MediaKind"];
             /**
              * @description Send it back as `If-Match` on a metadata edit or a file
              *     replacement, so two editors cannot silently overwrite each other.
              */
             revision: number;
             url: string;
-            sizes: components["schemas"]["ImageSizes"];
-            alt: string;
+            sizes: components["schemas"]["ImageSizes"] | null;
+            alt: string | null;
             title: string | null;
-            width: number;
-            height: number;
+            width: number | null;
+            height: number | null;
             mimeType: string;
             bytes: number;
             focalPoint: {
                 x: number;
                 y: number;
-            };
+            } | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -3131,19 +3930,32 @@ export interface components {
             /** @description Computed from the media reference registry, not stored (ADR-013). */
             usedBy: components["schemas"]["MediaUsage"][];
         };
+        /** @description An image needs `alt`; a document needs `title`. Omitting the one the kind needs is a 400. */
         MediaUploadRequest: {
             /**
              * Format: binary
-             * @description JPEG, PNG, WebP or AVIF, at most 10 MB, verified by magic bytes.
+             * @description An image: JPEG, PNG, WebP or AVIF, at most 10 MB. A document: a PDF, at most 20 MB.
+             *     Either way the type is verified by magic bytes, never by name or declared type.
              */
             file: string;
-            alt: string;
+            /**
+             * @default image
+             * @enum {string}
+             */
+            kind: "image" | "document";
+            /** @description Required for an image. Not accepted for a document. */
+            alt?: string;
+            /** @description Required for a document — it is the link text. */
             title?: string;
         };
         MediaReplaceRequest: {
             /** Format: binary */
             file: string;
         };
+        /**
+         * @description `alt` and `focalPoint` apply to images only; sending them for a document is a 400. A
+         *     document's `title` cannot be cleared.
+         */
         MediaPatch: {
             alt?: string;
             title?: string | null;
@@ -3172,7 +3984,10 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description The upload exceeds the 5 MB limit. */
+        /**
+         * @description The upload exceeds the limit for what it is: 5 MB for a CV, 10 MB for an image, 20 MB
+         *     for a PDF document.
+         */
         PayloadTooLarge: {
             headers: {
                 [name: string]: unknown;
@@ -3189,7 +4004,10 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description The uploaded file is not a PDF or DOCX. */
+        /**
+         * @description The file's bytes are not a type this upload accepts: a PDF or DOCX for a CV; a JPEG, PNG,
+         *     WebP or AVIF for an image; a PDF for a document.
+         */
         UnsupportedMediaType: {
             headers: {
                 [name: string]: unknown;
@@ -3319,6 +4137,17 @@ export interface components {
                 };
             };
         };
+        /** @description A legal page in its editable shape. */
+        AdminLegalPage: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["LegalPageAdmin"];
+                };
+            };
+        };
         /** @description One media record, with everywhere it is used. */
         AdminMedia: {
             headers: {
@@ -3439,10 +4268,19 @@ export interface components {
         PersonSort: "seniority" | "name_asc" | "name_desc";
         /** @description Filter by category. Omit for all categories. */
         InsightCategory: components["schemas"]["InsightCategory"];
-        /** @description Filter by practice area slug. */
-        InsightPracticeArea: string;
+        /**
+         * @description Filter by practice area slug — the "Practice Area" dropdown. On `/people` it matches an
+         *     attorney's `practiceAreas` or `primaryPracticeArea`. An unknown slug returns an empty
+         *     page, not a 404, because the value comes from a filter control.
+         */
+        PracticeAreaFilter: string;
         /** @description Listing sort order. */
         InsightSort: "newest" | "oldest";
+        /**
+         * @description Which legal page. `terms` and `privacy` exist; any other key is a 404.
+         * @example terms
+         */
+        LegalKey: string;
         /**
          * @description The search term.
          * @example arbitration
@@ -3658,6 +4496,12 @@ export interface operations {
                  *     with `role: "managing_partner"`.
                  */
                 role?: components["parameters"]["PersonRole"];
+                /**
+                 * @description Filter by practice area slug — the "Practice Area" dropdown. On `/people` it matches an
+                 *     attorney's `practiceAreas` or `primaryPracticeArea`. An unknown slug returns an empty
+                 *     page, not a 404, because the value comes from a filter control.
+                 */
+                practiceArea?: components["parameters"]["PracticeAreaFilter"];
                 /** @description Directory sort order. */
                 sort?: components["parameters"]["PersonSort"];
                 /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
@@ -3730,8 +4574,12 @@ export interface operations {
             query?: {
                 /** @description Filter by category. Omit for all categories. */
                 category?: components["parameters"]["InsightCategory"];
-                /** @description Filter by practice area slug. */
-                practiceArea?: components["parameters"]["InsightPracticeArea"];
+                /**
+                 * @description Filter by practice area slug — the "Practice Area" dropdown. On `/people` it matches an
+                 *     attorney's `practiceAreas` or `primaryPracticeArea`. An unknown slug returns an empty
+                 *     page, not a 404, because the value comes from a filter control.
+                 */
+                practiceArea?: components["parameters"]["PracticeAreaFilter"];
                 /** @description Listing sort order. */
                 sort?: components["parameters"]["InsightSort"];
                 /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
@@ -3823,6 +4671,104 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listRecognitions: {
+        parameters: {
+            query?: {
+                /** @description Include draft content. Ignored unless the request also carries a valid admin bearer token. */
+                preview?: components["parameters"]["Preview"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Directories and featured awards. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecognitionsOverview"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getRecognitionDirectory: {
+        parameters: {
+            query?: {
+                /** @description Include draft content. Ignored unless the request also carries a valid admin bearer token. */
+                preview?: components["parameters"]["Preview"];
+            };
+            header?: never;
+            path: {
+                /**
+                 * @description The resource slug.
+                 * @example dispute-resolution-arbitration
+                 */
+                slug: components["parameters"]["Slug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The directory page. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecognitionDirectoryPage"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getLegalPage: {
+        parameters: {
+            query?: {
+                /** @description Include draft content. Ignored unless the request also carries a valid admin bearer token. */
+                preview?: components["parameters"]["Preview"];
+            };
+            header?: never;
+            path: {
+                /**
+                 * @description Which legal page. `terms` and `privacy` exist; any other key is a 404.
+                 * @example terms
+                 */
+                key: components["parameters"]["LegalKey"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The legal page. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LegalPage"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
         };
@@ -5521,7 +6467,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    listRecognitionAdmin: {
+    listRecognitionDirectoryAdmin: {
         parameters: {
             query?: {
                 /** @description Filter by status. Omit for every status, which is the admin default. */
@@ -5539,14 +6485,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description A page of recognitions in their editable shape. */
+            /** @description A page of recognition directories in their editable shape. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["RecognitionAdmin"][];
+                        data: components["schemas"]["RecognitionDirectoryAdmin"][];
                         meta: components["schemas"]["PaginationMeta"];
                     };
                 };
@@ -5557,7 +6503,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    createRecognition: {
+    createRecognitionDirectory: {
         parameters: {
             query?: never;
             header?: never;
@@ -5566,18 +6512,18 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RecognitionCreate"];
+                "application/json": components["schemas"]["RecognitionDirectoryCreate"];
             };
         };
         responses: {
-            /** @description The created recognition. */
+            /** @description The created recognition directory. */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["RecognitionAdmin"];
+                        data: components["schemas"]["RecognitionDirectoryAdmin"];
                     };
                 };
             };
@@ -5588,7 +6534,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    reorderRecognition: {
+    reorderRecognitionDirectory: {
         parameters: {
             query?: never;
             header?: never;
@@ -5615,7 +6561,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    getRecognitionAdmin: {
+    getRecognitionDirectoryAdmin: {
         parameters: {
             query?: never;
             header?: never;
@@ -5627,14 +6573,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The recognition. */
+            /** @description The recognition directory. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["RecognitionAdmin"];
+                        data: components["schemas"]["RecognitionDirectoryAdmin"];
                     };
                 };
             };
@@ -5645,7 +6591,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    deleteRecognition: {
+    deleteRecognitionDirectory: {
         parameters: {
             query?: never;
             header?: never;
@@ -5672,7 +6618,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    updateRecognition: {
+    updateRecognitionDirectory: {
         parameters: {
             query?: never;
             header: {
@@ -5690,18 +6636,18 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RecognitionUpdate"];
+                "application/json": components["schemas"]["RecognitionDirectoryUpdate"];
             };
         };
         responses: {
-            /** @description The updated recognition. */
+            /** @description The updated recognition directory. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["RecognitionAdmin"];
+                        data: components["schemas"]["RecognitionDirectoryAdmin"];
                     };
                 };
             };
@@ -5714,7 +6660,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    publishRecognition: {
+    publishRecognitionDirectory: {
         parameters: {
             query?: never;
             header?: never;
@@ -5726,14 +6672,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The published recognition. */
+            /** @description The published recognition directory. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["RecognitionAdmin"];
+                        data: components["schemas"]["RecognitionDirectoryAdmin"];
                     };
                 };
             };
@@ -5744,7 +6690,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    unpublishRecognition: {
+    unpublishRecognitionDirectory: {
         parameters: {
             query?: never;
             header?: never;
@@ -5756,14 +6702,520 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The unpublished recognition. */
+            /** @description The unpublished recognition directory. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["RecognitionAdmin"];
+                        data: components["schemas"]["RecognitionDirectoryAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listAwardAdmin: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status, which is the admin default. */
+                status?: components["parameters"]["AdminStatus"];
+                /** @description Free-text filter over the collection's searchable fields. */
+                q?: components["parameters"]["AdminSearch"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of awards in their editable shape. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AwardAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createAward: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AwardCreate"];
+            };
+        };
+        responses: {
+            /** @description The created award. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AwardAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reorderAward: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getAwardAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The award. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AwardAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteAward: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateAward: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AwardUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated award. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AwardAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    publishAward: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published award. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AwardAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unpublishAward: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished award. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AwardAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listIndustryAdmin: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status, which is the admin default. */
+                status?: components["parameters"]["AdminStatus"];
+                /** @description Free-text filter over the collection's searchable fields. */
+                q?: components["parameters"]["AdminSearch"];
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of industries in their editable shape. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IndustryAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createIndustry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndustryCreate"];
+            };
+        };
+        responses: {
+            /** @description The created industry. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IndustryAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reorderIndustry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Reordered. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getIndustryAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The industry. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IndustryAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteIndustry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateIndustry: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndustryUpdate"];
+            };
+        };
+        responses: {
+            /** @description The updated industry. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IndustryAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    publishIndustry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published industry. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IndustryAdmin"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unpublishIndustry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The unpublished industry. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IndustryAdmin"];
                     };
                 };
             };
@@ -6476,13 +7928,80 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    getAdminLegalPage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Which legal page. `terms` and `privacy` exist; any other key is a 404.
+                 * @example terms
+                 */
+                key: components["parameters"]["LegalKey"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminLegalPage"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    replaceAdminLegalPage: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description The `revision` read from the GET. A stale value returns 409 with the
+                 *     current revision, so two editors cannot silently overwrite each other.
+                 */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                /**
+                 * @description Which legal page. `terms` and `privacy` exist; any other key is a 404.
+                 * @example terms
+                 */
+                key: components["parameters"]["LegalKey"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "status": "published",
+                 *       "title": "Terms of Service",
+                 *       "body": "<p>[PENDING FROM FIRM]</p>"
+                 *     }
+                 */
+                "application/json": components["schemas"]["LegalPageWrite"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminLegalPage"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            428: components["responses"]["PreconditionRequired"];
+            500: components["responses"]["InternalError"];
+        };
+    };
     listMedia: {
         parameters: {
             query?: {
                 /** @description Free-text filter over the collection's searchable fields. */
                 q?: components["parameters"]["AdminSearch"];
-                /** @description Only images nothing references, for finding what is safe to delete. */
+                /** @description Only media nothing references, for finding what is safe to delete. */
                 unused?: boolean;
+                /** @description Only images, or only documents. Omit for both. */
+                kind?: components["schemas"]["MediaKind"];
                 sort?: "newest" | "oldest";
                 /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
                 page?: components["parameters"]["Page"];

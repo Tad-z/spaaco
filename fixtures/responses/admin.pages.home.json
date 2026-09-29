@@ -6,7 +6,11 @@
     "hero": {
       "title": "Counsel To The Institutions Building Nigeria's Economy.",
       "subtitle": "For over five decades, we have advised governments, financial institutions and multinational corporations on capital markets transactions, complex disputes and the regulatory frameworks that shape commerce in Nigeria.",
-      "image": "665f00000000000000000120",
+      "images": [
+        "665f00000000000000000120",
+        "665f00000000000000000121",
+        "665f00000000000000000122"
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -32,11 +36,18 @@
     },
     "videoShowcase": {
       "videoUrl": null,
-      "poster": null
+      "poster": null,
+      "caption": "Our Managing Partner on what fifty-nine years of practice has taught us."
     },
-    "recognitionTabs": {
-      "achievementsLabel": "Our Achievements",
-      "recognizedByLabel": "Independently Recognized By"
+    "recognitionSection": {
+      "eyebrow": "Recognition",
+      "title": "Ranked Among Nigeria's Top Firms By Key Global Legal Institutions.",
+      "image": null,
+      "cta": {
+        "label": "View Our Recognitions",
+        "href": null,
+        "kind": null
+      }
     },
     "practiceSection": {
       "eyebrow": "Services",
@@ -106,8 +117,13 @@
       },
       "665f00000000000000000121": {
         "kind": "media",
-        "url": "https://placehold.co/1200x900?text=Why%20choose%20us",
-        "alt": "Attorneys of the firm in discussion around a boardroom table"
+        "url": "https://placehold.co/1440x662?text=Home%20hero%202",
+        "alt": "Home hero, slide 2 (placeholder)"
+      },
+      "665f00000000000000000122": {
+        "kind": "media",
+        "url": "https://placehold.co/1440x662?text=Home%20hero%203",
+        "alt": "Home hero, slide 3 (placeholder)"
       }
     }
   }

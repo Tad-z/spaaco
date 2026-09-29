@@ -1,0 +1,23 @@
+{
+  "data": {
+    "key": "recognition",
+    "directoryPage": {
+      "awardsEyebrow": "Awards by the years",
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Meet Our People",
+        "href": "/people",
+        "kind": "internal"
+      }
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  }
+}

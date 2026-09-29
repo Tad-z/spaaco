@@ -4,21 +4,23 @@
     "hero": {
       "title": "Our Practice Areas",
       "subtitle": "We've covered enough ground to know that no two matters are really the same.",
-      "image": {
-        "url": "https://placehold.co/1440x662?text=Practice%20areas%20hero",
-        "alt": "Columns of a Nigerian courthouse",
-        "width": 1440,
-        "height": 662,
-        "sizes": {
-          "sm": "https://placehold.co/480x221?text=Practice%20areas%20hero",
-          "md": "https://placehold.co/960x441?text=Practice%20areas%20hero",
-          "lg": "https://placehold.co/1440x662?text=Practice%20areas%20hero"
-        },
-        "focalPoint": {
-          "x": 0.5,
-          "y": 0.5
+      "images": [
+        {
+          "url": "https://placehold.co/1440x662?text=Practice%20areas%20hero",
+          "alt": "Columns of a Nigerian courthouse",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=Practice%20areas%20hero",
+            "md": "https://placehold.co/960x441?text=Practice%20areas%20hero",
+            "lg": "https://placehold.co/1440x662?text=Practice%20areas%20hero"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
         }
-      },
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -37,7 +39,7 @@
     },
     "practiceAreas": [
       {
-        "id": "665f00000000000000000021",
+        "id": "665f00000000000000001000",
         "slug": "company-secretarial",
         "title": "Company Secretarial",
         "shortLabel": "Company Secretarial",
@@ -59,7 +61,7 @@
         }
       },
       {
-        "id": "665f0000000000000000000e",
+        "id": "665f00000000000000001001",
         "slug": "corporate-finance-capital-markets",
         "title": "Corporate Finance & Capital Markets",
         "shortLabel": "Corporate",
@@ -81,7 +83,7 @@
         }
       },
       {
-        "id": "665f0000000000000000000f",
+        "id": "665f00000000000000001002",
         "slug": "data-protection-privacy",
         "title": "Data Protection & Privacy",
         "shortLabel": "Data Privacy",
@@ -103,7 +105,7 @@
         }
       },
       {
-        "id": "665f00000000000000000008",
+        "id": "665f00000000000000001003",
         "slug": "dispute-resolution-arbitration",
         "title": "Dispute Resolution & Arbitration",
         "shortLabel": "Dispute Resolution",
@@ -125,7 +127,7 @@
         }
       },
       {
-        "id": "665f00000000000000000002",
+        "id": "665f00000000000000001004",
         "slug": "energy-natural-resources",
         "title": "Energy & Natural Resources",
         "shortLabel": "Energy",
@@ -147,7 +149,7 @@
         }
       },
       {
-        "id": "665f00000000000000000010",
+        "id": "665f00000000000000001005",
         "slug": "intellectual-property",
         "title": "Intellectual Property",
         "shortLabel": "Intellectual Property",
@@ -169,7 +171,7 @@
         }
       },
       {
-        "id": "665f00000000000000000011",
+        "id": "665f00000000000000001006",
         "slug": "real-estate-succession",
         "title": "Real Estate & Succession",
         "shortLabel": "Real Estate",
@@ -191,7 +193,7 @@
         }
       },
       {
-        "id": "665f00000000000000000012",
+        "id": "665f00000000000000001007",
         "slug": "tax",
         "title": "Tax",
         "shortLabel": "Tax",
@@ -213,7 +215,7 @@
         }
       },
       {
-        "id": "665f00000000000000000022",
+        "id": "665f00000000000000001008",
         "slug": "telecommunications-regulatory",
         "title": "Telecommunications Regulatory",
         "shortLabel": "Telecoms",
@@ -238,22 +240,58 @@
     "csrBanner": {
       "title": "Pro Bono & Community Commitment",
       "text": "Beyond advising clients, we take an active role in strengthening the legal environment and supporting the communities we work in.",
-      "image": {
-        "url": "https://placehold.co/1440x662?text=CSR",
-        "alt": "Members of the firm at a community legal outreach event",
-        "width": 1440,
-        "height": 662,
-        "sizes": {
-          "sm": "https://placehold.co/480x221?text=CSR",
-          "md": "https://placehold.co/960x441?text=CSR",
-          "lg": "https://placehold.co/1440x662?text=CSR"
+      "images": [
+        {
+          "url": "https://placehold.co/1440x662?text=CSR",
+          "alt": "Members of the firm at a community legal outreach event",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=CSR",
+            "md": "https://placehold.co/960x441?text=CSR",
+            "lg": "https://placehold.co/1440x662?text=CSR"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
         },
-        "focalPoint": {
-          "x": 0.5,
-          "y": 0.5
+        {
+          "url": "https://placehold.co/1440x662?text=CSR%202",
+          "alt": "Pro bono and community commitment, slide 2 (placeholder)",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=CSR%202",
+            "md": "https://placehold.co/960x441?text=CSR%202",
+            "lg": "https://placehold.co/1440x662?text=CSR%202"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "url": "https://placehold.co/1440x662?text=CSR%203",
+          "alt": "Pro bono and community commitment, slide 3 (placeholder)",
+          "width": 1440,
+          "height": 662,
+          "sizes": {
+            "sm": "https://placehold.co/480x221?text=CSR%203",
+            "md": "https://placehold.co/960x441?text=CSR%203",
+            "lg": "https://placehold.co/1440x662?text=CSR%203"
+          },
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
         }
-      },
-      "cta": null
+      ],
+      "cta": {
+        "label": "Learn About Our CSR",
+        "href": "/responsible-business",
+        "kind": "internal"
+      }
     },
     "seo": {
       "title": null,

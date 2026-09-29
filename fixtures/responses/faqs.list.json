@@ -1,27 +1,27 @@
 {
   "data": [
     {
-      "id": "665f00000000000000000016",
+      "id": "665f0000000000000000100c",
       "question": "How do I schedule a consultation?",
-      "answer": "<p>[PENDING FROM FIRM]</p>"
+      "answer": "<p>Clients have the option to schedule a consultation by directly reaching out through the Discuss a Mandate feature, or by contacting any of our three offices via phone or email. When doing so, they can provide a brief overview of their issue. A dedicated member of our team will then promptly follow up to arrange a convenient time for the client to speak with the most appropriate lawyer who specializes in that particular area of law.</p>"
     },
     {
-      "id": "665f00000000000000000017",
+      "id": "665f0000000000000000100d",
       "question": "What types of matters does the firm handle?",
       "answer": "<p>The firm provides expert advice on a wide range of legal matters including dispute resolution and arbitration, corporate finance and capital markets, real estate and succession planning, energy and natural resources, intellectual property rights, data protection regulations, and tax law. Their comprehensive services are designed to support clients through complex legal challenges in these diverse areas.</p>"
     },
     {
-      "id": "665f00000000000000000018",
+      "id": "665f0000000000000000100e",
       "question": "Does the firm work with international clients?",
       "answer": "<p>[PENDING FROM FIRM]</p>"
     },
     {
-      "id": "665f00000000000000000019",
+      "id": "665f0000000000000000100f",
       "question": "How is client confidentiality handled?",
       "answer": "<p>[PENDING FROM FIRM]</p>"
     },
     {
-      "id": "665f0000000000000000001a",
+      "id": "665f00000000000000001010",
       "question": "How long does a typical matter take?",
       "answer": "<p>[PENDING FROM FIRM]</p>"
     }

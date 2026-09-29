@@ -4,12 +4,26 @@
     "hero": {
       "title": "Counsel To The Institutions Building Nigeria's Economy.",
       "subtitle": "For over five decades, we have advised governments, financial institutions and multinational corporations on capital markets transactions, complex disputes and the regulatory frameworks that shape commerce in Nigeria.",
-      "image": {
-        "placeholder": "Home hero",
-        "width": 1440,
-        "height": 662,
-        "alt": "Lady Justice statue against the Lagos skyline"
-      },
+      "images": [
+        {
+          "placeholder": "Home hero",
+          "width": 1440,
+          "height": 662,
+          "alt": "Lady Justice statue against the Lagos skyline"
+        },
+        {
+          "placeholder": "Home hero 2",
+          "width": 1440,
+          "height": 662,
+          "alt": "Home hero, slide 2 (placeholder)"
+        },
+        {
+          "placeholder": "Home hero 3",
+          "width": 1440,
+          "height": 662,
+          "alt": "Home hero, slide 3 (placeholder)"
+        }
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -40,9 +54,10 @@
         "width": 1440,
         "height": 662,
         "alt": "Poster frame for the firm showcase video"
-      }
+      },
+      "caption": "Our Managing Partner on what fifty-nine years of practice has taught us."
     },
-    "recognitionTabs": {
+    "recognitionSection": {
       "eyebrow": "Recognition",
       "title": "Ranked Among Nigeria's Top Firms By Key Global Legal Institutions.",
       "image": {
@@ -53,11 +68,9 @@
       },
       "cta": {
         "label": "View Our Recognitions",
-        "href": "/about",
-        "kind": "internal"
-      },
-      "achievementsLabel": "Our Achievements",
-      "recognizedByLabel": "Independently Recognized By"
+        "href": null,
+        "kind": null
+      }
     },
     "practiceSection": {
       "eyebrow": "Services",
@@ -130,12 +143,14 @@
     "hero": {
       "title": "Who We Are",
       "subtitle": "Integrity isn't a value we list, it's the reason clients keep coming back.",
-      "image": {
-        "placeholder": "About hero",
-        "width": 1440,
-        "height": 662,
-        "alt": "The reception of the Lagos office of the firm"
-      },
+      "images": [
+        {
+          "placeholder": "About hero",
+          "width": 1440,
+          "height": 662,
+          "alt": "The reception of the Lagos office of the firm"
+        }
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -157,7 +172,15 @@
         "Today, that means offices in Lagos, Abuja, and Ibadan, and a practice that spans far more ground than \"corporate and commercial law\" ever really captured."
       ],
       "quote": "law is a profession, not an occupation.",
-      "quotePerson": "babatunde-ajibade"
+      "quotePerson": "babatunde-ajibade",
+      "profileDownload": {
+        "leadText": "To learn more about the firm, you may download a copy of our profile",
+        "linkLabel": "here",
+        "document": {
+          "placeholderDocument": "Firm profile",
+          "title": "SPA Ajibade & Co. firm profile"
+        }
+      }
     },
     "stats": {
       "title": "Decades Of Practice, Measured In Outcomes.",
@@ -200,19 +223,19 @@
       "items": [
         {
           "title": "Our Mission",
-          "body": "Our mission is to provide legal counsel clients can trust, with clarity, integrity, and commitment. We measure success by outcomes that serve clients' interests, not transaction size or dispute complexity. As Nigeria's commercial landscape evolves, our guidance adapts, but our legal standards remain constant."
+          "body": "<p>We aim to continuously provide high quality legal services to clients that need them globally. We will do this promptly, ethically, and effectively to ensure their satisfaction every time.</p>"
         },
         {
           "title": "Our Vision",
-          "body": "[PENDING FROM FIRM]"
+          "body": "<p>To become the foremost legal industry influence in the establishment and sustenance of healthy corporate and commercial environments that are characterized by integrity and innovation.</p>"
         },
         {
           "title": "Our Values",
-          "body": "[PENDING FROM FIRM]"
+          "body": "<p>Our corporate goals and objectives are distilled into a number of corporate values that guide the way we conduct our business, provide solutions and add value to the environment.</p>"
         },
         {
           "title": "Our Asset",
-          "body": "[PENDING FROM FIRM]"
+          "body": "<p>Our strength rests on five things: <strong>our people</strong>, <strong>our goodwill</strong>, and <strong>our clients</strong>, built over decades of trust. It shows equally in the <strong>quality of our work</strong> and the <strong>infrastructure</strong> behind it.</p>"
         }
       ]
     },
@@ -266,25 +289,7 @@
         "width": 1200,
         "height": 900,
         "alt": "Award trophies displayed in the office of the firm"
-      },
-      "items": [
-        {
-          "name": "IFLR 1000",
-          "url": null
-        },
-        {
-          "name": "Chambers Global",
-          "url": null
-        },
-        {
-          "name": "Legal 500",
-          "url": null
-        },
-        {
-          "name": "Who's Who Legal",
-          "url": null
-        }
-      ]
+      }
     },
     "seo": {
       "title": null,
@@ -297,12 +302,14 @@
     "hero": {
       "title": "Our Practice Areas",
       "subtitle": "We've covered enough ground to know that no two matters are really the same.",
-      "image": {
-        "placeholder": "Practice areas hero",
-        "width": 1440,
-        "height": 662,
-        "alt": "Columns of a Nigerian courthouse"
-      },
+      "images": [
+        {
+          "placeholder": "Practice areas hero",
+          "width": 1440,
+          "height": 662,
+          "alt": "Columns of a Nigerian courthouse"
+        }
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -322,13 +329,31 @@
     "csrBanner": {
       "title": "Pro Bono & Community Commitment",
       "text": "Beyond advising clients, we take an active role in strengthening the legal environment and supporting the communities we work in.",
-      "image": {
-        "placeholder": "CSR",
-        "width": 1440,
-        "height": 662,
-        "alt": "Members of the firm at a community legal outreach event"
-      },
-      "cta": null
+      "images": [
+        {
+          "placeholder": "CSR",
+          "width": 1440,
+          "height": 662,
+          "alt": "Members of the firm at a community legal outreach event"
+        },
+        {
+          "placeholder": "CSR 2",
+          "width": 1440,
+          "height": 662,
+          "alt": "Pro bono and community commitment, slide 2 (placeholder)"
+        },
+        {
+          "placeholder": "CSR 3",
+          "width": 1440,
+          "height": 662,
+          "alt": "Pro bono and community commitment, slide 3 (placeholder)"
+        }
+      ],
+      "cta": {
+        "label": "Learn About Our CSR",
+        "href": "/responsible-business",
+        "kind": "internal"
+      }
     },
     "seo": {
       "title": null,
@@ -341,12 +366,14 @@
     "hero": {
       "title": "Get To Know Our Attorneys",
       "subtitle": "Meet the attorneys behind our firm's trusted reputation for strong counsel, thoughtful representation, strategic advocacy, and unwavering commitment to every client we serve.",
-      "image": {
-        "placeholder": "People hero",
-        "width": 1440,
-        "height": 662,
-        "alt": "Attorneys of the firm gathered in the atrium"
-      },
+      "images": [
+        {
+          "placeholder": "People hero",
+          "width": 1440,
+          "height": 662,
+          "alt": "Attorneys of the firm gathered in the atrium"
+        }
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -388,12 +415,14 @@
     "hero": {
       "title": "Practice Law, Not Just A Role.",
       "subtitle": "At SPA Ajibade, associates work directly with partners on matters that matter, not behind layers of a rotating team.",
-      "image": {
-        "placeholder": "Careers hero",
-        "width": 1440,
-        "height": 662,
-        "alt": "A junior associate working alongside a partner"
-      },
+      "images": [
+        {
+          "placeholder": "Careers hero",
+          "width": 1440,
+          "height": 662,
+          "alt": "A junior associate working alongside a partner"
+        }
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -408,7 +437,12 @@
     "jobsSection": {
       "eyebrow": null,
       "title": "Careers",
-      "cta": null
+      "cta": null,
+      "emptyState": {
+        "title": "No Open Roles at the Moment",
+        "body": "<p>We're not actively hiring right now, but that doesn't mean we're not interested in hearing from strong candidates. If you'd like to be considered for future opportunities at the firm, send your CV to <a href=\"mailto:hr@spaajibade.com\">hr@spaajibade.com</a> along with a short note on the kind of work you're looking to do. We review every submission and will reach out directly when a suitable role opens up.</p>",
+        "ctaLabel": "Send your CV"
+      }
     },
     "seo": {
       "title": null,
@@ -421,12 +455,14 @@
     "hero": {
       "title": "Frequently Asked Questions",
       "subtitle": "Straight answers to what people most often ask before reaching out, about the firm, how matters work, and what to expect.",
-      "image": {
-        "placeholder": "FAQ hero",
-        "width": 1440,
-        "height": 662,
-        "alt": "A member of the front office team on a call"
-      },
+      "images": [
+        {
+          "placeholder": "FAQ hero",
+          "width": 1440,
+          "height": 662,
+          "alt": "A member of the front office team on a call"
+        }
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -449,12 +485,14 @@
     "hero": {
       "title": "Wherever You Find Us.",
       "subtitle": "Three offices, one standard of counsel, direct access to the team handling your matter, no matter which door you walk through.",
-      "image": {
-        "placeholder": "Offices hero",
-        "width": 1440,
-        "height": 662,
-        "alt": "The entrance to SPAACO House in Lagos"
-      },
+      "images": [
+        {
+          "placeholder": "Offices hero",
+          "width": 1440,
+          "height": 662,
+          "alt": "The entrance to SPAACO House in Lagos"
+        }
+      ],
       "primaryCta": {
         "label": "Discuss a Mandate",
         "href": "action:mandate",
@@ -465,6 +503,61 @@
         "href": "action:chat",
         "kind": "action"
       }
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  },
+  {
+    "key": "recognition",
+    "directoryPage": {
+      "awardsEyebrow": "Awards by the years",
+      "primaryCta": {
+        "label": "Discuss a Mandate",
+        "href": "action:mandate",
+        "kind": "action"
+      },
+      "secondaryCta": {
+        "label": "Meet Our People",
+        "href": "/people",
+        "kind": "internal"
+      }
+    },
+    "seo": {
+      "title": null,
+      "description": null,
+      "ogImage": null
+    }
+  },
+  {
+    "key": "responsible-business",
+    "title": "RESPONSIBLE BUSINESS",
+    "images": [
+      {
+        "placeholder": "Responsible business 1",
+        "width": 1440,
+        "height": 662,
+        "alt": "Responsible business, slide 1 (placeholder)"
+      },
+      {
+        "placeholder": "Responsible business 2",
+        "width": 1440,
+        "height": 662,
+        "alt": "Responsible business, slide 2 (placeholder)"
+      },
+      {
+        "placeholder": "Responsible business 3",
+        "width": 1440,
+        "height": 662,
+        "alt": "Responsible business, slide 3 (placeholder)"
+      }
+    ],
+    "backLink": {
+      "label": "Back to Practice Areas",
+      "href": "/practice-areas",
+      "kind": "internal"
     },
     "seo": {
       "title": null,

@@ -1,0 +1,92 @@
+[
+  {
+    "slug": "iflr1000-recommended-firm-2024-a",
+    "directory": "iflr-1000",
+    "title": "IFLR1000: Recommended Firm",
+    "year": 2024,
+    "badge": {
+      "placeholder": "IFLR1000 A",
+      "width": 400,
+      "height": 400,
+      "alt": "IFLR1000 Recommended Firm 2024 badge"
+    },
+    "featuredOnHome": true,
+    "order": 0,
+    "status": "published"
+  },
+  {
+    "slug": "iflr1000-recommended-firm-2024-b",
+    "directory": "iflr-1000",
+    "title": "IFLR1000: Recommended Firm",
+    "year": 2024,
+    "badge": {
+      "placeholder": "IFLR1000 B",
+      "width": 400,
+      "height": 400,
+      "alt": "IFLR1000 Recommended Firm 2024 badge"
+    },
+    "featuredOnHome": true,
+    "order": 1,
+    "status": "published"
+  },
+  {
+    "slug": "chambers-global-ranked-in-global-2026-a",
+    "directory": "chambers-global",
+    "title": "Chambers Global: Ranked in Global",
+    "year": 2026,
+    "badge": {
+      "placeholder": "Chambers A",
+      "width": 400,
+      "height": 400,
+      "alt": "Chambers Global Ranked in Global 2026 badge"
+    },
+    "featuredOnHome": true,
+    "order": 2,
+    "status": "published"
+  },
+  {
+    "slug": "chambers-global-ranked-in-global-2026-b",
+    "directory": "chambers-global",
+    "title": "Chambers Global: Ranked in Global",
+    "year": 2026,
+    "badge": {
+      "placeholder": "Chambers B",
+      "width": 400,
+      "height": 400,
+      "alt": "Chambers Global Ranked in Global 2026 badge"
+    },
+    "featuredOnHome": true,
+    "order": 3,
+    "status": "published"
+  },
+  {
+    "slug": "chambers-global-top-ranked-leading-firm-2026",
+    "directory": "iflr-1000",
+    "title": "Chambers Global: Top Ranked Leading Firm",
+    "year": 2026,
+    "badge": {
+      "placeholder": "Chambers A",
+      "width": 400,
+      "height": 400,
+      "alt": "Chambers Global Ranked in Global 2026 badge"
+    },
+    "featuredOnHome": false,
+    "order": 4,
+    "status": "published"
+  },
+  {
+    "slug": "chambers-global-top-ranked-leading-firm-2025",
+    "directory": "iflr-1000",
+    "title": "Chambers Global: Top Ranked Leading Firm",
+    "year": 2025,
+    "badge": {
+      "placeholder": "Chambers A",
+      "width": 400,
+      "height": 400,
+      "alt": "Chambers Global Ranked in Global 2026 badge"
+    },
+    "featuredOnHome": false,
+    "order": 5,
+    "status": "published"
+  }
+]

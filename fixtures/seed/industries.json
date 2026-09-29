@@ -1,0 +1,128 @@
+[
+  {
+    "slug": "banking-finance",
+    "name": "Banking & Finance",
+    "order": 0,
+    "status": "published"
+  },
+  {
+    "slug": "consumer-retail",
+    "name": "Consumer & Retail",
+    "order": 1,
+    "status": "published"
+  },
+  {
+    "slug": "e-commerce-data-platforms",
+    "name": "E-Commerce & Data Platforms",
+    "order": 2,
+    "status": "published"
+  },
+  {
+    "slug": "energy-natural-resources",
+    "name": "Energy & Natural Resources",
+    "order": 3,
+    "status": "published"
+  },
+  {
+    "slug": "entertainment-media",
+    "name": "Entertainment & Media",
+    "order": 4,
+    "status": "published"
+  },
+  {
+    "slug": "financial-services",
+    "name": "Financial Services",
+    "order": 5,
+    "status": "published"
+  },
+  {
+    "slug": "financial-services-fintech",
+    "name": "Financial Services & Fintech",
+    "order": 6,
+    "status": "published"
+  },
+  {
+    "slug": "government-public-sector",
+    "name": "Government & Public Sector",
+    "order": 7,
+    "status": "published"
+  },
+  {
+    "slug": "healthcare-insurance",
+    "name": "Healthcare & Insurance",
+    "order": 8,
+    "status": "published"
+  },
+  {
+    "slug": "hospitality-leisure",
+    "name": "Hospitality & Leisure",
+    "order": 9,
+    "status": "published"
+  },
+  {
+    "slug": "infrastructure-construction",
+    "name": "Infrastructure & Construction",
+    "order": 10,
+    "status": "published"
+  },
+  {
+    "slug": "insurance-reinsurance",
+    "name": "Insurance & Reinsurance",
+    "order": 11,
+    "status": "published"
+  },
+  {
+    "slug": "manufacturing-fmcg",
+    "name": "Manufacturing & FMCG",
+    "order": 12,
+    "status": "published"
+  },
+  {
+    "slug": "media-broadcasting",
+    "name": "Media & Broadcasting",
+    "order": 13,
+    "status": "published"
+  },
+  {
+    "slug": "mining-minerals",
+    "name": "Mining & Minerals",
+    "order": 14,
+    "status": "published"
+  },
+  {
+    "slug": "oil-gas",
+    "name": "Oil & Gas",
+    "order": 15,
+    "status": "published"
+  },
+  {
+    "slug": "power-utilities",
+    "name": "Power & Utilities",
+    "order": 16,
+    "status": "published"
+  },
+  {
+    "slug": "real-estate-construction",
+    "name": "Real Estate & Construction",
+    "order": 17,
+    "status": "published"
+  },
+  {
+    "slug": "renewable-energy",
+    "name": "Renewable Energy",
+    "order": 18,
+    "status": "published"
+  },
+  {
+    "slug": "sports",
+    "name": "Sports",
+    "order": 19,
+    "status": "published"
+  },
+  {
+    "slug": "technology-telecommunications",
+    "name": "Technology & Telecommunications",
+    "order": 20,
+    "status": "published"
+  }
+]

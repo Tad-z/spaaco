@@ -4,7 +4,7 @@
     "hero": null,
     "featured": [
       {
-        "id": "665f00000000000000000004",
+        "id": "665f00000000000000001018",
         "slug": "the-rural-electrification-agency-renewable-electricity-and-the-mini-grid-regulation-2026-updates-and-prospects-for-investors",
         "title": "The Rural Electrification Agency, Renewable Electricity and the Mini-Grid Regulation 2026: Updates and Prospects for Investors.",
         "excerpt": null,
@@ -13,7 +13,7 @@
         "categoryLabels": ["Articles"],
         "practiceAreas": [
           {
-            "id": "665f00000000000000000002",
+            "id": "665f00000000000000001004",
             "slug": "energy-natural-resources",
             "title": "Energy & Natural Resources",
             "shortLabel": "Energy"
@@ -23,7 +23,7 @@
         "author": {
           "type": "person",
           "person": {
-            "id": "665f00000000000000000005",
+            "id": "665f00000000000000001019",
             "slug": "peter-olalere",
             "displayName": "Peter Olalere",
             "role": "associate_partner",
@@ -43,7 +43,14 @@
                 "y": 0.5
               }
             },
-            "linkedinUrl": null
+            "linkedinUrl": null,
+            "cardBio": "[PENDING FROM FIRM]",
+            "practiceAreas": [
+              {
+                "slug": "energy-natural-resources",
+                "title": "Energy & Natural Resources"
+              }
+            ]
           }
         },
         "coverImage": {
@@ -69,7 +76,7 @@
         }
       },
       {
-        "id": "665f00000000000000000001",
+        "id": "665f0000000000000000101a",
         "slug": "repositioning-and-promoting-energy-investments-between-south-africa-and-nigeria-a-perspective-on-trade-secrets",
         "title": "Repositioning and Promoting Energy Investments Between South Africa and Nigeria: A Perspective on Trade Secrets.",
         "excerpt": "The focus of this brief is specifically on a bilateral energy investment relationship between Nigeria and South Africa: two nations that represent, by any objective commercial assessment, the most logical and most strategically significant energy partnership on the African continent…",
@@ -78,7 +85,7 @@
         "categoryLabels": ["Articles"],
         "practiceAreas": [
           {
-            "id": "665f00000000000000000002",
+            "id": "665f00000000000000001004",
             "slug": "energy-natural-resources",
             "title": "Energy & Natural Resources",
             "shortLabel": "Energy"
@@ -88,7 +95,7 @@
         "author": {
           "type": "person",
           "person": {
-            "id": "665f00000000000000000003",
+            "id": "665f00000000000000001016",
             "slug": "john-onyido",
             "displayName": "Dr. John Onyido",
             "role": "partner",
@@ -108,7 +115,18 @@
                 "y": 0.5
               }
             },
-            "linkedinUrl": null
+            "linkedinUrl": null,
+            "cardBio": "[PENDING FROM FIRM]",
+            "practiceAreas": [
+              {
+                "slug": "data-protection-privacy",
+                "title": "Data Protection & Privacy"
+              },
+              {
+                "slug": "intellectual-property",
+                "title": "Intellectual Property"
+              }
+            ]
           }
         },
         "coverImage": {
@@ -134,15 +152,15 @@
         }
       },
       {
-        "id": "665f00000000000000000006",
+        "id": "665f0000000000000000101b",
         "slug": "inside-the-2025-annual-business-luncheon-what-industry-leaders-are-saying-about-nigerias-economy",
         "title": "Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy",
         "excerpt": null,
         "format": "article",
-        "categories": ["webinar_resources", "firm_news"],
-        "categoryLabels": ["Webinar Resources", "Firm News"],
+        "categories": ["events", "firm_news"],
+        "categoryLabels": ["Events", "Firm News"],
         "practiceAreas": [],
-        "chips": ["Webinar Resources", "Firm News"],
+        "chips": ["Events", "Firm News"],
         "author": {
           "type": "firm",
           "name": "SPA AJIBADE & Co.",
@@ -197,12 +215,46 @@
         "label": "News Updates"
       },
       {
-        "value": "media_coverage",
-        "label": "Media Coverage"
+        "value": "events",
+        "label": "Events"
+      }
+    ],
+    "practiceAreaFilters": [
+      {
+        "value": "company-secretarial",
+        "label": "Company Secretarial"
       },
       {
-        "value": "webinar_resources",
-        "label": "Webinar Resources"
+        "value": "corporate-finance-capital-markets",
+        "label": "Corporate Finance & Capital Markets"
+      },
+      {
+        "value": "data-protection-privacy",
+        "label": "Data Protection & Privacy"
+      },
+      {
+        "value": "dispute-resolution-arbitration",
+        "label": "Dispute Resolution & Arbitration"
+      },
+      {
+        "value": "energy-natural-resources",
+        "label": "Energy & Natural Resources"
+      },
+      {
+        "value": "intellectual-property",
+        "label": "Intellectual Property"
+      },
+      {
+        "value": "real-estate-succession",
+        "label": "Real Estate & Succession"
+      },
+      {
+        "value": "tax",
+        "label": "Tax"
+      },
+      {
+        "value": "telecommunications-regulatory",
+        "label": "Telecommunications Regulatory"
       }
     ],
     "listingSection": {
