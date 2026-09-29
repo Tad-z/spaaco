@@ -18,11 +18,26 @@ export interface ILink {
   kind: LinkKind;
 }
 
-/** The banner at the top of every inner page. */
+/**
+ * A call to action the design shows before its destination is decided: a real
+ * label, with `href` and `kind` both null until someone decides (ADR-056).
+ */
+export interface IPendingLink {
+  label: string;
+  href?: string | null;
+  kind?: LinkKind | null;
+}
+
+/**
+ * The banner at the top of every inner page.
+ *
+ * `images` are carousel slides: only the picture changes, the copy is shared.
+ * Empty until the firm uploads one (ADR-046).
+ */
 export interface IHero {
   title: string;
   subtitle?: string | null;
-  image?: Types.ObjectId | null;
+  images: Types.ObjectId[];
   primaryCta?: ILink | null;
   secondaryCta?: ILink | null;
 }

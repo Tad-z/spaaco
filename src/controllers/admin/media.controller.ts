@@ -60,9 +60,10 @@ export async function uploadMediaHandler(req: Request, res: Response): Promise<v
 
   const doc = await uploadMedia(
     {
+      kind: fields.kind,
       buffer: file.buffer,
       originalFilename: file.originalname,
-      alt: fields.alt,
+      alt: fields.alt ?? null,
       title: fields.title ?? null,
     },
     actorContext(req)

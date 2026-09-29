@@ -5,6 +5,7 @@ import {
   nullableLink,
   objectIdRef,
   paragraphs,
+  pendingLink,
   safeUrl,
   sectionHeader,
   seo,
@@ -25,16 +26,16 @@ export const homePageSchema = z
       .object({
         videoUrl: safeUrl.nullable(),
         poster: objectIdRef,
+        caption: z.string().trim().max(300).nullable(),
       })
       .strict(),
-    recognitionTabs: z
+    // The badges are the awards flagged for Home, so they are not edited here.
+    recognitionSection: z
       .object({
         eyebrow: z.string().trim().max(160).nullable(),
         title: z.string().trim().min(1).max(200),
         image: objectIdRef,
-        cta: nullableLink,
-        achievementsLabel: z.string().trim().min(1).max(120),
-        recognizedByLabel: z.string().trim().min(1).max(120),
+        cta: pendingLink,
       })
       .strict(),
     practiceSection: sectionHeader,

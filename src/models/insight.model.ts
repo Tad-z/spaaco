@@ -24,6 +24,20 @@ const insightSchema = new Schema<IInsight>(
         'videoUrl is required when format is "video"',
       ],
     },
+    // The article's "Read Article" link: an external URL or an uploaded PDF,
+    // never both (ADR-051).
+    externalUrl: { type: String, default: null, trim: true, maxlength: 2048 },
+    document: {
+      type: Schema.Types.ObjectId,
+      ref: 'Media',
+      default: null,
+      validate: {
+        validator: function (this: IInsight, value: unknown): boolean {
+          return value === null || value === undefined || !this.externalUrl;
+        },
+        message: 'set either externalUrl or document, not both',
+      },
+    },
     categories: {
       type: [{ type: String, enum: INSIGHT_CATEGORIES.values }],
       required: true,

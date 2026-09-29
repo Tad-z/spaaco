@@ -73,9 +73,14 @@ export function makePracticeArea(
     title: 'Dispute Resolution & Arbitration',
     shortLabel: 'Dispute Resolution',
     summary: 'When a disagreement threatens to disrupt a business…',
+    homeSummary: 'When a disagreement threatens to disrupt a business…',
+    heroIntro: 'When a disagreement threatens to disrupt a business…',
     image: null,
-    body: null,
-    keyServices: [],
+    heroImages: [],
+    overview: null,
+    coreServices: [{ title: 'Litigation', description: 'Representing clients in court.' }],
+    approach: null,
+    industries: [],
     seo: { title: null, description: null },
     ...overrides,
   };
@@ -107,9 +112,15 @@ export function makePerson(overrides: Partial<PersonDetailSource> = {}): PersonD
     role: 'managing_partner',
     photo: null,
     linkedinUrl: null,
+    instagramUrl: null,
+    email: null,
+    cardBio: null,
     bio: null,
     quote: null,
+    primaryPracticeArea: null,
     practiceAreas: [],
+    education: { intro: null, entries: [] },
+    memberships: [],
     office: null,
     ...overrides,
   };
@@ -124,6 +135,8 @@ export function makeInsight(overrides: Partial<InsightDetailSource> = {}): Insig
     body: null,
     format: 'article',
     videoUrl: null,
+    externalUrl: null,
+    document: null,
     categories: ['articles'],
     practiceAreas: [],
     author: null,
@@ -131,6 +144,27 @@ export function makeInsight(overrides: Partial<InsightDetailSource> = {}): Insig
     featured: false,
     ...overrides,
   };
+}
+
+/** A PDF from the library (ADR-053). */
+export function makeDocumentMedia(
+  overrides: Partial<IMedia> = {}
+): IMedia & { _id: Types.ObjectId } {
+  return makeMedia({
+    kind: 'document',
+    storageKey: 'seed/document-firm-profile',
+    url: 'https://placehold.co/600x800?text=Firm%20profile',
+    sizes: null,
+    width: null,
+    height: null,
+    mimeType: 'application/pdf',
+    bytes: 2048,
+    originalFilename: 'firm-profile.pdf',
+    title: 'SPA Ajibade & Co. firm profile',
+    alt: null,
+    focalPoint: null,
+    ...overrides,
+  });
 }
 
 /** Documents as the models return them, for database-backed tests. */
@@ -154,6 +188,9 @@ export const makePracticeAreaDoc = (
   title: 'Tax',
   shortLabel: 'Tax',
   summary: 'When a business needs to understand or meet its tax obligations…',
+  homeSummary: 'When a business needs to understand or meet its tax obligations…',
+  heroIntro: 'When a business needs to understand or meet its tax obligations…',
+  coreServices: [{ title: 'Tax Advisory', description: 'Advising on compliance.' }],
   ...overrides,
 });
 

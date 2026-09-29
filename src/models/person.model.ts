@@ -1,8 +1,26 @@
 import { Schema, model } from 'mongoose';
 import type { Model } from 'mongoose';
-import type { IPerson } from '../interfaces/person.interface.js';
+import type { IEducation, IEducationEntry, IPerson } from '../interfaces/person.interface.js';
 import { PERSON_ROLES } from '../constants/enums.js';
 import { contentPlugin } from './plugins/content.plugin.js';
+
+const subSchema = { _id: false, versionKey: false } as const;
+
+const educationEntrySchema = new Schema<IEducationEntry>(
+  {
+    qualification: { type: String, required: true, trim: true, maxlength: 300 },
+    year: { type: Number, default: null, min: 1900, max: 2200 },
+  },
+  subSchema
+);
+
+const educationSchema = new Schema<IEducation>(
+  {
+    intro: { type: String, default: null, trim: true, maxlength: 2000 },
+    entries: { type: [educationEntrySchema], default: [] },
+  },
+  subSchema
+);
 
 const personSchema = new Schema<IPerson>(
   {
@@ -13,11 +31,16 @@ const personSchema = new Schema<IPerson>(
     role: { type: String, required: true, enum: PERSON_ROLES.values },
     photo: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
     linkedinUrl: { type: String, default: null, trim: true, maxlength: 2048 },
-    // Stored but never serialised publicly, pending the firm's decision (Q9).
+    instagramUrl: { type: String, default: null, trim: true, maxlength: 2048 },
+    // Public since v2: shown on the profile and the practice-lead card (ADR-052).
     email: { type: String, default: null, trim: true, lowercase: true, maxlength: 254 },
+    cardBio: { type: String, default: null, trim: true, maxlength: 400 },
     bio: { type: String, default: null },
     quote: { type: String, default: null, trim: true, maxlength: 600 },
+    primaryPracticeArea: { type: Schema.Types.ObjectId, ref: 'PracticeArea', default: null },
     practiceAreas: [{ type: Schema.Types.ObjectId, ref: 'PracticeArea' }],
+    education: { type: educationSchema, default: () => ({ intro: null, entries: [] }) },
+    memberships: { type: [String], default: [] },
     office: { type: Schema.Types.ObjectId, ref: 'Office', default: null },
     featuredInLeadership: { type: Boolean, default: false },
   },
@@ -34,6 +57,8 @@ personSchema.virtual('fullNameForSlug').get(function (this: IPerson): string {
 
 // The directory: published people filtered by role, in manual order.
 personSchema.index({ status: 1, role: 1, order: 1 });
+// The directory's practice-area filter (ADR-054).
+personSchema.index({ status: 1, practiceAreas: 1 });
 personSchema.index({ firstName: 'text', lastName: 'text', bio: 'text' });
 
 export const Person: Model<IPerson> = model<IPerson>('Person', personSchema);

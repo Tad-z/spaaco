@@ -9,6 +9,8 @@ import { pagination, slug } from './common.validator.js';
  */
 export const listPeopleQuery = pagination.extend({
   role: z.enum(PERSON_ROLES.values).optional(),
+  // The "Practice Area" dropdown; combines with `role` (ADR-054).
+  practiceArea: slug.optional(),
   sort: z.enum(['seniority', 'name_asc', 'name_desc']).default('seniority'),
 });
 

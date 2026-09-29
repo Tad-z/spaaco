@@ -57,8 +57,12 @@ export function collectPageExpandTargets(doc: StoredSingleton): ExpandTargets {
   const personIds = new Set<string>();
 
   for (const path of PAGE_MEDIA_PATHS) {
-    const id = asId(atPath(doc, path));
-    if (id !== undefined) mediaIds.add(id);
+    // A carousel holds an array of ids; every other field holds one.
+    const value = atPath(doc, path);
+    for (const item of Array.isArray(value) ? value : [value]) {
+      const id = asId(item);
+      if (id !== undefined) mediaIds.add(id);
+    }
   }
 
   for (const path of PAGE_PERSON_PATHS) {

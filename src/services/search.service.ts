@@ -1,6 +1,11 @@
 import { Insight, Person, PracticeArea } from '../models/index.js';
 import { SEARCH } from '../config/constants.js';
-import { publishedFilter, publishedPopulate } from '../helpers/published-filter.helper.js';
+import {
+  personCardFields,
+  personCardPopulate,
+  publishedFilter,
+  publishedPopulate,
+} from '../helpers/published-filter.helper.js';
 import type {
   IInsightDoc,
   IPersonWithPhoto,
@@ -42,14 +47,14 @@ export async function search(query: string): Promise<SearchResultSources> {
       .limit(limit)
       .lean<IPracticeAreaWithImage[]>(),
     Person.find({ ...PUBLISHED, ...text }, scoreProjection)
-      .populate('photo')
+      .populate(personCardFields())
       .sort(byScore)
       .limit(limit)
       .lean<IPersonWithPhoto[]>(),
     Insight.find({ ...PUBLISHED, ...text }, scoreProjection)
       .populate('coverImage')
       .populate(publishedPopulate('practiceAreas'))
-      .populate({ ...publishedPopulate('author'), populate: { path: 'photo' } })
+      .populate(personCardPopulate('author'))
       .sort(byScore)
       .limit(limit)
       .lean<IInsightDoc[]>(),

@@ -103,7 +103,7 @@ The second design drop (29 Sep 2026) changes the page schemas and the media kind
 
 - [x] **D.1 Docs and spec.** Fold DESIGN_UPDATE_V2 into DATA_MODEL, API, PROJECT_BRIEF and SEED_CONTENT, and add ADRs for decisions 5, 6, 9, 10, 14 and 15, plus the Hero `images` change and PDF documents. Update `openapi.yaml` for every public change, then regenerate the types and update the fixtures from `SEED_CONTENT_V2.md`.
   - **Accept:** spec:lint, types:check and fixture validation pass.
-- [ ] **D.2 Hero, settings and FAQ.** Change Hero `image` to `images`. Add the nav, footer, legal-link and newsletter-copy changes, and the new contact callout CTA.
+- [x] **D.2 Hero, settings and FAQ.** Change Hero `image` to `images`. Add the nav, footer, legal-link and newsletter-copy changes, and the new contact callout CTA.
   - **Accept:** every page composer returns `hero.images`, and `/site` matches its fixture.
 - [ ] **D.3 Recognition rebuild.** Build `recognitionDirectories` and `awards`, the `recognition` page singleton, `GET /recognitions` and `GET /recognitions/:slug`, Home `recognitionSection`, and About `awardsList` from directories. Remove the old `recognitions` model.
   - **Accept:** the draft canary covers both new collections; a draft award never appears on Home or on a directory page.

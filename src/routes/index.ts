@@ -5,6 +5,8 @@ import { contentRoutes } from './public/content.routes.js';
 import { personRoutes } from './public/person.routes.js';
 import { insightRoutes } from './public/insight.routes.js';
 import { pageRoutes } from './public/page.routes.js';
+import { recognitionRoutes } from './public/recognition.routes.js';
+import { legalPageRoutes } from './public/legal-page.routes.js';
 import { searchRoutes } from './public/search.routes.js';
 import { submissionRoutes } from './public/submission.routes.js';
 import { fileRoutes } from './public/file.routes.js';
@@ -32,6 +34,8 @@ apiRoutes.use(contentRoutes);
 apiRoutes.use(personRoutes);
 apiRoutes.use(insightRoutes);
 apiRoutes.use(pageRoutes);
+apiRoutes.use(recognitionRoutes);
+apiRoutes.use(legalPageRoutes);
 apiRoutes.use(searchRoutes);
 
 // Admin routers deny by default: each states its own auth and roles.

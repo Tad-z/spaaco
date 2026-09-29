@@ -9,13 +9,19 @@ import type {
   PageKey,
   PeoplePage,
   PracticeAreasPage,
+  RecognitionPage,
+  ResponsibleBusinessPage,
 } from '../types/api.js';
 import type { IPageSources } from '../interfaces/populated.interface.js';
-import { toNullableImage } from './image.serializer.js';
-import { toCard as practiceAreaCard } from './practice-area.serializer.js';
+import { toImages, toNullableDocument, toNullableImage } from './image.serializer.js';
+import {
+  toCard as practiceAreaCard,
+  toFilterOption,
+  toHomeCard,
+} from './practice-area.serializer.js';
 import { toSummary as personSummary } from './person.serializer.js';
 import { toCard as insightCard } from './insight.serializer.js';
-import { toRecognition } from './recognition.serializer.js';
+import { toAwards, toDirectoryLink } from './recognition.serializer.js';
 import { toOffice } from './office.serializer.js';
 import { toJob } from './job.serializer.js';
 import {
@@ -58,12 +64,12 @@ function composeHome({
   practiceAreas,
   leadership,
   insights,
-  recognitions,
+  awards,
 }: IPageSources): HomePage {
   const hero = required(toHero(page.hero), 'home', 'hero');
   const aboutFirm = required(page.aboutFirm, 'home', 'aboutFirm');
   const whyChooseUs = required(page.whyChooseUs, 'home', 'whyChooseUs');
-  const recognitionTabs = required(page.recognitionTabs, 'home', 'recognitionTabs');
+  const recognition = required(page.recognitionSection, 'home', 'recognitionSection');
 
   return {
     key: 'home',
@@ -76,21 +82,23 @@ function composeHome({
     videoShowcase: {
       videoUrl: page.videoShowcase?.videoUrl ?? null,
       poster: toNullableImage(page.videoShowcase?.poster),
+      caption: page.videoShowcase?.caption ?? null,
     },
-    recognitionTabs: {
-      eyebrow: recognitionTabs.eyebrow ?? null,
-      title: recognitionTabs.title,
-      image: toNullableImage(recognitionTabs.image),
-      cta: toLink(recognitionTabs.cta),
-      achievementsLabel: recognitionTabs.achievementsLabel,
-      recognizedByLabel: recognitionTabs.recognizedByLabel,
-    },
-    recognitions: {
-      achievements: recognitions.filter((item) => item.tab === 'achievements').map(toRecognition),
-      recognizedBy: recognitions.filter((item) => item.tab === 'recognized_by').map(toRecognition),
+    recognitionSection: {
+      eyebrow: recognition.eyebrow ?? null,
+      title: recognition.title,
+      image: toNullableImage(recognition.image),
+      // The destination is pending (decision 12): both stay null until set.
+      cta: {
+        label: recognition.cta.label,
+        href: recognition.cta.href ?? null,
+        kind: recognition.cta.kind ?? null,
+      },
+      badges: toAwards(awards),
     },
     practiceSection: toSectionHeader(required(page.practiceSection, 'home', 'practiceSection')),
-    practiceAreas: practiceAreas.map(practiceAreaCard),
+    // Home cards carry the area's Home text, not the grid's (ADR-047).
+    practiceAreas: practiceAreas.map(toHomeCard),
     leadershipSection: toSectionHeader(
       required(page.leadershipSection, 'home', 'leadershipSection')
     ),
@@ -108,13 +116,14 @@ function composeHome({
   };
 }
 
-function composeAbout({ page, counts }: IPageSources): AboutPage {
+function composeAbout({ page, counts, directories }: IPageSources): AboutPage {
   const hero = required(toHero(page.hero), 'about', 'hero');
   const story = required(page.story, 'about', 'story');
   const stats = required(page.stats, 'about', 'stats');
   const missionSection = required(page.missionSection, 'about', 'missionSection');
   const principles = required(page.principles, 'about', 'principles');
   const awardsList = required(page.awardsList, 'about', 'awardsList');
+  const download = story.profileDownload;
 
   return {
     key: 'about',
@@ -127,6 +136,13 @@ function composeAbout({ page, counts }: IPageSources): AboutPage {
       // The pull quote shows the Managing Partner's photo and role, so the
       // whole summary is embedded rather than just a name.
       quotePerson: story.quotePerson ? personSummary(story.quotePerson) : null,
+      profileDownload: download
+        ? {
+            leadText: download.leadText,
+            linkLabel: download.linkLabel,
+            document: toNullableDocument(download.document),
+          }
+        : null,
     },
     stats: {
       title: stats.title,
@@ -148,7 +164,8 @@ function composeAbout({ page, counts }: IPageSources): AboutPage {
       eyebrow: awardsList.eyebrow ?? null,
       title: awardsList.title,
       image: toNullableImage(awardsList.image),
-      items: awardsList.items.map((item) => ({ name: item.name, url: item.url ?? null })),
+      // One row per published directory, linking to its page (ADR-056).
+      items: directories.map(toDirectoryLink),
     },
     seo: toSeo(page.seo),
   };
@@ -161,18 +178,18 @@ function composePracticeAreas({ page, practiceAreas }: IPageSources): PracticeAr
     key: 'practice-areas',
     hero: required(toHero(page.hero), 'practice-areas', 'hero'),
     gridSection: toSectionHeader(required(page.gridSection, 'practice-areas', 'gridSection')),
-    practiceAreas: practiceAreas.map(practiceAreaCard),
+    practiceAreas: practiceAreas.map((area) => practiceAreaCard(area)),
     csrBanner: {
       title: csrBanner.title,
       text: csrBanner.text,
-      image: toNullableImage(csrBanner.image),
+      images: toImages(csrBanner.images),
       cta: toLink(csrBanner.cta),
     },
     seo: toSeo(page.seo),
   };
 }
 
-function composePeople({ page }: IPageSources): PeoplePage {
+function composePeople({ page, filterAreas }: IPageSources): PeoplePage {
   return {
     key: 'people',
     hero: required(toHero(page.hero), 'people', 'hero'),
@@ -180,27 +197,41 @@ function composePeople({ page }: IPageSources): PeoplePage {
       required(page.directorySection, 'people', 'directorySection')
     ),
     roleFilters: [...ROLE_FILTERS],
+    practiceAreaFilters: filterAreas.map(toFilterOption),
     seo: toSeo(page.seo),
   };
 }
 
-function composeInsights({ page, insights }: IPageSources): InsightsPage {
+function composeInsights({ page, insights, filterAreas }: IPageSources): InsightsPage {
   return {
     key: 'insights',
     // Null by design: the page opens with the featured carousel.
     hero: toHero(page.hero),
     featured: insights.map(insightCard),
     categoryFilters: [...CATEGORY_FILTERS],
+    practiceAreaFilters: filterAreas.map(toFilterOption),
     listingSection: toSectionHeader(required(page.listingSection, 'insights', 'listingSection')),
     seo: toSeo(page.seo),
   };
 }
 
 function composeCareers({ page, jobs }: IPageSources): CareersPage {
+  const jobsSection = required(page.jobsSection, 'careers', 'jobsSection');
+  const emptyState = jobsSection.emptyState;
+
   return {
     key: 'careers',
     hero: required(toHero(page.hero), 'careers', 'hero'),
-    jobsSection: toSectionHeader(required(page.jobsSection, 'careers', 'jobsSection')),
+    jobsSection: {
+      eyebrow: jobsSection.eyebrow ?? null,
+      title: jobsSection.title,
+      cta: toLink(jobsSection.cta),
+      // Stored always, served only when there is nothing open to show.
+      emptyState:
+        jobs.length === 0 && emptyState
+          ? { title: emptyState.title, body: emptyState.body, ctaLabel: emptyState.ctaLabel }
+          : null,
+    },
     jobs: jobs.map(toJob),
     seo: toSeo(page.seo),
   };
@@ -224,6 +255,32 @@ function composeOffices({ page, offices }: IPageSources): OfficesPage {
   };
 }
 
+function composeRecognition({ page }: IPageSources): RecognitionPage {
+  const labels = required(page.directoryPage, 'recognition', 'directoryPage');
+
+  return {
+    key: 'recognition',
+    directoryPage: {
+      awardsEyebrow: labels.awardsEyebrow,
+      primaryCta: toLink(labels.primaryCta),
+      secondaryCta: toLink(labels.secondaryCta),
+    },
+    seo: toSeo(page.seo),
+  };
+}
+
+function composeResponsibleBusiness({ page }: IPageSources): ResponsibleBusinessPage {
+  const backLink = required(toLink(page.backLink), 'responsible-business', 'backLink');
+
+  return {
+    key: 'responsible-business',
+    title: required(page.title, 'responsible-business', 'title'),
+    images: toImages(page.images),
+    backLink,
+    seo: toSeo(page.seo),
+  };
+}
+
 const COMPOSERS: Record<PageKey, (sources: IPageSources) => Page> = {
   home: composeHome,
   about: composeAbout,
@@ -233,6 +290,8 @@ const COMPOSERS: Record<PageKey, (sources: IPageSources) => Page> = {
   careers: composeCareers,
   faq: composeFaq,
   offices: composeOffices,
+  recognition: composeRecognition,
+  'responsible-business': composeResponsibleBusiness,
 };
 
 export const toPage = (key: PageKey, sources: IPageSources): Page => COMPOSERS[key](sources);

@@ -5,7 +5,9 @@ import type { IPracticeArea } from './practice-area.interface.js';
 import type { IInsight } from './insight.interface.js';
 import type { IOffice } from './office.interface.js';
 import type { IJob } from './job.interface.js';
-import type { IRecognition } from './recognition.interface.js';
+import type { IIndustry } from './industry.interface.js';
+import type { IRecognitionDirectory } from './recognition-directory.interface.js';
+import type { IAward } from './award.interface.js';
 import type { IPage } from './page.interface.js';
 
 /**
@@ -16,30 +18,49 @@ import type { IPage } from './page.interface.js';
  * them, and neither layer may import the other.
  */
 
+/** Just enough of a practice area for a chip, a link or a filter option. */
+export type IPracticeAreaRefDoc = Pick<IPracticeArea, 'slug' | 'title' | 'shortLabel'> & {
+  _id: Types.ObjectId;
+};
+
 export type IPracticeAreaWithImage = Omit<IPracticeArea, 'image'> & {
   _id: Types.ObjectId;
   image: IMedia | null;
 };
 
-export type IPracticeAreaWithContacts = Omit<IPracticeAreaWithImage, 'contacts'> & {
-  contacts: IPersonWithPhoto[];
-};
-
-export type IPersonWithPhoto = Omit<IPerson, 'photo'> & {
+/**
+ * A person as every card renders them, front and back: the photo, and the
+ * practice-area chips (ADR-052). Drafts are already filtered out of both.
+ */
+export type IPersonWithPhoto = Omit<IPerson, 'photo' | 'practiceAreas'> & {
   _id: Types.ObjectId;
   photo: IMedia | null;
+  practiceAreas: IPracticeAreaRefDoc[];
 };
 
-export type IPersonDetailDoc = Omit<IPerson, 'photo' | 'practiceAreas' | 'office'> & {
+export type IIndustryDoc = IIndustry & { _id: Types.ObjectId };
+
+export type IPracticeAreaDetailDoc = Omit<
+  IPracticeArea,
+  'image' | 'heroImages' | 'industries' | 'lead'
+> & {
   _id: Types.ObjectId;
-  photo: IMedia | null;
-  practiceAreas: (IPracticeArea & { _id: Types.ObjectId })[];
+  image: IMedia | null;
+  heroImages: IMedia[];
+  industries: IIndustryDoc[];
+  lead: IPersonWithPhoto | null;
+};
+
+export type IPersonDetailDoc = Omit<IPersonWithPhoto, 'primaryPracticeArea' | 'office'> & {
+  primaryPracticeArea: IPracticeAreaRefDoc | null;
   office: (IOffice & { _id: Types.ObjectId }) | null;
 };
 
-export type IInsightDoc = Omit<IInsight, 'coverImage' | 'practiceAreas' | 'author'> & {
+export type IInsightDoc = Omit<IInsight, 'coverImage' | 'document' | 'practiceAreas' | 'author'> & {
   _id: Types.ObjectId;
   coverImage: IMedia | null;
+  /** Populated only on the detail read, where the "Read Article" link needs it. */
+  document?: IMedia | null;
   practiceAreas: (IPracticeArea & { _id: Types.ObjectId })[];
   /** Null means the firm is the author, not that the reference is missing. */
   author: IPersonWithPhoto | null;
@@ -53,12 +74,21 @@ export type IJobDoc = Omit<IJob, 'practiceArea' | 'office'> & {
   office: IOfficeDoc | null;
 };
 
-export type IRecognitionWithBadge = Omit<IRecognition, 'badge'> & {
+export type IRecognitionDirectoryDoc = Omit<IRecognitionDirectory, 'logo' | 'heroImages'> & {
+  _id: Types.ObjectId;
+  logo: IMedia | null;
+  heroImages: IMedia[];
+};
+
+export type IAwardDoc = Omit<IAward, 'badge' | 'directory'> & {
   _id: Types.ObjectId;
   badge: IMedia | null;
+  /** Null when the directory is a draft: such an award is dropped, never shown. */
+  directory: Pick<IRecognitionDirectory, 'name' | 'slug'> | null;
 };
 
 type WithImage<T> = Omit<T, 'image'> & { image?: IMedia | null };
+type WithImages<T> = Omit<T, 'images'> & { images?: IMedia[] };
 
 /** A page document with every media and person reference populated. */
 export interface IPageDoc extends Omit<
@@ -66,45 +96,57 @@ export interface IPageDoc extends Omit<
   | 'hero'
   | 'seo'
   | 'videoShowcase'
-  | 'recognitionTabs'
+  | 'recognitionSection'
   | 'whyChooseUs'
   | 'story'
   | 'missionSection'
   | 'principles'
   | 'awardsList'
   | 'csrBanner'
+  | 'images'
 > {
   _id: Types.ObjectId;
-  hero?: (Omit<NonNullable<IPage['hero']>, 'image'> & { image?: IMedia | null }) | null;
+  hero?: WithImages<NonNullable<IPage['hero']>> | null;
   seo: Omit<IPage['seo'], 'ogImage'> & { ogImage?: IMedia | null };
   videoShowcase?:
     (Omit<NonNullable<IPage['videoShowcase']>, 'poster'> & { poster?: IMedia | null }) | null;
-  recognitionTabs?: WithImage<NonNullable<IPage['recognitionTabs']>> | null;
+  recognitionSection?: WithImage<NonNullable<IPage['recognitionSection']>> | null;
   whyChooseUs?: WithImage<NonNullable<IPage['whyChooseUs']>> | null;
   story?:
-    | (Omit<NonNullable<IPage['story']>, 'quotePerson'> & {
+    | (Omit<NonNullable<IPage['story']>, 'quotePerson' | 'profileDownload'> & {
         quotePerson?: IPersonWithPhoto | null;
+        profileDownload?:
+          | (Omit<NonNullable<NonNullable<IPage['story']>['profileDownload']>, 'document'> & {
+              document?: IMedia | null;
+            })
+          | null;
       })
     | null;
   missionSection?: WithImage<NonNullable<IPage['missionSection']>> | null;
   principles?: WithImage<NonNullable<IPage['principles']>> | null;
   awardsList?: WithImage<NonNullable<IPage['awardsList']>> | null;
-  csrBanner?: WithImage<NonNullable<IPage['csrBanner']>> | null;
+  csrBanner?: WithImages<NonNullable<IPage['csrBanner']>> | null;
+  images?: IMedia[];
 }
 
 /**
  * Everything a composed page needs, already loaded.
  *
  * Only the collections a given key renders are populated; the rest are empty,
- * because paying for eight collection queries to serve the FAQ page would be
+ * because paying for every collection query to serve the FAQ page would be
  * wasteful on every request.
  */
 export interface IPageSources {
   page: IPageDoc;
   practiceAreas: IPracticeAreaWithImage[];
+  /** Every published area, for the People and Insights "Practice Area" dropdowns. */
+  filterAreas: IPracticeAreaRefDoc[];
   leadership: IPersonWithPhoto[];
   insights: IInsightDoc[];
-  recognitions: IRecognitionWithBadge[];
+  /** The awards flagged for Home, in order. */
+  awards: IAwardDoc[];
+  /** Every published recognition directory, in order: the About awards list. */
+  directories: IRecognitionDirectoryDoc[];
   offices: IOfficeDoc[];
   jobs: IJobDoc[];
   counts: { officeCount: number; practiceAreaCount: number };

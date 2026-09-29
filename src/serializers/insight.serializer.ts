@@ -1,8 +1,15 @@
-import type { InsightAuthor, InsightCard, InsightCta, InsightDetail } from '../types/api.js';
+import type {
+  InsightAuthor,
+  InsightCard,
+  InsightCta,
+  InsightDetail,
+  InsightDetailCta,
+  Link,
+} from '../types/api.js';
 import type { IInsight } from '../interfaces/insight.interface.js';
 import type { IMedia } from '../interfaces/media.interface.js';
 import { INSIGHT_CATEGORIES } from '../constants/enums.js';
-import { toNullableImage } from './image.serializer.js';
+import { toNullableDocument, toNullableImage } from './image.serializer.js';
 import { toRef as practiceAreaRef } from './practice-area.serializer.js';
 import type { PracticeAreaRefSource } from './practice-area.serializer.js';
 import { toSummary as personSummary } from './person.serializer.js';
@@ -35,6 +42,9 @@ export interface InsightCardSource {
 export interface InsightDetailSource extends InsightCardSource {
   body?: string | null;
   videoUrl?: string | null;
+  externalUrl?: string | null;
+  /** The populated PDF, when the article's link is an uploaded document. */
+  document?: IMedia | null;
 }
 
 /** The firm as author. The frontend supplies the logo mark; it is its asset. */
@@ -98,9 +108,37 @@ export function toCard(insight: InsightCardSource): InsightCard {
   };
 }
 
+/**
+ * The link after the body (ADR-051). A video goes to its video; an article to
+ * its external URL or its uploaded PDF, and has none when it has neither.
+ */
+export function toDetailCta(insight: InsightDetailSource): InsightDetailCta | null {
+  if (insight.format === 'video') {
+    return insight.videoUrl ? { label: 'Watch Video', url: insight.videoUrl } : null;
+  }
+
+  if (insight.externalUrl) return { label: 'Read Article', url: insight.externalUrl };
+
+  const document = toNullableDocument(insight.document);
+  return document ? { label: 'Read Article', url: document.url } : null;
+}
+
+/** Pro bono stories belong to the Responsible Business page; everything else to the listing. */
+export function toBackLink(insight: Pick<InsightCardSource, 'categories'>): Link {
+  return insight.categories.includes('pro_bono')
+    ? {
+        label: 'Back to Pro Bono & Community Commitment',
+        href: '/responsible-business',
+        kind: 'internal',
+      }
+    : { label: 'Back to Insights & News', href: '/insights', kind: 'internal' };
+}
+
 export function toDetail(insight: InsightDetailSource, related: InsightCard[] = []): InsightDetail {
   return {
     ...toCard(insight),
+    cta: toDetailCta(insight),
+    backLink: toBackLink(insight),
     body: insight.body ?? null,
     videoUrl: insight.videoUrl ?? null,
     related,

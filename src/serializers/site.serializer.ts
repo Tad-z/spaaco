@@ -1,4 +1,5 @@
 import type {
+  Link,
   NavItem,
   Site,
   SiteFaqSection,
@@ -6,12 +7,15 @@ import type {
   SiteSettings,
   Socials,
 } from '../types/api.js';
+import type { ILink } from '../interfaces/common.interface.js';
 import type { ISettings } from '../interfaces/settings.interface.js';
-import type { ISiteFaq, ISitePracticeArea, ISiteSources } from '../interfaces/site.interface.js';
+import type { ISiteFaq, ISiteSources } from '../interfaces/site.interface.js';
 import { NAV_ENTRIES } from '../constants/navigation.js';
+import type { NavEntry } from '../constants/navigation.js';
+import { INSIGHT_CATEGORIES, PUBLIC_INSIGHT_CATEGORIES } from '../constants/enums.js';
 import { toFaq } from './faq.serializer.js';
 import { toRef as practiceAreaRef } from './practice-area.serializer.js';
-import { toRef as officeRef } from './office.serializer.js';
+import { toFooterOffice } from './office.serializer.js';
 
 /**
  * The global shell.
@@ -40,19 +44,30 @@ const toSettings = (settings: ISettings): SiteSettings => ({
   copyright: settings.copyright,
 });
 
-function toNav(practiceAreas: ISitePracticeArea[]): NavItem[] {
+const toLinks = (links: readonly ILink[] | undefined): Link[] =>
+  (links ?? []).map((link) => ({ label: link.label, href: link.href, kind: link.kind }));
+
+/** A dropdown's items (ADR-050): the About anchors from settings, or the public categories. */
+function dropdownFor(entry: NavEntry, settings: ISettings): Link[] {
+  if (entry.dropdown === 'aboutAnchors') return toLinks(settings.aboutAnchors);
+
+  if (entry.dropdown === 'insightCategories') {
+    return PUBLIC_INSIGHT_CATEGORIES.map((category) => ({
+      label: INSIGHT_CATEGORIES.labels[category],
+      href: `/insights?category=${category}`,
+      kind: 'internal' as const,
+    }));
+  }
+
+  return [];
+}
+
+function toNav(settings: ISettings): NavItem[] {
   return NAV_ENTRIES.map((entry) => ({
     label: entry.label,
     href: entry.href,
     kind: entry.kind,
-    children:
-      entry.practiceAreaDropdown === true
-        ? practiceAreas.map((area) => ({
-            label: area.title,
-            href: `/practice-areas/${area.slug}`,
-            kind: 'internal' as const,
-          }))
-        : [],
+    children: dropdownFor(entry, settings),
   }));
 }
 
@@ -61,15 +76,17 @@ function toFooter(sources: ISiteSources): SiteFooter {
 
   return {
     tagline: settings.tagline,
-    links: NAV_ENTRIES.map((entry) => ({
-      label: entry.label,
-      href: entry.href,
-      kind: entry.kind,
-    })),
-    // Only the areas the firm flagged for the footer, which is a shorter list
-    // than the nav dropdown by design.
+    links: toLinks(settings.footerLinks),
+    // Only the areas the firm flagged for the footer: all nine in v2.
     practiceAreas: practiceAreas.filter((area) => area.showInFooter).map(practiceAreaRef),
-    offices: offices.map(officeRef),
+    offices: offices.map((office) => toFooterOffice(office, settings)),
+    legalLinks: toLinks(settings.legalLinks),
+    // Copy only: there is no subscribe endpoint (DESIGN_UPDATE_V2 §14).
+    newsletter: {
+      title: settings.newsletter.title,
+      note: settings.newsletter.note,
+      enabled: settings.newsletter.enabled,
+    },
     socials: toSocials(settings.socials),
     copyright: settings.copyright,
   };
@@ -93,11 +110,11 @@ function toFaqSection(settings: ISettings, faqs: ISiteFaq[]): SiteFaqSection {
 }
 
 export function toSite(sources: ISiteSources): Site {
-  const { settings, practiceAreas, faqs } = sources;
+  const { settings, faqs } = sources;
 
   return {
     settings: toSettings(settings),
-    nav: toNav(practiceAreas),
+    nav: toNav(settings),
     footer: toFooter(sources),
     faqSection: toFaqSection(settings, faqs),
     contactCallout: {

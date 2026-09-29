@@ -33,10 +33,10 @@ export const SEARCH = {
 /** How many related/featured items each surface shows. */
 export const CONTENT_LIMITS = {
   relatedInsights: 3,
-  personInsights: 3,
+  /** "Recent Publications" on an attorney's profile and a practice area's page. */
+  recentPublications: 6,
   featuredInsights: 3,
   homeLatestInsights: 6,
-  practiceAreaContacts: 10,
 } as const;
 
 export const UPLOAD_LIMITS = {
@@ -49,6 +49,9 @@ export const UPLOAD_LIMITS = {
   /** Library images. SVG is rejected because it can carry scripts (ADR-016). */
   imageMaxBytes: 10 * 1024 * 1024,
   imageMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
+  /** Library documents: PDFs only, such as the firm profile (ADR-053). */
+  documentMaxBytes: 20 * 1024 * 1024,
+  documentMimeTypes: ['application/pdf'],
   /** JSON bodies. Page documents are the largest thing an editor submits. */
   jsonBodyLimit: '100kb',
 } as const;
@@ -92,7 +95,7 @@ export const ROLE_RANK = {
   associate_partner: 2,
   senior_associate: 3,
   associate: 4,
-  nysc_associate: 5,
+  trainee_associate: 5,
 } as const;
 
 /** The firm's founding year, used by the computed "years since founding" stat. */

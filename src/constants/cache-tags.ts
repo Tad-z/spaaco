@@ -20,6 +20,9 @@ export const TAGS = {
   faqs: 'faqs',
   jobs: 'jobs',
   recognitions: 'recognitions',
+  recognition: (slug: string): string => `recognition:${slug}`,
+  industries: 'industries',
+  legal: (key: string): string => `legal:${key}`,
   media: (id: string): string => `media:${id}`,
 } as const;
 
@@ -32,7 +35,10 @@ export type CacheEntity =
   | 'office'
   | 'faq'
   | 'job'
-  | 'recognition'
+  | 'recognitionDirectory'
+  | 'award'
+  | 'industry'
+  | 'legalPage'
   | 'page';
 
 /**
@@ -48,25 +54,29 @@ export function tagsFor(entity: CacheEntity, slugOrKey?: string): string[] {
       return [TAGS.site];
     case 'practiceArea':
       // Insight cards carry practice-area chips, job cards carry a practice
-      // area, and the About stats can count them.
+      // area, person cards carry them on their back, the People and Insights
+      // pages list them as filters, and the About stats can count them.
       return [
         TAGS.site,
         TAGS.practiceAreas,
         TAGS.page('home'),
         TAGS.page('practice-areas'),
         TAGS.page('insights'),
+        TAGS.page('people'),
         TAGS.page('careers'),
         TAGS.page('about'),
         TAGS.insights,
+        TAGS.people,
         TAGS.jobs,
         ...(slugOrKey === undefined ? [] : [TAGS.practiceArea(slugOrKey)]),
       ];
     case 'person':
-      // Insight cards embed the author summary, so a renamed attorney has to
-      // clear the insights surfaces too.
+      // Insight cards embed the author summary, and a practice area's page
+      // embeds its lead, so a renamed attorney clears both.
       return [
         TAGS.people,
         TAGS.insights,
+        TAGS.practiceAreas,
         TAGS.page('home'),
         TAGS.page('about'),
         TAGS.page('insights'),
@@ -97,9 +107,27 @@ export function tagsFor(entity: CacheEntity, slugOrKey?: string): string[] {
       return [TAGS.site, TAGS.faqs];
     case 'job':
       return [TAGS.jobs, TAGS.page('careers')];
-    case 'recognition':
+    case 'recognitionDirectory':
+      // A directory names its awards' badges on Home and a row on About.
+      return [
+        TAGS.recognitions,
+        TAGS.page('home'),
+        TAGS.page('about'),
+        ...(slugOrKey === undefined ? [] : [TAGS.recognition(slugOrKey)]),
+      ];
+    case 'award':
+      // `recognitions` covers every directory page, since an award's own slug
+      // does not say which directory it sits on.
       return [TAGS.recognitions, TAGS.page('home')];
+    case 'industry':
+      return [TAGS.industries, TAGS.practiceAreas];
+    case 'legalPage':
+      return slugOrKey === undefined ? [] : [TAGS.legal(slugOrKey)];
     case 'page':
-      return slugOrKey === undefined ? [] : [TAGS.page(slugOrKey)];
+      if (slugOrKey === undefined) return [];
+      // The recognition page holds the labels every directory page embeds.
+      return slugOrKey === 'recognition'
+        ? [TAGS.page(slugOrKey), TAGS.recognitions]
+        : [TAGS.page(slugOrKey)];
   }
 }

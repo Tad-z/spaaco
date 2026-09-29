@@ -4,6 +4,7 @@ import type {
   IHero,
   IIconItem,
   ILink,
+  IPendingLink,
   ISectionHeader,
   ISeo,
   ISeoBasic,
@@ -30,6 +31,16 @@ export const linkSchema = new Schema<ILink>(
   subSchema
 );
 
+/** A CTA with no destination yet: `href` and `kind` stay null until decided (ADR-056). */
+export const pendingLinkSchema = new Schema<IPendingLink>(
+  {
+    label: { type: String, required: true, trim: true, maxlength: 120 },
+    href: { type: String, default: null, trim: true, maxlength: 2048 },
+    kind: { type: String, enum: [...LINK_KINDS.values, null], default: null },
+  },
+  subSchema
+);
+
 export const seoSchema = new Schema<ISeo>(
   {
     title: { type: String, default: null, trim: true, maxlength: 200 },
@@ -52,7 +63,7 @@ export const heroSchema = new Schema<IHero>(
   {
     title: { type: String, required: true, trim: true, maxlength: 200 },
     subtitle: { type: String, default: null, trim: true, maxlength: 600 },
-    image: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
+    images: [{ type: Schema.Types.ObjectId, ref: 'Media' }],
     primaryCta: { type: linkSchema, default: null },
     secondaryCta: { type: linkSchema, default: null },
   },
@@ -92,7 +103,8 @@ export const statSchema = new Schema<IStat>(
 export const titledBodySchema = new Schema<ITitledBody>(
   {
     title: { type: String, required: true, trim: true, maxlength: 160 },
-    body: { type: String, required: true, maxlength: 4000 },
+    // Sanitised HTML since v2: "Our Asset" has bold phrases.
+    body: { type: String, required: true, maxlength: 8000 },
   },
   subSchema
 );

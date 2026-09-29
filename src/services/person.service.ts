@@ -1,33 +1,29 @@
 import type { PipelineStage, Types } from 'mongoose';
-import { Person } from '../models/index.js';
+import { Person, PracticeArea } from '../models/index.js';
 import { NotFoundError } from '../core/errors.js';
 import { listInsightsByAuthor } from './insight.service.js';
-import type { IInsightDoc } from '../interfaces/populated.interface.js';
-import { publishedFilter, publishedPopulate } from '../helpers/published-filter.helper.js';
+import type {
+  IInsightDoc,
+  IPersonDetailDoc,
+  IPersonWithPhoto,
+} from '../interfaces/populated.interface.js';
+import {
+  personCardFields,
+  publishedFilter,
+  publishedPopulate,
+} from '../helpers/published-filter.helper.js';
 import type { PreviewOptions } from '../helpers/published-filter.helper.js';
 import { toSkip } from '../helpers/pagination.helper.js';
 import { PERSON_ROLES } from '../constants/enums.js';
 import { ROLE_RANK } from '../config/constants.js';
-import type { IPerson } from '../interfaces/person.interface.js';
-import type { IMedia } from '../interfaces/media.interface.js';
-import type { IPracticeArea } from '../interfaces/practice-area.interface.js';
-import type { IOffice } from '../interfaces/office.interface.js';
 import type { PersonRole } from '../types/api.js';
 
-export type PersonWithPhoto = Omit<IPerson, 'photo'> & {
-  _id: Types.ObjectId;
-  photo: IMedia | null;
-};
-
-export type PersonDetailDoc = Omit<IPerson, 'photo' | 'practiceAreas' | 'office'> & {
-  _id: Types.ObjectId;
-  photo: IMedia | null;
-  practiceAreas: (IPracticeArea & { _id: Types.ObjectId })[];
-  office: (IOffice & { _id: Types.ObjectId }) | null;
-};
+export type PersonWithPhoto = IPersonWithPhoto;
 
 export interface ListPeopleOptions extends PreviewOptions {
   readonly role?: PersonRole;
+  /** A practice area slug: the directory's "Practice Area" dropdown (ADR-054). */
+  readonly practiceArea?: string;
   readonly sort: 'seniority' | 'name_asc' | 'name_desc';
   readonly page: number;
   readonly pageSize: number;
@@ -50,6 +46,25 @@ function roleFilter(role: PersonRole | undefined): Record<string, unknown> {
 }
 
 /**
+ * The practice-area filter matches the card's chips or the profile's primary
+ * area (ADR-054). `undefined` means no filter; `null` means the slug names no
+ * area, which is an empty page rather than a 404 — the value comes from a
+ * dropdown.
+ */
+async function practiceAreaFilter(
+  slug: string | undefined
+): Promise<Record<string, unknown> | null | undefined> {
+  if (slug === undefined) return undefined;
+
+  const area = await PracticeArea.findOne({ slug })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+  if (!area) return null;
+
+  return { $or: [{ practiceAreas: area._id }, { primaryPracticeArea: area._id }] };
+}
+
+/**
  * Seniority sorts by role rank, then manual order, then last name.
  *
  * Mongo has no notion of our enum ordering, so the rank is derived in an
@@ -59,7 +74,10 @@ function roleFilter(role: PersonRole | undefined): Record<string, unknown> {
 export async function listPeople(
   options: ListPeopleOptions
 ): Promise<{ items: PersonWithPhoto[]; total: number }> {
-  const match = { ...publishedFilter(options), ...roleFilter(options.role) };
+  const areaFilter = await practiceAreaFilter(options.practiceArea);
+  if (areaFilter === null) return { items: [], total: 0 };
+
+  const match = { ...publishedFilter(options), ...roleFilter(options.role), ...areaFilter };
 
   let sortStage: PipelineStage.Sort['$sort'] = { roleRank: 1, order: 1, lastName: 1 };
   if (options.sort === 'name_asc') sortStage = { lastName: 1, firstName: 1 };
@@ -73,7 +91,7 @@ export async function listPeople(
       { $skip: toSkip(options.page, options.pageSize) },
       { $limit: options.pageSize },
       { $project: { roleRank: 0 } },
-    ]).then((docs) => Person.populate<PersonWithPhoto>(docs, { path: 'photo' })),
+    ]).then((docs) => Person.populate<PersonWithPhoto>(docs, personCardFields(options))),
     Person.countDocuments(match),
   ]);
 
@@ -83,12 +101,15 @@ export async function listPeople(
 export async function getPersonBySlug(
   slug: string,
   options: PreviewOptions = {}
-): Promise<{ person: PersonDetailDoc; insights: IInsightDoc[] }> {
+): Promise<{ person: IPersonDetailDoc; insights: IInsightDoc[] }> {
   const person = await Person.findOne({ slug, ...publishedFilter(options) })
-    .populate('photo')
-    .populate(publishedPopulate('practiceAreas', options))
+    .populate(personCardFields(options))
+    .populate({
+      ...publishedPopulate('primaryPracticeArea', options),
+      select: 'slug title shortLabel',
+    })
     .populate(publishedPopulate('office', options))
-    .lean<PersonDetailDoc | null>();
+    .lean<IPersonDetailDoc | null>();
 
   if (!person) throw new NotFoundError('Attorney');
 
@@ -98,19 +119,10 @@ export async function getPersonBySlug(
   return { person, insights };
 }
 
-/** People flagged for the Home leadership row. */
+/** People flagged for the Home leadership row, with their card backs. */
 export async function listLeadership(options: PreviewOptions = {}): Promise<PersonWithPhoto[]> {
   return Person.find({ ...publishedFilter(options), featuredInLeadership: true })
-    .populate('photo')
+    .populate(personCardFields(options))
     .sort({ order: 1 })
     .lean<PersonWithPhoto[]>();
-}
-
-export async function getPersonById(
-  id: Types.ObjectId,
-  options: PreviewOptions = {}
-): Promise<PersonWithPhoto | null> {
-  return Person.findOne({ _id: id, ...publishedFilter(options) })
-    .populate('photo')
-    .lean<PersonWithPhoto | null>();
 }

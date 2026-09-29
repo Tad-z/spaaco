@@ -1,11 +1,16 @@
 import { PracticeArea } from '../models/index.js';
 import { NotFoundError } from '../core/errors.js';
 import { listInsightsByPracticeArea } from './insight.service.js';
-import type { IInsightDoc } from '../interfaces/populated.interface.js';
-import { publishedFilter, publishedPopulate } from '../helpers/published-filter.helper.js';
+import {
+  personCardPopulate,
+  publishedFilter,
+  publishedPopulate,
+} from '../helpers/published-filter.helper.js';
 import type { PreviewOptions } from '../helpers/published-filter.helper.js';
 import type {
-  IPracticeAreaWithContacts,
+  IInsightDoc,
+  IPracticeAreaDetailDoc,
+  IPracticeAreaRefDoc,
   IPracticeAreaWithImage,
 } from '../interfaces/populated.interface.js';
 
@@ -28,19 +33,50 @@ export async function listFeaturedOnHome(
     .lean<IPracticeAreaWithImage[]>();
 }
 
+/**
+ * Every published area, as little as a link needs: the detail page's sidebar
+ * and the People and Insights "Practice Area" dropdowns (ADR-054).
+ */
+export async function listPracticeAreaLinks(
+  options: PreviewOptions = {}
+): Promise<IPracticeAreaRefDoc[]> {
+  return PracticeArea.find(publishedFilter(options))
+    .select('slug title shortLabel')
+    .sort({ order: 1, title: 1 })
+    .lean<IPracticeAreaRefDoc[]>();
+}
+
+export interface PracticeAreaDetailSources {
+  readonly area: IPracticeAreaDetailDoc;
+  readonly siblings: IPracticeAreaRefDoc[];
+  readonly publications: IInsightDoc[];
+}
+
+/**
+ * The detail page: the area with its hero slides, industries and lead, plus
+ * the sidebar and the recent publications.
+ *
+ * The lead and the industries go through `publishedPopulate`, so a draft
+ * attorney or a draft industry drops out rather than leaking (ADR-031).
+ */
 export async function getPracticeAreaBySlug(
   slug: string,
   options: PreviewOptions = {}
-): Promise<{ area: IPracticeAreaWithContacts; related: IInsightDoc[] }> {
+): Promise<PracticeAreaDetailSources> {
   const area = await PracticeArea.findOne({ slug, ...publishedFilter(options) })
     .populate('image')
-    .populate({ ...publishedPopulate('contacts', options), populate: { path: 'photo' } })
-    .lean<IPracticeAreaWithContacts | null>();
+    .populate('heroImages')
+    .populate({ ...publishedPopulate('industries', options), select: 'name slug' })
+    .populate(personCardPopulate('lead', options))
+    .lean<IPracticeAreaDetailDoc | null>();
 
   if (!area) throw new NotFoundError('Practice area');
 
   // Loaded here rather than by the controller, so the handler stays one call.
-  const related = await listInsightsByPracticeArea(area._id, options);
+  const [siblings, publications] = await Promise.all([
+    listPracticeAreaLinks(options),
+    listInsightsByPracticeArea(area._id, options),
+  ]);
 
-  return { area, related };
+  return { area, siblings, publications };
 }

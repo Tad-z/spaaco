@@ -5,8 +5,11 @@ import type {
   FocalPoint,
   IPublicStorage,
   ImageSizeUrls,
+  PutDocumentInput,
   PutImageInput,
+  StoredDocument,
   StoredImage,
+  StoredKind,
 } from '../../../interfaces/integrations/storage.interface.js';
 
 /**
@@ -125,13 +128,46 @@ export function createCloudinaryStorage(
       };
     },
 
+    /**
+     * A PDF goes up as a `raw` resource: delivered byte for byte, never run
+     * through the image pipeline, which would rasterise it (ADR-053).
+     */
+    async putDocument(input: PutDocumentInput): Promise<StoredDocument> {
+      const timestamp = String(Math.floor(Date.now() / 1000));
+      const params = { folder: 'spa-ajibade', timestamp };
+
+      const form = new FormData();
+      form.set('file', new Blob([new Uint8Array(input.buffer)], { type: 'application/pdf' }));
+      form.set('api_key', apiKey);
+      form.set('timestamp', timestamp);
+      form.set('folder', params.folder);
+      form.set('signature', sign(params, apiSecret));
+
+      const response = await fetchImpl(`https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`, {
+        method: 'POST',
+        body: form,
+      });
+
+      if (!response.ok) {
+        throw new InternalError(`Cloudinary rejected the upload (${String(response.status)})`);
+      }
+
+      const body = (await response.json()) as UploadResponse;
+
+      if (typeof body.public_id !== 'string' || typeof body.secure_url !== 'string') {
+        throw new InternalError('Cloudinary returned an upload without a public_id');
+      }
+
+      return { storageKey: body.public_id, url: body.secure_url };
+    },
+
     resize(storageKey: string, mimeType: string, focalPoint: FocalPoint): ImageSizeUrls {
       // No upload needed: the widths are URLs, so a new focal point is simply a
       // new set of URLs over the same stored original.
       return sizeUrls(storageKey, formatOf(mimeType), focalPoint);
     },
 
-    async remove(storageKey: string): Promise<void> {
+    async remove(storageKey: string, kind: StoredKind = 'image'): Promise<void> {
       const timestamp = String(Math.floor(Date.now() / 1000));
       const params = { public_id: storageKey, timestamp };
 
@@ -141,7 +177,9 @@ export function createCloudinaryStorage(
       form.set('timestamp', timestamp);
       form.set('signature', sign(params, apiSecret));
 
-      await fetchImpl(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+      // Images and raw files live under different resource types.
+      const resource = kind === 'document' ? 'raw' : 'image';
+      await fetchImpl(`https://api.cloudinary.com/v1_1/${cloudName}/${resource}/destroy`, {
         method: 'POST',
         body: form,
       });

@@ -36,6 +36,15 @@ const settingsSchema = new Schema<ISettings>(
       primaryCta: { type: linkSchema, default: null },
       secondaryCta: { type: linkSchema, default: null },
     },
+    // The editable parts of the nav and footer (ADR-050).
+    aboutAnchors: { type: [linkSchema], default: [] },
+    footerLinks: { type: [linkSchema], default: [] },
+    legalLinks: { type: [linkSchema], default: [] },
+    newsletter: {
+      title: { type: String, required: true, trim: true, maxlength: 200 },
+      note: { type: String, required: true, trim: true, maxlength: 300 },
+      enabled: { type: Boolean, default: false },
+    },
     revision: { type: Number, default: 0 },
   },
   { timestamps: true, strict: 'throw' }

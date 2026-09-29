@@ -6,7 +6,11 @@ import { PayloadTooLargeError, ValidationError } from '../core/errors.js';
 import { namedHandler } from '../helpers/named-handler.helper.js';
 
 /**
- * One file, in memory, for the image library.
+ * One file, in memory, for the media library: an image or a PDF document.
+ *
+ * The limit is the larger, document one, because multer cannot know the kind
+ * before it has read the body; the service holds images to their own, smaller
+ * ceiling (ADR-053).
  *
  * Memory storage rather than a temp file: the service needs the bytes anyway
  * to sniff the type and read the dimensions, and nothing untrusted is ever
@@ -20,7 +24,7 @@ import { namedHandler } from '../helpers/named-handler.helper.js';
 const single = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: UPLOAD_LIMITS.imageMaxBytes,
+    fileSize: UPLOAD_LIMITS.documentMaxBytes,
     files: 1,
     // Bounded like the CV form: this route needs auth, but an unbounded field
     // count is a memory problem whoever sends it.
@@ -38,7 +42,7 @@ export function imageUpload(): RequestHandler {
         if (error.code === 'LIMIT_FILE_SIZE') {
           next(
             new PayloadTooLargeError(
-              `The image must be ${String(Math.round(UPLOAD_LIMITS.imageMaxBytes / (1024 * 1024)))} MB or smaller.`
+              `The file must be ${String(Math.round(UPLOAD_LIMITS.documentMaxBytes / (1024 * 1024)))} MB or smaller.`
             )
           );
           return;

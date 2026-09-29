@@ -1,11 +1,9 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
-import { FIXTURE_DIR } from '../../support/spec.js';
+import { normalise, readFixture as fixture } from '../../support/fixtures.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { Insight, Page, PracticeArea } from '../../../src/models/index.js';
 import { previewToken } from '../../support/auth.js';
@@ -24,30 +22,6 @@ import { PAGE_KEYS } from '../../../src/constants/enums.js';
 setupTestDb();
 
 const app = buildTestApp();
-
-/** Replace values that legitimately vary between runs. */
-function normalise(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(normalise);
-  if (typeof value !== 'object' || value === null) return value;
-
-  return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>).map(([key, nested]) => {
-      if (key === 'id') return [key, '<id>'];
-      // Placeholder image URLs embed generated labels; the fixture and the
-      // seed agree on the label but not on which record produced it.
-      if (
-        (key === 'url' || key === 'sm' || key === 'md' || key === 'lg') &&
-        typeof nested === 'string'
-      ) {
-        return [key, nested.replace(/\d+x\d+/, '<size>')];
-      }
-      return [key, normalise(nested)];
-    })
-  );
-}
-
-const fixture = (name: string): unknown =>
-  JSON.parse(readFileSync(join(FIXTURE_DIR, name), 'utf8'));
 
 beforeEach(async () => {
   await runSeed();
@@ -74,7 +48,30 @@ describe('GET /api/v1/pages/{key}', () => {
     }
   );
 
-  it('returns 400 for a key outside the eight', async () => {
+  it.each(
+    PAGE_KEYS.values
+      .filter((key) => !['insights', 'recognition', 'responsible-business'].includes(key))
+      .map((key) => ({ key }))
+  )('$key serves its hero as an image carousel', async ({ key }) => {
+    const res = await request(app).get(`/api/v1/pages/${key}`);
+
+    // `image` is gone everywhere (ADR-046): one slide is a one-item array.
+    expect(res.body.data.hero).not.toHaveProperty('image');
+    expect(Array.isArray(res.body.data.hero.images)).toBe(true);
+    expect(res.body.data.hero.images.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('serves an empty carousel when no hero image is uploaded, rather than failing', async () => {
+    await Page.updateOne({ key: 'offices' }, { $set: { 'hero.images': [] } });
+
+    const res = await request(app).get('/api/v1/pages/offices');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.hero.images).toEqual([]);
+    expectToMatchContract(res, 'get', '/api/v1/pages/{key}');
+  });
+
+  it('returns 400 for a key outside the ten', async () => {
     const res = await request(app).get('/api/v1/pages/contact');
 
     expect(res.status).toBe(400);
@@ -126,11 +123,11 @@ describe('embedded collections', () => {
       res.body.data.practiceAreas.map((area: { shortLabel: string }) => area.shortLabel)
     ).toEqual([
       'Corporate',
-      'Data Privacy',
       'Energy',
       'Dispute Resolution',
       'Intellectual Property',
       'Real Estate',
+      'Data Privacy',
       'Tax',
     ]);
   });

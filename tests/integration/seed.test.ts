@@ -47,11 +47,15 @@ describe('runSeed', () => {
       practiceAreas: 9,
       people: 9,
       offices: 3,
-      insights: 4,
-      recognitions: 4,
+      // Four articles, the pro bono story and its eleven demo repeats.
+      insights: 16,
+      industries: 21,
+      recognitionDirectories: 4,
+      awards: 6,
+      legalPages: 2,
       faqs: 5,
       jobs: 2,
-      pages: 8,
+      pages: 10,
       settings: 1,
     });
     expect(result.media).toBeGreaterThan(0);

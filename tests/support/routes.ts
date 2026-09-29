@@ -10,6 +10,8 @@ import { contentRoutes } from '../../src/routes/public/content.routes.js';
 import { personRoutes } from '../../src/routes/public/person.routes.js';
 import { insightRoutes } from '../../src/routes/public/insight.routes.js';
 import { pageRoutes } from '../../src/routes/public/page.routes.js';
+import { recognitionRoutes } from '../../src/routes/public/recognition.routes.js';
+import { legalPageRoutes } from '../../src/routes/public/legal-page.routes.js';
 import { searchRoutes } from '../../src/routes/public/search.routes.js';
 import { submissionRoutes } from '../../src/routes/public/submission.routes.js';
 import { fileRoutes } from '../../src/routes/public/file.routes.js';
@@ -94,6 +96,8 @@ export function registeredPublicRoutes(): RegisteredRoute[] {
     personRoutes,
     insightRoutes,
     pageRoutes,
+    recognitionRoutes,
+    legalPageRoutes,
     searchRoutes,
     submissionRoutes,
     fileRoutes,

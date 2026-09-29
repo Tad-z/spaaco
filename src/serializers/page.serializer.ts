@@ -1,10 +1,10 @@
 import type { FilterOption, Hero, IconItem, Link, SectionHeader, Seo, Stat } from '../types/api.js';
 import type { IIconItem, ILink } from '../interfaces/common.interface.js';
 import type { IMedia } from '../interfaces/media.interface.js';
-import { INSIGHT_CATEGORIES, PERSON_ROLES } from '../constants/enums.js';
+import { INSIGHT_CATEGORIES, PERSON_ROLES, PUBLIC_INSIGHT_CATEGORIES } from '../constants/enums.js';
 import { resolveStatValue } from '../helpers/computed-stats.helper.js';
 import type { StatCounts } from '../helpers/computed-stats.helper.js';
-import { toNullableImage } from './image.serializer.js';
+import { toImages, toNullableImage } from './image.serializer.js';
 
 /**
  * The building blocks every page composer shares.
@@ -20,7 +20,8 @@ export const toLink = (link: ILink | null | undefined): Link | null =>
 export interface HeroSource {
   title: string;
   subtitle?: string | null;
-  image?: IMedia | null;
+  /** Carousel slides; only the image changes between them (ADR-046). */
+  images?: (IMedia | null)[];
   primaryCta?: ILink | null;
   secondaryCta?: ILink | null;
 }
@@ -30,7 +31,7 @@ export const toHero = (hero: HeroSource | null | undefined): Hero | null =>
     ? {
         title: hero.title,
         subtitle: hero.subtitle ?? null,
-        image: toNullableImage(hero.image),
+        images: toImages(hero.images),
         primaryCta: toLink(hero.primaryCta),
         secondaryCta: toLink(hero.secondaryCta),
       }
@@ -90,12 +91,13 @@ export const ROLE_FILTERS: readonly FilterOption[] = [
   { value: 'associate_partner', label: PERSON_ROLES.labels.associate_partner + 's' },
   { value: 'senior_associate', label: PERSON_ROLES.labels.senior_associate + 's' },
   { value: 'associate', label: PERSON_ROLES.labels.associate + 's' },
-  { value: 'nysc_associate', label: PERSON_ROLES.labels.nysc_associate + 's' },
+  { value: 'trainee_associate', label: PERSON_ROLES.labels.trainee_associate + 's' },
 ];
 
+/** The public tabs: `pro_bono` is the Responsible Business grid, not a tab (ADR-049). */
 export const CATEGORY_FILTERS: readonly FilterOption[] = [
   { value: '', label: 'All insights & news' },
-  ...INSIGHT_CATEGORIES.values.map((value) => ({
+  ...PUBLIC_INSIGHT_CATEGORIES.map((value) => ({
     value,
     label: INSIGHT_CATEGORIES.labels[value],
   })),

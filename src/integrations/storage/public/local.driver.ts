@@ -7,8 +7,11 @@ import { logger } from '../../../core/logger.js';
 import type {
   IPublicStorage,
   ImageSizeUrls,
+  PutDocumentInput,
   PutImageInput,
+  StoredDocument,
   StoredImage,
+  StoredKind,
 } from '../../../interfaces/integrations/storage.interface.js';
 
 /**
@@ -81,6 +84,16 @@ export function createLocalStorage(directory: string, baseUrl: string): IPublicS
       };
     },
 
+    async putDocument(input: PutDocumentInput): Promise<StoredDocument> {
+      const key = keyFor(input.originalFilename);
+      const name = `${key}.pdf`;
+
+      await mkdir(dirname(pathFor(name)), { recursive: true });
+      await writeFile(pathFor(name), input.buffer);
+
+      return { storageKey: key, url: urlFor(name) };
+    },
+
     resize(): undefined {
       // The three widths are whole files written at upload time, and none of
       // them is cropped, so the focal point changes nothing about them. The
@@ -88,7 +101,16 @@ export function createLocalStorage(directory: string, baseUrl: string): IPublicS
       return undefined;
     },
 
-    async remove(storageKey: string): Promise<void> {
+    async remove(storageKey: string, kind: StoredKind = 'image'): Promise<void> {
+      if (kind === 'document') {
+        try {
+          await rm(pathFor(`${storageKey}.pdf`), { force: true });
+        } catch (error) {
+          logger.warn({ err: error, storageKey }, 'could not remove a stored document');
+        }
+        return;
+      }
+
       const extension = Object.values(EXTENSIONS);
 
       // The extension is not part of the key, so every candidate is tried.

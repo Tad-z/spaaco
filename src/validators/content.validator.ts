@@ -5,15 +5,23 @@ import {
   INSIGHT_CATEGORIES,
   INSIGHT_FORMATS,
   PERSON_ROLES,
-  RECOGNITION_TABS,
   WORK_MODES,
 } from '../constants/enums.js';
-import { sanitizeRichText } from '../helpers/sanitize.helper.js';
-import { objectId, objectIdRef, pagination, safeUrl, seoBasic, slug } from './common.validator.js';
+import {
+  mediaIdList,
+  objectId,
+  objectIdRef,
+  pagination,
+  richText as richTextOf,
+  safeUrl,
+  seoBasic,
+  slug,
+} from './common.validator.js';
+import { ADMIN_COLLECTIONS } from '../constants/content-collections.js';
 import type { AdminCollection } from '../constants/content-collections.js';
 
 /**
- * Write schemas for the seven content collections.
+ * Write schemas for the nine content collections.
  *
  * Rich text is sanitised here, as part of validation, so a service never sees
  * unsanitised HTML and no write path can forget to call the sanitiser.
@@ -23,10 +31,7 @@ import type { AdminCollection } from '../constants/content-collections.js';
  */
 
 /** A rich-text field: sanitised on the way in. */
-const richText = z
-  .string()
-  .max(50_000)
-  .transform((value) => sanitizeRichText(value));
+const richText = richTextOf();
 
 const nullableRichText = richText.nullable();
 
@@ -38,11 +43,24 @@ const practiceAreaCreate = z
     slug: slug.optional(),
     title: text(200),
     shortLabel: text(60),
+    // Three texts, because the designs show three (ADR-047).
     summary: text(1000),
+    homeSummary: text(1000),
+    heroIntro: text(1000),
     image: objectIdRef.optional(),
-    body: nullableRichText.optional(),
-    keyServices: z.array(z.string().trim().max(200)).max(30).optional(),
-    contacts: z.array(objectId).max(20).optional(),
+    heroImages: mediaIdList.optional(),
+    overview: optionalText(3000).optional(),
+    coreServices: z
+      .array(z.object({ title: text(160), description: text(600) }).strict())
+      .min(1)
+      .max(6),
+    approach: z
+      .object({ text: text(1500), points: z.array(text(300)).max(10) })
+      .strict()
+      .nullable()
+      .optional(),
+    industries: z.array(objectId).max(20).optional(),
+    lead: objectIdRef.optional(),
     featuredOnHome: z.boolean().optional(),
     homeOrder: z.number().int().min(0).max(100).nullable().optional(),
     showInFooter: z.boolean().optional(),
@@ -60,10 +78,31 @@ const personCreate = z
     role: z.enum(PERSON_ROLES.values),
     photo: objectIdRef.optional(),
     linkedinUrl: safeUrl.nullable().optional(),
+    instagramUrl: safeUrl.nullable().optional(),
+    // Public since v2 (ADR-052).
     email: z.string().trim().toLowerCase().email().max(254).nullable().optional(),
+    cardBio: optionalText(400).optional(),
     bio: nullableRichText.optional(),
     quote: optionalText(600).optional(),
+    primaryPracticeArea: objectIdRef.optional(),
     practiceAreas: z.array(objectId).max(30).optional(),
+    education: z
+      .object({
+        intro: optionalText(2000),
+        entries: z
+          .array(
+            z
+              .object({
+                qualification: text(300),
+                year: z.number().int().min(1900).max(2200).nullable(),
+              })
+              .strict()
+          )
+          .max(20),
+      })
+      .strict()
+      .optional(),
+    memberships: z.array(text(200)).max(30).optional(),
     office: objectIdRef.optional(),
     featuredInLeadership: z.boolean().optional(),
   })
@@ -77,6 +116,8 @@ const insightBase = z
     body: nullableRichText.optional(),
     format: z.enum(INSIGHT_FORMATS.values),
     videoUrl: safeUrl.nullable().optional(),
+    externalUrl: safeUrl.nullable().optional(),
+    document: objectIdRef.optional(),
     categories: z.array(z.enum(INSIGHT_CATEGORIES.values)).min(1).max(7),
     practiceAreas: z.array(objectId).max(30).optional(),
     author: objectIdRef.optional(),
@@ -99,10 +140,15 @@ const VIDEO_URL_ISSUE: z.CustomErrorParams = {
   message: 'videoUrl is required when format is "video"',
 };
 
-const insightCreate = insightBase.refine(
-  (value) => value.format !== 'video' || Boolean(value.videoUrl),
-  VIDEO_URL_ISSUE
-);
+/** "Read Article" goes to one place: an external URL or an uploaded PDF (ADR-051). */
+const ONE_TARGET_ISSUE: z.CustomErrorParams = {
+  path: ['document'],
+  message: 'set either externalUrl or document, not both',
+};
+
+const insightCreate = insightBase
+  .refine((value) => value.format !== 'video' || Boolean(value.videoUrl), VIDEO_URL_ISSUE)
+  .refine((value) => !(value.externalUrl && value.document), ONE_TARGET_ISSUE);
 
 const officeCreate = z
   .object({
@@ -125,15 +171,31 @@ const officeCreate = z
   })
   .strict();
 
-const recognitionCreate = z
+const recognitionDirectoryCreate = z
   .object({
     slug: slug.optional(),
-    organization: text(160),
-    title: text(160),
-    year: z.number().int().min(1900).max(2200).nullable().optional(),
+    name: text(160),
+    logo: objectIdRef.optional(),
+    heroSubtitle: optionalText(600).optional(),
+    heroImages: mediaIdList.optional(),
+  })
+  .strict();
+
+const awardCreate = z
+  .object({
+    slug: slug.optional(),
+    directory: objectId,
+    title: text(200),
+    year: z.number().int().min(1900).max(2200),
     badge: objectIdRef.optional(),
-    url: safeUrl.nullable().optional(),
-    tab: z.enum(RECOGNITION_TABS.values),
+    featuredOnHome: z.boolean().optional(),
+  })
+  .strict();
+
+const industryCreate = z
+  .object({
+    slug: slug.optional(),
+    name: text(120),
   })
   .strict();
 
@@ -164,14 +226,17 @@ const jobCreate = z
 const insightUpdate = insightBase
   .partial()
   .strict()
-  .refine((value) => value.format !== 'video' || Boolean(value.videoUrl), VIDEO_URL_ISSUE);
+  .refine((value) => value.format !== 'video' || Boolean(value.videoUrl), VIDEO_URL_ISSUE)
+  .refine((value) => !(value.externalUrl && value.document), ONE_TARGET_ISSUE);
 
 export const CONTENT_CREATE_SCHEMAS: Record<AdminCollection, ZodTypeAny> = {
   'practice-areas': practiceAreaCreate,
   people: personCreate,
   insights: insightCreate,
   offices: officeCreate,
-  recognitions: recognitionCreate,
+  'recognition-directories': recognitionDirectoryCreate,
+  awards: awardCreate,
+  industries: industryCreate,
   faqs: faqCreate,
   jobs: jobCreate,
 };
@@ -194,22 +259,14 @@ export const CONTENT_UPDATE_SCHEMAS: Record<AdminCollection, ZodTypeAny> = {
   people: nonEmpty(personCreate.partial().strict()),
   insights: nonEmpty(insightUpdate),
   offices: nonEmpty(officeCreate.partial().strict()),
-  recognitions: nonEmpty(recognitionCreate.partial().strict()),
+  'recognition-directories': nonEmpty(recognitionDirectoryCreate.partial().strict()),
+  awards: nonEmpty(awardCreate.partial().strict()),
+  industries: nonEmpty(industryCreate.partial().strict()),
   faqs: nonEmpty(faqCreate.partial().strict()),
   jobs: nonEmpty(jobCreate.partial().strict()),
 };
 
-export const adminCollectionParams = z.object({
-  collection: z.enum([
-    'practice-areas',
-    'people',
-    'insights',
-    'offices',
-    'recognitions',
-    'faqs',
-    'jobs',
-  ]),
-});
+export const adminCollectionParams = z.object({ collection: z.enum(ADMIN_COLLECTIONS) });
 
 export const adminItemParams = adminCollectionParams.extend({ id: objectId });
 

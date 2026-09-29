@@ -3,10 +3,12 @@ import {
   EMPLOYMENT_TYPES,
   INSIGHT_CATEGORIES,
   INSIGHT_FORMATS,
+  LEGAL_PAGE_KEYS,
   LINK_KINDS,
+  MEDIA_KINDS,
   PAGE_KEYS,
   PERSON_ROLES,
-  RECOGNITION_TABS,
+  PUBLIC_INSIGHT_CATEGORIES,
   WORK_MODES,
 } from '../../../src/constants/enums.js';
 import { asObject, spec } from '../../support/spec.js';
@@ -35,9 +37,10 @@ const cases = [
   { name: 'InsightFormat', constant: INSIGHT_FORMATS },
   { name: 'EmploymentType', constant: EMPLOYMENT_TYPES },
   { name: 'WorkMode', constant: WORK_MODES },
-  { name: 'RecognitionTab', constant: RECOGNITION_TABS },
   { name: 'LinkKind', constant: LINK_KINDS },
   { name: 'PageKey', constant: PAGE_KEYS },
+  { name: 'LegalPageKey', constant: LEGAL_PAGE_KEYS },
+  { name: 'MediaKind', constant: MEDIA_KINDS },
 ] as const;
 
 describe('enums match the contract', () => {
@@ -58,9 +61,15 @@ describe('enums match the contract', () => {
 describe('labels', () => {
   it('uses the wording from the designs', () => {
     expect(PERSON_ROLES.labels.managing_partner).toBe('Managing Partner');
-    expect(PERSON_ROLES.labels.nysc_associate).toBe('NYSC Associate');
-    expect(INSIGHT_CATEGORIES.labels.webinar_resources).toBe('Webinar Resources');
+    expect(PERSON_ROLES.labels.trainee_associate).toBe('Trainee Associate');
+    expect(INSIGHT_CATEGORIES.labels.pro_bono).toBe('Pro Bono & Community Commitment');
     expect(EMPLOYMENT_TYPES.labels.full_time).toBe('Full-time');
-    expect(RECOGNITION_TABS.labels.recognized_by).toBe('Independently Recognized By');
+  });
+});
+
+describe('the pro bono rule (ADR-049)', () => {
+  it('keeps pro_bono out of the public categories, and nothing else', () => {
+    expect(PUBLIC_INSIGHT_CATEGORIES).not.toContain('pro_bono');
+    expect(PUBLIC_INSIGHT_CATEGORIES).toHaveLength(INSIGHT_CATEGORIES.values.length - 1);
   });
 });

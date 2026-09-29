@@ -15,7 +15,7 @@ export interface SearchSources {
 }
 
 export const toSearchResults = (sources: SearchSources): SearchResults => ({
-  practiceAreas: sources.practiceAreas.map(practiceAreaCard),
+  practiceAreas: sources.practiceAreas.map((area) => practiceAreaCard(area)),
   people: sources.people.map(personSummary),
   insights: sources.insights.map(insightCard),
 });

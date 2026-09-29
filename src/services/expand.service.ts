@@ -17,8 +17,15 @@ export async function buildExpanded(
     mediaIds.length === 0
       ? []
       : Media.find({ _id: { $in: mediaIds } })
-          .select('url alt')
-          .lean<{ _id: { toString: () => string }; url: string; alt: string }[]>(),
+          .select('url alt title')
+          .lean<
+            {
+              _id: { toString: () => string };
+              url: string;
+              alt?: string | null;
+              title?: string | null;
+            }[]
+          >(),
     personIds.length === 0
       ? []
       : Person.find({ _id: { $in: personIds } })
@@ -37,7 +44,12 @@ export async function buildExpanded(
   const expanded: Expanded = {};
 
   for (const item of media) {
-    expanded[item._id.toString()] = { kind: 'media', url: item.url, alt: item.alt };
+    // A document has no alt text; its title stands in, as the spec says (ADR-053).
+    expanded[item._id.toString()] = {
+      kind: 'media',
+      url: item.url,
+      alt: item.alt ?? item.title ?? '',
+    };
   }
 
   for (const person of people) {

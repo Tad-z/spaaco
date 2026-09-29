@@ -3,9 +3,16 @@ import type { Model, SortOrder, Types } from 'mongoose';
 import sharp from 'sharp';
 import { MEDIA_REFS, MEDIA_REF_MODELS, mediaRefsFor } from '../constants/media-refs.js';
 import { UPLOAD_LIMITS } from '../config/constants.js';
-import { ConflictError, NotFoundError, UnsupportedMediaTypeError } from '../core/errors.js';
+import {
+  ConflictError,
+  NotFoundError,
+  PayloadTooLargeError,
+  UnsupportedMediaTypeError,
+  ValidationError,
+} from '../core/errors.js';
 import { logger } from '../core/logger.js';
 import { sniffImageType } from '../helpers/image-type.helper.js';
+import { PDF_MIME, sniffDocumentType } from '../helpers/document-type.helper.js';
 import { toSkip } from '../helpers/pagination.helper.js';
 import { Media } from '../models/index.js';
 import { publicStorage } from '../integrations/storage/public/index.js';
@@ -15,15 +22,19 @@ import { tagsFor } from '../constants/cache-tags.js';
 import type { CacheEntity } from '../constants/cache-tags.js';
 import type { IMedia } from '../interfaces/media.interface.js';
 import type { StoredImage } from '../interfaces/integrations/storage.interface.js';
+import type { ErrorDetail, MediaKind } from '../types/api.js';
 
 /**
- * The image library.
+ * The media library: images, and PDF documents (ADR-053).
  *
  * Two rules shape everything here. A file is whatever its bytes say it is, not
  * whatever its name or `Content-Type` claims (ADR-016). And "where is this
- * image used?" is computed from `constants/media-refs.ts` on demand rather
- * than stored as back-references, so nothing has to be kept in sync on every
- * write — at the price of the registry itself having to be complete (ADR-013).
+ * used?" is computed from `constants/media-refs.ts` on demand rather than
+ * stored as back-references, so nothing has to be kept in sync on every write
+ * — at the price of the registry itself having to be complete (ADR-013).
+ *
+ * A reference field may hold one id or an array of them (a carousel), so every
+ * walk over the registry below treats a path's value as a list.
  */
 
 export type MediaDoc = IMedia & { _id: Types.ObjectId };
@@ -48,6 +59,7 @@ interface TaggedUsage extends MediaUsage {
 
 export interface ListMediaOptions {
   readonly q?: string;
+  readonly kind?: MediaKind;
   readonly unused?: boolean;
   readonly sort: 'newest' | 'oldest';
   readonly page: number;
@@ -55,9 +67,12 @@ export interface ListMediaOptions {
 }
 
 export interface UploadInput {
+  readonly kind: MediaKind;
   readonly buffer: Buffer;
   readonly originalFilename: string;
-  readonly alt: string;
+  /** Required for an image; the validator has already checked. */
+  readonly alt?: string | null;
+  /** Required for a document; the validator has already checked. */
   readonly title?: string | null;
 }
 
@@ -91,6 +106,36 @@ function acceptedType(buffer: Buffer): AcceptedImageType {
   return actual;
 }
 
+/**
+ * A PDF, or a 415: the bytes must say `%PDF`, whatever the name or the
+ * declared type claim. A "PDF" that is not one is refused before anything is
+ * stored (ADR-053).
+ */
+function assertDocument(buffer: Buffer): void {
+  if (sniffDocumentType(buffer) !== PDF_MIME) {
+    throw new UnsupportedMediaTypeError('Upload a PDF. Only PDF documents are accepted.');
+  }
+
+  if (buffer.byteLength > UPLOAD_LIMITS.documentMaxBytes) {
+    throw new PayloadTooLargeError(
+      `The document must be ${String(UPLOAD_LIMITS.documentMaxBytes / (1024 * 1024))} MB or smaller.`
+    );
+  }
+}
+
+/**
+ * The multipart limit is the document limit, the larger of the two, because
+ * multer cannot know the kind before it has read the body. Images keep their
+ * own, smaller ceiling here.
+ */
+function assertImageSize(buffer: Buffer): void {
+  if (buffer.byteLength > UPLOAD_LIMITS.imageMaxBytes) {
+    throw new PayloadTooLargeError(
+      `The image must be ${String(UPLOAD_LIMITS.imageMaxBytes / (1024 * 1024))} MB or smaller.`
+    );
+  }
+}
+
 /** Store the bytes and read their dimensions, which no driver owns. */
 async function storeImage(
   buffer: Buffer,
@@ -101,6 +146,7 @@ async function storeImage(
   width: number;
   height: number;
 }> {
+  assertImageSize(buffer);
   const mimeType = acceptedType(buffer);
   // Sharp's types declare width and height as always present; at runtime they
   // are absent for a file it can identify but not decode. The cast widens them
@@ -124,10 +170,44 @@ async function storeImage(
   return { stored, mimeType, width, height };
 }
 
+const providerName = (): 'cloudinary' | 'local' =>
+  publicStorage().name === 'cloudinary' ? 'cloudinary' : 'local';
+
+async function uploadDocument(input: UploadInput, context: ActorContext): Promise<MediaDoc> {
+  assertDocument(input.buffer);
+
+  const stored = await publicStorage().putDocument({
+    buffer: input.buffer,
+    originalFilename: input.originalFilename,
+  });
+
+  const created = await Media.create({
+    kind: 'document',
+    provider: providerName(),
+    storageKey: stored.storageKey,
+    url: stored.url,
+    sizes: null,
+    version: 1,
+    width: null,
+    height: null,
+    mimeType: PDF_MIME,
+    bytes: input.buffer.byteLength,
+    originalFilename: input.originalFilename,
+    title: input.title ?? null,
+    alt: null,
+    focalPoint: null,
+    uploadedBy: context.actorId ?? null,
+  });
+
+  return created.toObject();
+}
+
 export async function uploadMedia(
   input: UploadInput,
   context: ActorContext = {}
 ): Promise<MediaDoc> {
+  if (input.kind === 'document') return uploadDocument(input, context);
+
   const { stored, mimeType, width, height } = await storeImage(
     input.buffer,
     input.originalFilename
@@ -135,7 +215,7 @@ export async function uploadMedia(
 
   const created = await Media.create({
     kind: 'image',
-    provider: publicStorage().name === 'cloudinary' ? 'cloudinary' : 'local',
+    provider: providerName(),
     storageKey: stored.storageKey,
     url: stored.url,
     sizes: stored.sizes,
@@ -162,6 +242,8 @@ export async function listMedia(
     const pattern = new RegExp(escapeRegex(options.q), 'i');
     filter.$or = [{ title: pattern }, { alt: pattern }, { originalFilename: pattern }];
   }
+
+  if (options.kind !== undefined) filter.kind = options.kind;
 
   if (options.unused === true) {
     const used = await usedMediaIds();
@@ -211,18 +293,41 @@ export interface UpdateMediaInput {
   readonly focalPoint?: { x: number; y: number };
 }
 
+/**
+ * A document has no alt text or focal point, and its title is its link text,
+ * so it cannot be cleared (ADR-053). Said with a field path, so the dashboard
+ * can point at the input.
+ */
+function assertEditableFor(kind: MediaKind, input: UpdateMediaInput): void {
+  if (kind !== 'document') return;
+
+  const details: ErrorDetail[] = [];
+  if (input.alt !== undefined) details.push({ path: 'alt', message: 'a document has no alt text' });
+  if (input.focalPoint !== undefined) {
+    details.push({ path: 'focalPoint', message: 'a document has no focal point' });
+  }
+  if (input.title === null || input.title === '') {
+    details.push({ path: 'title', message: 'a document needs a title, which is its link text' });
+  }
+
+  if (details.length > 0)
+    throw new ValidationError('That edit does not apply to a document', details);
+}
+
 export async function updateMedia(
   id: string,
   expectedRevision: number,
   input: UpdateMediaInput
 ): Promise<MediaDoc> {
   const changes: Record<string, unknown> = { ...input };
+  const existing = await getMedia(id);
+
+  assertEditableFor(existing.kind, input);
 
   if (input.focalPoint !== undefined) {
     // Cloudinary bakes the focal point into the size URLs as gravity, so the
     // stored `sizes` go stale the moment it moves (ADR-030). The local driver
     // returns undefined here, because its widths are uncropped files.
-    const existing = await getMedia(id);
     const sizes = publicStorage().resize(existing.storageKey, existing.mimeType, input.focalPoint);
 
     if (sizes !== undefined) changes.sizes = sizes;
@@ -269,21 +374,32 @@ export async function replaceMediaFile(
   context: ActorContext = {}
 ): Promise<MediaDoc> {
   const existing = await getMedia(id);
-  const { stored, mimeType, width, height } = await storeImage(buffer, originalFilename);
+
+  // The replacement must be the same kind, so every field pointing at this id
+  // keeps holding what it expects: a PDF for a document, a picture for an image.
+  let changes: Record<string, unknown>;
+  let storedKey: string;
+
+  if (existing.kind === 'document') {
+    assertDocument(buffer);
+    const stored = await publicStorage().putDocument({ buffer, originalFilename });
+    storedKey = stored.storageKey;
+    changes = { url: stored.url, mimeType: PDF_MIME };
+  } else {
+    const { stored, mimeType, width, height } = await storeImage(buffer, originalFilename);
+    storedKey = stored.storageKey;
+    changes = { url: stored.url, sizes: stored.sizes, width, height, mimeType };
+  }
 
   const updated = await Media.findOneAndUpdate(
     { _id: id, revision: expectedRevision },
     {
       $set: {
-        provider: publicStorage().name === 'cloudinary' ? 'cloudinary' : 'local',
-        storageKey: stored.storageKey,
-        // A new URL on purpose, so no browser or CDN can keep serving the old
-        // picture from a cached copy of the same address.
-        url: stored.url,
-        sizes: stored.sizes,
-        width,
-        height,
-        mimeType,
+        provider: providerName(),
+        storageKey: storedKey,
+        // A new URL on purpose (in `changes`), so no browser or CDN can keep
+        // serving the old file from a cached copy of the same address.
+        ...changes,
         bytes: buffer.byteLength,
         originalFilename,
       },
@@ -296,11 +412,11 @@ export async function replaceMediaFile(
     // We lost the race, or the record is gone. Either way the file just
     // uploaded is referenced by nothing, so it is removed here rather than
     // left behind as an orphan nobody will ever find.
-    await removeStored(stored.storageKey);
+    await removeStored(storedKey, existing.kind);
     throw await staleOrMissing(id);
   }
 
-  await removeStored(existing.storageKey);
+  await removeStored(existing.storageKey, existing.kind);
   await invalidateUsages(id);
 
   await record({
@@ -309,7 +425,7 @@ export async function replaceMediaFile(
     entityId: existing._id,
     actor: context.actorId ?? null,
     // The alt text describes the picture, not a person, so it is safe to keep.
-    meta: { alt: existing.alt, version: updated.version },
+    meta: { kind: existing.kind, alt: existing.alt ?? existing.title, version: updated.version },
   });
 
   return updated;
@@ -321,7 +437,7 @@ export async function deleteMedia(id: string, context: ActorContext = {}): Promi
 
   if (usages.length > 0) {
     throw new ConflictError(
-      'This image is still in use. Remove it from the records below before deleting it.',
+      `This ${existing.kind} is still in use. Remove it from the records below before deleting it.`,
       usages.map((usage) => ({
         path: 'usedBy',
         message: `${usage.collection}: ${usage.label} (${usage.field})`,
@@ -330,14 +446,14 @@ export async function deleteMedia(id: string, context: ActorContext = {}): Promi
   }
 
   await Media.deleteOne({ _id: id });
-  await removeStored(existing.storageKey);
+  await removeStored(existing.storageKey, existing.kind);
 
   await record({
     action: 'media.delete',
     entity: 'media',
     entityId: existing._id,
     actor: context.actorId ?? null,
-    meta: { alt: existing.alt },
+    meta: { kind: existing.kind, alt: existing.alt ?? existing.title },
   });
 }
 
@@ -369,7 +485,7 @@ async function findTaggedUsages(id: string): Promise<TaggedUsage[]> {
 
       return docs.flatMap((doc) =>
         refs
-          .filter((ref) => idOf(atPath(doc, ref.path)) === id)
+          .filter((ref) => idsAt(doc, ref.path).includes(id))
           .map((ref) => ({
             collection: ref.collection,
             id: idOf(doc._id),
@@ -389,6 +505,12 @@ const idOf = (value: unknown): string => {
   if (value instanceof mongoose.Types.ObjectId) return value.toHexString();
   return typeof value === 'string' ? value : '';
 };
+
+/** Every id a path holds: none, one, or a carousel's worth. */
+function idsAt(doc: Record<string, unknown>, path: string): string[] {
+  const value = atPath(doc, path);
+  return (Array.isArray(value) ? value : [value]).map(idOf).filter((item) => item !== '');
+}
 
 /** A label is shown to a person, so anything but a string is not one. */
 const labelOf = (value: unknown): string => (typeof value === 'string' ? value : '');
@@ -413,13 +535,20 @@ async function usedMediaIds(): Promise<Types.ObjectId[]> {
       const model = mongoose.model(modelName) as unknown as Model<unknown>;
 
       const docs = await model
-        .find({ $or: refs.map((ref) => ({ [ref.path]: { $ne: null } })) })
+        // `$exists` rather than `$ne: null` alone, so an empty carousel is not
+        // fetched for nothing; an array field matches when non-empty.
+        .find({
+          $or: refs.map((ref) => ({ [ref.path]: { $exists: true, $nin: [null, []] } })),
+        })
         .select(refs.map((ref) => ref.path).join(' '))
         .lean<Record<string, unknown>[]>();
 
       return docs.flatMap((doc) =>
         refs
-          .map((ref) => atPath(doc, ref.path))
+          .flatMap((ref) => {
+            const value = atPath(doc, ref.path);
+            return Array.isArray(value) ? (value as unknown[]) : [value];
+          })
           .filter((value): value is Types.ObjectId => value instanceof mongoose.Types.ObjectId)
       );
     })
@@ -433,7 +562,8 @@ const ENTITY_BY_COLLECTION: Record<string, CacheEntity> = {
   practiceAreas: 'practiceArea',
   people: 'person',
   insights: 'insight',
-  recognitions: 'recognition',
+  recognitionDirectories: 'recognitionDirectory',
+  awards: 'award',
   pages: 'page',
 };
 
@@ -460,11 +590,59 @@ async function invalidateUsages(id: string): Promise<void> {
 }
 
 /** Storage failures are logged, never fatal: the record is already correct. */
-async function removeStored(storageKey: string): Promise<void> {
+async function removeStored(storageKey: string, kind: MediaKind = 'image'): Promise<void> {
   try {
-    await publicStorage().remove(storageKey);
+    await publicStorage().remove(storageKey, kind);
   } catch (error) {
     logger.warn({ err: error, storageKey }, 'could not remove the stored file');
+  }
+}
+
+/**
+ * Refuse a write that points a media field at the wrong kind — a PDF in a
+ * hero, a picture as the firm profile (ADR-053).
+ *
+ * `doc` is the candidate in its editable shape (ids as strings), or a partial
+ * update: only the paths it actually carries are checked. An id that matches
+ * no record is left alone here — it populates to nothing and reads as empty —
+ * so this checks what a reference *is*, not whether it exists.
+ */
+export async function assertMediaKinds(model: string, doc: Record<string, unknown>): Promise<void> {
+  const refs = mediaRefsFor(model);
+  if (refs.length === 0) return;
+
+  const wanted = new Map<string, { path: string; kind: MediaKind }[]>();
+  for (const ref of refs) {
+    for (const id of idsAt(doc, ref.path)) {
+      if (!mongoose.isValidObjectId(id)) continue;
+      const list = wanted.get(id) ?? [];
+      list.push({ path: ref.path, kind: ref.kind });
+      wanted.set(id, list);
+    }
+  }
+  if (wanted.size === 0) return;
+
+  const found = await Media.find({ _id: { $in: [...wanted.keys()] } })
+    .select('kind')
+    .lean<{ _id: Types.ObjectId; kind: MediaKind }[]>();
+
+  const details: ErrorDetail[] = [];
+  for (const media of found) {
+    for (const use of wanted.get(media._id.toHexString()) ?? []) {
+      if (media.kind !== use.kind) {
+        details.push({
+          path: use.path,
+          message:
+            use.kind === 'document'
+              ? 'must be a PDF document from the media library, not an image'
+              : 'must be an image from the media library, not a document',
+        });
+      }
+    }
+  }
+
+  if (details.length > 0) {
+    throw new ValidationError('A media reference points at the wrong kind of file', details);
   }
 }
 

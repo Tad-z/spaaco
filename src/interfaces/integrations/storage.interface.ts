@@ -36,9 +36,26 @@ export interface StoredImage {
   readonly sizes: ImageSizeUrls;
 }
 
+export interface PutDocumentInput {
+  readonly buffer: Buffer;
+  /** Used only to make the stored key readable; never trusted. */
+  readonly originalFilename: string;
+}
+
+/** A stored PDF: one file, no sizes (ADR-053). */
+export interface StoredDocument {
+  readonly storageKey: string;
+  readonly url: string;
+}
+
+/** What a stored file is, which decides how a driver finds it again to delete it. */
+export type StoredKind = 'image' | 'document';
+
 export interface IPublicStorage {
   readonly name: string;
   put(input: PutImageInput): Promise<StoredImage>;
+  /** Store a PDF as-is. The caller has already checked its magic bytes. */
+  putDocument(input: PutDocumentInput): Promise<StoredDocument>;
   /**
    * The size URLs for an already-stored image at a new focal point, or
    * `undefined` when the driver's widths are files rather than URLs and so
@@ -49,5 +66,5 @@ export interface IPublicStorage {
    */
   resize(storageKey: string, mimeType: string, focalPoint: FocalPoint): ImageSizeUrls | undefined;
   /** Best effort: a failure is logged, never fatal (ARCHITECTURE step 4). */
-  remove(storageKey: string): Promise<void>;
+  remove(storageKey: string, kind?: StoredKind): Promise<void>;
 }

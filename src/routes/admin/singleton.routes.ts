@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import {
+  getAdminLegalPageHandler,
   getAdminPageHandler,
   getAdminSettingsHandler,
   patchAdminPageHandler,
   patchAdminSettingsHandler,
+  replaceAdminLegalPageHandler,
   replaceAdminPageHandler,
   replaceAdminSettingsHandler,
 } from '../../controllers/admin/singleton.controller.js';
@@ -13,10 +15,12 @@ import { validate } from '../../middlewares/validate.middleware.js';
 import { ifMatch } from '../../middlewares/if-match.middleware.js';
 import { noStore } from '../../middlewares/cache-headers.middleware.js';
 import { pageKeyParams } from '../../validators/page.validator.js';
+import { legalKeyParams } from '../../validators/legal-page.validator.js';
 import { patchBody, replaceBody } from '../../validators/singleton.validator.js';
 
 /**
- * Pages and settings, under `/admin/pages/:key` and `/admin/settings`.
+ * Pages, settings and legal pages, under `/admin/pages/:key`, `/admin/settings`
+ * and `/admin/legal/:key`.
  *
  * `editor` and above, and no `hr`: the matrix in docs/API.md grants HR the
  * jobs *collection*, not the page documents the site is built from.
@@ -66,4 +70,21 @@ adminSingletonRoutes.patch(
   ifMatch,
   validate({ body: patchBody }),
   patchAdminSettingsHandler
+);
+
+// Legal pages: GET and PUT only. The keys are fixed, and `status` in the PUT
+// body is how one is published or withdrawn (ADR-057).
+adminSingletonRoutes.get(
+  '/legal/:key',
+  ...guards,
+  validate({ params: legalKeyParams }),
+  getAdminLegalPageHandler
+);
+
+adminSingletonRoutes.put(
+  '/legal/:key',
+  ...guards,
+  ifMatch,
+  validate({ params: legalKeyParams, body: replaceBody }),
+  replaceAdminLegalPageHandler
 );

@@ -1,24 +1,35 @@
 import { describe, expect, it } from 'vitest';
-import { toImage, toNullableImage } from '../../../src/serializers/image.serializer.js';
+import {
+  toImages,
+  toNullableDocument,
+  toNullableImage,
+} from '../../../src/serializers/image.serializer.js';
 import {
   toDisplayName,
+  toLead,
   toSummary,
   toDetail as personDetail,
 } from '../../../src/serializers/person.serializer.js';
 import {
   FIRM_AUTHOR,
+  toBackLink,
   toCard,
   toChips,
   toCta,
   toDetail as insightDetail,
+  toDetailCta,
 } from '../../../src/serializers/insight.serializer.js';
 import {
   toCard as practiceAreaCard,
+  toDetail as practiceAreaDetail,
+  toHomeCard,
+  toLink as practiceAreaLink,
   toRef as practiceAreaRef,
 } from '../../../src/serializers/practice-area.serializer.js';
 import { toOffice } from '../../../src/serializers/office.serializer.js';
 import { formatErrors, getValidator, SPEC_ID } from '../../support/spec.js';
 import {
+  makeDocumentMedia,
   makeInsight,
   makeMedia,
   makeOffice,
@@ -43,16 +54,44 @@ const validate = (schema: string, value: unknown): void => {
 
 describe('image serializer', () => {
   it('produces the Image shape the spec defines', () => {
-    const image = toImage(makeMedia());
+    const image = toNullableImage(makeMedia());
 
     validate('Image', image);
-    expect(image.sizes.sm).toContain('480');
+    expect(image?.sizes.sm).toContain('480');
   });
 
   it('never exposes the internal storage key', () => {
-    const image = toImage(makeMedia({ storageKey: 'private/secret-path.jpg' }));
+    const image = toNullableImage(makeMedia({ storageKey: 'private/secret-path.jpg' }));
 
     expect(JSON.stringify(image)).not.toContain('secret-path');
+  });
+
+  it('never renders a PDF as a picture, and never a picture as a PDF', () => {
+    // Writes refuse the wrong kind (ADR-053); this is the second line.
+    expect(toNullableImage(makeDocumentMedia())).toBeNull();
+    expect(toNullableDocument(makeMedia())).toBeNull();
+  });
+
+  it('produces the Document shape, with no sizes and no alt', () => {
+    const document = toNullableDocument(makeDocumentMedia());
+
+    validate('Document', document);
+    expect(document).toEqual({
+      url: 'https://placehold.co/600x800?text=Firm%20profile',
+      title: 'SPA Ajibade & Co. firm profile',
+      bytes: 2048,
+      mimeType: 'application/pdf',
+    });
+  });
+
+  it('keeps a carousel to the slides that are real images, in order', () => {
+    const first = makeMedia({ url: 'https://placehold.co/1x1?text=first' });
+    const second = makeMedia({ url: 'https://placehold.co/1x1?text=second' });
+
+    const slides = toImages([first, null, makeDocumentMedia(), second]);
+
+    expect(slides.map((slide) => slide.url)).toEqual([first.url, second.url]);
+    expect(toImages(undefined)).toEqual([]);
   });
 
   it('returns null for a missing image rather than a half-built object', () => {
@@ -74,6 +113,24 @@ describe('person serializer', () => {
     validate('PersonSummary', toSummary(makePerson()));
   });
 
+  it('carries the card back: the italic line and the practice-area chips', () => {
+    const summary = toSummary(
+      makePerson({ cardBio: 'A well-regarded authority.', practiceAreas: [makePracticeArea()] })
+    );
+
+    validate('PersonSummary', summary);
+    expect(summary.cardBio).toBe('A well-regarded authority.');
+    expect(summary.practiceAreas).toEqual([
+      { slug: 'dispute-resolution-arbitration', title: 'Dispute Resolution & Arbitration' },
+    ]);
+  });
+
+  it('drops a chip whose practice area did not populate (a draft), rather than half-rendering it', () => {
+    const unpopulated = { _id: 'x' } as unknown as ReturnType<typeof makePracticeArea>;
+
+    expect(toSummary(makePerson({ practiceAreas: [unpopulated] })).practiceAreas).toEqual([]);
+  });
+
   it.each([
     [
       'keeps Dr. and appends post-nominals',
@@ -93,26 +150,36 @@ describe('person serializer', () => {
   });
 
   it('derives the role label from the enum', () => {
-    expect(toSummary(makePerson({ role: 'nysc_associate' })).roleLabel).toBe('NYSC Associate');
+    expect(toSummary(makePerson({ role: 'trainee_associate' })).roleLabel).toBe(
+      'Trainee Associate'
+    );
   });
 
-  it('never returns the attorney email, which is not public', () => {
-    // The serializer's input type has no `email` field at all, so a leak is
-    // unrepresentable. This guards the case where someone widens that type
-    // later and a document carrying an email flows straight through.
-    const person = { ...makePerson(), email: 'private@spaajibade.com' };
+  it('shows the email on the profile and the lead card, but not on a plain card (ADR-052)', () => {
+    const person = makePerson({ email: 'b.ajibade@spaajibade.com' });
 
-    expect(JSON.stringify(toSummary(person))).not.toContain('private@spaajibade.com');
-    expect(JSON.stringify(personDetail(person))).not.toContain('private@spaajibade.com');
+    expect(personDetail(person).email).toBe('b.ajibade@spaajibade.com');
+    expect(toLead(person).email).toBe('b.ajibade@spaajibade.com');
+    validate('PracticeAreaLead', toLead(person));
+    // A directory card has no email icon, so its summary has no email field.
+    expect(JSON.stringify(toSummary(person))).not.toContain('b.ajibade@spaajibade.com');
   });
 
   it('produces the PersonDetail shape with its references expanded', () => {
     const detail = personDetail(
-      makePerson({ practiceAreas: [makePracticeArea()], office: makeOffice() })
+      makePerson({
+        practiceAreas: [makePracticeArea()],
+        primaryPracticeArea: makePracticeArea(),
+        education: { intro: null, entries: [{ qualification: 'LL.B.', year: 1988 }] },
+        memberships: ['Nigerian Bar Association (NBA)'],
+        office: makeOffice(),
+      })
     );
 
     validate('PersonDetail', detail);
     expect(detail.practiceAreas).toHaveLength(1);
+    expect(detail.primaryPracticeArea?.slug).toBe('dispute-resolution-arbitration');
+    expect(detail.education.entries).toEqual([{ qualification: 'LL.B.', year: 1988 }]);
     expect(detail.office?.name).toBe('Lagos');
   });
 
@@ -162,10 +229,10 @@ describe('insight serializer', () => {
 
     it('falls back to the second category when there is no practice area', () => {
       const chips = toChips(
-        makeInsight({ categories: ['webinar_resources', 'firm_news'], practiceAreas: [] })
+        makeInsight({ categories: ['events', 'firm_news'], practiceAreas: [] })
       );
 
-      expect(chips).toEqual(['Webinar Resources', 'Firm News']);
+      expect(chips).toEqual(['Events', 'Firm News']);
     });
 
     it('shows one chip when there is neither a practice area nor a second category', () => {
@@ -198,12 +265,76 @@ describe('insight serializer', () => {
     validate('InsightDetail', detail);
     expect(detail.related).toHaveLength(1);
   });
+
+  describe('the link after the body (ADR-051)', () => {
+    it('reads "Read Article" to the external URL', () => {
+      expect(toDetailCta(makeInsight({ externalUrl: 'https://example.com/brief' }))).toEqual({
+        label: 'Read Article',
+        url: 'https://example.com/brief',
+      });
+    });
+
+    it('reads "Read Article" to the uploaded PDF', () => {
+      const document = makeDocumentMedia();
+
+      expect(toDetailCta(makeInsight({ document }))).toEqual({
+        label: 'Read Article',
+        url: document.url,
+      });
+    });
+
+    it('is absent for an article with neither', () => {
+      expect(toDetailCta(makeInsight())).toBeNull();
+    });
+
+    it('does not treat an image in the document slot as a PDF', () => {
+      expect(toDetailCta(makeInsight({ document: makeMedia() }))).toBeNull();
+    });
+
+    it('reads "Watch Video" to the video', () => {
+      const cta = toDetailCta(
+        makeInsight({ format: 'video', videoUrl: 'https://youtube.com/watch?v=1' })
+      );
+
+      expect(cta).toEqual({ label: 'Watch Video', url: 'https://youtube.com/watch?v=1' });
+    });
+  });
+
+  it('sends a pro bono story back to Responsible Business, and anything else to the listing', () => {
+    expect(toBackLink(makeInsight({ categories: ['pro_bono'] }))).toEqual({
+      label: 'Back to Pro Bono & Community Commitment',
+      href: '/responsible-business',
+      kind: 'internal',
+    });
+    expect(toBackLink(makeInsight({ categories: ['articles'] })).href).toBe('/insights');
+  });
 });
 
 describe('practice area serializer', () => {
   it('produces the ref and card shapes', () => {
     validate('PracticeAreaRef', practiceAreaRef(makePracticeArea()));
     validate('PracticeAreaCard', practiceAreaCard(makePracticeArea({ image: makeMedia() })));
+  });
+
+  it('puts the Home text on a Home card and the grid text on a grid card (ADR-047)', () => {
+    const area = makePracticeArea({ summary: 'Grid text.', homeSummary: 'Home text.' });
+
+    expect(practiceAreaCard(area).summary).toBe('Grid text.');
+    expect(toHomeCard(area).summary).toBe('Home text.');
+  });
+
+  it('produces the PracticeAreaDetail shape', () => {
+    const area = makePracticeArea({
+      heroImages: [makeMedia()],
+      approach: { text: 'Our approach.', points: ['One point'] },
+      industries: [{ name: 'Oil & Gas', slug: 'oil-gas' }],
+    });
+
+    const detail = practiceAreaDetail(area, toLead(makePerson()), [practiceAreaLink(area)], []);
+
+    validate('PracticeAreaDetail', detail);
+    expect(detail.industries).toEqual([{ name: 'Oil & Gas', slug: 'oil-gas' }]);
+    expect(detail.heroImages).toHaveLength(1);
   });
 });
 

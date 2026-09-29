@@ -33,14 +33,17 @@ import type { Types } from 'mongoose';
 import { connectDatabase, disconnectDatabase } from '../src/core/db.js';
 import { logger } from '../src/core/logger.js';
 import {
+  Award,
   Faq,
+  Industry,
   Insight,
   Job,
+  LegalPage,
   Office,
   Page,
   Person,
   PracticeArea,
-  Recognition,
+  RecognitionDirectory,
   Settings,
 } from '../src/models/index.js';
 
@@ -76,11 +79,18 @@ const readDoc = (file: string): Json => {
  * they become nothing at all, so the firm sees an empty image slot rather than
  * a grey rectangle that looks deliberate.
  */
+const isMediaPlaceholder = (value: unknown): boolean =>
+  typeof value === 'object' &&
+  value !== null &&
+  ('placeholder' in value || 'placeholderDocument' in value);
+
 function withoutImages(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(withoutImages);
+  // A carousel of placeholders becomes an empty carousel, not a list of nulls.
+  if (Array.isArray(value))
+    return value.filter((item) => !isMediaPlaceholder(item)).map(withoutImages);
   if (typeof value !== 'object' || value === null) return value;
 
-  if ('placeholder' in value) return null;
+  if (isMediaPlaceholder(value)) return null;
 
   return Object.fromEntries(
     Object.entries(value).map(([key, nested]) => [key, withoutImages(nested)])
@@ -107,7 +117,10 @@ const COLLECTIONS: readonly { name: string; model: Countable }[] = [
   { name: 'people', model: Person },
   { name: 'offices', model: Office },
   { name: 'insights', model: Insight },
-  { name: 'recognitions', model: Recognition },
+  { name: 'industries', model: Industry },
+  { name: 'recognition directories', model: RecognitionDirectory },
+  { name: 'awards', model: Award },
+  { name: 'legal pages', model: LegalPage },
   { name: 'FAQs', model: Faq },
   { name: 'jobs', model: Job },
   { name: 'pages', model: Page },
@@ -130,7 +143,10 @@ export interface LoadResult {
   readonly people: number;
   readonly offices: number;
   readonly insights: number;
-  readonly recognitions: number;
+  readonly industries: number;
+  readonly recognitionDirectories: number;
+  readonly awards: number;
+  readonly legalPages: number;
   readonly faqs: number;
   readonly jobs: number;
   readonly pages: number;
@@ -178,21 +194,36 @@ async function write(draft: { status: 'draft'; publishedAt: null }): Promise<Loa
     officeIds.set(String(slug), created._id);
   }
 
+  const industryIds: SlugMap = new Map();
+  for (const doc of readDocs('industries.json')) {
+    const { slug, ...rest } = asJson(doc);
+    const created = await Industry.create({ ...rest, slug, ...draft });
+    industryIds.set(String(slug), created._id);
+  }
+
+  // A practice area names its lead, who does not exist yet; it is set once
+  // the people are in.
   const practiceAreaIds: SlugMap = new Map();
+  const leads = new Map<string, unknown>();
   for (const doc of readDocs('practice-areas.json')) {
-    // `contacts` is dropped: it points at people, who do not exist yet, and
-    // the firm reassigns contacts during review anyway.
-    const { slug, contacts: _contacts, ...rest } = asJson(doc);
-    const created = await PracticeArea.create({ ...rest, slug, ...draft });
+    const { slug, lead, industries, ...rest } = asJson(doc);
+    leads.set(String(slug), lead);
+    const created = await PracticeArea.create({
+      ...rest,
+      slug,
+      industries: toIds(industryIds, industries),
+      ...draft,
+    });
     practiceAreaIds.set(String(slug), created._id);
   }
 
   const peopleIds: SlugMap = new Map();
   for (const doc of readDocs('people.json')) {
-    const { slug, practiceAreas, office, ...rest } = asJson(doc);
+    const { slug, practiceAreas, primaryPracticeArea, office, ...rest } = asJson(doc);
     const created = await Person.create({
       ...rest,
       slug,
+      primaryPracticeArea: toId(practiceAreaIds, primaryPracticeArea),
       practiceAreas: toIds(practiceAreaIds, practiceAreas),
       office: toId(officeIds, office),
       ...draft,
@@ -200,6 +231,11 @@ async function write(draft: { status: 'draft'; publishedAt: null }): Promise<Loa
     peopleIds.set(String(slug), created._id);
   }
 
+  for (const [slug, lead] of leads) {
+    await PracticeArea.updateOne({ slug }, { $set: { lead: toId(peopleIds, lead) } });
+  }
+
+  // Never `insights.demo.json`: demo repeats must not reach production.
   for (const doc of readDocs('insights.json')) {
     const { slug, practiceAreas, author, ...rest } = asJson(doc);
     await Insight.create({
@@ -212,9 +248,23 @@ async function write(draft: { status: 'draft'; publishedAt: null }): Promise<Loa
     });
   }
 
-  for (const doc of readDocs('recognitions.json')) {
+  const directoryIds: SlugMap = new Map();
+  for (const doc of readDocs('recognition-directories.json')) {
     const { slug, ...rest } = asJson(doc);
-    await Recognition.create({ ...rest, slug, ...draft });
+    const created = await RecognitionDirectory.create({ ...rest, slug, ...draft });
+    directoryIds.set(String(slug), created._id);
+  }
+
+  for (const doc of readDocs('awards.json')) {
+    const { slug, directory, ...rest } = asJson(doc);
+    await Award.create({ ...rest, slug, directory: toId(directoryIds, directory), ...draft });
+  }
+
+  // Legal pages have a status, unlike pages: a legal text nobody at the firm
+  // has approved must not go live because a script ran.
+  for (const doc of readDocs('legal-pages.json')) {
+    const { key, ...rest } = asJson(doc);
+    await LegalPage.create({ ...rest, key, status: 'draft' });
   }
 
   for (const doc of readDocs('faqs.json')) {
@@ -257,7 +307,10 @@ async function write(draft: { status: 'draft'; publishedAt: null }): Promise<Loa
     people: await Person.countDocuments(),
     offices: await Office.countDocuments(),
     insights: await Insight.countDocuments(),
-    recognitions: await Recognition.countDocuments(),
+    industries: await Industry.countDocuments(),
+    recognitionDirectories: await RecognitionDirectory.countDocuments(),
+    awards: await Award.countDocuments(),
+    legalPages: await LegalPage.countDocuments(),
     faqs: await Faq.countDocuments(),
     jobs: await Job.countDocuments(),
     pages: await Page.countDocuments(),

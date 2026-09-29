@@ -34,3 +34,31 @@ export const publishedPopulate = (
   path,
   match: publishedFilter(options),
 });
+
+/** A populate spec, as Mongoose accepts it: a path, a draft filter, and nested populates. */
+export interface PopulateSpec {
+  path: string;
+  match?: Record<string, unknown>;
+  select?: string;
+  populate?: PopulateSpec[];
+}
+
+/**
+ * Everything a person card renders, front and back (ADR-052): the photo, and
+ * the practice-area chips — the chips filtered to published areas, like the
+ * person themselves.
+ *
+ * Every surface that emits a `PersonSummary` (author blocks, the leadership
+ * row, the directory, a practice lead, a pull quote) populates through this,
+ * so none of them can forget the chips or leak a draft area through them.
+ */
+export const personCardPopulate = (path: string, options: PreviewOptions = {}): PopulateSpec => ({
+  ...publishedPopulate(path, options),
+  populate: personCardFields(options),
+});
+
+/** The nested half of `personCardPopulate`, for a query whose root is a person. */
+export const personCardFields = (options: PreviewOptions = {}): PopulateSpec[] => [
+  { path: 'photo' },
+  { ...publishedPopulate('practiceAreas', options), select: 'slug title shortLabel' },
+];

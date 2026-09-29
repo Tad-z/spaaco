@@ -6,12 +6,13 @@ import { getJobById, listJobs } from '../../services/job.service.js';
 import {
   toCard as practiceAreaCard,
   toDetail as practiceAreaDetail,
+  toLink as practiceAreaLink,
 } from '../../serializers/practice-area.serializer.js';
 import { toOffice } from '../../serializers/office.serializer.js';
 import { toFaq } from '../../serializers/faq.serializer.js';
 import { toJob } from '../../serializers/job.serializer.js';
 import { toCard as insightCard } from '../../serializers/insight.serializer.js';
-import { toSummary as personSummary } from '../../serializers/person.serializer.js';
+import { toLead } from '../../serializers/person.serializer.js';
 import { readParams } from '../../middlewares/validate.middleware.js';
 import { idParams, slugParams } from '../../validators/common.validator.js';
 
@@ -26,15 +27,22 @@ import { idParams, slugParams } from '../../validators/common.validator.js';
 
 export async function listPracticeAreasHandler(req: Request, res: Response): Promise<void> {
   const areas = await listPracticeAreas({ preview: req.preview });
-  res.json({ data: areas.map(practiceAreaCard) });
+  res.json({ data: areas.map((area) => practiceAreaCard(area)) });
 }
 
 export async function getPracticeAreaHandler(req: Request, res: Response): Promise<void> {
   const { slug } = readParams(req, slugParams);
-  const { area, related } = await getPracticeAreaBySlug(slug, { preview: req.preview });
+  const { area, siblings, publications } = await getPracticeAreaBySlug(slug, {
+    preview: req.preview,
+  });
 
   res.json({
-    data: practiceAreaDetail(area, area.contacts.map(personSummary), related.map(insightCard)),
+    data: practiceAreaDetail(
+      area,
+      area.lead ? toLead(area.lead) : null,
+      siblings.map(practiceAreaLink),
+      publications.map(insightCard)
+    ),
   });
 }
 

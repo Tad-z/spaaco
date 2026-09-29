@@ -23,15 +23,18 @@ import { config } from '../src/config/env.js';
 import { IMAGE_SIZES } from '../src/config/constants.js';
 import { slugify } from '../src/helpers/slug.helper.js';
 import {
+  Award,
   Faq,
+  Industry,
   Insight,
   Job,
+  LegalPage,
   Media,
   Office,
   Page,
   Person,
   PracticeArea,
-  Recognition,
+  RecognitionDirectory,
   Settings,
 } from '../src/models/index.js';
 
@@ -48,11 +51,25 @@ interface Placeholder {
   alt: string;
 }
 
+/** The descriptor for a placeholder PDF document (ADR-053). */
+interface DocumentPlaceholder {
+  placeholderDocument: string;
+  title: string;
+}
+
 const isPlaceholder = (value: unknown): value is Placeholder =>
   typeof value === 'object' &&
   value !== null &&
   'placeholder' in value &&
   typeof (value as Placeholder).placeholder === 'string';
+
+const isDocumentPlaceholder = (value: unknown): value is DocumentPlaceholder =>
+  typeof value === 'object' &&
+  value !== null &&
+  'placeholderDocument' in value &&
+  typeof (value as DocumentPlaceholder).placeholderDocument === 'string';
+
+type AnyPlaceholder = Placeholder | DocumentPlaceholder;
 
 const readJson = (file: string): unknown => JSON.parse(readFileSync(join(SEED_DIR, file), 'utf8'));
 
@@ -72,8 +89,10 @@ const readDoc = (file: string): Json => {
 };
 
 /** Stable identity for a placeholder, so re-running reuses the same Media doc. */
-const storageKeyFor = (p: Placeholder): string =>
-  `seed/${slugify(p.placeholder)}-${String(p.width)}x${String(p.height)}`;
+const storageKeyFor = (p: AnyPlaceholder): string =>
+  'placeholderDocument' in p
+    ? `seed/document-${slugify(p.placeholderDocument)}`
+    : `seed/${slugify(p.placeholder)}-${String(p.width)}x${String(p.height)}`;
 
 const placeholderUrl = (p: Placeholder, width: number): string => {
   const height = Math.round(width * (p.height / p.width));
@@ -81,14 +100,14 @@ const placeholderUrl = (p: Placeholder, width: number): string => {
 };
 
 /** Walk a value, collecting every placeholder descriptor it contains. */
-function collectPlaceholders(value: unknown, found: Map<string, Placeholder>): void {
+function collectPlaceholders(value: unknown, found: Map<string, AnyPlaceholder>): void {
   if (Array.isArray(value)) {
     for (const item of value) collectPlaceholders(item, found);
     return;
   }
   if (typeof value !== 'object' || value === null) return;
 
-  if (isPlaceholder(value)) {
+  if (isPlaceholder(value) || isDocumentPlaceholder(value)) {
     found.set(storageKeyFor(value), value);
     return;
   }
@@ -100,7 +119,9 @@ function resolvePlaceholders(value: unknown, media: Map<string, Types.ObjectId>)
   if (Array.isArray(value)) return value.map((item) => resolvePlaceholders(item, media));
   if (typeof value !== 'object' || value === null) return value;
 
-  if (isPlaceholder(value)) return media.get(storageKeyFor(value)) ?? null;
+  if (isPlaceholder(value) || isDocumentPlaceholder(value)) {
+    return media.get(storageKeyFor(value)) ?? null;
+  }
 
   return Object.fromEntries(
     Object.entries(value).map(([key, nested]) => [key, resolvePlaceholders(nested, media)])
@@ -140,7 +161,10 @@ export interface SeedResult {
   readonly people: number;
   readonly offices: number;
   readonly insights: number;
-  readonly recognitions: number;
+  readonly industries: number;
+  readonly recognitionDirectories: number;
+  readonly awards: number;
+  readonly legalPages: number;
   readonly faqs: number;
   readonly jobs: number;
   readonly pages: number;
@@ -168,21 +192,27 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
   const practiceAreaDocs = readDocs('practice-areas.json');
   const peopleDocs = readDocs('people.json');
   const officeDocs = readDocs('offices.json');
-  const insightDocs = readDocs('insights.json');
-  const recognitionDocs = readDocs('recognitions.json');
+  // The pro bono demo repeats fill the paginated Responsible Business grid in
+  // dev. They live in their own file so the launch loader never reads them.
+  const insightDocs = [...readDocs('insights.json'), ...readDocs('insights.demo.json')];
+  const industryDocs = readDocs('industries.json');
+  const directoryDocs = readDocs('recognition-directories.json');
+  const awardDocs = readDocs('awards.json');
+  const legalDocs = readDocs('legal-pages.json');
   const faqDocs = readDocs('faqs.json');
   const jobDocs = readDocs('jobs.json');
   const pageDocs = readDocs('pages.json');
   const settingsDoc = readDoc('settings.json');
 
   // --- media first: everything else references it -------------------------
-  const placeholders = new Map<string, Placeholder>();
+  const placeholders = new Map<string, AnyPlaceholder>();
   for (const source of [
     practiceAreaDocs,
     peopleDocs,
     officeDocs,
     insightDocs,
-    recognitionDocs,
+    directoryDocs,
+    awardDocs,
     faqDocs,
     jobDocs,
     pageDocs,
@@ -193,6 +223,35 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
 
   const mediaIds = new Map<string, Types.ObjectId>();
   for (const [storageKey, placeholder] of placeholders) {
+    if ('placeholderDocument' in placeholder) {
+      // A PDF record whose URL is a placeholder picture: dev only, like the
+      // images, and replaced by the firm's real file through the library.
+      mediaIds.set(
+        storageKey,
+        await upsert(
+          Media,
+          { storageKey },
+          {
+            kind: 'document',
+            provider: 'local',
+            storageKey,
+            url: `https://placehold.co/600x800?text=${encodeURIComponent(placeholder.placeholderDocument)}`,
+            sizes: null,
+            version: 1,
+            width: null,
+            height: null,
+            mimeType: 'application/pdf',
+            bytes: 1024,
+            originalFilename: `${slugify(placeholder.placeholderDocument)}.pdf`,
+            title: placeholder.title,
+            alt: null,
+            focalPoint: null,
+          }
+        )
+      );
+      continue;
+    }
+
     const id = await upsert(
       Media,
       { storageKey },
@@ -227,16 +286,36 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
     officeIds.set(String(slug), await upsert(Office, { slug }, { slug, ...rest }));
   }
 
+  const industryIds: SlugMap = new Map();
+  for (const doc of industryDocs) {
+    const { slug, ...rest } = doc;
+    industryIds.set(String(slug), await upsert(Industry, { slug }, { slug, ...rest }));
+  }
+
+  // Practice areas name their lead, and people name their practice areas, so
+  // the lead is set in a second pass once the people exist.
   const practiceAreaIds: SlugMap = new Map();
+  const leads = new Map<string, unknown>();
   for (const doc of practiceAreaDocs) {
-    const { slug, contacts: _contacts, ...rest } = resolvePlaceholders(doc, mediaIds) as Json;
-    practiceAreaIds.set(String(slug), await upsert(PracticeArea, { slug }, { slug, ...rest }));
+    const { slug, lead, industries, ...rest } = resolvePlaceholders(doc, mediaIds) as Json;
+    leads.set(String(slug), lead);
+    practiceAreaIds.set(
+      String(slug),
+      await upsert(
+        PracticeArea,
+        { slug },
+        { slug, ...rest, industries: toIds(industryIds, industries) }
+      )
+    );
   }
 
   // --- people reference practice areas and offices ------------------------
   const peopleIds: SlugMap = new Map();
   for (const doc of peopleDocs) {
-    const { slug, practiceAreas, office, ...rest } = resolvePlaceholders(doc, mediaIds) as Json;
+    const { slug, practiceAreas, primaryPracticeArea, office, ...rest } = resolvePlaceholders(
+      doc,
+      mediaIds
+    ) as Json;
     peopleIds.set(
       String(slug),
       await upsert(
@@ -245,11 +324,16 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
         {
           slug,
           ...rest,
+          primaryPracticeArea: toId(practiceAreaIds, primaryPracticeArea),
           practiceAreas: toIds(practiceAreaIds, practiceAreas),
           office: toId(officeIds, office),
         }
       )
     );
+  }
+
+  for (const [slug, lead] of leads) {
+    await PracticeArea.updateOne({ slug }, { $set: { lead: toId(peopleIds, lead) } });
   }
 
   // --- insights reference people and practice areas -----------------------
@@ -268,9 +352,15 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
     );
   }
 
-  for (const doc of recognitionDocs) {
+  const directoryIds: SlugMap = new Map();
+  for (const doc of directoryDocs) {
     const { slug, ...rest } = resolvePlaceholders(doc, mediaIds) as Json;
-    await upsert(Recognition, { slug }, { slug, ...rest });
+    directoryIds.set(String(slug), await upsert(RecognitionDirectory, { slug }, { slug, ...rest }));
+  }
+
+  for (const doc of awardDocs) {
+    const { slug, directory, ...rest } = resolvePlaceholders(doc, mediaIds) as Json;
+    await upsert(Award, { slug }, { slug, ...rest, directory: toId(directoryIds, directory) });
   }
 
   for (const doc of faqDocs) {
@@ -306,6 +396,11 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
     await upsert(Page, { key }, { key, ...sections });
   }
 
+  for (const doc of legalDocs) {
+    const { key, ...rest } = doc;
+    await upsert(LegalPage, { key }, { key, ...rest });
+  }
+
   const { key: settingsKey, ...settingsRest } = resolvePlaceholders(settingsDoc, mediaIds) as Json;
   await upsert(
     Settings,
@@ -319,7 +414,10 @@ export async function runSeed(options: SeedOptions = {}): Promise<SeedResult> {
     people: await Person.countDocuments(),
     offices: await Office.countDocuments(),
     insights: await Insight.countDocuments(),
-    recognitions: await Recognition.countDocuments(),
+    industries: await Industry.countDocuments(),
+    recognitionDirectories: await RecognitionDirectory.countDocuments(),
+    awards: await Award.countDocuments(),
+    legalPages: await LegalPage.countDocuments(),
     faqs: await Faq.countDocuments(),
     jobs: await Job.countDocuments(),
     pages: await Page.countDocuments(),

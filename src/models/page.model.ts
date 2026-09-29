@@ -6,6 +6,7 @@ import {
   heroSchema,
   iconItemSchema,
   linkSchema,
+  pendingLinkSchema,
   sectionHeaderSchema,
   seoSchema,
   statSchema,
@@ -38,18 +39,18 @@ const videoShowcaseSchema = new Schema(
     // Videos are linked, never uploaded: a YouTube, Vimeo or Cloudinary URL.
     videoUrl: { type: String, default: null, trim: true, maxlength: 2048 },
     poster: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
+    caption: { type: String, default: null, trim: true, maxlength: 300 },
   },
   subSchema
 );
 
-const recognitionTabsSchema = new Schema(
+/** The badges are the awards flagged for Home, not stored here (ADR-056). */
+const recognitionSectionSchema = new Schema(
   {
     eyebrow: { type: String, default: null, trim: true, maxlength: 160 },
     title: { type: String, required: true, trim: true, maxlength: 200 },
     image: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
-    cta: { type: linkSchema, default: null },
-    achievementsLabel: { type: String, required: true, trim: true, maxlength: 120 },
-    recognizedByLabel: { type: String, required: true, trim: true, maxlength: 120 },
+    cta: { type: pendingLinkSchema, required: true },
   },
   subSchema
 );
@@ -65,6 +66,16 @@ const whyChooseUsSchema = new Schema(
   subSchema
 );
 
+const profileDownloadSchema = new Schema(
+  {
+    leadText: { type: String, required: true, trim: true, maxlength: 300 },
+    linkLabel: { type: String, required: true, trim: true, maxlength: 60 },
+    // A media record of kind `document`: the firm profile PDF (ADR-053).
+    document: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
+  },
+  subSchema
+);
+
 const storySchema = new Schema(
   {
     eyebrow: { type: String, default: null, trim: true, maxlength: 160 },
@@ -72,6 +83,7 @@ const storySchema = new Schema(
     paragraphs: { type: [String], default: [] },
     quote: { type: String, default: null, trim: true, maxlength: 600 },
     quotePerson: { type: Schema.Types.ObjectId, ref: 'Person', default: null },
+    profileDownload: { type: profileDownloadSchema, default: null },
   },
   subSchema
 );
@@ -104,20 +116,12 @@ const principlesSchema = new Schema(
   subSchema
 );
 
-const awardListItemSchema = new Schema(
-  {
-    name: { type: String, required: true, trim: true, maxlength: 160 },
-    url: { type: String, default: null, trim: true, maxlength: 2048 },
-  },
-  subSchema
-);
-
+// The rows are the recognition directories, composed at read time (ADR-056).
 const awardsListSchema = new Schema(
   {
     eyebrow: { type: String, default: null, trim: true, maxlength: 160 },
     title: { type: String, required: true, trim: true, maxlength: 200 },
     image: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
-    items: { type: [awardListItemSchema], default: [] },
   },
   subSchema
 );
@@ -126,8 +130,36 @@ const csrBannerSchema = new Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 200 },
     text: { type: String, required: true, trim: true, maxlength: 1000 },
-    image: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
+    images: [{ type: Schema.Types.ObjectId, ref: 'Media' }],
     cta: { type: linkSchema, default: null },
+  },
+  subSchema
+);
+
+const emptyStateSchema = new Schema(
+  {
+    title: { type: String, required: true, trim: true, maxlength: 200 },
+    body: { type: String, required: true, maxlength: 4000 },
+    ctaLabel: { type: String, required: true, trim: true, maxlength: 60 },
+  },
+  subSchema
+);
+
+const jobsSectionSchema = new Schema(
+  {
+    eyebrow: { type: String, default: null, trim: true, maxlength: 160 },
+    title: { type: String, required: true, trim: true, maxlength: 200 },
+    cta: { type: linkSchema, default: null },
+    emptyState: { type: emptyStateSchema, default: null },
+  },
+  subSchema
+);
+
+const directoryPageSchema = new Schema(
+  {
+    awardsEyebrow: { type: String, required: true, trim: true, maxlength: 160 },
+    primaryCta: { type: linkSchema, default: null },
+    secondaryCta: { type: linkSchema, default: null },
   },
   subSchema
 );
@@ -135,14 +167,15 @@ const csrBannerSchema = new Schema(
 const pageSchema = new Schema<IPage>(
   {
     key: { type: String, required: true, unique: true, enum: PAGE_KEYS.values },
-    // Null on the insights page, which opens with the featured carousel.
+    // Null on the pages that open without a banner: insights, recognition,
+    // responsible-business.
     hero: { type: heroSchema, default: null },
     seo: { type: seoSchema, default: () => ({}) },
 
     // home
     aboutFirm: { type: aboutFirmSchema, default: null },
     videoShowcase: { type: videoShowcaseSchema, default: null },
-    recognitionTabs: { type: recognitionTabsSchema, default: null },
+    recognitionSection: { type: recognitionSectionSchema, default: null },
     practiceSection: { type: sectionHeaderSchema, default: null },
     leadershipSection: { type: sectionHeaderSchema, default: null },
     whyChooseUs: { type: whyChooseUsSchema, default: null },
@@ -162,7 +195,15 @@ const pageSchema = new Schema<IPage>(
     // people, insights, careers
     directorySection: { type: sectionHeaderSchema, default: null },
     listingSection: { type: sectionHeaderSchema, default: null },
-    jobsSection: { type: sectionHeaderSchema, default: null },
+    jobsSection: { type: jobsSectionSchema, default: null },
+
+    // recognition
+    directoryPage: { type: directoryPageSchema, default: null },
+
+    // responsible-business
+    title: { type: String, default: null, trim: true, maxlength: 200 },
+    images: [{ type: Schema.Types.ObjectId, ref: 'Media' }],
+    backLink: { type: linkSchema, default: null },
 
     revision: { type: Number, default: 0 },
   },

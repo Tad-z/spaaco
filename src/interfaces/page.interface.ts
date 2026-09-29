@@ -3,6 +3,7 @@ import type {
   IHero,
   IIconItem,
   ILink,
+  IPendingLink,
   ISectionHeader,
   ISeo,
   IStat,
@@ -28,15 +29,15 @@ export interface IHomeAboutFirm {
 export interface IHomeVideoShowcase {
   videoUrl?: string | null;
   poster?: Types.ObjectId | null;
+  caption?: string | null;
 }
 
-export interface IHomeRecognitionTabs {
+/** The Home Recognition band. Its badges are the awards flagged for Home. */
+export interface IHomeRecognitionSection {
   eyebrow?: string | null;
   title: string;
   image?: Types.ObjectId | null;
-  cta?: ILink | null;
-  achievementsLabel: string;
-  recognizedByLabel: string;
+  cta: IPendingLink;
 }
 
 export interface IHomeWhyChooseUs {
@@ -47,12 +48,21 @@ export interface IHomeWhyChooseUs {
   image?: Types.ObjectId | null;
 }
 
+/** "…download a copy of our profile here", where `linkLabel` is the linked word. */
+export interface IAboutProfileDownload {
+  leadText: string;
+  linkLabel: string;
+  /** A media record of `kind: document`. */
+  document?: Types.ObjectId | null;
+}
+
 export interface IAboutStory {
   eyebrow?: string | null;
   title: string;
   paragraphs: string[];
   quote?: string | null;
   quotePerson?: Types.ObjectId | null;
+  profileDownload?: IAboutProfileDownload | null;
 }
 
 export interface IAboutStats {
@@ -64,6 +74,7 @@ export interface IAboutMissionSection {
   eyebrow?: string | null;
   title: string;
   image?: Types.ObjectId | null;
+  /** Bodies are sanitised HTML. */
   items: ITitledBody[];
 }
 
@@ -74,23 +85,40 @@ export interface IAboutPrinciples {
   items: IIconItem[];
 }
 
-export interface IAwardListItem {
-  name: string;
-  url?: string | null;
-}
-
+/** The rows are the recognition directories, not stored here. */
 export interface IAboutAwardsList {
   eyebrow?: string | null;
   title: string;
   image?: Types.ObjectId | null;
-  items: IAwardListItem[];
 }
 
 export interface ICsrBanner {
   title: string;
   text: string;
-  image?: Types.ObjectId | null;
+  images: Types.ObjectId[];
   cta?: ILink | null;
+}
+
+/** Shown in place of the job cards when nothing is open. */
+export interface ICareersEmptyState {
+  title: string;
+  /** Sanitised HTML. */
+  body: string;
+  ctaLabel: string;
+}
+
+export interface ICareersJobsSection {
+  eyebrow?: string | null;
+  title: string;
+  cta?: ILink | null;
+  emptyState?: ICareersEmptyState | null;
+}
+
+/** What every recognition directory page shares. */
+export interface IRecognitionDirectoryLabels {
+  awardsEyebrow: string;
+  primaryCta?: ILink | null;
+  secondaryCta?: ILink | null;
 }
 
 /**
@@ -99,14 +127,14 @@ export interface ICsrBanner {
  */
 export interface IPage {
   key: PageKey;
-  /** Null on the insights page, which opens with the featured carousel. */
+  /** Null on the pages that open without a banner: insights, recognition, responsible-business. */
   hero?: IHero | null;
   seo: ISeo;
 
   // home
   aboutFirm?: IHomeAboutFirm | null;
   videoShowcase?: IHomeVideoShowcase | null;
-  recognitionTabs?: IHomeRecognitionTabs | null;
+  recognitionSection?: IHomeRecognitionSection | null;
   practiceSection?: ISectionHeader | null;
   leadershipSection?: ISectionHeader | null;
   whyChooseUs?: IHomeWhyChooseUs | null;
@@ -126,7 +154,15 @@ export interface IPage {
   // people, insights, careers
   directorySection?: ISectionHeader | null;
   listingSection?: ISectionHeader | null;
-  jobsSection?: ISectionHeader | null;
+  jobsSection?: ICareersJobsSection | null;
+
+  // recognition
+  directoryPage?: IRecognitionDirectoryLabels | null;
+
+  // responsible-business
+  title?: string | null;
+  images?: Types.ObjectId[];
+  backLink?: ILink | null;
 
   /** Optimistic-locking counter (ADR-015). */
   revision: number;

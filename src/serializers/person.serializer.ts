@@ -1,11 +1,16 @@
-import type { PersonDetail, PersonSummary } from '../types/api.js';
-import type { IPerson } from '../interfaces/person.interface.js';
+import type {
+  InsightCard,
+  PersonDetail,
+  PersonSummary,
+  PracticeAreaLead,
+  PracticeAreaLink,
+} from '../types/api.js';
+import type { IEducation, IPerson } from '../interfaces/person.interface.js';
 import type { IMedia } from '../interfaces/media.interface.js';
-import type { InsightCard } from '../types/api.js';
 import { PERSON_ROLES } from '../constants/enums.js';
 import { toNullableImage } from './image.serializer.js';
-import { toRef as practiceAreaRef } from './practice-area.serializer.js';
-import type { PracticeAreaRefSource } from './practice-area.serializer.js';
+import { toLink as practiceAreaLink } from './practice-area.serializer.js';
+import type { PracticeAreaLinkSource } from './practice-area.serializer.js';
 import { toRef as officeRef } from './office.serializer.js';
 import type { OfficeRefSource } from './office.serializer.js';
 
@@ -15,8 +20,8 @@ import type { OfficeRefSource } from './office.serializer.js';
  * `displayName` and `roleLabel` are derived here rather than stored, so
  * renaming a role label never needs a data migration.
  *
- * Email is never returned. The field exists because the firm may later choose
- * to publish it (DECISIONS Q9), and until they do it must not leak.
+ * Every summary carries the card's back face — `cardBio` and the practice-area
+ * chips — because every person card flips (ADR-052).
  */
 
 /**
@@ -34,12 +39,19 @@ export interface PersonSummarySource {
   role: IPerson['role'];
   photo?: IMedia | null;
   linkedinUrl?: string | null;
+  cardBio?: string | null;
+  /** Populated chips. An unpopulated id reads as absent. */
+  practiceAreas?: readonly unknown[];
 }
 
 export interface PersonDetailSource extends PersonSummarySource {
+  instagramUrl?: string | null;
+  email?: string | null;
   bio?: string | null;
   quote?: string | null;
-  practiceAreas?: PracticeAreaRefSource[];
+  primaryPracticeArea?: PracticeAreaLinkSource | null;
+  education?: IEducation | null;
+  memberships?: string[];
   office?: OfficeRefSource | null;
 }
 
@@ -57,6 +69,16 @@ export function toDisplayName(
 
 export const toRoleLabel = (role: IPerson['role']): string => PERSON_ROLES.labels[role];
 
+const isAreaLinkSource = (value: unknown): value is PracticeAreaLinkSource =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as { slug?: unknown }).slug === 'string' &&
+  typeof (value as { title?: unknown }).title === 'string';
+
+/** The chips, from populated areas only: a draft area was already filtered out. */
+const toChips = (areas: readonly unknown[] | undefined): PracticeAreaLink[] =>
+  (areas ?? []).filter(isAreaLinkSource).map(practiceAreaLink);
+
 export function toSummary(person: PersonSummarySource): PersonSummary {
   return {
     id: person._id.toString(),
@@ -66,20 +88,43 @@ export function toSummary(person: PersonSummarySource): PersonSummary {
     roleLabel: toRoleLabel(person.role),
     photo: toNullableImage(person.photo),
     linkedinUrl: person.linkedinUrl ?? null,
+    cardBio: person.cardBio ?? null,
+    practiceAreas: toChips(person.practiceAreas),
   };
 }
 
-export function toDetail(person: PersonDetailSource, insights: InsightCard[] = []): PersonDetail {
+/** The "Practice Lead" card: a summary plus the address behind its email icon. */
+export function toLead(person: PersonSummarySource & { email?: string | null }): PracticeAreaLead {
+  return { ...toSummary(person), email: person.email ?? null };
+}
+
+export function toDetail(
+  person: PersonDetailSource,
+  recentPublications: InsightCard[] = []
+): PersonDetail {
   return {
     ...toSummary(person),
     firstName: person.firstName,
     lastName: person.lastName,
     honorific: person.honorific ?? null,
     postNominals: person.postNominals ?? null,
+    instagramUrl: person.instagramUrl ?? null,
+    // Public since v2: the profile shows it (ADR-052).
+    email: person.email ?? null,
     bio: person.bio ?? null,
     quote: person.quote ?? null,
-    practiceAreas: (person.practiceAreas ?? []).map(practiceAreaRef),
+    primaryPracticeArea: person.primaryPracticeArea
+      ? practiceAreaLink(person.primaryPracticeArea)
+      : null,
+    education: {
+      intro: person.education?.intro ?? null,
+      entries: (person.education?.entries ?? []).map((entry) => ({
+        qualification: entry.qualification,
+        year: entry.year ?? null,
+      })),
+    },
+    memberships: person.memberships ?? [],
     office: person.office ? officeRef(person.office) : null,
-    insights,
+    recentPublications,
   };
 }

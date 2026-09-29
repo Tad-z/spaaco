@@ -51,6 +51,17 @@ export const settingsWriteSchema = z
         secondaryCta: nullableLink,
       })
       .strict(),
+    // The editable parts of the nav and footer (ADR-050).
+    aboutAnchors: z.array(link).max(12),
+    footerLinks: z.array(link).max(12),
+    legalLinks: z.array(link).max(6),
+    newsletter: z
+      .object({
+        title: z.string().trim().min(1).max(200),
+        note: z.string().trim().min(1).max(300),
+        enabled: z.boolean(),
+      })
+      .strict(),
   })
   .strict();
 

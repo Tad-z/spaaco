@@ -8,6 +8,8 @@ import { insightsPageSchema } from './insights.validator.js';
 import { careersPageSchema } from './careers.validator.js';
 import { faqPageSchema } from './faq.validator.js';
 import { officesPageSchema } from './offices.validator.js';
+import { recognitionPageSchema } from './recognition.validator.js';
+import { responsibleBusinessPageSchema } from './responsible-business.validator.js';
 
 /**
  * Page key → the schema its stored document must satisfy.
@@ -26,6 +28,8 @@ export const PAGE_SCHEMAS: Record<PageKey, ZodTypeAny> = {
   careers: careersPageSchema,
   faq: faqPageSchema,
   offices: officesPageSchema,
+  recognition: recognitionPageSchema,
+  'responsible-business': responsibleBusinessPageSchema,
 };
 
 export const schemaForPage = (key: PageKey): ZodTypeAny => PAGE_SCHEMAS[key];
@@ -38,3 +42,5 @@ export { insightsPageSchema } from './insights.validator.js';
 export { careersPageSchema } from './careers.validator.js';
 export { faqPageSchema } from './faq.validator.js';
 export { officesPageSchema } from './offices.validator.js';
+export { recognitionPageSchema } from './recognition.validator.js';
+export { responsibleBusinessPageSchema } from './responsible-business.validator.js';

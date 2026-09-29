@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { LINK_KINDS, STAT_SOURCES } from '../constants/enums.js';
 import { PAGINATION, SEARCH } from '../config/constants.js';
+import { sanitizeRichText } from '../helpers/sanitize.helper.js';
 
 /**
  * Shared request schemas.
@@ -22,6 +23,23 @@ export const slug = z
 
 /** A nullable reference to another document. */
 export const objectIdRef = objectId.nullable();
+
+/**
+ * A list of media ids — a carousel's slides. Empty means nothing is uploaded
+ * yet; the designs expect at least one, but that is the firm's to fill, not a
+ * write the API refuses (ADR-046).
+ */
+export const mediaIdList = z.array(objectId).max(12);
+
+/**
+ * A rich-text field: sanitised on the way in, as part of validation, so a
+ * service never sees unsanitised HTML and no write path can forget it.
+ */
+export const richText = (max = 50_000): z.ZodEffects<z.ZodString, string, string> =>
+  z
+    .string()
+    .max(max)
+    .transform((value) => sanitizeRichText(value));
 
 /**
  * A URL an editor may store, restricted to schemes a browser can safely follow.
@@ -103,6 +121,35 @@ export const link = z
 
 export const nullableLink = link.nullable();
 
+/**
+ * A CTA whose destination is not decided yet (ADR-056). `href` and `kind` are
+ * both null, or both set — and once set, held to exactly the rules of a link.
+ */
+export const pendingLink = z
+  .object({
+    label: z.string().trim().min(1).max(120),
+    href: z.string().trim().min(1).max(2048).nullable(),
+    kind: z.enum(LINK_KINDS.values).nullable(),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.href === null && value.kind === null) return;
+
+    if (value.href === null || value.kind === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [value.href === null ? 'href' : 'kind'],
+        message: 'href and kind are set together, or both left null',
+      });
+      return;
+    }
+
+    const parsed = link.safeParse({ label: value.label, href: value.href, kind: value.kind });
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) ctx.addIssue(issue);
+    }
+  });
+
 export const seo = z.object({
   title: z.string().trim().max(200).nullable(),
   description: z.string().trim().max(400).nullable(),
@@ -114,13 +161,15 @@ export const seoBasic = z.object({
   description: z.string().trim().max(400).nullable(),
 });
 
-export const hero = z.object({
-  title: z.string().trim().min(1).max(200),
-  subtitle: z.string().trim().max(600).nullable(),
-  image: objectIdRef,
-  primaryCta: nullableLink,
-  secondaryCta: nullableLink,
-});
+export const hero = z
+  .object({
+    title: z.string().trim().min(1).max(200),
+    subtitle: z.string().trim().max(600).nullable(),
+    images: mediaIdList,
+    primaryCta: nullableLink,
+    secondaryCta: nullableLink,
+  })
+  .strict();
 
 export const sectionHeader = z.object({
   eyebrow: z.string().trim().max(160).nullable(),
@@ -142,10 +191,13 @@ export const stat = z.object({
   source: z.enum(STAT_SOURCES.values),
 });
 
-export const titledBody = z.object({
-  title: z.string().trim().min(1).max(160),
-  body: z.string().max(4000),
-});
+/** A heading with an HTML body — the About accordion ("Our Asset" has bold phrases). */
+export const titledBody = z
+  .object({
+    title: z.string().trim().min(1).max(160),
+    body: richText(8000),
+  })
+  .strict();
 
 export const paragraphs = z.array(z.string().max(4000)).max(20);
 

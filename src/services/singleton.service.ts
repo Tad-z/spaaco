@@ -5,9 +5,11 @@ import { ConflictError, NotFoundError, ValidationError } from '../core/errors.js
 import { zodIssueDetails } from '../helpers/zod-issues.helper.js';
 import { toPlainJson } from '../helpers/plain.helper.js';
 import { invalidateEntity } from './cache.service.js';
-import { Page, Settings } from '../models/index.js';
+import { assertMediaKinds } from './media.service.js';
+import { LegalPage, Page, Settings } from '../models/index.js';
 import { schemaForPage } from '../validators/pages/index.js';
 import { settingsWriteSchema } from '../validators/settings.validator.js';
+import { legalPageWriteSchema } from '../validators/legal-page.validator.js';
 import type { CacheEntity } from '../constants/cache-tags.js';
 import type { PageKey } from '../types/api.js';
 
@@ -48,6 +50,19 @@ export const pageConfig = (key: PageKey): SingletonConfig => ({
   entity: 'page',
   cacheKey: key,
   label: `Page "${key}"`,
+});
+
+/**
+ * A legal page (ADR-057). The key is any slug; one that names no document is a
+ * 404 from `getSingleton`, like a page key with no document.
+ */
+export const legalPageConfig = (key: string): SingletonConfig => ({
+  model: LegalPage as unknown as Model<unknown>,
+  filter: { key },
+  schema: legalPageWriteSchema,
+  entity: 'legalPage',
+  cacheKey: key,
+  label: 'Legal page',
 });
 
 export const settingsConfig = (): SingletonConfig => ({
@@ -131,6 +146,9 @@ async function save(
   expectedRevision: number,
   next: Record<string, unknown>
 ): Promise<SingletonDoc> {
+  // A PDF in a hero, or a picture as the firm profile, is refused (ADR-053).
+  await assertMediaKinds(config.model.modelName, next);
+
   const updated = await config.model
     .findOneAndUpdate(
       { ...config.filter, revision: expectedRevision } as FilterQuery<unknown>,

@@ -5,7 +5,8 @@ import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { runSeed } from '../../../scripts/seed.js';
-import { Faq, PracticeArea } from '../../../src/models/index.js';
+import { Faq, Office, PracticeArea, Settings } from '../../../src/models/index.js';
+import { normalise, readFixture } from '../../support/fixtures.js';
 import { expiredToken, previewToken, signWithWrongSecret } from '../../support/auth.js';
 
 /**
@@ -31,25 +32,49 @@ describe('GET /api/v1/site', () => {
     expect(res.body.data.settings.firmName).toBe('SPA Ajibade & Co.');
   });
 
-  it('builds the practice areas dropdown from the collection', async () => {
+  it('deep-equals its published fixture', async () => {
     const res = await request(app).get('/api/v1/site');
 
-    const dropdown = res.body.data.nav.find(
-      (item: { label: string }) => item.label === 'Practice Areas'
-    );
-
-    expect(dropdown.children).toHaveLength(9);
-    expect(dropdown.children[0]).toMatchObject({ kind: 'internal' });
+    expect(normalise(res.body)).toEqual(normalise(readFixture('site.json')));
   });
 
-  it('lists only the footer-flagged practice areas, which is a shorter list', async () => {
-    const res = await request(app).get('/api/v1/site');
+  it('takes the About dropdown from settings, and the Insights one from the public categories', async () => {
+    await Settings.updateOne(
+      { key: 'site' },
+      { $set: { aboutAnchors: [{ label: 'Our History', href: '/about#story', kind: 'internal' }] } }
+    );
 
-    // The design's footer shows 7 of the 9 areas.
-    expect(res.body.data.footer.practiceAreas).toHaveLength(7);
-    expect(
-      res.body.data.nav.find((i: { label: string }) => i.label === 'Practice Areas').children
-    ).toHaveLength(9);
+    const res = await request(app).get('/api/v1/site');
+    interface Entry {
+      label: string;
+      children: { label: string; href: string }[];
+    }
+    const nav = (res.body as { data: { nav: Entry[] } }).data.nav;
+    const entry = (label: string): Entry => {
+      const found = nav.find((item) => item.label === label);
+      if (!found) throw new Error(`no nav entry "${label}"`);
+      return found;
+    };
+
+    expect(entry('About Us').children.map((child) => child.label)).toEqual(['Our History']);
+    // Pro bono stories are not a tab, so they are not a nav entry either (ADR-049).
+    expect(entry('Insights & News').children.map((child) => child.href)).not.toContain(
+      '/insights?category=pro_bono'
+    );
+    expect(entry('Practice Areas').children).toEqual([]);
+  });
+
+  it("falls back to the site's phone and email for an office with none", async () => {
+    await Office.updateOne({ slug: 'abuja' }, { phone: '+234 9 000 0000' });
+
+    const res = await request(app).get('/api/v1/site');
+    const [lagos, abuja] = res.body.data.footer.offices;
+
+    expect(lagos).toMatchObject({
+      phone: '(+234) 80000000000',
+      email: 'frontoffice@spaajibade.com',
+    });
+    expect(abuja).toMatchObject({ phone: '+234 9 000 0000', email: 'frontoffice@spaajibade.com' });
   });
 
   it('orders offices Lagos, Abuja, Ibadan, as the page does', async () => {
@@ -93,14 +118,13 @@ describe('draft exclusion', () => {
     ).not.toContain('How do I schedule a consultation?');
   });
 
-  it('hides a draft practice area from the nav and the footer', async () => {
+  it('hides a draft practice area from the footer', async () => {
     await PracticeArea.updateOne({ slug: 'tax' }, { status: 'draft' });
 
     const res = await request(app).get('/api/v1/site');
 
-    const dropdown = res.body.data.nav.find((i: { label: string }) => i.label === 'Practice Areas');
-    expect(dropdown.children).toHaveLength(8);
-    expect(res.body.data.footer.practiceAreas).toHaveLength(6);
+    // All nine are footer-flagged in v2, so eight remain.
+    expect(res.body.data.footer.practiceAreas).toHaveLength(8);
   });
 
   it('still hides drafts when preview is requested without a token', async () => {

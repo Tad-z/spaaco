@@ -1,13 +1,15 @@
 import { Types } from 'mongoose';
 import type {
+  AwardAdmin,
   Expanded,
   FaqAdmin,
+  IndustryAdmin,
   InsightAdmin,
   JobAdmin,
   OfficeAdmin,
   PersonAdmin,
   PracticeAreaAdmin,
-  RecognitionAdmin,
+  RecognitionDirectoryAdmin,
 } from '../types/api.js';
 import type { AdminCollection } from '../constants/content-collections.js';
 import { CONTENT_COLLECTIONS } from '../constants/content-collections.js';
@@ -77,34 +79,75 @@ export function collectExpandTargets(
   const mediaIds = new Set<string>();
   const personIds = new Set<string>();
 
+  // A path may hold one id or an array of them (a carousel's slides).
+  const idsAt = (value: unknown): string[] => {
+    if (Array.isArray(value)) return idList(value);
+    const id = idOrNull(value);
+    return id === null ? [] : [id];
+  };
+
   for (const doc of docs) {
     for (const path of config.mediaPaths) {
-      const id = idOrNull(doc[path]);
-      if (id !== null) mediaIds.add(id);
+      for (const id of idsAt(doc[path])) mediaIds.add(id);
     }
     for (const path of config.personPaths) {
-      const value = doc[path];
-      if (Array.isArray(value)) {
-        for (const id of idList(value)) personIds.add(id);
-      } else {
-        const id = idOrNull(value);
-        if (id !== null) personIds.add(id);
-      }
+      for (const id of idsAt(doc[path])) personIds.add(id);
     }
   }
 
   return { mediaIds: [...mediaIds], personIds: [...personIds] };
 }
 
+/** Embedded sub-documents as plain objects, so no Mongoose internals reach the payload. */
+const plainList = (
+  value: unknown,
+  shape: (item: Record<string, unknown>) => Record<string, unknown>
+): Record<string, unknown>[] =>
+  Array.isArray(value)
+    ? value
+        .filter(
+          (item): item is Record<string, unknown> => typeof item === 'object' && item !== null
+        )
+        .map(shape)
+    : [];
+
+const approachOf = (value: unknown): { text: unknown; points: unknown[] } | null => {
+  if (typeof value !== 'object' || value === null) return null;
+  const approach = value as { text?: unknown; points?: unknown };
+  return { text: approach.text, points: Array.isArray(approach.points) ? approach.points : [] };
+};
+
+const educationOf = (value: unknown): { intro: unknown; entries: Record<string, unknown>[] } => {
+  const education = (typeof value === 'object' && value !== null ? value : {}) as {
+    intro?: unknown;
+    entries?: unknown;
+  };
+  return {
+    intro: education.intro ?? null,
+    entries: plainList(education.entries, (entry) => ({
+      qualification: entry.qualification,
+      year: entry.year ?? null,
+    })),
+  };
+};
+
 const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknown>> = {
   'practice-areas': (doc) => ({
     title: doc.title,
     shortLabel: doc.shortLabel,
     summary: doc.summary,
+    homeSummary: doc.homeSummary,
+    heroIntro: doc.heroIntro,
     image: idOrNull(doc.image),
-    body: doc.body ?? null,
-    keyServices: doc.keyServices ?? [],
-    contacts: idList(doc.contacts),
+    heroImages: idList(doc.heroImages),
+    overview: doc.overview ?? null,
+    coreServices: plainList(doc.coreServices, (item) => ({
+      title: item.title,
+      description: item.description,
+    })),
+    approach: approachOf(doc.approach),
+    industries: idList(doc.industries),
+    lead: idOrNull(doc.lead),
     featuredOnHome: doc.featuredOnHome ?? true,
     homeOrder: doc.homeOrder ?? null,
     showInFooter: doc.showInFooter ?? true,
@@ -121,12 +164,15 @@ const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknow
     role: doc.role,
     photo: idOrNull(doc.photo),
     linkedinUrl: doc.linkedinUrl ?? null,
-    // Present here but never in a public payload: the firm may publish it one
-    // day, and the editor needs to see it either way (DECISIONS Q9).
+    instagramUrl: doc.instagramUrl ?? null,
     email: doc.email ?? null,
+    cardBio: doc.cardBio ?? null,
     bio: doc.bio ?? null,
     quote: doc.quote ?? null,
+    primaryPracticeArea: idOrNull(doc.primaryPracticeArea),
     practiceAreas: idList(doc.practiceAreas),
+    education: educationOf(doc.education),
+    memberships: Array.isArray(doc.memberships) ? doc.memberships : [],
     office: idOrNull(doc.office),
     featuredInLeadership: doc.featuredInLeadership ?? false,
   }),
@@ -140,6 +186,8 @@ const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknow
     practiceAreas: idList(doc.practiceAreas),
     author: idOrNull(doc.author),
     coverImage: idOrNull(doc.coverImage),
+    externalUrl: doc.externalUrl ?? null,
+    document: idOrNull(doc.document),
     featured: doc.featured ?? false,
   }),
   offices: (doc) => ({
@@ -151,14 +199,20 @@ const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknow
     phone: doc.phone ?? null,
     email: doc.email ?? null,
   }),
-  recognitions: (doc) => ({
-    organization: doc.organization,
-    title: doc.title,
-    year: doc.year ?? null,
-    badge: idOrNull(doc.badge),
-    url: doc.url ?? null,
-    tab: doc.tab,
+  'recognition-directories': (doc) => ({
+    name: doc.name,
+    logo: idOrNull(doc.logo),
+    heroSubtitle: doc.heroSubtitle ?? null,
+    heroImages: idList(doc.heroImages),
   }),
+  awards: (doc) => ({
+    directory: idOrNull(doc.directory),
+    title: doc.title,
+    year: doc.year,
+    badge: idOrNull(doc.badge),
+    featuredOnHome: doc.featuredOnHome ?? false,
+  }),
+  industries: (doc) => ({ name: doc.name }),
   faqs: (doc) => ({ question: doc.question, answer: doc.answer }),
   jobs: (doc) => ({
     title: doc.title,
@@ -185,7 +239,9 @@ export interface AdminShapeByCollection {
   people: PersonAdmin;
   insights: InsightAdmin;
   offices: OfficeAdmin;
-  recognitions: RecognitionAdmin;
+  'recognition-directories': RecognitionDirectoryAdmin;
+  awards: AwardAdmin;
+  industries: IndustryAdmin;
   faqs: FaqAdmin;
   jobs: JobAdmin;
 }

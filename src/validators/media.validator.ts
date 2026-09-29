@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PAGINATION } from '../config/constants.js';
+import { MEDIA_KINDS } from '../constants/enums.js';
 
 /**
  * Media library requests.
@@ -21,13 +22,43 @@ const coordinate = z.coerce.number().min(0).max(1);
 
 export const focalPoint = z.object({ x: coordinate, y: coordinate }).strict();
 
-/** Multipart fields are always strings, so `title` is coerced rather than typed. */
+/**
+ * Multipart fields are always strings. An image needs `alt`; a document needs
+ * `title`, its link text, and takes no alt (ADR-053). Checked here rather than
+ * in the service, so the editor gets the field path back.
+ */
 export const uploadMediaBody = z
   .object({
-    alt,
+    kind: z.enum(MEDIA_KINDS.values).default('image'),
+    alt: alt.optional(),
     title: title.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.kind === 'image' && value.alt === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['alt'],
+        message: 'alt text is required, so the site stays usable with a screen reader',
+      });
+    }
+    if (value.kind === 'document') {
+      if (value.title === undefined || value.title === '') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['title'],
+          message: 'a document needs a title, which is its link text',
+        });
+      }
+      if (value.alt !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['alt'],
+          message: 'a document has no alt text; give it a title instead',
+        });
+      }
+    }
+  });
 
 export const updateMediaBody = z
   .object({
@@ -43,6 +74,7 @@ export const updateMediaBody = z
 export const listMediaQuery = z
   .object({
     q: z.string().trim().max(120).optional(),
+    kind: z.enum(MEDIA_KINDS.values).optional(),
     // `?unused=true` only: the absence of the flag means "everything".
     unused: z
       .enum(['true', 'false'])

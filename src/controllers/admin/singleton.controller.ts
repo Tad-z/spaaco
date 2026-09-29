@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { ValidationError } from '../../core/errors.js';
 import {
   getSingleton,
+  legalPageConfig,
   pageConfig,
   patchSingleton,
   replaceSingleton,
@@ -14,7 +15,9 @@ import {
   toAdminPage,
   toAdminSettings,
 } from '../../serializers/admin-singleton.serializer.js';
+import { toAdminLegalPage } from '../../serializers/legal-page.serializer.js';
 import { readBody, readParams } from '../../middlewares/validate.middleware.js';
+import { legalKeyParams } from '../../validators/legal-page.validator.js';
 import { pageKeyParams } from '../../validators/page.validator.js';
 import { patchBody, replaceBody } from '../../validators/singleton.validator.js';
 
@@ -88,4 +91,19 @@ export async function patchAdminSettingsHandler(req: Request, res: Response): Pr
   const doc = await patchSingleton(settingsConfig(), expectedRevision(req), body);
 
   res.json({ data: toAdminSettings(doc) });
+}
+
+export async function getAdminLegalPageHandler(req: Request, res: Response): Promise<void> {
+  const { key } = readParams(req, legalKeyParams);
+
+  res.json({ data: toAdminLegalPage(await getSingleton(legalPageConfig(key))) });
+}
+
+export async function replaceAdminLegalPageHandler(req: Request, res: Response): Promise<void> {
+  const { key } = readParams(req, legalKeyParams);
+  const body = readBody(req, replaceBody);
+
+  const doc = await replaceSingleton(legalPageConfig(key), expectedRevision(req), body);
+
+  res.json({ data: toAdminLegalPage(doc) });
 }

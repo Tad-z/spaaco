@@ -2,9 +2,11 @@ import type {
   EmploymentType,
   InsightCategory,
   InsightFormat,
+  LegalPageKey,
   LinkKind,
+  MediaKind,
+  PageKey,
   PersonRole,
-  RecognitionTab,
   WorkMode,
 } from '../types/api.js';
 
@@ -32,7 +34,7 @@ export const PERSON_ROLES = {
     'associate_partner',
     'senior_associate',
     'associate',
-    'nysc_associate',
+    'trainee_associate',
   ] as const satisfies readonly PersonRole[],
   labels: {
     managing_partner: 'Managing Partner',
@@ -40,7 +42,7 @@ export const PERSON_ROLES = {
     associate_partner: 'Associate Partner',
     senior_associate: 'Senior Associate',
     associate: 'Associate',
-    nysc_associate: 'NYSC Associate',
+    trainee_associate: 'Trainee Associate',
   } satisfies Record<PersonRole, string>,
 } as const;
 
@@ -51,8 +53,8 @@ export const INSIGHT_CATEGORIES = {
     'insights',
     'regulatory_updates',
     'news_updates',
-    'media_coverage',
-    'webinar_resources',
+    'events',
+    'pro_bono',
   ] as const satisfies readonly InsightCategory[],
   labels: {
     firm_news: 'Firm News',
@@ -60,10 +62,24 @@ export const INSIGHT_CATEGORIES = {
     insights: 'Insights',
     regulatory_updates: 'Regulatory Updates',
     news_updates: 'News Updates',
-    media_coverage: 'Media Coverage',
-    webinar_resources: 'Webinar Resources',
+    events: 'Events',
+    pro_bono: 'Pro Bono & Community Commitment',
   } satisfies Record<InsightCategory, string>,
 } as const;
+
+/**
+ * Categories left out of every insight listing unless asked for by name.
+ *
+ * Pro bono stories are the Responsible Business page's grid, and the designs
+ * show them nowhere else — not in "All insights & news", not in Home's Recent
+ * Publications, not on a practice area or an attorney (ADR-049). One constant,
+ * so the rule cannot be applied in four places and forgotten in a fifth.
+ */
+export const EXCLUDED_FROM_MAIN_LISTING: readonly InsightCategory[] = ['pro_bono'];
+
+/** The listing tabs and the Insights & News nav dropdown: every category a listing shows. */
+export const PUBLIC_INSIGHT_CATEGORIES: readonly InsightCategory[] =
+  INSIGHT_CATEGORIES.values.filter((category) => !EXCLUDED_FROM_MAIN_LISTING.includes(category));
 
 export const INSIGHT_FORMATS = {
   values: ['article', 'video'] as const satisfies readonly InsightFormat[],
@@ -93,14 +109,6 @@ export const WORK_MODES = {
     WorkMode,
     string
   >,
-} as const;
-
-export const RECOGNITION_TABS = {
-  values: ['achievements', 'recognized_by'] as const satisfies readonly RecognitionTab[],
-  labels: {
-    achievements: 'Our Achievements',
-    recognized_by: 'Independently Recognized By',
-  } satisfies Record<RecognitionTab, string>,
 } as const;
 
 export const LINK_KINDS = {
@@ -133,7 +141,18 @@ export const STAT_SOURCES = {
 export type StatSource = (typeof STAT_SOURCES.values)[number];
 
 export const PAGE_KEYS = {
-  values: ['home', 'about', 'practice-areas', 'people', 'insights', 'careers', 'faq', 'offices'],
+  values: [
+    'home',
+    'about',
+    'practice-areas',
+    'people',
+    'insights',
+    'careers',
+    'faq',
+    'offices',
+    'recognition',
+    'responsible-business',
+  ] as const satisfies readonly PageKey[],
   labels: {
     home: 'Home',
     about: 'About Us',
@@ -143,8 +162,24 @@ export const PAGE_KEYS = {
     careers: 'Careers',
     faq: "FAQ's",
     offices: 'Our Offices',
-  },
-} as const satisfies { values: readonly string[]; labels: Record<string, string> };
+    recognition: 'Recognition',
+    'responsible-business': 'Responsible Business',
+  } satisfies Record<PageKey, string>,
+} as const;
+
+export const LEGAL_PAGE_KEYS = {
+  values: ['terms', 'privacy'] as const satisfies readonly LegalPageKey[],
+  labels: { terms: 'Terms of Service', privacy: 'Privacy Policy' } satisfies Record<
+    LegalPageKey,
+    string
+  >,
+} as const;
+
+/** Media library kinds: pictures, and PDF documents (ADR-053). */
+export const MEDIA_KINDS = {
+  values: ['image', 'document'] as const satisfies readonly MediaKind[],
+  labels: { image: 'Image', document: 'Document' } satisfies Record<MediaKind, string>,
+} as const;
 
 export const USER_ROLES = {
   values: ['admin', 'editor', 'hr', 'business_dev'],

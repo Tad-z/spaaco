@@ -16,6 +16,13 @@ export interface IStillHaveQuestions {
   actions: ILink[];
 }
 
+/** The footer newsletter block's copy. No subscribe endpoint exists (DESIGN_UPDATE_V2 §14). */
+export interface INewsletter {
+  title: string;
+  note: string;
+  enabled: boolean;
+}
+
 export interface IContactCallout {
   title: string;
   text: string;
@@ -42,6 +49,12 @@ export interface ISettings {
   faqSection: { eyebrow?: string | null; title: string };
   stillHaveQuestions: IStillHaveQuestions;
   contactCallout: IContactCallout;
+  /** The About Us nav dropdown: anchors into the About page (ADR-050). */
+  aboutAnchors: ILink[];
+  /** The footer's Quick Links column. */
+  footerLinks: ILink[];
+  legalLinks: ILink[];
+  newsletter: INewsletter;
   revision: number;
   createdAt: Date;
   updatedAt: Date;

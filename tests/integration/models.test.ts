@@ -2,14 +2,16 @@ import mongoose from 'mongoose';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { setupTestDb } from '../support/setup-db.js';
 import {
+  Award,
   Faq,
+  Industry,
   Insight,
   Job,
   Media,
   Office,
   Person,
   PracticeArea,
-  Recognition,
+  RecognitionDirectory,
 } from '../../src/models/index.js';
 import { MEDIA_REFS } from '../../src/constants/media-refs.js';
 
@@ -94,10 +96,10 @@ describe('validation rules', () => {
     const doc = await Person.create({
       firstName: 'Ada',
       lastName: 'Nwosu',
-      role: 'nysc_associate',
+      role: 'trainee_associate',
     });
 
-    expect(doc.role).toBe('nysc_associate');
+    expect(doc.role).toBe('trainee_associate');
   });
 
   it('requires alt text on media, which the admin UI enforces on upload', async () => {
@@ -168,7 +170,15 @@ describe('indexes', () => {
     [Office as never, [{ status: 1, order: 1 }]],
     [Faq as never, [{ status: 1, order: 1 }]],
     [Job as never, [{ status: 1, isOpen: 1, closingDate: 1, order: 1 }]],
-    [Recognition as never, [{ status: 1, tab: 1, order: 1 }]],
+    [RecognitionDirectory as never, [{ status: 1, order: 1 }]],
+    [
+      Award as never,
+      [
+        { status: 1, directory: 1, year: -1, order: 1 },
+        { status: 1, featuredOnHome: 1, order: 1 },
+      ],
+    ],
+    [Industry as never, [{ status: 1, order: 1 }]],
   ];
 
   it.each(expected.map(([model, keys]) => ({ name: model.modelName, model, keys })))(
@@ -200,7 +210,17 @@ describe('indexes', () => {
   });
 
   it('enforces slug uniqueness on every content collection', async () => {
-    for (const model of [PracticeArea, Person, Insight, Office, Faq, Job, Recognition]) {
+    for (const model of [
+      PracticeArea,
+      Person,
+      Insight,
+      Office,
+      Faq,
+      Job,
+      RecognitionDirectory,
+      Award,
+      Industry,
+    ]) {
       const indexes = await model.listIndexes();
       const slugIndex = indexes.find(
         (index) => JSON.stringify(index.key) === JSON.stringify({ slug: 1 })
@@ -276,12 +296,41 @@ describe('media reference registry', () => {
     }
   });
 
+  it('sees media held in arrays and in nested sections, not only single fields', () => {
+    const paths = new Set(MEDIA_REFS.map((ref) => `${ref.model}.${ref.path}`));
+
+    // Guards the guard: if the walker stopped descending into arrays or
+    // embedded sections, these would silently drop out of both lists.
+    for (const expected of [
+      'Page.hero.images',
+      'Page.csrBanner.images',
+      'Page.story.profileDownload.document',
+      'PracticeArea.heroImages',
+      'RecognitionDirectory.heroImages',
+    ]) {
+      expect(paths.has(expected), expected).toBe(true);
+      const [model, ...rest] = expected.split('.');
+      expect(mediaPaths(mongoose.model(model ?? '').schema)).toContain(rest.join('.'));
+    }
+  });
+
+  it('names the kind each field must hold (ADR-053)', () => {
+    const documents = MEDIA_REFS.filter((ref) => ref.kind === 'document').map(
+      (ref) => `${ref.model}.${ref.path}`
+    );
+
+    expect(documents.sort()).toEqual(['Insight.document', 'Page.story.profileDownload.document']);
+  });
+
   it('can actually find a usage through the registry', async () => {
     const imageId = await media();
     await PracticeArea.create({
       title: 'Tax',
       shortLabel: 'Tax',
       summary: 'Summary',
+      homeSummary: 'Summary',
+      heroIntro: 'Summary',
+      coreServices: [{ title: 'Tax Advisory', description: 'Advice.' }],
       image: imageId,
     });
 

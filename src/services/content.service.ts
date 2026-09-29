@@ -2,10 +2,11 @@ import mongoose from 'mongoose';
 import type { Model, Types } from 'mongoose';
 import { CONTENT_COLLECTIONS } from '../constants/content-collections.js';
 import type { AdminCollection, ContentCollectionConfig } from '../constants/content-collections.js';
-import { ConflictError, NotFoundError } from '../core/errors.js';
+import { ConflictError, NotFoundError, ValidationError } from '../core/errors.js';
 import { toSkip } from '../helpers/pagination.helper.js';
 import { invalidateEntity } from './cache.service.js';
 import { record } from './audit.service.js';
+import { assertMediaKinds } from './media.service.js';
 import type { ErrorDetail } from '../types/api.js';
 
 /**
@@ -90,6 +91,7 @@ export async function createContent(
   context: ActorContext = {}
 ): Promise<ContentDoc> {
   const model = modelFor(collection);
+  await assertMediaKinds(config(collection).model, input);
 
   const created = await model.create({ ...input, createdBy: context.actorId ?? null });
   const doc = (created as unknown as { toObject: () => ContentDoc }).toObject();
@@ -121,6 +123,8 @@ export async function updateContent(
   context: ActorContext = {}
 ): Promise<ContentDoc> {
   const model = modelFor(collection);
+  await assertMediaKinds(config(collection).model, input);
+  if (collection === 'insights') await assertOneArticleTarget(model, id, input);
 
   const updated = await model
     .findOneAndUpdate(
@@ -143,6 +147,32 @@ export async function updateContent(
     'This record changed since you loaded it. Reload and reapply your changes.',
     [{ path: 'revision', message: `current revision is ${String(current.revision)}` }]
   );
+}
+
+/**
+ * An article's "Read Article" link goes to one place (ADR-051). The request
+ * schema catches both in one body; this catches a patch that sets one while
+ * the stored record already has the other.
+ */
+async function assertOneArticleTarget(
+  model: Model<unknown>,
+  id: string,
+  input: Record<string, unknown>
+): Promise<void> {
+  if (!input.externalUrl && !input.document) return;
+
+  const current = await model
+    .findById(id)
+    .select('externalUrl document')
+    .lean<{ externalUrl?: unknown; document?: unknown } | null>();
+  if (!current) return;
+
+  const merged = { ...current, ...input };
+  if (merged.externalUrl && merged.document) {
+    throw new ValidationError('An article links to an external URL or a document, not both', [
+      { path: 'document', message: 'set either externalUrl or document, not both' },
+    ]);
+  }
 }
 
 export async function setPublished(
