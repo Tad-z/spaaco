@@ -3,15 +3,18 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { setupTestDb } from '../support/setup-db.js';
 import { existingContent, loadLaunchContent } from '../../scripts/load-launch-content.js';
 import {
+  Award,
   Faq,
+  Industry,
   Insight,
   Job,
+  LegalPage,
   Media,
   Office,
   Page,
   Person,
   PracticeArea,
-  Recognition,
+  RecognitionDirectory,
   Settings,
 } from '../../src/models/index.js';
 
@@ -33,7 +36,10 @@ beforeEach(async () => {
     Person,
     Office,
     Insight,
-    Recognition,
+    Industry,
+    RecognitionDirectory,
+    Award,
+    LegalPage,
     Faq,
     Job,
     Page,
@@ -50,7 +56,7 @@ describe('loading the launch content', () => {
 
     expect(result.practiceAreas).toBeGreaterThan(0);
     expect(result.people).toBeGreaterThan(0);
-    expect(result.pages).toBe(8);
+    expect(result.pages).toBe(10);
     expect(result.settings).toBe(1);
 
     const tax = await PracticeArea.findOne({ slug: 'tax' }).lean();
@@ -60,7 +66,18 @@ describe('loading the launch content', () => {
   it('creates every collection item as a draft', async () => {
     await loadLaunchContent();
 
-    for (const model of [PracticeArea, Person, Office, Insight, Recognition, Faq, Job]) {
+    for (const model of [
+      PracticeArea,
+      Person,
+      Office,
+      Insight,
+      Industry,
+      RecognitionDirectory,
+      Award,
+      LegalPage,
+      Faq,
+      Job,
+    ] as unknown as Model<unknown>[]) {
       const published = await model.countDocuments({ status: 'published' });
       expect(published, model.modelName).toBe(0);
     }
@@ -73,7 +90,7 @@ describe('loading the launch content', () => {
     // publish state, because the site has no shell without them. Pinned here
     // so the behaviour is deliberate and documented rather than assumed: the
     // loader must run before the domain points at the site.
-    expect(await Page.countDocuments()).toBe(8);
+    expect(await Page.countDocuments()).toBe(10);
     expect(await Settings.countDocuments()).toBe(1);
 
     const home = await Page.findOne({ key: 'home' }).lean();
@@ -111,6 +128,40 @@ describe('loading the launch content', () => {
 
     const withImage = await PracticeArea.countDocuments({ image: { $ne: null } });
     expect(withImage).toBe(0);
+
+    // A carousel of placeholders becomes an empty carousel, and the firm
+    // profile an empty slot (ADR-046, ADR-053).
+    const home = await Page.findOne({ key: 'home' }).lean();
+    const about = await Page.findOne({ key: 'about' }).lean();
+    expect(home?.hero?.images).toEqual([]);
+    expect(about?.story?.profileDownload?.document).toBeNull();
+  });
+
+  it('never loads the demo repeats of the pro bono story', async () => {
+    await loadLaunchContent();
+
+    expect(await Insight.countDocuments({ categories: 'pro_bono' })).toBe(1);
+  });
+
+  it('leaves every page editable, empty image slots and all', async () => {
+    const { PAGE_SCHEMAS } = await import('../../src/validators/pages/index.js');
+    const { toPlainJson } = await import('../../src/helpers/plain.helper.js');
+    await loadLaunchContent();
+
+    // What the loader writes must be a valid PUT body for its key, or the
+    // firm could not save a page until every picture was uploaded (ADR-046).
+    for (const [key, schema] of Object.entries(PAGE_SCHEMAS)) {
+      const doc = toPlainJson(await Page.findOne({ key }).lean()) as Record<string, unknown>;
+      const sections = Object.fromEntries(
+        Object.keys((schema as unknown as { shape: Record<string, unknown> }).shape).map((name) => [
+          name,
+          doc[name],
+        ])
+      );
+
+      const result = schema.safeParse(sections);
+      expect(result.success, `${key}: ${JSON.stringify(result.error?.issues)}`).toBe(true);
+    }
   });
 
   it('leaves vacancies closed until the firm opens them', async () => {
