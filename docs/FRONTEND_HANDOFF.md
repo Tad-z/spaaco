@@ -54,7 +54,7 @@ The mock needs no database, no credentials and no `.env`.
 ### Two mock quirks worth knowing
 
 1. **`/pages/{key}` always returns the `home` example** unless you ask for another one.
-   All eight pages are one operation with eight examples, and Prism cannot pick an example
+   All ten pages are one operation with ten examples, and Prism cannot pick an example
    based on a path parameter. Use the `Prefer` header:
 
    ```bash
@@ -153,25 +153,28 @@ This is how the admin dashboard will preview unpublished content.
 
 ## Endpoints
 
-| Method & path                         | Returns                                                                                      |
-| ------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `GET /api/v1/health`                  | `{ status, db, version }`                                                                    |
-| `GET /api/v1/site`                    | The global shell — settings, nav, footer, FAQ section, contact callout                       |
-| `GET /api/v1/pages/{key}`             | One composed page; `key` is one of the 8 page keys                                           |
-| `GET /api/v1/practice-areas`          | All published practice areas, in the firm's order                                            |
-| `GET /api/v1/practice-areas/{slug}`   | Detail, plus contacts and 3 related insights                                                 |
-| `GET /api/v1/people`                  | Directory. `?role=`, `?sort=seniority\|name_asc\|name_desc`, paginated (default 9)           |
-| `GET /api/v1/people/{slug}`           | Profile, practice areas, office, their latest 3 insights                                     |
-| `GET /api/v1/insights`                | Listing. `?category=`, `?practiceArea=<slug>`, `?sort=newest\|oldest`, paginated (default 9) |
-| `GET /api/v1/insights/{slug}`         | Full body or video URL, author, 3 related                                                    |
-| `GET /api/v1/offices`                 | All offices, in page order: Lagos, Abuja, Ibadan                                             |
-| `GET /api/v1/jobs`                    | Open vacancies only                                                                          |
-| `GET /api/v1/jobs/{id}`               | One vacancy                                                                                  |
-| `GET /api/v1/faqs`                    | The FAQ set (also embedded in `/site`)                                                       |
-| `GET /api/v1/search?q=`               | `{ practiceAreas, people, insights }`, max 5 each, `q` is 2–100 chars                        |
-| `POST /api/v1/enquiries`              | 201 `{ data: { reference } }`                                                                |
-| `POST /api/v1/messages`               | 201 `{ data: { reference } }`                                                                |
-| `POST /api/v1/jobs/{id}/applications` | multipart, 201 `{ data: { reference } }`                                                     |
+| Method & path                         | Returns                                                                                                                      |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/v1/health`                  | `{ status, db, version }`                                                                                                    |
+| `GET /api/v1/site`                    | The global shell — settings, nav, footer, FAQ section, contact callout                                                       |
+| `GET /api/v1/pages/{key}`             | One composed page; `key` is one of the 10 page keys                                                                          |
+| `GET /api/v1/practice-areas`          | All published practice areas, in the firm's order                                                                            |
+| `GET /api/v1/practice-areas/{slug}`   | The designed detail page: hero, overview, services, approach, industries, lead, sidebar, 6 publications                      |
+| `GET /api/v1/people`                  | Directory. `?role=`, `?practiceArea=<slug>`, `?sort=seniority\|name_asc\|name_desc`, paginated (default 9)                   |
+| `GET /api/v1/people/{slug}`           | Profile: bio, education, memberships, email, primary area, office, their latest 6 insights                                   |
+| `GET /api/v1/insights`                | Listing. `?category=`, `?practiceArea=<slug>`, `?sort=newest\|oldest`, paginated (default 9). `pro_bono` only when asked for |
+| `GET /api/v1/insights/{slug}`         | Full body or video URL, author, 3 related, the after-body `cta` and `backLink`                                               |
+| `GET /api/v1/recognitions`            | Directories (with wordmarks) and the awards featured on Home                                                                 |
+| `GET /api/v1/recognitions/{slug}`     | One directory's page: hero and its awards, newest year first                                                                 |
+| `GET /api/v1/legal/{key}`             | `terms` or `privacy`                                                                                                         |
+| `GET /api/v1/offices`                 | All offices, in page order: Lagos, Abuja, Ibadan                                                                             |
+| `GET /api/v1/jobs`                    | Open vacancies only                                                                                                          |
+| `GET /api/v1/jobs/{id}`               | One vacancy                                                                                                                  |
+| `GET /api/v1/faqs`                    | The FAQ set (also embedded in `/site`)                                                                                       |
+| `GET /api/v1/search?q=`               | `{ practiceAreas, people, insights }`, max 5 each, `q` is 2–100 chars                                                        |
+| `POST /api/v1/enquiries`              | 201 `{ data: { reference } }`                                                                                                |
+| `POST /api/v1/messages`               | 201 `{ data: { reference } }`                                                                                                |
+| `POST /api/v1/jobs/{id}/applications` | multipart, 201 `{ data: { reference } }`                                                                                     |
 
 ### Fetch `/site` once
 
@@ -182,18 +185,31 @@ The FAQ section, contact callout and footer are **not** repeated inside page pay
 
 Each page arrives with its referenced data already expanded, so a page needs one request.
 
-- **home** — hero, aboutFirm, videoShowcase, `recognitions` split into `achievements` /
-  `recognizedBy`, `practiceAreas` (the ones flagged for Home, in Home tab order),
-  `leadership` (3 attorneys), whyChooseUs, `latestInsights` (up to 6), plus section headers.
-- **about** — hero, story (with `quotePerson` as a full PersonSummary), stats (computed
-  values already resolved), missionSection, principles, awardsList.
-- **practice-areas** — hero, gridSection, `practiceAreas` (all 9), csrBanner.
-- **people** — hero, directorySection, `roleFilters`. The grid comes from `GET /people`.
+Every hero's pictures are `images`, an array (three slides on Home, one elsewhere).
+
+- **home** — hero, aboutFirm, videoShowcase (with `caption`), `recognitionSection` (heading,
+  image, a "View Our Recognitions" CTA with `href: null` for now, and `badges`),
+  `practiceAreas` (the ones flagged for Home, in Home tab order, each card's `summary` being
+  its Home text), `leadership` (3 attorneys, card backs included), whyChooseUs,
+  `latestInsights` (up to 6, never pro bono), plus section headers.
+- **about** — hero, story (with `quotePerson` as a full PersonSummary, and `profileDownload`
+  linking the firm profile PDF), stats (computed values already resolved), missionSection
+  (bodies are HTML), principles, awardsList (one row per recognition directory:
+  `{ name, slug }`, linking to `/recognition/{slug}`).
+- **practice-areas** — hero, gridSection, `practiceAreas` (all 9), csrBanner (a carousel;
+  its CTA goes to `/responsible-business`).
+- **people** — hero, directorySection, `roleFilters`, `practiceAreaFilters`. The grid comes
+  from `GET /people`.
 - **insights** — `hero` is **`null` by design** (the page opens with the carousel), `featured`
-  (≤ 3), `categoryFilters`, listingSection. The grid comes from `GET /insights`.
-- **careers** — hero, jobsSection, `jobs` (all open roles).
+  (≤ 3), `categoryFilters`, `practiceAreaFilters`, listingSection. The grid comes from
+  `GET /insights`.
+- **careers** — hero, jobsSection (with an `emptyState` only when no job is open), `jobs`.
 - **faq** — hero only.
 - **offices** — hero, `offices`.
+- **recognition** — the labels every directory page shares; render those pages from
+  `GET /recognitions/{slug}`, which embeds them.
+- **responsible-business** — `title`, `images`, `backLink`. Its grid is
+  `GET /insights?category=pro_bono`.
 
 Filter tabs (`roleFilters`, `categoryFilters`) are `{ value, label }`. An **empty `value`**
 means "no filter" — that's the "Our Attorneys" and "All insights & news" tab. Pass a non-empty
@@ -215,6 +231,9 @@ sent.
   title, or the second category label when there is no practice area.
 - `cta` tells you which button to draw: `{ label: "Read More", kind: "read_more" }` or
   `{ label: "Watch Video", kind: "watch_video" }`.
+- On the **detail** endpoint `cta` is different: the link after the body,
+  `{ label: "Read Article" | "Watch Video", url }`, or `null` when there is nothing to link.
+- `author.person` is a full PersonSummary, so it carries the card back too.
 
 ### Forms
 
@@ -240,25 +259,26 @@ in their final shape — only the values are outstanding. Anything marked
 `[PENDING FROM FIRM]` will be replaced by the firm through the admin UI; anything `null` will
 be filled the same way. **Please design for both the filled and the empty state.**
 
-| Where                       | Field                                          | Current value                                                                                                           |
-| --------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| All images everywhere       | `url`, `sizes`                                 | `https://placehold.co/…` placeholders; the firm uploads the real files                                                  |
-| `/site`                     | `settings.socials.*`, `footer.socials.*`       | all `null` — no social URLs supplied yet                                                                                |
-| `/site`                     | 4 of the 5 `faqSection.items[].answer`         | `[PENDING FROM FIRM]`                                                                                                   |
-| `/offices`, `pages/offices` | `coordinates`, `directionsUrl`                 | `null` — the design's maps are placeholders showing streets in Ukraine                                                  |
-| `/offices`                  | `phone`, `email`                               | `null` — fall back to the site-wide values                                                                              |
-| People                      | `linkedinUrl`, `bio`                           | `null` for every attorney                                                                                               |
-| Insights                    | `excerpt` (3 of 4), `body`, `videoUrl`         | `null` or `[PENDING FROM FIRM]`                                                                                         |
-| Practice areas              | `body`, `keyServices`, `contacts`              | `null` / empty — the detail page isn't designed                                                                         |
-| `pages/home`                | `videoShowcase.videoUrl`                       | `null`                                                                                                                  |
-| `pages/home`                | `whyChooseUs.points[].text`                    | `null` — the design shows titles only                                                                                   |
-| `pages/about`               | `missionSection.items[]` Vision, Values, Asset | `[PENDING FROM FIRM]` (Mission has real copy)                                                                           |
-| `pages/about`               | `awardsList.items[].url`                       | `null`                                                                                                                  |
-| `pages/practice-areas`      | `csrBanner.cta`                                | `null` — the CSR page doesn't exist, so there is no link to give. Render the banner without a button until it does      |
-| Every page                  | `seo.title`, `seo.description`, `seo.ogImage`  | `null` — no SEO copy supplied yet                                                                                       |
-| `/practice-areas/{slug}`    | `seo.title`, `seo.description`                 | `null`. Note practice areas have no `ogImage`, and `/people/{slug}` and `/insights/{slug}` carry no `seo` object at all |
-| Jobs                        | `closingDate`                                  | `null`                                                                                                                  |
-| Recognitions                | `url`; the whole `recognizedBy` tab            | `null` / empty — only the "achievements" tiles are designed                                                             |
+| Where                       | Field                                                 | Current value                                                                                                           |
+| --------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| All images everywhere       | `url`, `sizes`                                        | `https://placehold.co/…` placeholders; the firm uploads the real files                                                  |
+| `/site`                     | `settings.socials.*`, `footer.socials.*`              | all `null` — no social URLs supplied yet                                                                                |
+| `/site`                     | 4 of the 5 `faqSection.items[].answer`                | `[PENDING FROM FIRM]`                                                                                                   |
+| `/offices`, `pages/offices` | `coordinates`, `directionsUrl`                        | `null` — the design's maps are placeholders showing streets in Ukraine                                                  |
+| `/offices`                  | `phone`, `email`                                      | `null` — the footer already falls back to the site-wide values for you                                                  |
+| People                      | `linkedinUrl`, `instagramUrl`, `email`                | `null` for every attorney                                                                                               |
+| People except the MP        | `bio`, `cardBio`, `education`, `memberships`          | `[PENDING FROM FIRM]` or empty                                                                                          |
+| Insights                    | `excerpt` (3 of 4), `body`, `videoUrl`, `externalUrl` | `null` or `[PENDING FROM FIRM]`; so article #1's detail `cta` is `null`                                                 |
+| Pro bono stories            | the 12 cards                                          | one real story plus 11 demo repeats (`-2`…`-12`), dev only, to fill the paginated grid                                  |
+| `pages/about`               | `story.profileDownload.document`                      | a placeholder PDF record in dev                                                                                         |
+| Recognition                 | Legal 500 and Who's Who Legal awards; wordmarks       | none yet / placeholders                                                                                                 |
+| Legal pages                 | `body`                                                | `[PENDING FROM FIRM]`                                                                                                   |
+| `pages/home`                | `videoShowcase.videoUrl`                              | `null`                                                                                                                  |
+| `pages/home`                | `whyChooseUs.points[].text`                           | `null` — the design shows titles only                                                                                   |
+| `pages/home`                | `recognitionSection.cta.href`                         | `null` — the destination is not decided                                                                                 |
+| Every page                  | `seo.title`, `seo.description`, `seo.ogImage`         | `null` — no SEO copy supplied yet                                                                                       |
+| `/practice-areas/{slug}`    | `seo.title`, `seo.description`                        | `null`. Note practice areas have no `ogImage`, and `/people/{slug}` and `/insights/{slug}` carry no `seo` object at all |
+| Jobs                        | `closingDate`                                         | `null`                                                                                                                  |
 
 Two content notes you may notice in the copy:
 
@@ -268,32 +288,28 @@ Two content notes you may notice in the copy:
 - The phone number `(+234) 80000000000` is the design's placeholder and has one digit too
   many.
 
-Both, plus the practice-area count (9 on the page, 7 in the footer, "15+ Areas" in the stats)
-and the two identical job descriptions, are listed in `docs/DECISIONS.md` for the firm to
-resolve.
+Both, plus the practice-area count (9 on the page, "15+ Areas" in the stats), the two
+identical job descriptions, the Chambers awards shown under IFLR 1000, and the pro bono
+story's two dates, are listed in `docs/DECISIONS.md` for the firm to resolve.
 
 ---
 
-## Not designed yet
+## Not designed yet, or not built
 
-These endpoints serve complete data so you aren't blocked, but their _screens_ have no design.
-Expect the shapes to gain fields — additive changes only — once the designs land:
+Every detail page (practice area, insight, attorney, recognition, Responsible Business) is now
+designed and served as designed. What remains:
 
-- **Practice area detail** (`/practice-areas/{slug}`)
-- **Insight detail** (`/insights/{slug}`)
-- **Attorney bio** (`/people/{slug}`) — modal or page is still open; this endpoint serves either
-- **The CSR page** — no endpoint at all yet
-- **Nav dropdown contents** — only the Practice Areas dropdown is generated (from the
-  collection); the others return an empty `children` array
-- **Search results UI**, **Sort By options**, the **Discuss a Mandate flow**, the **chat
-  widget's open state**, and all **mobile layouts**
+- **Not built, on purpose:** the chat assistant, newsletter subscribe, what "Discuss a
+  Mandate" does on an attorney card, where "View Our Recognitions" goes, and CV submissions
+  when no job is open.
+- **Still undesigned:** the search results UI, the Discuss a Mandate flow, and all mobile
+  layouts.
 
-## Not in the spec yet
+## The admin API
 
-The **admin API** (auth, content CRUD, pages, settings, the media library, submissions) is
-being specified next, in phases 4–6. You will get a second handoff for the admin dashboard
-covering the editable shape, optimistic locking with `If-Match`, and the role matrix. Nothing
-in the public contract above will change as a result.
+The admin API is in the spec too — auth, content CRUD for the nine collections, pages,
+settings, legal pages, the media library (images and PDFs) and submissions. `docs/FRONTEND_GUIDE.md`
+walks through it: the editable shape, optimistic locking with `If-Match`, and the role matrix.
 
 ---
 

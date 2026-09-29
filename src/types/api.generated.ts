@@ -1837,7 +1837,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * The image library
+         * The media library
          * @description The picker the admin dashboard shows when attaching an image. `?unused=true`
          *     narrows it to images nothing references, which is what makes a clear-out
          *     safe.

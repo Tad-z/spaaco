@@ -68,21 +68,25 @@ Errors always look like this, whatever went wrong:
 
 ## 3. Building a page: usually one request
 
-The eight pages of the site each come from a single request, with everything already assembled — the page's own copy plus the attorneys, practice areas and articles it displays. You do not need to stitch several calls together.
+The site's pages each come from a single request, with everything already assembled — the page's own copy plus the attorneys, practice areas, awards and articles it displays. You do not need to stitch several calls together.
 
 ```
 GET /api/v1/pages/home
 ```
 
-The eight keys are:
+The ten keys are:
 
-`home` · `about` · `practice-areas` · `people` · `insights` · `careers` · `faq` · `offices`
+`home` · `about` · `practice-areas` · `people` · `insights` · `careers` · `faq` · `offices` · `recognition` · `responsible-business`
 
-For example, `/pages/home` comes back with the hero, the "A Firm Built On Integrity" block, the featured practice areas, the leadership trio, the latest articles, the recognitions, and the SEO fields — all in one object.
+For example, `/pages/home` comes back with the hero carousel, the "A Firm Built On Integrity" block, the video with its caption, the Recognition band and its award badges, the featured practice areas, the leadership trio (with the back of each card), the latest articles, and the SEO fields — all in one object.
+
+Two keys are different: `recognition` only holds the labels every directory's award page shares (you render those pages from `/recognitions/{slug}`, which already includes them), and `responsible-business` is the CSR page's title, carousel and back link — its grid is `/insights?category=pro_bono`.
+
+**Heroes are carousels.** Every hero has `images`, an array — three slides on Home, one elsewhere. Only the picture changes between slides; the title, subtitle and buttons stay put.
 
 ### The header and footer
 
-Everything that appears on every page — firm name, tagline, phone, email, social links, the navigation menu, the footer columns, the contact call-out — comes from one request you make once and reuse:
+Everything that appears on every page — firm name, tagline, phone, email, social links, the navigation menu (with the About Us and Insights & News dropdowns), the footer's Quick Links, practice areas, offices with their contact details, the Terms and Privacy links, the newsletter copy, and the contact call-out — comes from one request you make once and reuse:
 
 ```
 GET /api/v1/site
@@ -105,7 +109,10 @@ GET /api/v1/insights
 GET /api/v1/offices
 GET /api/v1/faqs
 GET /api/v1/jobs
+GET /api/v1/recognitions
 ```
+
+`/recognitions` feeds the two-tab component ("Our Achievements" / "Independently Recognized By"): the directories with their wordmarks, and the awards featured on Home.
 
 ### Paging
 
@@ -114,10 +121,12 @@ Every list takes `?page=` and `?pageSize=`. The default page size is 9 (that is 
 ### Filtering attorneys
 
 ```
-GET /api/v1/people?role=partner&sort=name_asc&page=2
+GET /api/v1/people?role=partner&practiceArea=tax&page=2
 ```
 
-`role` is one of: `managing_partner`, `partner`, `associate_partner`, `senior_associate`, `associate`, `nysc_associate`.
+`role` is one of: `managing_partner`, `partner`, `associate_partner`, `senior_associate`, `associate`, `trainee_associate`.
+
+`practiceArea` takes a practice area's slug — it is the "Sort By" dropdown in the design, which is really a filter, headed "Practice Area". It combines with the role tab. `/pages/people` gives you the options as `practiceAreaFilters`. Every card in the list already carries its back face (`cardBio` and the practice-area chips), so flipping a card needs no request.
 
 One thing to know: asking for `role=partner` also returns the Managing Partner. That is deliberate — the directory design has a "Partners" tab and no separate "Managing Partner" tab, so the filter matches the tab rather than the exact job title.
 
@@ -129,9 +138,11 @@ One thing to know: asking for `role=partner` also returns the Managing Partner. 
 GET /api/v1/insights?category=articles&practiceArea=tax&sort=oldest
 ```
 
-`category` is one of: `firm_news`, `articles`, `insights`, `regulatory_updates`, `news_updates`, `media_coverage`, `webinar_resources`.
+`category` is one of: `firm_news`, `articles`, `insights`, `regulatory_updates`, `news_updates`, `events`, `pro_bono`.
 
-`practiceArea` takes a practice area's slug. `sort` is `newest` (the default) or `oldest`.
+**`pro_bono` is special.** Those are the Responsible Business stories, and they appear only when you ask for `category=pro_bono` — never in "All insights & news", another tab, the featured carousel, Home, or a practice area's or attorney's publications. It is not a tab; `/pages/insights` gives you the real tabs as `categoryFilters`.
+
+`practiceArea` takes a practice area's slug (the "Sort By" dropdown; options in `practiceAreaFilters`), and combines with the category tab. `sort` is `newest` (the default) or `oldest`.
 
 ---
 
@@ -143,7 +154,15 @@ Most things are addressed by their slug, which is the URL-friendly version of th
 GET /api/v1/practice-areas/{slug}
 GET /api/v1/people/{slug}
 GET /api/v1/insights/{slug}
+GET /api/v1/recognitions/{slug}
+GET /api/v1/legal/{key}
 ```
+
+- A **practice area** comes with its hero text and images, overview, core services, approach, industries, the Practice Lead card (with LinkedIn and email), every area for the sidebar (`siblings`), and six recent publications.
+- An **attorney** comes with their bio, education, memberships, primary practice area, email, Instagram and LinkedIn, and six recent publications.
+- An **insight** ends with `cta`: "Read Article" (to the external article or a PDF) or "Watch Video", or `null` when there is nothing to link to. `backLink` says where "Back to…" goes — Responsible Business for a pro bono story, Insights & News for everything else.
+- A **recognition directory** (`/recognitions/iflr-1000`) is the page behind each "View Awards" row on About.
+- A **legal page** is `terms` or `privacy`, with an `updatedAt` for a "Last updated" line.
 
 Jobs are the exception — they use an id:
 
@@ -237,7 +256,11 @@ Five submissions per form, per visitor, per ten minutes. If someone hits it they
 
 ## 8. Things that will surprise you
 
-**Images come back as `null` right now.** The content was loaded from the designs, but no photographs have been uploaded yet. Every image field is empty until the firm adds them through the dashboard. Build your empty states and placeholders properly — this is not a bug, and it is a realistic thing to develop against.
+**Images come back empty until the firm uploads them.** A single image field is `null`; a carousel (`hero.images`, `csrBanner.images`, `heroImages`) is an empty array. Build your empty states properly — this is not a bug, and it is a realistic thing to develop against.
+
+**Some buttons have nowhere to go yet.** "View Our Recognitions" on Home comes back with `href: null`, and the careers empty state gives you only the "Send your CV" label. Render them however the design wants a pending button to look; the destinations will arrive as data, not code.
+
+**There is no newsletter or chat endpoint.** The footer's newsletter block comes with its copy and `enabled: false`; the chat assistant is not built. Do not wire either to anything.
 
 **Unpublished content does not exist as far as you are concerned.** The firm works on things as drafts. A draft attorney is not in the list and their URL returns 404. You will never accidentally show work in progress.
 
@@ -310,18 +333,18 @@ Changing a password is `PATCH /api/v1/admin/auth/password`. Doing so signs out e
 
 ### Who can do what
 
-| Area                             | admin | editor | hr        | business_dev |
-| -------------------------------- | ----- | ------ | --------- | ------------ |
-| Content, pages, settings, images | yes   | yes    | jobs only | no           |
-| Enquiries and messages           | yes   | no     | no        | yes          |
-| Job applications and CVs         | yes   | no     | yes       | no           |
-| User accounts, audit log         | yes   | no     | no        | no           |
+| Area                                         | admin | editor | hr        | business_dev |
+| -------------------------------------------- | ----- | ------ | --------- | ------------ |
+| Content, pages, settings, legal pages, media | yes   | yes    | jobs only | no           |
+| Enquiries and messages                       | yes   | no     | no        | yes          |
+| Job applications and CVs                     | yes   | no     | yes       | no           |
+| User accounts, audit log                     | yes   | no     | no        | no           |
 
 Hide what a role cannot use. The backend will return 403 regardless, but nobody enjoys clicking a button that refuses them.
 
 ### Editing content
 
-The seven collections all work identically:
+The nine collections all work identically:
 
 ```
 GET    /api/v1/admin/content/{collection}
@@ -334,9 +357,9 @@ POST   /api/v1/admin/content/{collection}/{id}/unpublish
 PATCH  /api/v1/admin/content/{collection}/reorder
 ```
 
-where `{collection}` is one of `practice-areas`, `people`, `insights`, `offices`, `recognitions`, `faqs`, `jobs`.
+where `{collection}` is one of `practice-areas`, `people`, `insights`, `offices`, `recognition-directories`, `awards`, `industries`, `faqs`, `jobs`.
 
-Build the editor once and it works for all seven.
+Build the editor once and it works for all nine. Image lists such as `heroImages` are arrays of media ids.
 
 Add `?status=draft` or `?status=published` to the list to filter, and `?q=` to search within it.
 
@@ -358,18 +381,23 @@ Creating something does not make it public. It starts as a draft, and stays invi
 
 ### The rest of the dashboard
 
-| What                                  | Where                        |
-| ------------------------------------- | ---------------------------- |
-| Site settings (phone, email, socials) | `/api/v1/admin/settings`     |
-| Page copy (the eight pages)           | `/api/v1/admin/pages/{key}`  |
-| Image library                         | `/api/v1/admin/media`        |
-| Enquiries inbox                       | `/api/v1/admin/enquiries`    |
-| Messages inbox                        | `/api/v1/admin/messages`     |
-| Applications inbox                    | `/api/v1/admin/applications` |
-| Who changed what                      | `/api/v1/admin/audit-logs`   |
-| Accounts                              | `/api/v1/admin/users`        |
+| What                                                                         | Where                        |
+| ---------------------------------------------------------------------------- | ---------------------------- |
+| Site settings (phone, email, socials, nav and footer links, newsletter copy) | `/api/v1/admin/settings`     |
+| Page copy (the ten pages)                                                    | `/api/v1/admin/pages/{key}`  |
+| Terms of Service, Privacy Policy                                             | `/api/v1/admin/legal/{key}`  |
+| Media library (images and PDFs)                                              | `/api/v1/admin/media`        |
+| Enquiries inbox                                                              | `/api/v1/admin/enquiries`    |
+| Messages inbox                                                               | `/api/v1/admin/messages`     |
+| Applications inbox                                                           | `/api/v1/admin/applications` |
+| Who changed what                                                             | `/api/v1/admin/audit-logs`   |
+| Accounts                                                                     | `/api/v1/admin/users`        |
 
-Settings and pages use `If-Match` too.
+Settings, pages and legal pages use `If-Match` too. A legal page is published or withdrawn by the `status` in its PUT body, since it has no publish button of its own.
+
+### The media library holds PDFs too
+
+Upload with `kind=document` and a `title` (the link text) to add a PDF, such as the firm profile or an article's PDF; images need `alt` instead. The API checks the real file type, scans PDFs, and allows up to 20 MB for a PDF and 10 MB for an image. Filter the library with `?kind=image` or `?kind=document`. Putting a PDF into an image field, or an image into a document field, is refused with a 400.
 
 ### CVs are handled carefully
 
@@ -387,25 +415,28 @@ You get back a URL that works for five minutes and then stops. Every single time
 
 ### Public — no login needed
 
-| Method | Path                      | What it gives you                                     |
-| ------ | ------------------------- | ----------------------------------------------------- |
-| GET    | `/site`                   | Header, footer, navigation, firm details              |
-| GET    | `/pages/{key}`            | A whole page, assembled                               |
-| GET    | `/practice-areas`         | List                                                  |
-| GET    | `/practice-areas/{slug}`  | One practice area                                     |
-| GET    | `/people`                 | Attorney directory (`role`, `sort`, paging)           |
-| GET    | `/people/{slug}`          | One attorney                                          |
-| GET    | `/insights`               | Articles (`category`, `practiceArea`, `sort`, paging) |
-| GET    | `/insights/{slug}`        | One article                                           |
-| GET    | `/offices`                | The three offices                                     |
-| GET    | `/faqs`                   | Questions and answers                                 |
-| GET    | `/jobs`                   | Open vacancies                                        |
-| GET    | `/jobs/{id}`              | One vacancy                                           |
-| GET    | `/search?q=`              | Grouped quick results                                 |
-| POST   | `/enquiries`              | Discuss a Mandate form                                |
-| POST   | `/messages`               | Contact form                                          |
-| POST   | `/jobs/{id}/applications` | Job application with CV                               |
-| GET    | `/health`                 | Is the API up                                         |
+| Method | Path                      | What it gives you                                           |
+| ------ | ------------------------- | ----------------------------------------------------------- |
+| GET    | `/site`                   | Header, footer, navigation, firm details                    |
+| GET    | `/pages/{key}`            | A whole page, assembled                                     |
+| GET    | `/practice-areas`         | List                                                        |
+| GET    | `/practice-areas/{slug}`  | One practice area                                           |
+| GET    | `/people`                 | Attorney directory (`role`, `practiceArea`, `sort`, paging) |
+| GET    | `/people/{slug}`          | One attorney                                                |
+| GET    | `/insights`               | Articles (`category`, `practiceArea`, `sort`, paging)       |
+| GET    | `/insights/{slug}`        | One article                                                 |
+| GET    | `/recognitions`           | Directories and featured awards                             |
+| GET    | `/recognitions/{slug}`    | One directory's awards page                                 |
+| GET    | `/legal/{key}`            | Terms of Service or Privacy Policy                          |
+| GET    | `/offices`                | The three offices                                           |
+| GET    | `/faqs`                   | Questions and answers                                       |
+| GET    | `/jobs`                   | Open vacancies                                              |
+| GET    | `/jobs/{id}`              | One vacancy                                                 |
+| GET    | `/search?q=`              | Grouped quick results                                       |
+| POST   | `/enquiries`              | Discuss a Mandate form                                      |
+| POST   | `/messages`               | Contact form                                                |
+| POST   | `/jobs/{id}/applications` | Job application with CV                                     |
+| GET    | `/health`                 | Is the API up                                               |
 
 ### Admin — needs a token
 
@@ -414,7 +445,7 @@ You get back a URL that works for five minutes and then stops. Every single time
 | POST   | `/admin/auth/login` · `/refresh` · `/logout`                                    |
 | PATCH  | `/admin/auth/me` · `/admin/auth/password`                                       |
 | —      | `/admin/content/{collection}` and its `{id}`, `publish`, `unpublish`, `reorder` |
-| —      | `/admin/settings` · `/admin/pages/{key}`                                        |
+| —      | `/admin/settings` · `/admin/pages/{key}` · `/admin/legal/{key}`                 |
 | —      | `/admin/media` and `/admin/media/{id}`                                          |
 | —      | `/admin/enquiries` · `/admin/messages` · `/admin/applications`                  |
 | GET    | `/admin/applications/{id}/cv`                                                   |

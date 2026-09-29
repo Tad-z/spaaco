@@ -1,6 +1,6 @@
 ---
 name: new-resource
-description: Scaffold a new API resource across every layer (interface, model, validator, service, serializer, public/admin controllers and routes, tests), following this repo's TypeScript layered structure. Use whenever a roadmap task introduces a new collection or endpoint group, such as practice-areas, people, insights, offices, jobs, faqs, recognitions, media, enquiries, messages or applications, even if the user just says "add the X endpoints".
+description: Scaffold a new API resource across every layer (interface, model, validator, service, serializer, public/admin controllers and routes, tests), following this repo's TypeScript layered structure. Use whenever a roadmap task introduces a new collection or endpoint group, such as practice-areas, people, insights, offices, jobs, faqs, recognition-directories, awards, industries, media, enquiries, messages or applications, even if the user just says "add the X endpoints".
 argument-hint: '<resource-name in kebab-case, singular, e.g. practice-area>'
 ---
 

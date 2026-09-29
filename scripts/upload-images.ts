@@ -35,10 +35,32 @@ const DEFAULT_FIELD: Record<string, string> = {
   people: 'photo',
   'practice-areas': 'image',
   insights: 'coverImage',
-  recognitions: 'badge',
+  awards: 'badge',
+  'recognition-directories': 'logo',
 };
 
-const COLLECTIONS = ['people', 'practice-areas', 'insights', 'recognitions'] as const;
+const COLLECTIONS = [
+  'people',
+  'practice-areas',
+  'insights',
+  'awards',
+  'recognition-directories',
+] as const;
+
+/**
+ * A slot is empty when nothing is attached: null, absent, or — for a carousel
+ * such as `hero.images` or `heroImages` (ADR-046) — an empty array.
+ */
+const isEmpty = (value: unknown): boolean =>
+  value === null || value === undefined || (Array.isArray(value) && value.length === 0);
+
+/**
+ * What to write into a slot: a carousel takes a list of ids, every other
+ * image field one id. Decided by what the API returned for the slot, so the
+ * manifest names the field and never has to say which kind it is.
+ */
+const slotValue = (current: unknown, mediaId: string): string | string[] =>
+  Array.isArray(current) ? [mediaId] : mediaId;
 
 interface Slot {
   readonly file: string;
@@ -160,7 +182,7 @@ async function patch(path: string, revision: number, payload: unknown): Promise<
 }
 
 /** Sets `a.b.c` on a copy of the object, leaving the original alone. */
-function setPath(target: Record<string, unknown>, path: string, value: string): void {
+function setPath(target: Record<string, unknown>, path: string, value: string | string[]): void {
   const parts = path.split('.');
   const last = parts.pop();
   if (last === undefined) return;
@@ -201,7 +223,7 @@ async function doCollections(manifest: Manifest): Promise<number> {
         continue;
       }
 
-      if (item[field] !== null && item[field] !== undefined && !FORCE) {
+      if (!isEmpty(item[field]) && !FORCE) {
         console.log(`  = ${slug} already has an image`);
         continue;
       }
@@ -212,7 +234,9 @@ async function doCollections(manifest: Manifest): Promise<number> {
       }
 
       const mediaId = await upload(slot.file, slot.alt);
-      await patch(`/admin/content/${collection}/${item.id}`, item.revision, { [field]: mediaId });
+      await patch(`/admin/content/${collection}/${item.id}`, item.revision, {
+        [field]: slotValue(item[field], mediaId),
+      });
       console.log(`  + ${slug}.${field}`);
       changed += 1;
     }
@@ -248,7 +272,7 @@ async function doPages(manifest: Manifest): Promise<number> {
     const applied: string[] = [];
 
     for (const [path, slot] of Object.entries(slots)) {
-      if (at(page, path) !== null && at(page, path) !== undefined && !FORCE) {
+      if (!isEmpty(at(page, path)) && !FORCE) {
         console.log(`  = ${key}.${path} already set`);
         continue;
       }
@@ -264,7 +288,7 @@ async function doPages(manifest: Manifest): Promise<number> {
       // Start from the section as stored: a PATCH replaces the whole section
       // object, so anything not carried over would be dropped.
       if (payload[section] === undefined) payload[section] = { ...(page[section] as object) };
-      setPath(payload, path, mediaId);
+      setPath(payload, path, slotValue(at(page, path), mediaId));
       applied.push(path);
     }
 

@@ -130,7 +130,7 @@ The admin spec sections are written in Phase 4/5, before those phases' code.
 **Content CRUD:** the same pattern under `/content/<collection>`, for `practice-areas, people, insights, offices, recognition-directories, awards, industries, faqs, jobs`:
 `GET /content/:collection` (all statuses, `?status=&q=&page=`), `GET /content/:collection/:id`, `POST /content/:collection`, `PATCH /content/:collection/:id`, `DELETE /content/:collection/:id`, `POST /content/:collection/:id/publish`, `POST /content/:collection/:id/unpublish`, `PATCH /content/:collection/reorder` (body: ordered id list).
 
-The `/content/` segment keeps these from colliding with the admin singletons (`/admin/settings`, `/admin/pages/:key`, `/admin/media/:id`), which would otherwise depend on route registration order. In `openapi.yaml` the seven collections are listed as explicit paths with their own request and response schemas, generated from one template by `npm run spec:gen`, so the dashboard gets a concrete type per collection rather than a union (ADR-033).
+The `/content/` segment keeps these from colliding with the admin singletons (`/admin/settings`, `/admin/pages/:key`, `/admin/media/:id`), which would otherwise depend on route registration order. In `openapi.yaml` the nine collections are listed as explicit paths with their own request and response schemas, generated from one template by `npm run spec:gen`, so the dashboard gets a concrete type per collection rather than a union (ADR-033).
 
 References to other collections are checked before a delete: a person who leads a practice area, an industry a practice area picks, a directory with awards, and a person, practice area or media item referenced elsewhere all return 409 naming what still points at them.
 
@@ -142,7 +142,7 @@ References to other collections are checked before a delete: a person who leads 
 - `PATCH /pages/:key` and `PATCH /settings` do **section-level merges**. Each top-level key in the body (e.g. `hero`, `stats`) replaces that section entirely; sections not in the body are untouched; arrays inside a section are replaced whole, never merged. The merged result is validated against the page's schema before saving.
 - **Optimistic locking:** every PUT/PATCH sends `If-Match: <revision>`. A stale revision returns 409 `CONFLICT` with the current revision, so two editors can't silently overwrite each other. Content collection PATCHes follow the same rule.
 
-**Media** (the admin UI's image library):
+**Media** (the admin UI's media library — images and PDF documents):
 
 - `POST /media`: multipart upload (`file`, optional `kind` = `image` (default) or `document`). An **image** is a JPEG, PNG, WebP or AVIF, ≤ 10 MB, and needs `alt`. A **document** is a PDF, ≤ 20 MB, and needs `title`. The type is checked by magic bytes and must match `kind`; a mismatch is a 415. SVG is rejected because it can carry scripts; export badges as PNG. Returns 201 with the media record.
 - `GET /media`: library listing. Takes `?q=` (matches title/alt/original filename), `?kind=image|document`, `?unused=true`, `?sort=newest|oldest` and pagination (default pageSize 24).
@@ -165,8 +165,8 @@ A reference is checked against the kind its field expects: putting a PDF's id in
 
 Admin GETs and public GETs return **different shapes on purpose**:
 
-- **Public (composed):** references are expanded into what the site renders. `hero.image` is a full Image object; `leadership` is PersonSummary[]; computed stats are resolved.
-- **Admin (editable):** references stay as IDs, exactly as the admin UI must send them back. `hero.image` is `"665f…"` (a media ID), `story.quotePerson` is a person ID, and stats keep their `source`. To render thumbnails without extra calls, admin responses also include an `_expanded` object keyed by ID with a minimal preview of each referenced media or person (`{ url, alt }` / `{ displayName }`). **`_expanded` is rejected on write, not ignored:** the request schemas are strict, so sending it back is a 400 naming the field rather than a silent no-op.
+- **Public (composed):** references are expanded into what the site renders. `hero.images` is an array of Image objects; `leadership` is PersonSummary[]; computed stats are resolved.
+- **Admin (editable):** references stay as IDs, exactly as the admin UI must send them back. `hero.images` is `["665f…"]` (media IDs), `story.quotePerson` is a person ID, and stats keep their `source`. To render thumbnails without extra calls, admin responses also include an `_expanded` object keyed by ID with a minimal preview of each referenced media or person (`{ url, alt }` / `{ displayName }`). **`_expanded` is rejected on write, not ignored:** the request schemas are strict, so sending it back is a 400 naming the field rather than a silent no-op.
 
 Rule of thumb: whatever an admin GET returns, minus the fields the server owns, is a valid PUT body. Those fields are `id`, `slug`'s siblings `status`, `publishedAt` and `order`, plus `revision`, `createdAt`, `updatedAt` and `_expanded`. (`slug` itself _is_ writable — it is how an editor changes a URL.)
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Publishes every draft in the seven content collections.
+ * Publishes every draft in the nine content collections.
  *
  * The launch loader deliberately leaves its content as drafts so the firm can
  * review each item before the public site shows it. That is right for launch

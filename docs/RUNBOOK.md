@@ -303,9 +303,12 @@ It refuses to run if any content already exists, so it cannot overwrite the
 firm's work, and a run that fails partway undoes itself rather than leaving a
 half-loaded database the guard would then refuse to fix.
 
-**Collections** — practice areas, people, offices, insights, recognitions, FAQs
-and jobs — are created as **drafts** with **no images**, and vacancies are
-created closed. The firm reviews each item, uploads the real photographs, and
+**Collections** — practice areas, industries, people, offices, insights,
+recognition directories, awards, FAQs and jobs — are created as **drafts**
+with **no images** (carousels empty, no firm profile PDF), and vacancies are
+created closed. The two legal pages are created as drafts too, so neither goes
+live before the firm has approved its text. The pro bono demo repeats in
+`fixtures/seed/insights.demo.json` are never loaded. The firm reviews each item, uploads the real photographs, and
 publishes.
 
 **Pages and settings are the exception, and it matters.** They are singletons

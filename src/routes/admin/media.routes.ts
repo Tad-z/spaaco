@@ -21,7 +21,7 @@ import {
 } from '../../validators/media.validator.js';
 
 /**
- * The image library, under `/admin/media`.
+ * The media library — images and PDF documents — under `/admin/media`.
  *
  * `editor` and above, matching pages and settings: an image is site content.
  *

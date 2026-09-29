@@ -16,7 +16,8 @@ src/
 ├── interfaces/
 │   ├── common.interface.ts       ILink, IHero, IIconItem, IStat, IContentFields, ISeo
 │   ├── practice-area.interface.ts, person.interface.ts, insight.interface.ts, office.interface.ts,
-│   │   recognition.interface.ts, faq.interface.ts, job.interface.ts, media.interface.ts,
+│   │   recognition-directory.interface.ts, award.interface.ts, industry.interface.ts,
+│   │   legal-page.interface.ts, faq.interface.ts, job.interface.ts, media.interface.ts,
 │   │   page.interface.ts (one interface per page key), settings.interface.ts,
 │   │   enquiry.interface.ts, message.interface.ts, application.interface.ts,
 │   │   user.interface.ts, refresh-token.interface.ts, audit-log.interface.ts
@@ -145,24 +146,24 @@ request
 
 ## Media lifecycle
 
-1. **Upload** (`POST /admin/media`): multer memory storage → magic-byte type check → read dimensions (sharp) → `storage/public.put()` → create the Media doc.
-2. **Attach:** the admin UI saves the media ID into a content field. The model's validation checks that the ID exists and is an image.
+1. **Upload** (`POST /admin/media`): multer memory storage → magic-byte type check against the requested `kind` → for an image, read dimensions (sharp) and `storage/public.put()`; for a PDF document, virus scan and `storage/public.putDocument()` (ADR-053) → create the Media doc.
+2. **Attach:** the admin UI saves the media ID into a content or page field — one ID, or an array for a carousel. On every write, `assertMediaKinds` checks each referenced ID against the `kind` its registry entry expects, so a PDF cannot land in an image field or a picture in a document field.
 3. **Serve:** public serializers expand the ID into the Image shape. With the Cloudinary driver, `sizes` are Cloudinary transformation URLs (`w_480`, `w_960`, `w_1440`, with `f_auto,q_auto`) using the focal point as gravity. With the local driver, sharp generates the three widths at upload time and stores them beside the original.
-4. **Replace** (`PUT /admin/media/:id/file`): upload the new file under a new key → update the doc (bumping `version`) → delete the old file (failures are logged, never fatal) → `findUsages(id)` → invalidate the cache tags of every referencing entity → audit log.
+4. **Replace** (`PUT /admin/media/:id/file`): the new file must be the same kind; upload it under a new key → update the doc (bumping `version`) → delete the old file (failures are logged, never fatal) → `findUsages(id)` → invalidate the cache tags of every referencing entity → audit log.
 5. **Delete:** `findUsages(id)` must be empty; then delete the doc and the file.
 
 ## Integrations (`src/integrations/`)
 
 Each integration exports a factory (`index.ts`) that returns a driver implementing its interface from `interfaces/integrations/`. The driver is chosen by config, and every integration has a credential-free driver for dev and tests.
 
-| Integration               | Drivers               | Dev/test default                                                   |
-| ------------------------- | --------------------- | ------------------------------------------------------------------ |
-| `storage/public` (images) | `cloudinary`, `local` | `local` (writes to `./.uploads`, served at `/uploads` in dev only) |
-| `storage/private` (CVs)   | `s3`, `local`         | `local` (`./.private-uploads`, never served)                       |
-| `mailer`                  | `resend`, `log`       | `log` (logs the recipient and subject, never the body)             |
-| `captcha`                 | `turnstile`, `noop`   | `noop` (accepts token `"test"`)                                    |
-| `virusScan`               | `clamav`, `noop`      | `noop` (returns `clean`)                                           |
-| `revalidate`              | `http`, `noop`        | `noop`                                                             |
+| Integration                              | Drivers               | Dev/test default                                                   |
+| ---------------------------------------- | --------------------- | ------------------------------------------------------------------ |
+| `storage/public` (images, PDF documents) | `cloudinary`, `local` | `local` (writes to `./.uploads`, served at `/uploads` in dev only) |
+| `storage/private` (CVs)                  | `s3`, `local`         | `local` (`./.private-uploads`, never served)                       |
+| `mailer`                                 | `resend`, `log`       | `log` (logs the recipient and subject, never the body)             |
+| `captcha`                                | `turnstile`, `noop`   | `noop` (accepts token `"test"`)                                    |
+| `virusScan`                              | `clamav`, `noop`      | `noop` (returns `clean`)                                           |
+| `revalidate`                             | `http`, `noop`        | `noop`                                                             |
 
 ## Auth
 

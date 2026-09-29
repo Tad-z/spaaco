@@ -14,9 +14,10 @@ import type { CacheEntity } from '../constants/cache-tags.js';
 import type { PageKey } from '../types/api.js';
 
 /**
- * The eight page documents and site settings share one implementation.
+ * The ten page documents, site settings and the two legal pages share one
+ * implementation.
  *
- * All nine are a single document with a `revision`, replaced whole by PUT and
+ * Every one is a single document with a `revision`, replaced whole by PUT and
  * merged section by section by PATCH. The part worth getting right — validate
  * the *result* of the merge, then save only if nobody else saved first — is
  * identical for every one of them, so it exists once here and the differences

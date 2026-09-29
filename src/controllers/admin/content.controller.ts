@@ -29,7 +29,7 @@ import {
 import type { AdminCollection } from '../../constants/content-collections.js';
 
 /**
- * One set of handlers for all seven content collections.
+ * One set of handlers for all nine content collections.
  *
  * The body schema is chosen by the `collection` path parameter, which the
  * route has already validated against the enum, so the lookup is total.

@@ -10,7 +10,7 @@ import { assertMediaKinds } from './media.service.js';
 import type { ErrorDetail } from '../types/api.js';
 
 /**
- * One implementation of CRUD for all seven content collections.
+ * One implementation of CRUD for all nine content collections.
  *
  * Everything that differs between them lives in
  * `constants/content-collections.ts`, so behaviour that must be identical —
