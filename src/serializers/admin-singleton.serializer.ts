@@ -106,6 +106,10 @@ export function toAdminSettings(doc: StoredSingleton): SettingsAdmin {
     faqSection: plain(doc.faqSection),
     stillHaveQuestions: plain(doc.stillHaveQuestions),
     contactCallout: plain(doc.contactCallout),
+    aboutAnchors: plain(doc.aboutAnchors ?? []),
+    footerLinks: plain(doc.footerLinks ?? []),
+    legalLinks: plain(doc.legalLinks ?? []),
+    newsletter: plain(doc.newsletter),
   };
 
   return shaped as unknown as SettingsAdmin;

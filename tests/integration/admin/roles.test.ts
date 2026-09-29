@@ -43,6 +43,8 @@ const MATRIX: Record<string, readonly UserRole[]> = {
   // HR, whose grant is the jobs collection rather than the pages it appears on.
   '/api/v1/admin/pages/:key': ['editor'],
   '/api/v1/admin/settings': ['editor'],
+  // Legal pages are site content like any page (ADR-057).
+  '/api/v1/admin/legal/:key': ['editor'],
   '/api/v1/admin/media': ['editor'],
   '/api/v1/admin/media/:id': ['editor'],
   '/api/v1/admin/media/:id/file': ['editor'],
@@ -106,6 +108,11 @@ const BODIES: Record<string, Record<string, unknown>> = {
     ids: ['665f1a2b3c4d5e6f70819293'],
   },
   'patch /api/v1/admin/content/:collection/:id': { title: 'Renamed' },
+  'put /api/v1/admin/legal/:key': {
+    status: 'published',
+    title: 'Terms of Service',
+    body: '<p>Terms.</p>',
+  },
 };
 
 const send = (route: { method: string; path: string }, token?: string): request.Test => {

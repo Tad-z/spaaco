@@ -113,7 +113,7 @@ The second design drop (29 Sep 2026) changes the page schemas and the media kind
   - **Accept:** role + practiceArea filters combine correctly with pagination meta; the Partners filter includes the MP.
 - [x] **D.6 Insights and Responsible Business.** Apply the new categories and relabelling, add `externalUrl` and `document`, and implement the detail `cta` and `backLink`, `practiceAreaFilters`, the `pro_bono` exclusion rule, and `GET /pages/responsible-business`.
   - **Accept:** pro_bono is absent from every default listing and present with `category=pro_bono`; the article CTA resolves from externalUrl or document; the video CTA resolves from videoUrl.
-- [ ] **D.7 Careers empty state and legal pages.** Add `jobsSection.emptyState`, the `legalPages` collection, `GET /legal/:key`, and the admin GET/PUT.
+- [x] **D.7 Careers empty state and legal pages.** Add `jobsSection.emptyState`, the `legalPages` collection, `GET /legal/:key`, and the admin GET/PUT.
   - **Accept:** careers returns the empty state when no jobs are open; an unknown legal key returns 404.
 - [ ] **D.8 Media documents.** Only if 5.4 isn't done yet: fold PDF support into 5.4's spec (kind filter, 20 MB, magic bytes). Otherwise, add it now.
   - **Accept:** an uploaded PDF works as the profile download and as an insight document; a fake PDF returns 415; an in-use document can't be deleted.

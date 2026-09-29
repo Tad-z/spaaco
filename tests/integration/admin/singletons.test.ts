@@ -59,9 +59,14 @@ describe('reading a page', () => {
 
     expect(res.body.data.key).toBe('home');
     expect(res.body.data.revision).toBeTypeOf('number');
-    // A composed public payload would have an Image object here.
-    expect(res.body.data.hero.image).toBeTypeOf('string');
-    expect(res.body.data._expanded[res.body.data.hero.image]).toMatchObject({ kind: 'media' });
+    // A composed public payload would have Image objects here; the editable
+    // shape keeps the carousel as ids, each previewed in `_expanded`.
+    const slides = res.body.data.hero.images as string[];
+    expect(slides).toHaveLength(3);
+    for (const id of slides) {
+      expect(id).toBeTypeOf('string');
+      expect(res.body.data._expanded[id]).toMatchObject({ kind: 'media' });
+    }
   });
 
   it('returns 400 for a key that is not a page', async () => {
@@ -335,5 +340,64 @@ describe('settings', () => {
 
     const res = await request(app).get('/api/v1/site');
     expect(res.body.data.settings.tagline).toBe('Counsel for the long term');
+  });
+});
+
+describe('legal pages (ADR-057)', () => {
+  const getLegal = async (): Promise<request.Response> =>
+    request(app).get('/api/v1/admin/legal/terms').set('Authorization', auth());
+
+  it('returns the editable shape, including its status', async () => {
+    const res = await getLegal();
+
+    expect(res.status).toBe(200);
+    expectToMatchContract(res, 'get', '/api/v1/admin/legal/{key}');
+    expect(res.body.data).toMatchObject({ key: 'terms', status: 'published' });
+  });
+
+  it('round-trips GET then PUT, and sanitises the body on the way in', async () => {
+    const { body } = await getLegal();
+    const { id, key, revision, updatedAt, ...editableBody } = body.data as Record<string, unknown>;
+
+    const res = await request(app)
+      .put('/api/v1/admin/legal/terms')
+      .set('Authorization', auth())
+      .set('If-Match', String(revision))
+      .send({ ...editableBody, body: '<p>Terms.</p><script>alert(1)</script>' });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expectToMatchContract(res, 'put', '/api/v1/admin/legal/{key}');
+    expect(res.body.data.body).toBe('<p>Terms.</p>');
+    expect(res.body.data.revision).toBe(Number(revision) + 1);
+  });
+
+  it('takes a page off the public site when its status is set to draft', async () => {
+    const { body } = await getLegal();
+
+    await request(app)
+      .put('/api/v1/admin/legal/terms')
+      .set('Authorization', auth())
+      .set('If-Match', String(body.data.revision))
+      .send({ status: 'draft', title: body.data.title, body: body.data.body });
+
+    expect((await request(app).get('/api/v1/legal/terms')).status).toBe(404);
+  });
+
+  it('returns 409 when someone else saved first', async () => {
+    const res = await request(app)
+      .put('/api/v1/admin/legal/terms')
+      .set('Authorization', auth())
+      .set('If-Match', '99')
+      .send({ status: 'published', title: 'Terms of Service', body: '<p>Terms.</p>' });
+
+    expect(res.status).toBe(409);
+    expectToMatchContract(res, 'put', '/api/v1/admin/legal/{key}');
+  });
+
+  it('returns 404 for a key that names no legal page', async () => {
+    const res = await request(app).get('/api/v1/admin/legal/cookies').set('Authorization', auth());
+
+    expect(res.status).toBe(404);
+    expectToMatchContract(res, 'get', '/api/v1/admin/legal/{key}');
   });
 });
