@@ -26,6 +26,14 @@ This file adds to and overrides `SEED_CONTENT.md`. Keep wording exact. `[PENDING
   - badges: awards 1–4 below
 - **practiceSection:** tab order is Corporate, Energy, Dispute Resolution, Intellectual Property, Real Estate, then the rest.
 
+## FAQs #3–5 (final, from the FAQ component sheet)
+
+**Does the firm work with international clients?** Yes, our team regularly advises international clients and multinational organisations on matters involving Nigerian law, drawing on extensive experience across cross-border transactions and disputes spanning multiple jurisdictions. Our extensive reach and diverse contact base allow us to provide comprehensive, well-informed advice tailored to each client's specific regulatory, commercial, and jurisdictional context.
+
+**How is client confidentiality handled?** Client confidentiality is treated as fundamental to how we practice law, and every member of our team, from partners to support staff, is bound by strict professional and ethical obligations in this regard. All client information is handled under rigorous internal controls designed to protect sensitive matters throughout every stage of an engagement, from the first conversation onward.
+
+**How long does a typical matter take?** Timelines vary considerably depending on the nature and complexity of each individual matter, with straightforward transactions often resolved within a matter of weeks from start to finish. Complex disputes or multi-jurisdictional matters can take considerably longer to resolve, and we provide every client with a realistic, honest timeline estimate at the very outset of engagement.
+
 ## About
 
 - **story paragraph 4:** "Today, that means offices in Lagos, Abuja, and Ibadan, and a practice that spans far more ground than "corporate and commercial law" ever really captured."

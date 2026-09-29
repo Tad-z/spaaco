@@ -263,7 +263,6 @@ be filled the same way. **Please design for both the filled and the empty state.
 | --------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | All images everywhere       | `url`, `sizes`                                        | `https://placehold.co/…` placeholders; the firm uploads the real files                                                  |
 | `/site`                     | `settings.socials.*`, `footer.socials.*`              | all `null` — no social URLs supplied yet                                                                                |
-| `/site`                     | 4 of the 5 `faqSection.items[].answer`                | `[PENDING FROM FIRM]`                                                                                                   |
 | `/offices`, `pages/offices` | `coordinates`, `directionsUrl`                        | `null` — the design's maps are placeholders showing streets in Ukraine                                                  |
 | `/offices`                  | `phone`, `email`                                      | `null` — the footer already falls back to the site-wide values for you                                                  |
 | People                      | `linkedinUrl`, `instagramUrl`, `email`                | `null` for every attorney                                                                                               |

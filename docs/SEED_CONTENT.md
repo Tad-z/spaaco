@@ -82,9 +82,9 @@ Directories, in order: IFLR 1000, Chambers Global, Legal 500, Who's Who Legal. T
 
 1. How do I schedule a consultation?: Clients have the option to schedule a consultation by directly reaching out through the Discuss a Mandate feature, or by contacting any of our three offices via phone or email. When doing so, they can provide a brief overview of their issue. A dedicated member of our team will then promptly follow up to arrange a convenient time for the client to speak with the most appropriate lawyer who specializes in that particular area of law. (final in v2)
 2. What types of matters does the firm handle?: The firm provides expert advice on a wide range of legal matters including dispute resolution and arbitration, corporate finance and capital markets, real estate and succession planning, energy and natural resources, intellectual property rights, data protection regulations, and tax law. Their comprehensive services are designed to support clients through complex legal challenges in these diverse areas.
-3. Does the firm work with international clients?: `[PENDING FROM FIRM]`
-4. How is client confidentiality handled?: `[PENDING FROM FIRM]`
-5. How long does a typical matter take?: `[PENDING FROM FIRM]`
+3. Does the firm work with international clients?: final in v2 — see SEED_CONTENT_V2, "FAQs #3–5"
+4. How is client confidentiality handled?: final in v2 — see SEED_CONTENT_V2, "FAQs #3–5"
+5. How long does a typical matter take?: final in v2 — see SEED_CONTENT_V2, "FAQs #3–5"
 
 ## Insights
 

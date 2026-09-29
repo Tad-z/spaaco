@@ -220,7 +220,15 @@ ADMIN_PASSWORD=… API_URL=https://spaaco.onrender.com npm run publish-all -- --
 ```
 
 This one goes over HTTP, not to the database, so each publish is audited and
-the page cache is invalidated. It is reversible per item from the dashboard, or
+the page cache is invalidated.
+
+**Mind the insight dates.** The loader leaves `publishedAt` empty, so publishing
+stamps every insight with the moment it was published, and the admin API does
+not let anyone set it afterwards. If the insights should carry the dates in
+`fixtures/seed/insights.json` (the designs' dates), set those directly in the
+database after publishing — only `publishedAt`, only on published insights —
+then make any admin edit to an insight so the cached pages are cleared. This was
+done for the v2 reload on 29 Sep 2026. It is reversible per item from the dashboard, or
 by `POST /api/v1/admin/content/{collection}/{id}/unpublish`.
 
 With Docker, or on a plan that has a shell:
