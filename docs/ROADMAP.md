@@ -105,7 +105,7 @@ The second design drop (29 Sep 2026) changes the page schemas and the media kind
   - **Accept:** spec:lint, types:check and fixture validation pass.
 - [x] **D.2 Hero, settings and FAQ.** Change Hero `image` to `images`. Add the nav, footer, legal-link and newsletter-copy changes, and the new contact callout CTA.
   - **Accept:** every page composer returns `hero.images`, and `/site` matches its fixture.
-- [ ] **D.3 Recognition rebuild.** Build `recognitionDirectories` and `awards`, the `recognition` page singleton, `GET /recognitions` and `GET /recognitions/:slug`, Home `recognitionSection`, and About `awardsList` from directories. Remove the old `recognitions` model.
+- [x] **D.3 Recognition rebuild.** Build `recognitionDirectories` and `awards`, the `recognition` page singleton, `GET /recognitions` and `GET /recognitions/:slug`, Home `recognitionSection`, and About `awardsList` from directories. Remove the old `recognitions` model.
   - **Accept:** the draft canary covers both new collections; a draft award never appears on Home or on a directory page.
 - [ ] **D.4 Practice areas.** Add the new fields, the `industries` collection, and the detail endpoint with siblings, lead, industries and recentPublications. Home uses `homeSummary`, and the CSR banner uses images.
   - **Accept:** the detail response for all 9 seeded areas matches the spec; a draft lead or industry is excluded (publishedPopulate).

@@ -6,14 +6,17 @@ import { createTestUser } from '../../support/auth.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { makeMedia } from '../../support/factories.js';
 import {
+  Award,
   Faq,
+  Industry,
   Insight,
   Job,
+  LegalPage,
   Media,
   Office,
   Person,
   PracticeArea,
-  Recognition,
+  RecognitionDirectory,
 } from '../../../src/models/index.js';
 import { asObject, spec } from '../../support/spec.js';
 import { API_PREFIX } from '../../../src/routes/index.js';
@@ -66,12 +69,19 @@ async function seedCanaries(): Promise<void> {
     phone: `+234 000 ${CANARY}`,
   });
 
+  const industry = await Industry.create({ name: `Draft Industry ${CANARY}` });
+
   const practiceArea = await PracticeArea.create({
     title: `Draft Practice ${CANARY}`,
     shortLabel: `Draft ${CANARY}`,
     summary: `An unpublished practice area ${CANARY}.`,
+    homeSummary: `An unpublished Home card ${CANARY}.`,
+    heroIntro: `An unpublished hero ${CANARY}.`,
     image: media._id,
-    body: html('practice area'),
+    heroImages: [media._id],
+    overview: `An unpublished overview ${CANARY}.`,
+    coreServices: [{ title: `Draft service ${CANARY}`, description: `Unpublished ${CANARY}.` }],
+    industries: [industry._id],
   });
 
   const person = await Person.create({
@@ -81,6 +91,7 @@ async function seedCanaries(): Promise<void> {
     photo: media._id,
     bio: html('attorney'),
     quote: `Never published ${CANARY}`,
+    cardBio: `Unpublished card ${CANARY}`,
     practiceAreas: [practiceArea._id],
     office: office._id,
     featuredInLeadership: true,
@@ -98,13 +109,43 @@ async function seedCanaries(): Promise<void> {
     featured: true,
   });
 
-  await Recognition.create({
-    organization: `Draft Awards ${CANARY}`,
+  // A draft directory, with a *published* award under it: the award is only
+  // reachable through its directory, which must take it off the site (ADR-056).
+  const directory = await RecognitionDirectory.create({
+    name: `Draft Directory ${CANARY}`,
+    logo: media._id,
+    heroSubtitle: `An unpublished directory ${CANARY}.`,
+    heroImages: [media._id],
+  });
+
+  await Award.create({
+    directory: directory._id,
+    title: `Orphaned Ranking ${CANARY}`,
+    year: 2026,
+    badge: media._id,
+    featuredOnHome: true,
+    status: 'published',
+  });
+
+  // And a draft award under a *published* directory, flagged for Home.
+  const published = await RecognitionDirectory.findOne({ status: 'published' })
+    .select('_id')
+    .lean<{ _id: unknown } | null>();
+  expect(published, 'the seed has no published recognition directory').toBeTruthy();
+
+  await Award.create({
+    directory: published?._id,
     title: `Unpublished Ranking ${CANARY}`,
     year: 2026,
     badge: media._id,
-    tab: 'achievements',
+    featuredOnHome: true,
   });
+
+  // A draft industry picked by a *published* practice area.
+  await PracticeArea.updateOne({ status: 'published' }, { $push: { industries: industry._id } });
+
+  // A legal page withdrawn to draft (ADR-057).
+  await LegalPage.updateOne({ key: 'privacy' }, { status: 'draft', body: html('privacy policy') });
 
   await Faq.create({
     question: `Is this question published ${CANARY}?`,
@@ -121,6 +162,20 @@ async function seedCanaries(): Promise<void> {
     office: office._id,
     isOpen: true,
   });
+
+  // A draft practice area on a *published* attorney's card back (ADR-052).
+  await Person.updateMany({ status: 'published' }, { $push: { practiceAreas: practiceArea._id } });
+
+  // A draft pro bono story, which the Responsible Business grid must not show.
+  await Insight.create({
+    title: `Draft Pro Bono ${CANARY}`,
+    body: html('pro bono story'),
+    format: 'article',
+    categories: ['pro_bono'],
+  });
+
+  // A *published* practice area whose lead is unpublished (ADR-052).
+  await PracticeArea.updateOne({ status: 'published' }, { lead: person._id });
 
   // A *published* insight whose author is unpublished. The canary here is
   // reachable only by following a reference out of published content, which is
@@ -170,17 +225,21 @@ function publicGetPaths(): string[] {
  * quietly stop covering it — exactly the rot this test exists to prevent.
  */
 async function concreteUrls(): Promise<string[]> {
-  const [practiceArea, person, insight, job] = await Promise.all([
+  const [practiceArea, person, insight, job, directory] = await Promise.all([
     PracticeArea.findOne({ status: 'published' }).select('slug').lean<{ slug: string } | null>(),
     Person.findOne({ status: 'published' }).select('slug').lean<{ slug: string } | null>(),
     Insight.findOne({ status: 'published' }).select('slug').lean<{ slug: string } | null>(),
     Job.findOne({ status: 'published' }).select('_id').lean<{ _id: unknown } | null>(),
+    RecognitionDirectory.findOne({ status: 'published' })
+      .select('slug')
+      .lean<{ slug: string } | null>(),
   ]);
 
   const bySlug: Record<string, string | undefined> = {
     [`${API_PREFIX}/practice-areas/{slug}`]: practiceArea?.slug,
     [`${API_PREFIX}/people/{slug}`]: person?.slug,
     [`${API_PREFIX}/insights/{slug}`]: insight?.slug,
+    [`${API_PREFIX}/recognitions/{slug}`]: directory?.slug,
   };
 
   const urls: string[] = [];
@@ -197,6 +256,20 @@ async function concreteUrls(): Promise<string[]> {
       urls.push(
         ...['law', 'draft', CANARY].map((q) => `${API_PREFIX}/search?q=${encodeURIComponent(q)}`)
       );
+      continue;
+    }
+
+    if (path === `${API_PREFIX}/legal/{key}`) {
+      // The published one: the draft (privacy) must 404, which the legal
+      // tests assert, while the sweep needs a 200 to search.
+      urls.push(`${API_PREFIX}/legal/terms`);
+      continue;
+    }
+
+    if (path === `${API_PREFIX}/insights`) {
+      // The unfiltered listing, and the pro bono grid, which is the one
+      // listing that asks for an excluded category by name.
+      urls.push(path, `${path}?category=pro_bono`);
       continue;
     }
 

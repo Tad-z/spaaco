@@ -6,7 +6,13 @@ import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { createTestUser } from '../../support/auth.js';
 import { runSeed } from '../../../scripts/seed.js';
-import { AuditLog, Insight, PracticeArea } from '../../../src/models/index.js';
+import {
+  AuditLog,
+  Insight,
+  Person,
+  PracticeArea,
+  RecognitionDirectory,
+} from '../../../src/models/index.js';
 import * as cache from '../../../src/core/cache.js';
 import { ADMIN_COLLECTIONS } from '../../../src/constants/content-collections.js';
 
@@ -257,7 +263,14 @@ describe('create', () => {
     const res = await request(app)
       .post(`${base}/practice-areas`)
       .set('Authorization', auth())
-      .send({ title: 'Shipping & Admiralty', shortLabel: 'Shipping', summary: 'A new practice.' });
+      .send({
+        title: 'Shipping & Admiralty',
+        shortLabel: 'Shipping',
+        summary: 'A new practice.',
+        homeSummary: 'A new practice.',
+        heroIntro: 'A new practice.',
+        coreServices: [{ title: 'Charterparties', description: 'Drafting and disputes.' }],
+      });
 
     expect(res.status).toBe(201);
     expectToMatchContract(res, 'post', '/api/v1/admin/content/practice-areas');
@@ -345,9 +358,21 @@ describe('delete', () => {
     expectToMatchContract(res, 'delete', '/api/v1/admin/content/practice-areas/{id}');
   });
 
+  it('refuses to delete a recognition directory that still has awards (ADR-056)', async () => {
+    const directory = await RecognitionDirectory.findOne({ slug: 'iflr-1000' }).lean();
+
+    const res = await request(app)
+      .delete(`${base}/recognition-directories/${directory?._id.toString() ?? ''}`)
+      .set('Authorization', auth());
+
+    expect(res.status).toBe(409);
+    expect(res.body.error.details[0].path).toBe('Award.directory');
+  });
+
   it('deletes once the references are gone', async () => {
     const area = await PracticeArea.findOne({ slug: 'energy-natural-resources' }).lean();
     await Insight.updateMany({}, { $pull: { practiceAreas: area?._id } });
+    await Person.updateMany({}, { $pull: { practiceAreas: area?._id } });
 
     const res = await request(app)
       .delete(`${base}/practice-areas/${area?._id.toString() ?? ''}`)
@@ -477,29 +502,51 @@ describe('cache invalidation on write', () => {
 
 describe('every collection', () => {
   /**
-   * Where a published record shows up publicly. Recognitions and FAQs have no
-   * detail endpoint of their own — they are only ever listed.
+   * Where a published record shows up publicly. Awards, industries and FAQs
+   * have no detail endpoint of their own — they are only ever embedded.
    */
   const PUBLIC_PATHS: Partial<Record<string, string>> = {
     'practice-areas': '/api/v1/practice-areas',
     people: '/api/v1/people',
     insights: '/api/v1/insights',
+    'recognition-directories': '/api/v1/recognitions',
     jobs: '/api/v1/jobs',
   };
 
-  const smokeBodies: Record<string, Record<string, unknown>> = {
-    'practice-areas': { title: 'Smoke Area', shortLabel: 'Smoke', summary: 'A summary.' },
-    people: { firstName: 'Smoke', lastName: 'Tester', role: 'associate' },
-    insights: { title: 'Smoke Insight', format: 'article', categories: ['articles'] },
-    offices: { name: 'Smoketown', address: '1 Smoke Street', hours: '9 to 5' },
-    recognitions: { organization: 'Smoke Ranking', title: 'Listed', tab: 'achievements' },
-    faqs: { question: 'Does it smoke?', answer: '<p>Yes.</p>' },
-    jobs: {
-      title: 'Smoke Associate',
-      description: '<p>A role.</p>',
-      employmentType: 'full_time',
-      workMode: 'hybrid',
-    },
+  /** An award needs a directory, which only exists once the seed has run. */
+  let directoryId = '';
+  beforeEach(async () => {
+    const directory = await RecognitionDirectory.findOne({ slug: 'legal-500' })
+      .select('_id')
+      .lean<{ _id: { toString: () => string } } | null>();
+    directoryId = directory?._id.toString() ?? '';
+  });
+
+  const smokeBody = (collection: string): Record<string, unknown> => {
+    const bodies: Record<string, Record<string, unknown>> = {
+      'practice-areas': {
+        title: 'Smoke Area',
+        shortLabel: 'Smoke',
+        summary: 'A summary.',
+        homeSummary: 'A Home summary.',
+        heroIntro: 'A hero paragraph.',
+        coreServices: [{ title: 'Smoke Service', description: 'A service.' }],
+      },
+      people: { firstName: 'Smoke', lastName: 'Tester', role: 'associate' },
+      insights: { title: 'Smoke Insight', format: 'article', categories: ['articles'] },
+      offices: { name: 'Smoketown', address: '1 Smoke Street', hours: '9 to 5' },
+      'recognition-directories': { name: 'Smoke Rankings' },
+      awards: { directory: directoryId, title: 'Smoke Award', year: 2026 },
+      industries: { name: 'Smoke & Mirrors' },
+      faqs: { question: 'Does it smoke?', answer: '<p>Yes.</p>' },
+      jobs: {
+        title: 'Smoke Associate',
+        description: '<p>A role.</p>',
+        employmentType: 'full_time',
+        workMode: 'hybrid',
+      },
+    };
+    return bodies[collection] ?? {};
   };
 
   it.each(ADMIN_COLLECTIONS.map((collection) => ({ collection })))(
@@ -508,7 +555,7 @@ describe('every collection', () => {
       const created = await request(app)
         .post(`${base}/${collection}`)
         .set('Authorization', auth())
-        .send(smokeBodies[collection]);
+        .send(smokeBody(collection));
 
       expect(created.status, JSON.stringify(created.body)).toBe(201);
       // Each collection has its own response schema now (ADR-033), and this is
@@ -560,7 +607,7 @@ describe('every collection', () => {
       const created = await request(app)
         .post(`${base}/${collection}`)
         .set('Authorization', auth())
-        .send(smokeBodies[collection]);
+        .send(smokeBody(collection));
 
       expect(created.status, JSON.stringify(created.body)).toBe(201);
       const id: string = created.body.data.id;
