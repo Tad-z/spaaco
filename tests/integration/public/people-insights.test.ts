@@ -4,7 +4,8 @@ import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { runSeed } from '../../../scripts/seed.js';
-import { Insight, Person } from '../../../src/models/index.js';
+import { Insight, Person, PracticeArea } from '../../../src/models/index.js';
+import { normalise, readFixture } from '../../support/fixtures.js';
 
 /**
  * The two endpoints with real behaviour to pin: filtering, sorting and
@@ -24,12 +25,14 @@ beforeEach(async () => {
 });
 
 describe('GET /api/v1/people', () => {
-  it('returns the directory with pagination meta', async () => {
+  it('returns the directory with pagination meta, as the fixture has it', async () => {
     const res = await request(app).get('/api/v1/people');
 
     expect(res.status).toBe(200);
     expectToMatchContract(res, 'get', '/api/v1/people');
     expect(res.body.meta).toEqual({ page: 1, pageSize: 9, total: 9, totalPages: 1 });
+    // Card backs included: chips and the italic line (ADR-052).
+    expect(normalise(res.body)).toEqual(normalise(readFixture('people.list.json')));
   });
 
   it('sorts by seniority by default: managing partner, partners, then the rest', async () => {
@@ -63,6 +66,71 @@ describe('GET /api/v1/people', () => {
 
     expect(res.body.data).toHaveLength(2);
     expect(res.body.meta.total).toBe(2);
+  });
+
+  describe('the practice-area filter (ADR-054)', () => {
+    it('matches the areas on the card', async () => {
+      const res = await request(app).get('/api/v1/people?practiceArea=energy-natural-resources');
+
+      expect(names(res.body)).toEqual(['Peter Olalere']);
+      expect(res.body.meta).toEqual({ page: 1, pageSize: 9, total: 1, totalPages: 1 });
+      expectToMatchContract(res, 'get', '/api/v1/people');
+    });
+
+    it('matches the primary practice area too', async () => {
+      const tax = await PracticeArea.findOne({ slug: 'tax' }).lean();
+      await Person.updateOne({ slug: 'emmanuel-bassey' }, { primaryPracticeArea: tax?._id });
+
+      const res = await request(app).get('/api/v1/people?practiceArea=tax');
+
+      expect(names(res.body)).toEqual(['Emmanuel Bassey']);
+    });
+
+    it('combines with the role tab, and the Partners tab still includes the MP', async () => {
+      const res = await request(app).get(
+        '/api/v1/people?role=partner&practiceArea=dispute-resolution-arbitration'
+      );
+
+      expect(names(res.body)).toEqual(['Dr. Babatunde Ajibade, SAN', 'Dr. Kolawole Mayomi']);
+      expect(res.body.meta.total).toBe(2);
+    });
+
+    it('reports meta for the combined filter across pages', async () => {
+      const res = await request(app).get(
+        '/api/v1/people?role=partner&practiceArea=dispute-resolution-arbitration&page=2&pageSize=1'
+      );
+
+      expect(names(res.body)).toEqual(['Dr. Kolawole Mayomi']);
+      expect(res.body.meta).toEqual({ page: 2, pageSize: 1, total: 2, totalPages: 2 });
+    });
+
+    it('returns an empty page for a combination nobody matches', async () => {
+      const res = await request(app).get(
+        '/api/v1/people?role=associate_partner&practiceArea=dispute-resolution-arbitration'
+      );
+
+      expect(res.body.data).toEqual([]);
+      expect(res.body.meta).toEqual({ page: 1, pageSize: 9, total: 0, totalPages: 0 });
+    });
+
+    it('returns an empty page, not a 404, for an unknown area', async () => {
+      const res = await request(app).get('/api/v1/people?practiceArea=shipping');
+
+      expect(res.status).toBe(200);
+      expect(res.body.meta.total).toBe(0);
+      expectToMatchContract(res, 'get', '/api/v1/people');
+    });
+  });
+
+  it('accepts the Trainee Associates tab, and no longer the NYSC one', async () => {
+    await Person.updateOne({ slug: 'david-essien' }, { role: 'trainee_associate' });
+
+    const trainees = await request(app).get('/api/v1/people?role=trainee_associate');
+    const nysc = await request(app).get('/api/v1/people?role=nysc_associate');
+
+    expect(names(trainees.body)).toEqual(['David Essien']);
+    expect(trainees.body.data[0].roleLabel).toBe('Trainee Associate');
+    expect(nysc.status).toBe(400);
   });
 
   it('sorts by name in both directions', async () => {
@@ -113,13 +181,25 @@ describe('GET /api/v1/people', () => {
 });
 
 describe('GET /api/v1/people/{slug}', () => {
-  it('returns the profile with practice areas, office and their insights', async () => {
-    const res = await request(app).get('/api/v1/people/john-onyido');
+  it('serves the Managing Partner as the fixture has him', async () => {
+    const res = await request(app).get('/api/v1/people/babatunde-ajibade');
 
     expect(res.status).toBe(200);
     expectToMatchContract(res, 'get', '/api/v1/people/{slug}');
+    expect(normalise(res.body)).toEqual(
+      normalise(readFixture('people.detail.babatunde-ajibade.json'))
+    );
+  });
+
+  it('returns their recent publications, never a pro bono story', async () => {
+    const john = await Person.findOne({ slug: 'john-onyido' }).lean();
+    await Insight.updateMany({ categories: 'pro_bono' }, { author: john?._id });
+
+    const res = await request(app).get('/api/v1/people/john-onyido');
+
+    expectToMatchContract(res, 'get', '/api/v1/people/{slug}');
     expect(res.body.data.office.name).toBe('Lagos');
-    expect(res.body.data.insights).toHaveLength(1);
+    expect(res.body.data.recentPublications).toHaveLength(1);
   });
 
   it('returns 404 for an unknown attorney', async () => {

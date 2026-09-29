@@ -109,7 +109,7 @@ The second design drop (29 Sep 2026) changes the page schemas and the media kind
   - **Accept:** the draft canary covers both new collections; a draft award never appears on Home or on a directory page.
 - [x] **D.4 Practice areas.** Add the new fields, the `industries` collection, and the detail endpoint with siblings, lead, industries and recentPublications. Home uses `homeSummary`, and the CSR banner uses images.
   - **Accept:** the detail response for all 9 seeded areas matches the spec; a draft lead or industry is excluded (publishedPopulate).
-- [ ] **D.5 People.** Rename the enum to trainee_associate. Add the practiceArea filter and `practiceAreaFilters`, the new person fields, card-back data in PersonSummary, and profile `recentPublications`.
+- [x] **D.5 People.** Rename the enum to trainee_associate. Add the practiceArea filter and `practiceAreaFilters`, the new person fields, card-back data in PersonSummary, and profile `recentPublications`.
   - **Accept:** role + practiceArea filters combine correctly with pagination meta; the Partners filter includes the MP.
 - [ ] **D.6 Insights and Responsible Business.** Apply the new categories and relabelling, add `externalUrl` and `document`, and implement the detail `cta` and `backLink`, `practiceAreaFilters`, the `pro_bono` exclusion rule, and `GET /pages/responsible-business`.
   - **Accept:** pro_bono is absent from every default listing and present with `category=pro_bono`; the article CTA resolves from externalUrl or document; the video CTA resolves from videoUrl.
