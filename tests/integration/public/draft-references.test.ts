@@ -3,7 +3,7 @@ import request from 'supertest';
 import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { runSeed } from '../../../scripts/seed.js';
-import { Insight, Office, Person, PracticeArea } from '../../../src/models/index.js';
+import { Industry, Insight, Office, Person, PracticeArea } from '../../../src/models/index.js';
 import { createTestUser } from '../../support/auth.js';
 
 /**
@@ -135,17 +135,38 @@ describe('other draft references', () => {
     expect(res.body.data.story.quotePerson).toBeNull();
   });
 
-  it('hides a draft contact on a practice area detail page', async () => {
-    const person = await Person.findOne({ slug: 'john-onyido' }).lean();
-    await PracticeArea.updateOne(
-      { slug: 'dispute-resolution-arbitration' },
-      { contacts: [person?._id] }
-    );
-    await Person.updateOne({ slug: 'john-onyido' }, { status: 'draft' });
+  it('hides a draft practice lead, rather than showing the card', async () => {
+    await Person.updateOne({ slug: 'kolawole-mayomi' }, { status: 'draft' });
 
     const res = await request(app).get('/api/v1/practice-areas/dispute-resolution-arbitration');
 
-    expect(res.body.data.contacts).toEqual([]);
+    expect(res.body.data.lead).toBeNull();
+  });
+
+  it('hides a draft industry from the practice areas that pick it', async () => {
+    await Industry.updateOne({ slug: 'banking-finance' }, { status: 'draft' });
+
+    const res = await request(app).get('/api/v1/practice-areas/dispute-resolution-arbitration');
+
+    expect(res.body.data.industries.map((i: { slug: string }) => i.slug)).not.toContain(
+      'banking-finance'
+    );
+    expect(res.body.data.industries).toHaveLength(3);
+  });
+
+  it('hides a draft practice area from the sidebar and the card-back chips', async () => {
+    await PracticeArea.updateOne(
+      { slug: 'corporate-finance-capital-markets' },
+      { status: 'draft' }
+    );
+
+    const area = await request(app).get('/api/v1/practice-areas/tax');
+    const person = await request(app).get('/api/v1/people/babatunde-ajibade');
+
+    expect(area.body.data.siblings).toHaveLength(8);
+    expect(person.body.data.practiceAreas.map((p: { slug: string }) => p.slug)).toEqual([
+      'dispute-resolution-arbitration',
+    ]);
   });
 
   it('hides a draft insight from a practice area detail page', async () => {
@@ -153,6 +174,6 @@ describe('other draft references', () => {
 
     const res = await request(app).get('/api/v1/practice-areas/dispute-resolution-arbitration');
 
-    expect(res.body.data.relatedInsights).toEqual([]);
+    expect(res.body.data.recentPublications).toEqual([]);
   });
 });

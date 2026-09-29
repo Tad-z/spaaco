@@ -369,6 +369,21 @@ describe('delete', () => {
     expect(res.body.error.details[0].path).toBe('Award.directory');
   });
 
+  it('refuses to delete an industry a practice area still picks (ADR-048)', async () => {
+    const res = await request(app).get(`${base}/industries?q=Oil`).set('Authorization', auth());
+    const id = (res.body as { data: { id: string }[] }).data[0]?.id ?? '';
+
+    const deleted = await request(app)
+      .delete(`${base}/industries/${id}`)
+      .set('Authorization', auth());
+
+    expect(deleted.status).toBe(409);
+    expect(deleted.body.error.details[0]).toEqual({
+      path: 'PracticeArea.industries',
+      message: 'Energy & Natural Resources',
+    });
+  });
+
   it('deletes once the references are gone', async () => {
     const area = await PracticeArea.findOne({ slug: 'energy-natural-resources' }).lean();
     await Insight.updateMany({}, { $pull: { practiceAreas: area?._id } });

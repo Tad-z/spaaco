@@ -5,7 +5,8 @@ import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { runSeed } from '../../../scripts/seed.js';
-import { Job, Office, PracticeArea } from '../../../src/models/index.js';
+import { Insight, Job, Office, PracticeArea } from '../../../src/models/index.js';
+import { normalise, readFixture } from '../../support/fixtures.js';
 
 /**
  * The four straightforward collections. Per ADR-029 each endpoint gets its
@@ -42,12 +43,49 @@ describe('GET /api/v1/practice-areas', () => {
 });
 
 describe('GET /api/v1/practice-areas/{slug}', () => {
-  it('returns the detail with related insights', async () => {
+  it('serves Dispute Resolution as the fixture has it', async () => {
     const res = await request(app).get('/api/v1/practice-areas/dispute-resolution-arbitration');
 
     expect(res.status).toBe(200);
+    expect(normalise(res.body)).toEqual(
+      normalise(readFixture('practice-areas.detail.dispute-resolution.json'))
+    );
+  });
+
+  it.each(
+    [
+      'company-secretarial',
+      'corporate-finance-capital-markets',
+      'data-protection-privacy',
+      'dispute-resolution-arbitration',
+      'energy-natural-resources',
+      'intellectual-property',
+      'real-estate-succession',
+      'tax',
+      'telecommunications-regulatory',
+    ].map((slug) => ({ slug }))
+  )('$slug matches the contract, with its lead, industries and sidebar', async ({ slug }) => {
+    const res = await request(app).get(`/api/v1/practice-areas/${slug}`);
+
+    expect(res.status).toBe(200);
     expectToMatchContract(res, 'get', '/api/v1/practice-areas/{slug}');
-    expect(res.body.data.relatedInsights.length).toBeGreaterThan(0);
+    expect(res.body.data.coreServices).toHaveLength(3);
+    expect(res.body.data.industries).toHaveLength(4);
+    expect(res.body.data.approach.points).toHaveLength(4);
+    expect(res.body.data.lead).not.toBeNull();
+    expect(res.body.data.siblings).toHaveLength(9);
+  });
+
+  it('lists recent publications tagged with the area, newest first, never pro bono', async () => {
+    // Tag every pro bono story with the area: none may appear (ADR-049).
+    const area = await PracticeArea.findOne({ slug: 'energy-natural-resources' }).lean();
+    await Insight.updateMany({ categories: 'pro_bono' }, { practiceAreas: [area?._id] });
+
+    const res = await request(app).get('/api/v1/practice-areas/energy-natural-resources');
+    const publications = res.body.data.recentPublications as { categories: string[] }[];
+
+    expect(publications).toHaveLength(2);
+    expect(publications.flatMap((card) => card.categories)).not.toContain('pro_bono');
   });
 
   it('returns 404 for an unknown slug', async () => {

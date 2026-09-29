@@ -107,7 +107,7 @@ The second design drop (29 Sep 2026) changes the page schemas and the media kind
   - **Accept:** every page composer returns `hero.images`, and `/site` matches its fixture.
 - [x] **D.3 Recognition rebuild.** Build `recognitionDirectories` and `awards`, the `recognition` page singleton, `GET /recognitions` and `GET /recognitions/:slug`, Home `recognitionSection`, and About `awardsList` from directories. Remove the old `recognitions` model.
   - **Accept:** the draft canary covers both new collections; a draft award never appears on Home or on a directory page.
-- [ ] **D.4 Practice areas.** Add the new fields, the `industries` collection, and the detail endpoint with siblings, lead, industries and recentPublications. Home uses `homeSummary`, and the CSR banner uses images.
+- [x] **D.4 Practice areas.** Add the new fields, the `industries` collection, and the detail endpoint with siblings, lead, industries and recentPublications. Home uses `homeSummary`, and the CSR banner uses images.
   - **Accept:** the detail response for all 9 seeded areas matches the spec; a draft lead or industry is excluded (publishedPopulate).
 - [ ] **D.5 People.** Rename the enum to trainee_associate. Add the practiceArea filter and `practiceAreaFilters`, the new person fields, card-back data in PersonSummary, and profile `recentPublications`.
   - **Accept:** role + practiceArea filters combine correctly with pagination meta; the Partners filter includes the MP.
