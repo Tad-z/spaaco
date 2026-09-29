@@ -210,3 +210,45 @@ describe('removing', () => {
     expect(form.get('signature')).toBe(expected);
   });
 });
+
+describe('PDF documents (ADR-053)', () => {
+  const pdf = Buffer.from('%PDF-1.4\n%%EOF\n');
+
+  it('uploads a PDF as a raw resource, signed, so it is never rasterised', async () => {
+    const fetchImpl = vi.fn(() =>
+      Promise.resolve(
+        okResponse({
+          public_id: 'spa-ajibade/firm-profile',
+          secure_url: 'https://res.cloudinary.com/spa-demo/raw/upload/spa-ajibade/firm-profile.pdf',
+        }) as Response
+      )
+    );
+
+    const stored = await driverWith(fetchImpl).putDocument({
+      buffer: pdf,
+      originalFilename: 'firm-profile.pdf',
+    });
+
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    const form = init.body as FormData;
+
+    expect(url).toBe('https://api.cloudinary.com/v1_1/spa-demo/raw/upload');
+    const expected = createHash('sha1')
+      .update(`folder=spa-ajibade&timestamp=${field(form, 'timestamp')}shh-secret`)
+      .digest('hex');
+    expect(field(form, 'signature')).toBe(expected);
+    expect(stored).toEqual({
+      storageKey: 'spa-ajibade/firm-profile',
+      url: 'https://res.cloudinary.com/spa-demo/raw/upload/spa-ajibade/firm-profile.pdf',
+    });
+  });
+
+  it('destroys a document under the raw resource type, where it lives', async () => {
+    const fetchImpl = vi.fn(() => Promise.resolve(okResponse({ result: 'ok' }) as Response));
+
+    await driverWith(fetchImpl).remove('spa-ajibade/firm-profile', 'document');
+
+    const [url] = fetchImpl.mock.calls[0] as unknown as [string];
+    expect(url).toBe('https://api.cloudinary.com/v1_1/spa-demo/raw/destroy');
+  });
+});

@@ -115,7 +115,7 @@ The second design drop (29 Sep 2026) changes the page schemas and the media kind
   - **Accept:** pro_bono is absent from every default listing and present with `category=pro_bono`; the article CTA resolves from externalUrl or document; the video CTA resolves from videoUrl.
 - [x] **D.7 Careers empty state and legal pages.** Add `jobsSection.emptyState`, the `legalPages` collection, `GET /legal/:key`, and the admin GET/PUT.
   - **Accept:** careers returns the empty state when no jobs are open; an unknown legal key returns 404.
-- [ ] **D.8 Media documents.** Only if 5.4 isn't done yet: fold PDF support into 5.4's spec (kind filter, 20 MB, magic bytes). Otherwise, add it now.
+- [x] **D.8 Media documents.** Only if 5.4 isn't done yet: fold PDF support into 5.4's spec (kind filter, 20 MB, magic bytes). Otherwise, add it now.
   - **Accept:** an uploaded PDF works as the profile download and as an insight document; a fake PDF returns 415; an in-use document can't be deleted.
 - [ ] **D.9 Reseed and review.** Reseed; confirm every `/pages/:key` fixture round-trip passes; run the api-reviewer on Phase D and fix its blockers.
 

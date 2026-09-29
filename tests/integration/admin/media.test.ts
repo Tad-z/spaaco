@@ -433,3 +433,236 @@ describe('deleting', () => {
     expect(await Media.findById(id).lean()).toBeNull();
   });
 });
+
+describe('PDF documents (ADR-053)', () => {
+  /** A minimal but real PDF, so the `%PDF` check is exercised rather than mocked. */
+  const pdf = Buffer.from(
+    '%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n'
+  );
+
+  const uploadDocument = (
+    overrides: { file?: Buffer; title?: string | null; alt?: string } = {}
+  ): request.Test => {
+    const req = request(app).post(base).set('Authorization', auth()).field('kind', 'document');
+
+    if (overrides.title !== null) {
+      req.field('title', overrides.title ?? 'SPA Ajibade & Co. firm profile');
+    }
+    if (overrides.alt !== undefined) req.field('alt', overrides.alt);
+
+    return req.attach('file', overrides.file ?? pdf, {
+      filename: 'firm-profile.pdf',
+      contentType: 'application/pdf',
+    });
+  };
+
+  it('stores a PDF with a title and no image fields', async () => {
+    const res = await uploadDocument();
+
+    expect(res.status, JSON.stringify(res.body)).toBe(201);
+    expectToMatchContract(res, 'post', '/api/v1/admin/media');
+    expect(res.body.data).toMatchObject({
+      kind: 'document',
+      title: 'SPA Ajibade & Co. firm profile',
+      mimeType: 'application/pdf',
+      sizes: null,
+      alt: null,
+      width: null,
+      height: null,
+      focalPoint: null,
+    });
+    expect(res.body.data.url).toMatch(/\.pdf$/);
+  });
+
+  it('refuses a fake PDF, whatever its name and declared type say', async () => {
+    const fake = Buffer.concat([Buffer.from('MZ'), Buffer.alloc(1024)]);
+
+    const res = await uploadDocument({ file: fake });
+
+    expect(res.status).toBe(415);
+    expect(res.body.error.code).toBe('UNSUPPORTED_MEDIA_TYPE');
+    expectToMatchContract(res, 'post', '/api/v1/admin/media');
+  });
+
+  it('refuses an image uploaded as a document, and a PDF uploaded as an image', async () => {
+    const pictureAsDocument = await uploadDocument({ file: await png() });
+    const pdfAsImage = await upload({ file: pdf, name: 'profile.pdf', type: 'application/pdf' });
+
+    expect(pictureAsDocument.status).toBe(415);
+    expect(pdfAsImage.status).toBe(415);
+  });
+
+  it('requires a title, which is its link text, and takes no alt', async () => {
+    const untitled = await uploadDocument({ title: null });
+    const withAlt = await uploadDocument({ alt: 'A PDF' });
+
+    expect(untitled.status).toBe(400);
+    expect(untitled.body.error.details.map((d: { path: string }) => d.path)).toContain('title');
+    expect(withAlt.status).toBe(400);
+    expect(withAlt.body.error.details.map((d: { path: string }) => d.path)).toContain('alt');
+  });
+
+  it('accepts a PDF between the image and document limits, and refuses one past 20 MB', async () => {
+    const between = Buffer.concat([pdf, Buffer.alloc(UPLOAD_LIMITS.imageMaxBytes + 1024)]);
+    const over = Buffer.concat([pdf, Buffer.alloc(UPLOAD_LIMITS.documentMaxBytes + 1024)]);
+
+    expect((await uploadDocument({ file: between })).status).toBe(201);
+    const refused = await uploadDocument({ file: over });
+    expect(refused.status).toBe(413);
+    expect(refused.body.error.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
+  it('filters the library by kind', async () => {
+    await uploadDocument();
+
+    const documents = await request(app).get(`${base}?kind=document`).set('Authorization', auth());
+    const images = await request(app).get(`${base}?kind=image`).set('Authorization', auth());
+
+    expectToMatchContract(documents, 'get', '/api/v1/admin/media');
+    // The seed's placeholder firm profile, plus the one just uploaded.
+    expect(documents.body.data.map((m: { kind: string }) => m.kind)).toEqual([
+      'document',
+      'document',
+    ]);
+    expect(images.body.data.every((m: { kind: string }) => m.kind === 'image')).toBe(true);
+  });
+
+  it('works as the About profile download, and cannot then be deleted', async () => {
+    const id: string = (await uploadDocument()).body.data.id;
+
+    const page = await request(app).get('/api/v1/admin/pages/about').set('Authorization', auth());
+    const story = page.body.data.story as Record<string, unknown>;
+    const patched = await request(app)
+      .patch('/api/v1/admin/pages/about')
+      .set('Authorization', auth())
+      .set('If-Match', String(page.body.data.revision))
+      .send({
+        story: {
+          ...story,
+          profileDownload: { ...(story.profileDownload as object), document: id },
+        },
+      });
+    expect(patched.status, JSON.stringify(patched.body)).toBe(200);
+
+    const about = await request(app).get('/api/v1/pages/about');
+    expect(about.body.data.story.profileDownload.document).toMatchObject({
+      title: 'SPA Ajibade & Co. firm profile',
+      mimeType: 'application/pdf',
+    });
+
+    const deleted = await request(app).delete(`${base}/${id}`).set('Authorization', auth());
+    expect(deleted.status).toBe(409);
+    expect(deleted.body.error.details[0].message).toContain('story.profileDownload.document');
+  });
+
+  it('works as an insight document, and cannot then be deleted', async () => {
+    const id: string = (await uploadDocument()).body.data.id;
+
+    const created = await request(app)
+      .post('/api/v1/admin/content/insights')
+      .set('Authorization', auth())
+      .send({
+        title: 'A brief with a PDF',
+        format: 'article',
+        categories: ['articles'],
+        document: id,
+      });
+    expect(created.status, JSON.stringify(created.body)).toBe(201);
+
+    const usage = await request(app).get(`${base}/${id}`).set('Authorization', auth());
+    expect(usage.body.data.usedBy).toEqual([
+      expect.objectContaining({ collection: 'insights', field: 'document' }),
+    ]);
+
+    const deleted = await request(app).delete(`${base}/${id}`).set('Authorization', auth());
+    expect(deleted.status).toBe(409);
+  });
+
+  it('refuses a PDF in an image field, and an image in a document field', async () => {
+    const documentId: string = (await uploadDocument()).body.data.id;
+    const imageId: string = (await upload()).body.data.id;
+
+    const pdfAsHero = await request(app)
+      .post('/api/v1/admin/content/recognition-directories')
+      .set('Authorization', auth())
+      .send({ name: 'Wrong Kind', heroImages: [documentId] });
+    const imageAsDocument = await request(app)
+      .post('/api/v1/admin/content/insights')
+      .set('Authorization', auth())
+      .send({
+        title: 'Wrong kind',
+        format: 'article',
+        categories: ['articles'],
+        document: imageId,
+      });
+
+    expect(pdfAsHero.status).toBe(400);
+    expect(pdfAsHero.body.error.details[0].path).toBe('heroImages');
+    expect(imageAsDocument.status).toBe(400);
+    expect(imageAsDocument.body.error.details[0].path).toBe('document');
+  });
+
+  it('sees an image used in a carousel, and refuses to delete it', async () => {
+    const id: string = (await upload()).body.data.id;
+    const page = await request(app)
+      .get('/api/v1/admin/pages/practice-areas')
+      .set('Authorization', auth());
+    const csrBanner = page.body.data.csrBanner as { images: string[] };
+
+    await request(app)
+      .patch('/api/v1/admin/pages/practice-areas')
+      .set('Authorization', auth())
+      .set('If-Match', String(page.body.data.revision))
+      .send({ csrBanner: { ...csrBanner, images: [...csrBanner.images, id] } });
+
+    const usage = await request(app).get(`${base}/${id}`).set('Authorization', auth());
+    const deleted = await request(app).delete(`${base}/${id}`).set('Authorization', auth());
+
+    expect(usage.body.data.usedBy).toEqual([
+      expect.objectContaining({
+        collection: 'pages',
+        label: 'practice-areas',
+        field: 'csrBanner.images',
+      }),
+    ]);
+    expect(deleted.status).toBe(409);
+  });
+
+  it('replaces a document with a PDF only, keeping its id', async () => {
+    const created = (await uploadDocument()).body.data as {
+      id: string;
+      revision: number;
+      url: string;
+    };
+
+    const withImage = await request(app)
+      .put(`${base}/${created.id}/file`)
+      .set('Authorization', auth())
+      .set('If-Match', String(created.revision))
+      .attach('file', await png(), { filename: 'x.png', contentType: 'image/png' });
+    const withPdf = await request(app)
+      .put(`${base}/${created.id}/file`)
+      .set('Authorization', auth())
+      .set('If-Match', String(created.revision))
+      .attach('file', pdf, { filename: 'profile-2026.pdf', contentType: 'application/pdf' });
+
+    expect(withImage.status).toBe(415);
+    expect(withPdf.status, JSON.stringify(withPdf.body)).toBe(200);
+    expectToMatchContract(withPdf, 'put', '/api/v1/admin/media/{id}/file');
+    expect(withPdf.body.data.id).toBe(created.id);
+    expect(withPdf.body.data.url).not.toBe(created.url);
+  });
+
+  it('refuses an image-only edit on a document', async () => {
+    const created = (await uploadDocument()).body.data as { id: string; revision: number };
+
+    const res = await request(app)
+      .patch(`${base}/${created.id}`)
+      .set('Authorization', auth())
+      .set('If-Match', String(created.revision))
+      .send({ focalPoint: { x: 0.2, y: 0.2 } });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details[0].path).toBe('focalPoint');
+  });
+});
