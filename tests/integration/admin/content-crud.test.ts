@@ -9,12 +9,14 @@ import { runSeed } from '../../../scripts/seed.js';
 import {
   AuditLog,
   Insight,
+  Media,
   Person,
   PracticeArea,
   RecognitionDirectory,
 } from '../../../src/models/index.js';
 import * as cache from '../../../src/core/cache.js';
 import { ADMIN_COLLECTIONS } from '../../../src/constants/content-collections.js';
+import { makeDocumentMedia } from '../../support/factories.js';
 
 /**
  * The generic CRUD factory, tested thoroughly once (ADR-029).
@@ -305,6 +307,50 @@ describe('create', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error.details[0].path).toBe('videoUrl');
+  });
+});
+
+describe("an article's link (ADR-051)", () => {
+  const pdf = async (): Promise<string> => {
+    const created = await Media.create(makeDocumentMedia());
+    return created._id.toHexString();
+  };
+
+  it('refuses both an external URL and a document in one write', async () => {
+    const res = await request(app)
+      .post(`${base}/insights`)
+      .set('Authorization', auth())
+      .send({
+        title: 'Both at once',
+        format: 'article',
+        categories: ['articles'],
+        externalUrl: 'https://example.com/brief',
+        document: await pdf(),
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details[0].path).toBe('document');
+  });
+
+  it('refuses a document added to an article that already links out', async () => {
+    const created = await request(app)
+      .post(`${base}/insights`)
+      .set('Authorization', auth())
+      .send({
+        title: 'Links out',
+        format: 'article',
+        categories: ['articles'],
+        externalUrl: 'https://example.com/brief',
+      });
+
+    const res = await request(app)
+      .patch(`${base}/insights/${created.body.data.id as string}`)
+      .set('Authorization', auth())
+      .set('If-Match', String(created.body.data.revision))
+      .send({ document: await pdf() });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details[0].path).toBe('document');
   });
 });
 

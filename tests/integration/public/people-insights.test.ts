@@ -4,7 +4,8 @@ import { buildTestApp } from '../../support/build-app.js';
 import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { runSeed } from '../../../scripts/seed.js';
-import { Insight, Person, PracticeArea } from '../../../src/models/index.js';
+import { Insight, Media, Person, PracticeArea } from '../../../src/models/index.js';
+import { makeDocumentMedia } from '../../support/factories.js';
 import { normalise, readFixture } from '../../support/fixtures.js';
 
 /**
@@ -211,13 +212,64 @@ describe('GET /api/v1/people/{slug}', () => {
 });
 
 describe('GET /api/v1/insights', () => {
-  it('returns cards newest first with pagination meta', async () => {
+  it('returns cards newest first with pagination meta, as the fixture has them', async () => {
     const res = await request(app).get('/api/v1/insights');
 
     expect(res.status).toBe(200);
     expectToMatchContract(res, 'get', '/api/v1/insights');
     expect(res.body.meta.total).toBe(4);
     expect(res.body.data[0].publishedAt).toBe('2026-07-01T00:00:00.000Z');
+    expect(normalise(res.body)).toEqual(normalise(readFixture('insights.list.json')));
+  });
+
+  describe('pro bono stories (ADR-049)', () => {
+    const categoriesOf = (body: { data: { categories: string[] }[] }): string[] =>
+      body.data.flatMap((card) => card.categories);
+
+    it('are absent from the unfiltered listing, which is "All insights & news"', async () => {
+      const res = await request(app).get('/api/v1/insights?pageSize=50');
+
+      expect(categoriesOf(res.body)).not.toContain('pro_bono');
+      expect(res.body.meta.total).toBe(4);
+    });
+
+    it('are absent from another category, even when tagged with it too', async () => {
+      await Insight.updateMany({ categories: 'pro_bono' }, { categories: ['pro_bono', 'events'] });
+
+      const res = await request(app).get('/api/v1/insights?category=events');
+
+      expect(categoriesOf(res.body)).not.toContain('pro_bono');
+      expect(res.body.meta.total).toBe(1);
+    });
+
+    it('are absent from the featured carousel and Home, whatever their flags', async () => {
+      await Insight.updateMany(
+        { categories: 'pro_bono' },
+        { featured: true, publishedAt: new Date('2026-09-01T00:00:00.000Z') }
+      );
+
+      const home = await request(app).get('/api/v1/pages/home');
+      const insights = await request(app).get('/api/v1/pages/insights');
+
+      expect(
+        home.body.data.latestInsights.flatMap((card: { categories: string[] }) => card.categories)
+      ).not.toContain('pro_bono');
+      expect(
+        insights.body.data.featured.flatMap((card: { categories: string[] }) => card.categories)
+      ).not.toContain('pro_bono');
+    });
+
+    it('are the Responsible Business grid when asked for by name, 9 per page', async () => {
+      const first = await request(app).get('/api/v1/insights?category=pro_bono');
+      const second = await request(app).get('/api/v1/insights?category=pro_bono&page=2');
+
+      expectToMatchContract(first, 'get', '/api/v1/insights');
+      expect(first.body.data).toHaveLength(9);
+      expect(first.body.meta).toEqual({ page: 1, pageSize: 9, total: 12, totalPages: 2 });
+      expect(second.body.data).toHaveLength(3);
+      expect(first.body.data[0].chips).toEqual(['Pro Bono & Community Commitment']);
+      expect(first.body.data[0].author).toMatchObject({ type: 'firm' });
+    });
   });
 
   it('sorts oldest first when asked', async () => {
@@ -278,12 +330,12 @@ describe('GET /api/v1/insights', () => {
       slug: 'a-recorded-webinar',
       format: 'video',
       videoUrl: 'https://www.youtube.com/watch?v=spaajibade',
-      categories: ['webinar_resources'],
+      categories: ['events'],
       status: 'published',
       publishedAt: new Date('2026-07-01T00:00:00.000Z'),
     });
 
-    const res = await request(app).get('/api/v1/insights?category=webinar_resources');
+    const res = await request(app).get('/api/v1/insights?category=events');
 
     expect(res.body.data[0].format).toBe('video');
     expect(res.body.data[0].cta).toEqual({ label: 'Watch Video', kind: 'watch_video' });
@@ -306,31 +358,82 @@ describe('GET /api/v1/insights', () => {
 });
 
 describe('GET /api/v1/insights/{slug}', () => {
-  it('returns the detail with related insights', async () => {
-    const insight = await Insight.findOne({ slug: /trade-secrets$/ }).lean();
-    const res = await request(app).get(`/api/v1/insights/${insight?.slug ?? ''}`);
+  const TRADE_SECRETS =
+    'repositioning-and-promoting-energy-investments-between-south-africa-and-nigeria-a-perspective-on-trade-secrets';
+
+  it('returns the detail with related insights, as the fixture has it', async () => {
+    const res = await request(app).get(`/api/v1/insights/${TRADE_SECRETS}`);
 
     expect(res.status).toBe(200);
     expectToMatchContract(res, 'get', '/api/v1/insights/{slug}');
-    expect(res.body.data.related.length).toBeGreaterThan(0);
-    expect(res.body.data.related.map((r: { slug: string }) => r.slug)).not.toContain(insight?.slug);
+    expect(res.body.data.related.map((r: { slug: string }) => r.slug)).not.toContain(TRADE_SECRETS);
+    expect(normalise(res.body)).toEqual(
+      normalise(readFixture('insights.detail.trade-secrets.json'))
+    );
   });
 
-  it('returns the video URL for a video insight', async () => {
-    // Built here, for the same reason as the card test above.
-    await Insight.create({
-      title: 'A Recorded Webinar On The New Practice Directions',
-      slug: 'a-recorded-webinar',
-      format: 'video',
-      videoUrl: 'https://www.youtube.com/watch?v=spaajibade',
-      categories: ['webinar_resources'],
-      status: 'published',
-      publishedAt: new Date('2026-07-01T00:00:00.000Z'),
+  describe('the link after the body (ADR-051)', () => {
+    it('reads "Read Article" to the external article', async () => {
+      await Insight.updateOne(
+        { slug: TRADE_SECRETS },
+        { externalUrl: 'https://www.spaajibade.com/briefs/trade-secrets' }
+      );
+
+      const res = await request(app).get(`/api/v1/insights/${TRADE_SECRETS}`);
+
+      expect(res.body.data.cta).toEqual({
+        label: 'Read Article',
+        url: 'https://www.spaajibade.com/briefs/trade-secrets',
+      });
+      expectToMatchContract(res, 'get', '/api/v1/insights/{slug}');
     });
 
-    const res = await request(app).get('/api/v1/insights/a-recorded-webinar');
+    it('reads "Read Article" to the uploaded PDF', async () => {
+      const pdf = await Media.create(makeDocumentMedia());
+      await Insight.updateOne({ slug: TRADE_SECRETS }, { document: pdf._id });
 
-    expect(res.body.data.videoUrl).toBe('https://www.youtube.com/watch?v=spaajibade');
+      const res = await request(app).get(`/api/v1/insights/${TRADE_SECRETS}`);
+
+      expect(res.body.data.cta).toEqual({ label: 'Read Article', url: pdf.url });
+    });
+
+    it('reads "Watch Video" to the video', async () => {
+      // Built here rather than taken from the seed: the seed's video insights
+      // are articles until the firm supplies the links (ADR-042).
+      await Insight.create({
+        title: 'A Recorded Webinar On The New Practice Directions',
+        slug: 'a-recorded-webinar',
+        format: 'video',
+        videoUrl: 'https://www.youtube.com/watch?v=spaajibade',
+        categories: ['events'],
+        status: 'published',
+        publishedAt: new Date('2026-07-01T00:00:00.000Z'),
+      });
+
+      const res = await request(app).get('/api/v1/insights/a-recorded-webinar');
+
+      expect(res.body.data.videoUrl).toBe('https://www.youtube.com/watch?v=spaajibade');
+      expect(res.body.data.cta).toEqual({
+        label: 'Watch Video',
+        url: 'https://www.youtube.com/watch?v=spaajibade',
+      });
+    });
+  });
+
+  it('sends a pro bono story back to Responsible Business, among other pro bono stories', async () => {
+    const res = await request(app).get(
+      '/api/v1/insights/spa-ajibade-co-sponsors-team-titans-an-american-flag-football-team'
+    );
+
+    expectToMatchContract(res, 'get', '/api/v1/insights/{slug}');
+    expect(res.body.data.backLink).toEqual({
+      label: 'Back to Pro Bono & Community Commitment',
+      href: '/responsible-business',
+      kind: 'internal',
+    });
+    expect(
+      res.body.data.related.flatMap((card: { categories: string[] }) => card.categories)
+    ).toEqual(['pro_bono', 'pro_bono', 'pro_bono']);
   });
 
   it('returns 404 for an unknown insight', async () => {
