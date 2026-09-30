@@ -66,9 +66,26 @@ interface Slot {
   readonly file: string;
   readonly alt: string;
   readonly field?: string;
+  /**
+   * Further fields on the same record that show the same picture, such as a
+   * practice area's `heroImages` reusing its card `image`. They share one
+   * upload: the id already attached to `field` when there is one.
+   */
+  readonly alsoFields?: readonly string[];
 }
 
-type Manifest = Record<string, Record<string, Slot | Record<string, Slot>>>;
+/** A page slot that copies another page's value: `"<page key>:<path>"`. */
+interface SameAsSlot {
+  readonly sameAs: string;
+}
+
+/**
+ * A page slot: one file, a carousel's files in slide order, or a copy of
+ * another page's slot.
+ */
+type PageSlot = Slot | readonly Slot[] | SameAsSlot;
+
+type Manifest = Record<string, Record<string, Slot | Record<string, PageSlot>>>;
 
 const MIME: Record<string, string> = {
   '.png': 'image/png',
@@ -223,27 +240,106 @@ async function doCollections(manifest: Manifest): Promise<number> {
         continue;
       }
 
-      if (!isEmpty(item[field]) && !FORCE) {
+      const fields = [field, ...(slot.alsoFields ?? [])];
+      const toFill = fields.filter((name) => FORCE || isEmpty(item[name]));
+
+      if (toFill.length === 0) {
         console.log(`  = ${slug} already has an image`);
         continue;
       }
 
       if (DRY_RUN) {
-        console.log(`  ~ ${slug}.${field} <- ${slot.file}`);
+        console.log(`  ~ ${slug}.${toFill.join(', ')} <- ${slot.file}`);
         continue;
       }
 
-      const mediaId = await upload(slot.file, slot.alt);
-      await patch(`/admin/content/${collection}/${item.id}`, item.revision, {
-        [field]: slotValue(item[field], mediaId),
-      });
-      console.log(`  + ${slug}.${field}`);
-      changed += 1;
+      // Reuse the picture already attached to the main field, so filling a
+      // second field with it adds nothing to the library.
+      const attached = item[field];
+      const mediaId =
+        !FORCE && typeof attached === 'string' ? attached : await upload(slot.file, slot.alt);
+
+      await patch(
+        `/admin/content/${collection}/${item.id}`,
+        item.revision,
+        Object.fromEntries(toFill.map((name) => [name, slotValue(item[name], mediaId)]))
+      );
+      console.log(`  + ${slug}.${toFill.join(', ')}`);
+      changed += toFill.length;
     }
   }
 
   return changed;
 }
+
+type Page = Record<string, unknown> & { revision: number };
+
+async function readPage(key: string): Promise<Page | undefined> {
+  const response = await fetch(`${BASE}/admin/pages/${key}`, { headers: authHeader() });
+  if (!response.ok) {
+    console.error(`  ! ${key}: reading the page failed with ${String(response.status)}`);
+    return undefined;
+  }
+
+  return ((await response.json()) as { data: Page }).data;
+}
+
+const isSameAs = (slot: PageSlot): slot is SameAsSlot => 'sameAs' in slot;
+
+const sameIds = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * What a page slot should hold, or `undefined` when it already holds it.
+ *
+ * A carousel keeps the slides it has and uploads only the missing ones, so
+ * adding slide 2 to a hero that already shows slide 1 re-uploads nothing.
+ */
+async function pageSlotValue(
+  current: unknown,
+  slot: PageSlot,
+  written: ReadonlyMap<string, unknown>
+): Promise<string | string[] | undefined> {
+  if (isSameAs(slot)) {
+    // Prefer what this run just wrote: the source page may have changed since.
+    let source = written.get(slot.sameAs);
+    if (source === undefined) {
+      const [key = '', path = ''] = slot.sameAs.split(':');
+      const page = await readPage(key);
+      source = page === undefined ? undefined : at(page, path);
+    }
+
+    if (isEmpty(source)) throw new Error(`${slot.sameAs} is empty, so there is nothing to copy`);
+    if (!FORCE && sameIds(current, source)) return undefined;
+
+    return source as string | string[];
+  }
+
+  if (Array.isArray(slot)) {
+    const slides = slot as readonly Slot[];
+    const have = Array.isArray(current) ? (current as string[]) : [];
+    if (!FORCE && have.length >= slides.length) return undefined;
+
+    const ids: string[] = [];
+    for (const [index, slide] of slides.entries()) {
+      const existing = have[index];
+      ids.push(!FORCE && existing !== undefined ? existing : await upload(slide.file, slide.alt));
+    }
+
+    return ids;
+  }
+
+  if (!isEmpty(current) && !FORCE) return undefined;
+
+  const single = slot as Slot;
+
+  return slotValue(current, await upload(single.file, single.alt));
+}
+
+const describe = (slot: PageSlot): string => {
+  if (isSameAs(slot)) return `same as ${slot.sameAs}`;
+  if (Array.isArray(slot)) return (slot as readonly Slot[]).map((slide) => slide.file).join(', ');
+  return (slot as Slot).file;
+};
 
 async function doPages(manifest: Manifest): Promise<number> {
   const pages = manifest.pages;
@@ -252,19 +348,14 @@ async function doPages(manifest: Manifest): Promise<number> {
   let changed = 0;
   console.log('\npages');
 
+  /** Values this run wrote, keyed `"<page key>:<path>"`, for `sameAs` slots. */
+  const written = new Map<string, unknown>();
+
   for (const [key, rawSlots] of Object.entries(pages)) {
-    const slots = rawSlots as Record<string, Slot>;
+    const slots = rawSlots as Record<string, PageSlot>;
 
-    const response = await fetch(`${BASE}/admin/pages/${key}`, { headers: authHeader() });
-    if (!response.ok) {
-      console.error(`  ! ${key}: reading the page failed with ${String(response.status)}`);
-      continue;
-    }
-
-    const body = (await response.json()) as {
-      data: Record<string, unknown> & { revision: number };
-    };
-    const page = body.data;
+    const page = await readPage(key);
+    if (page === undefined) continue;
 
     // One PATCH per page, so its revision is read once and every slot on it
     // moves together.
@@ -272,23 +363,27 @@ async function doPages(manifest: Manifest): Promise<number> {
     const applied: string[] = [];
 
     for (const [path, slot] of Object.entries(slots)) {
-      if (!isEmpty(at(page, path)) && !FORCE) {
+      if (DRY_RUN) {
+        console.log(`  ~ ${key}.${path} <- ${describe(slot)}`);
+        continue;
+      }
+
+      const value = await pageSlotValue(at(page, path), slot, written);
+      if (value === undefined) {
         console.log(`  = ${key}.${path} already set`);
         continue;
       }
 
-      if (DRY_RUN) {
-        console.log(`  ~ ${key}.${path} <- ${slot.file}`);
-        continue;
-      }
-
-      const mediaId = await upload(slot.file, slot.alt);
       const section = path.split('.')[0] ?? '';
 
       // Start from the section as stored: a PATCH replaces the whole section
-      // object, so anything not carried over would be dropped.
-      if (payload[section] === undefined) payload[section] = { ...(page[section] as object) };
-      setPath(payload, path, slotValue(at(page, path), mediaId));
+      // object, so anything not carried over would be dropped. A top-level
+      // field (a path with no dot) is written as it is.
+      if (path.includes('.') && payload[section] === undefined) {
+        payload[section] = { ...(page[section] as object) };
+      }
+      setPath(payload, path, value);
+      written.set(`${key}:${path}`, value);
       applied.push(path);
     }
 
