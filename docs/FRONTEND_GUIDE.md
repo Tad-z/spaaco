@@ -234,7 +234,7 @@ This one is a file upload, so send it as `multipart/form-data`, not JSON.
 
 | Field                | Required | Notes                                                    |
 | -------------------- | -------- | -------------------------------------------------------- |
-| `file`               | yes      | the CV — PDF or DOCX, maximum 5 MB                       |
+| `cv`                 | yes      | the CV — PDF or DOCX, maximum 5 MB                       |
 | `fullName`           | yes      |                                                          |
 | `email`              | yes      |                                                          |
 | `phone`              | yes      | required here, unlike the other two forms                |
@@ -244,7 +244,7 @@ This one is a file upload, so send it as `multipart/form-data`, not JSON.
 | `turnstileToken`     | yes      | as above                                                 |
 | `website`            | no       | the same honeypot                                        |
 
-The file field is literally named `file`. The API checks the actual contents of the upload rather than trusting the file extension, so a `.pdf` that is really something else is rejected.
+The file field is named `cv` (not `file` — that name belongs to the admin media upload). The API checks the actual contents of the upload rather than trusting the file extension, so a `.pdf` that is really something else is rejected.
 
 Only jobs that are open and past neither their closing date appear in `/jobs`, so a vacancy you can see is a vacancy you can apply to.
 
