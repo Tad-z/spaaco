@@ -74,7 +74,11 @@ interface Slot {
   readonly alsoFields?: readonly string[];
 }
 
-/** A page slot that copies another page's value: `"<page key>:<path>"`. */
+/**
+ * A page slot that copies another slot's picture: another page's,
+ * `"<page key>:<path>"`, or a record's, `"<collection>/<slug>:<field>"`.
+ * It replaces whatever the slot held, and is a no-op once they match.
+ */
 interface SameAsSlot {
   readonly sameAs: string;
 }
@@ -303,15 +307,26 @@ async function pageSlotValue(
     // Prefer what this run just wrote: the source page may have changed since.
     let source = written.get(slot.sameAs);
     if (source === undefined) {
-      const [key = '', path = ''] = slot.sameAs.split(':');
-      const page = await readPage(key);
-      source = page === undefined ? undefined : at(page, path);
+      const [owner = '', path = ''] = slot.sameAs.split(':');
+      const [collection = '', slug] = owner.split('/');
+
+      if (slug === undefined) {
+        const page = await readPage(owner);
+        source = page === undefined ? undefined : at(page, path);
+      } else {
+        source = (await itemsOf(collection)).get(slug)?.[path];
+      }
     }
 
     if (isEmpty(source)) throw new Error(`${slot.sameAs} is empty, so there is nothing to copy`);
-    if (!FORCE && sameIds(current, source)) return undefined;
 
-    return source as string | string[];
+    // A carousel's first picture fills a single image slot, and a single
+    // picture fills a carousel as its one slide.
+    const ids = Array.isArray(source) ? (source as string[]) : [source as string];
+    const value = Array.isArray(current) ? ids : (ids[0] ?? '');
+    if (!FORCE && sameIds(current, value)) return undefined;
+
+    return value;
   }
 
   if (Array.isArray(slot)) {
