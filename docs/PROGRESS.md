@@ -91,3 +91,5 @@ never silently lost.
 ### Phase 5, re-verified after Phase D
 
 - **5.3 and 5.4 re-verified** — both were reopened by the design update and are ticked again against their amended criteria. 5.3: a GET → PUT round-trip changes nothing but the revision for all ten page keys (including `recognition` and `responsible-business`), for settings and for the legal pages; a `hero` PATCH leaves every other section byte-identical; an invalid merged document is a 400 naming the section; a stale revision is a 409. 5.4: SVGs and renamed executables are 415s, a missing alt is a 400, replace-in-place keeps the id and changes the URL, an in-use file is a 409 listing where; PDFs upload as `kind: document` (magic bytes, 20 MB, title required, no sizes, scanned), the library filters by kind, and usages are found in carousels and document fields. No roadmap task remains open.
+
+- 2026-10-01 fix(media): Cloudinary size URLs dropped `g_xy_center` (refused without a crop mode, so every live `sizes` width was a 400; ADR-030 amended). `npm run rebuild-image-sizes` repairs stored records after deploy. upload-images now fills carousels slide by slide and shares pictures between slots.

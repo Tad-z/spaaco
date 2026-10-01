@@ -334,8 +334,8 @@ export async function updateMedia(
   assertEditableFor(existing.kind, input);
 
   if (input.focalPoint !== undefined) {
-    // Cloudinary bakes the focal point into the size URLs as gravity, so the
-    // stored `sizes` go stale the moment it moves (ADR-030). The local driver
+    // Re-stores the Cloudinary size URLs, which also repairs any written
+    // before gravity was dropped from them (ADR-030). The local driver
     // returns undefined here, because its widths are uncropped files.
     const sizes = publicStorage().resize(existing.storageKey, existing.mimeType, input.focalPoint);
 

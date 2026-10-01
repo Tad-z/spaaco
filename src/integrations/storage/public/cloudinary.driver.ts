@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { IMAGE_SIZES } from '../../../config/constants.js';
 import { InternalError } from '../../../core/errors.js';
 import type {
-  FocalPoint,
   IPublicStorage,
   ImageSizeUrls,
   PutDocumentInput,
@@ -70,22 +69,16 @@ export function createCloudinaryStorage(
   const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
   /**
-   * Transformation URLs, with the focal point as gravity (ADR-030).
+   * Transformation URLs for the three widths (ADR-030).
    *
-   * `g_xy_center` tells Cloudinary which point to keep when a crop has to
-   * choose, so a portrait is not beheaded on a narrow viewport. It only bites
-   * once a crop is applied, which is why the widths stay `c_limit` here and the
-   * coordinates ride along for the frontend's own transformations.
+   * The widths only scale down (`c_limit`), never crop, so they carry no
+   * gravity: Cloudinary refuses `g_xy_center` without a cropping mode, with a
+   * 400 for every size. The focal point reaches the frontend as its own field
+   * on the image, for the crops it makes itself.
    */
-  const sizeUrls = (
-    publicId: string,
-    format: string,
-    focalPoint: FocalPoint = { x: 0.5, y: 0.5 }
-  ): ImageSizeUrls => {
-    const gravity = `g_xy_center,x_${focalPoint.x.toFixed(3)},y_${focalPoint.y.toFixed(3)}`;
-
+  const sizeUrls = (publicId: string, format: string): ImageSizeUrls => {
     const at = (width: number): string =>
-      `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto,c_limit,w_${String(width)},${gravity}/${publicId}.${format}`;
+      `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto,c_limit,w_${String(width)}/${publicId}.${format}`;
 
     return { sm: at(IMAGE_SIZES.sm), md: at(IMAGE_SIZES.md), lg: at(IMAGE_SIZES.lg) };
   };
@@ -124,7 +117,7 @@ export function createCloudinaryStorage(
       return {
         storageKey: body.public_id,
         url: body.secure_url,
-        sizes: sizeUrls(body.public_id, format, input.focalPoint),
+        sizes: sizeUrls(body.public_id, format),
       };
     },
 
@@ -179,10 +172,11 @@ export function createCloudinaryStorage(
       return { storageKey: body.public_id, url: body.secure_url };
     },
 
-    resize(storageKey: string, mimeType: string, focalPoint: FocalPoint): ImageSizeUrls {
-      // No upload needed: the widths are URLs, so a new focal point is simply a
-      // new set of URLs over the same stored original.
-      return sizeUrls(storageKey, formatOf(mimeType), focalPoint);
+    resize(storageKey: string, mimeType: string): ImageSizeUrls {
+      // The widths no longer depend on the focal point, but rebuilding them
+      // costs nothing, and it rewrites the URLs stored before gravity was
+      // dropped, which Cloudinary refuses. `rebuild-image-sizes` relies on it.
+      return sizeUrls(storageKey, formatOf(mimeType));
     },
 
     async remove(storageKey: string, kind: StoredKind = 'image'): Promise<void> {
