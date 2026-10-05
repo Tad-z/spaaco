@@ -13,6 +13,7 @@ import type {
 } from '../types/api.js';
 import type { AdminCollection } from '../constants/content-collections.js';
 import { CONTENT_COLLECTIONS } from '../constants/content-collections.js';
+import { LEGACY_SOURCES } from '../constants/enums.js';
 
 /**
  * The editable shape: references stay as ids, exactly as the dashboard must
@@ -50,6 +51,19 @@ const idList = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.map((item) => idOrNull(item)).filter((id): id is string => id !== null)
     : [];
+
+/** Where an imported record came from (ADR-059); null for content made by hand. */
+const legacyOf = (value: unknown): PersonAdmin['legacy'] => {
+  if (typeof value !== 'object' || value === null) return null;
+  const legacy = value as { source?: unknown; legacyId?: unknown; importedAt?: unknown };
+  const importedAt = ISO(legacy.importedAt);
+  const source = LEGACY_SOURCES.values.find((value) => value === legacy.source);
+  if (source === undefined || typeof legacy.legacyId !== 'number' || importedAt === null) {
+    return null;
+  }
+
+  return { source, legacyId: legacy.legacyId, importedAt };
+};
 
 /** Fields every content item carries, in the shape the contract declares. */
 function meta(doc: StoredDoc): Record<string, unknown> {
@@ -175,6 +189,7 @@ const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknow
     memberships: Array.isArray(doc.memberships) ? doc.memberships : [],
     office: idOrNull(doc.office),
     featuredInLeadership: doc.featuredInLeadership ?? false,
+    legacy: legacyOf(doc.legacy),
   }),
   insights: (doc) => ({
     title: doc.title,
@@ -189,6 +204,7 @@ const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknow
     externalUrl: doc.externalUrl ?? null,
     document: idOrNull(doc.document),
     featured: doc.featured ?? false,
+    legacy: legacyOf(doc.legacy),
   }),
   offices: (doc) => ({
     name: doc.name,

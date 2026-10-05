@@ -1,5 +1,4 @@
 import type { Request, Response } from 'express';
-import type { Types } from 'mongoose';
 import { UnauthenticatedError, ValidationError } from '../../core/errors.js';
 import {
   createContent,
@@ -10,6 +9,7 @@ import {
   setPublished,
   updateContent,
 } from '../../services/content.service.js';
+import type { ActorContext } from '../../services/content.service.js';
 import { buildExpanded } from '../../services/expand.service.js';
 import {
   collectExpandTargets,
@@ -36,9 +36,9 @@ import type { AdminCollection } from '../../constants/content-collections.js';
  */
 
 /** requireAuth guarantees this, but the type does not, so it is checked once. */
-const actorContext = (req: Request): { actorId: Types.ObjectId } => {
+const actorContext = (req: Request): ActorContext => {
   if (!req.user) throw new UnauthenticatedError();
-  return { actorId: req.user.id };
+  return { actorId: req.user.id, roles: req.user.roles };
 };
 
 /** Serialize one or many documents with their previews resolved in one pass. */

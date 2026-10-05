@@ -2,12 +2,13 @@ import mongoose from 'mongoose';
 import type { Model, Types } from 'mongoose';
 import { CONTENT_COLLECTIONS } from '../constants/content-collections.js';
 import type { AdminCollection, ContentCollectionConfig } from '../constants/content-collections.js';
-import { ConflictError, NotFoundError, ValidationError } from '../core/errors.js';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../core/errors.js';
 import { toSkip } from '../helpers/pagination.helper.js';
 import { invalidateEntity } from './cache.service.js';
 import { record } from './audit.service.js';
 import { assertMediaKinds } from './media.service.js';
 import type { ErrorDetail } from '../types/api.js';
+import type { UserRole } from '../constants/enums.js';
 
 /**
  * One implementation of CRUD for all nine content collections.
@@ -20,6 +21,7 @@ import type { ErrorDetail } from '../types/api.js';
 
 export interface ActorContext {
   readonly actorId?: Types.ObjectId;
+  readonly roles?: readonly UserRole[];
 }
 
 export interface ListOptions {
@@ -85,6 +87,45 @@ export async function getContent(collection: AdminCollection, id: string): Promi
   return doc;
 }
 
+interface LegacyImportInput {
+  readonly source: string;
+  readonly legacyId: number;
+  readonly publishedAt?: string;
+}
+
+/**
+ * Turns a write's `legacyImport` into the stored `legacy` block (ADR-059).
+ *
+ * Admins only. An import may backdate an insight's `publishedAt`, which no
+ * other write can do, so it is refused outright from any other role rather
+ * than ignored: an editor sending it has a client bug worth hearing about.
+ * Returns the input unchanged when there is no `legacyImport`.
+ */
+function applyLegacyImport(
+  input: Record<string, unknown>,
+  context: ActorContext
+): { input: Record<string, unknown>; legacy?: LegacyImportInput } {
+  if (input.legacyImport === undefined) return { input };
+
+  if (!(context.roles ?? []).includes('admin')) {
+    throw new ForbiddenError('Only an administrator can import content', [
+      { path: 'legacyImport', message: 'requires the admin role' },
+    ]);
+  }
+
+  // Validated by the request schema before it reaches here.
+  const { legacyImport, ...rest } = input;
+  const legacy = legacyImport as LegacyImportInput;
+
+  const output: Record<string, unknown> = {
+    ...rest,
+    legacy: { source: legacy.source, legacyId: legacy.legacyId, importedAt: new Date() },
+  };
+  if (legacy.publishedAt !== undefined) output.publishedAt = new Date(legacy.publishedAt);
+
+  return { input: output, legacy };
+}
+
 export async function createContent(
   collection: AdminCollection,
   input: Record<string, unknown>,
@@ -92,8 +133,9 @@ export async function createContent(
 ): Promise<ContentDoc> {
   const model = modelFor(collection);
   await assertMediaKinds(config(collection).model, input);
+  const { input: data, legacy } = applyLegacyImport(input, context);
 
-  const created = await model.create({ ...input, createdBy: context.actorId ?? null });
+  const created = await model.create({ ...data, createdBy: context.actorId ?? null });
   const doc = (created as unknown as { toObject: () => ContentDoc }).toObject();
 
   invalidateEntity(config(collection).cacheEntity, doc.slug);
@@ -102,7 +144,7 @@ export async function createContent(
     action: `${collection}.create`,
     entity: config(collection).model,
     entityId: doc._id,
-    meta: { slug: doc.slug },
+    meta: legacy === undefined ? { slug: doc.slug } : { slug: doc.slug, legacyImport: legacy },
   });
 
   return doc;
@@ -125,17 +167,29 @@ export async function updateContent(
   const model = modelFor(collection);
   await assertMediaKinds(config(collection).model, input);
   if (collection === 'insights') await assertOneArticleTarget(model, id, input);
+  const { input: data, legacy } = applyLegacyImport(input, context);
 
   const updated = await model
     .findOneAndUpdate(
       { _id: id, revision: expectedRevision },
-      { $set: { ...input, updatedBy: context.actorId ?? null }, $inc: { revision: 1 } },
+      { $set: { ...data, updatedBy: context.actorId ?? null }, $inc: { revision: 1 } },
       { new: true, runValidators: true }
     )
     .lean<ContentDoc | null>();
 
   if (updated) {
     invalidateEntity(config(collection).cacheEntity, updated.slug);
+    // Ordinary edits are not audited, but an import can move `publishedAt`,
+    // which is otherwise only ever set by the audited publish action.
+    if (legacy !== undefined) {
+      await record({
+        actor: context.actorId ?? null,
+        action: `${collection}.import`,
+        entity: config(collection).model,
+        entityId: updated._id,
+        meta: { slug: updated.slug, legacyImport: legacy },
+      });
+    }
     return updated;
   }
 

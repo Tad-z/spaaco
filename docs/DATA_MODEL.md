@@ -83,11 +83,13 @@ Indexes: `{status:1, order:1}` and a text index on `title, summary, overview`.
 | memberships          | [String]                                      |                                                                                                |
 | office               | →Office                                       |                                                                                                |
 | featuredInLeadership | Boolean                                       | The Home leadership row                                                                        |
+| legacy               | `{ source, legacyId, importedAt }`, nullable  | Set only on imported records (ADR-059). Admin read-only; never public                          |
 
 **Seniority sort** is role rank (managing_partner = 0 … trainee_associate = 5), then `order`, then `lastName`.
 **Role filtering** treats `partner` as a group that also matches `managing_partner`, because the directory has a "Partners" tab and no Managing Partner tab (DECISIONS Q3).
 **Practice-area filtering** (`?practiceArea=<slug>`) matches `practiceAreas` or `primaryPracticeArea`, and combines with `role`.
 People carry no `seo` fields, so `/people/:slug` returns none.
+People and insights both index `{ 'legacy.source': 1, 'legacy.legacyId': 1 }` (sparse), so an import can be found or rolled back with one query.
 Indexes: `{status:1, role:1, order:1}`, `{status:1, practiceAreas:1}` and a text index on `firstName, lastName, bio`.
 
 ### `insights`
@@ -107,6 +109,7 @@ Indexes: `{status:1, role:1, order:1}`, `{status:1, practiceAreas:1}` and a text
 | coverImage    | →Media                              |                                                                                        |
 | featured      | Boolean                             | Top carousel (max 3 shown)                                                             |
 | publishedAt   | Date                                | Displayed as "June, 2026." by the frontend                                             |
+| legacy        | `{ source, legacyId, importedAt }`  | Set only on imported records (ADR-059). Admin read-only; never public                  |
 
 Card chips = the first category label, then the first practice area title. If there's no practice area, show the second category.
 **`pro_bono` ("Pro Bono & Community Commitment") is excluded from every listing unless it is asked for by name** — the main listing, the featured carousel, Home's Recent Publications, and practice-area and person publications. The rule lives in one constant, `EXCLUDED_FROM_MAIN_LISTING` (ADR-049).

@@ -4,6 +4,7 @@ import {
   EMPLOYMENT_TYPES,
   INSIGHT_CATEGORIES,
   INSIGHT_FORMATS,
+  LEGACY_SOURCES,
   PERSON_ROLES,
   WORK_MODES,
 } from '../constants/enums.js';
@@ -37,6 +38,22 @@ const nullableRichText = richText.nullable();
 
 const text = (max: number): z.ZodString => z.string().trim().min(1).max(max);
 const optionalText = (max: number): ZodTypeAny => z.string().trim().max(max).nullable();
+
+/**
+ * Marks a write as part of a one-off content import (ADR-059). Admins only:
+ * the service refuses it from anyone else. An insight may also carry the date
+ * it was first published, which no other write can set.
+ */
+const legacyImport = z
+  .object({
+    source: z.enum(LEGACY_SOURCES.values),
+    legacyId: z.number().int().min(1),
+  })
+  .strict();
+
+const insightLegacyImport = legacyImport
+  .extend({ publishedAt: z.string().datetime({ offset: true }).optional() })
+  .strict();
 
 const practiceAreaCreate = z
   .object({
@@ -105,6 +122,7 @@ const personCreate = z
     memberships: z.array(text(200)).max(30).optional(),
     office: objectIdRef.optional(),
     featuredInLeadership: z.boolean().optional(),
+    legacyImport: legacyImport.optional(),
   })
   .strict();
 
@@ -125,7 +143,9 @@ const insightBase = z
     featured: z.boolean().optional(),
     // No `publishedAt`: it is stamped by POST /publish and is read-only in the
     // contract, so accepting it here would let a client backdate an article
-    // out of band of the only action that is audited.
+    // out of band of the only action that is audited. The one exception is an
+    // admin's `legacyImport.publishedAt`, audited on the write (ADR-059).
+    legacyImport: insightLegacyImport.optional(),
   })
   .strict();
 

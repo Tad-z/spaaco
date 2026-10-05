@@ -39,6 +39,7 @@ const READ_ONLY = [
   'revision',
   'createdAt',
   'updatedAt',
+  'legacy',
   '_expanded',
 ] as const;
 
@@ -63,6 +64,11 @@ interface CollectionSpec {
   readonly sample: Json;
   /** Previews for any ids the sample references. */
   readonly expanded?: Json;
+  /**
+   * Fields a write accepts that a read never returns, such as `legacyImport`
+   * (ADR-059). Added to `<Name>Create` and `<Name>Update` only.
+   */
+  readonly writeOnly?: Json;
 }
 
 const MEDIA_ID = '665f00000000000000000101';
@@ -160,8 +166,10 @@ const COLLECTIONS: readonly CollectionSpec[] = [
       memberships: ['Nigerian Bar Association (NBA)'],
       office: null,
       featuredInLeadership: true,
+      legacy: null,
     },
     expanded: MEDIA_PREVIEW,
+    writeOnly: { legacyImport: { $ref: '#/components/schemas/LegacyImportWrite' } },
   },
   {
     slug: 'insights',
@@ -185,8 +193,10 @@ const COLLECTIONS: readonly CollectionSpec[] = [
       externalUrl: null,
       document: null,
       featured: false,
+      legacy: null,
     },
     expanded: MEDIA_PREVIEW,
+    writeOnly: { legacyImport: { $ref: '#/components/schemas/InsightLegacyImportWrite' } },
   },
   {
     slug: 'offices',
@@ -315,7 +325,9 @@ const dataOf = (schema: Json): Json => ({
 function writeSchemas(admin: Json, collection: CollectionSpec): { create: Json; update: Json } {
   const readOnly = new Set<string>(READ_ONLY);
   const properties = Object.fromEntries(
-    Object.entries(admin.properties as Json).filter(([key]) => !readOnly.has(key))
+    Object.entries({ ...(admin.properties as Json), ...collection.writeOnly }).filter(
+      ([key]) => !readOnly.has(key)
+    )
   );
 
   const create: Json = {

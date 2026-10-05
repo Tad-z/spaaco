@@ -168,7 +168,9 @@ Admin GETs and public GETs return **different shapes on purpose**:
 - **Public (composed):** references are expanded into what the site renders. `hero.images` is an array of Image objects; `leadership` is PersonSummary[]; computed stats are resolved.
 - **Admin (editable):** references stay as IDs, exactly as the admin UI must send them back. `hero.images` is `["665f…"]` (media IDs), `story.quotePerson` is a person ID, and stats keep their `source`. To render thumbnails without extra calls, admin responses also include an `_expanded` object keyed by ID with a minimal preview of each referenced media or person (`{ url, alt }` / `{ displayName }`). **`_expanded` is rejected on write, not ignored:** the request schemas are strict, so sending it back is a 400 naming the field rather than a silent no-op.
 
-Rule of thumb: whatever an admin GET returns, minus the fields the server owns, is a valid PUT body. Those fields are `id`, `slug`'s siblings `status`, `publishedAt` and `order`, plus `revision`, `createdAt`, `updatedAt` and `_expanded`. (`slug` itself _is_ writable — it is how an editor changes a URL.)
+**Content imports (ADR-059).** People and insight writes accept a write-only `legacyImport: { source: 'wordpress', legacyId }`, from the `admin` role only (anyone else gets 403). On an insight it may also carry `publishedAt`, the date the article was first published in the source system; publishing later keeps it. A read shows the stored provenance as the read-only `legacy: { source, legacyId, importedAt }`. Public responses carry neither.
+
+Rule of thumb: whatever an admin GET returns, minus the fields the server owns, is a valid PUT body. Those fields are `id`, `slug`'s siblings `status`, `publishedAt` and `order`, plus `revision`, `createdAt`, `updatedAt`, `legacy` and `_expanded`. (`slug` itself _is_ writable — it is how an editor changes a URL.)
 
 **Submissions:** `GET /enquiries`, `GET /enquiries/:id`, `PATCH /enquiries/:id` (status, assignedTo). The same for `/messages` and `/applications`, plus `GET /applications/:id/cv`, which returns `{ url, expiresAt }` (a signed URL with a 5-minute TTL; this access is audited).
 

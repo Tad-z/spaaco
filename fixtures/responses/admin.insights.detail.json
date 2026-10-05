@@ -20,6 +20,7 @@
     "externalUrl": null,
     "document": null,
     "featured": false,
+    "legacy": null,
     "_expanded": {
       "665f00000000000000000101": {
         "kind": "media",

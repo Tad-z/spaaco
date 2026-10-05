@@ -2,6 +2,7 @@ import type {
   EmploymentType,
   InsightCategory,
   InsightFormat,
+  LegacySource,
   LegalPageKey,
   LinkKind,
   MediaKind,
@@ -80,6 +81,12 @@ export const EXCLUDED_FROM_MAIN_LISTING: readonly InsightCategory[] = ['pro_bono
 /** The listing tabs and the Insights & News nav dropdown: every category a listing shows. */
 export const PUBLIC_INSIGHT_CATEGORIES: readonly InsightCategory[] =
   INSIGHT_CATEGORIES.values.filter((category) => !EXCLUDED_FROM_MAIN_LISTING.includes(category));
+
+/** Systems content may be imported from, recorded on each imported record (ADR-059). */
+export const LEGACY_SOURCES = {
+  values: ['wordpress'] as const satisfies readonly LegacySource[],
+  labels: { wordpress: 'WordPress' } satisfies Record<LegacySource, string>,
+} as const;
 
 export const INSIGHT_FORMATS = {
   values: ['article', 'video'] as const satisfies readonly InsightFormat[],

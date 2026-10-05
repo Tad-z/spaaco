@@ -1,5 +1,5 @@
 import type { Types } from 'mongoose';
-import type { IContentFields } from './common.interface.js';
+import type { IContentFields, ILegacyImport } from './common.interface.js';
 import type { InsightCategory, InsightFormat } from '../types/api.js';
 
 /** An article, news item, video or pro bono story. */
@@ -21,4 +21,6 @@ export interface IInsight extends IContentFields {
   author?: Types.ObjectId | null;
   coverImage?: Types.ObjectId | null;
   featured: boolean;
+  /** Set when the record came from a content import (ADR-059). */
+  legacy?: ILegacyImport | null;
 }

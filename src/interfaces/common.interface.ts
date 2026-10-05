@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 import type { ContentStatus, StatSource } from '../constants/enums.js';
-import type { LinkKind } from '../types/api.js';
+import type { LegacySource, LinkKind } from '../types/api.js';
 
 /**
  * Shapes shared by several collections.
@@ -84,6 +84,16 @@ export interface ISeoBasic {
 export interface ITitledBody {
   title: string;
   body: string;
+}
+
+/**
+ * Where an imported record came from (ADR-059). Null on content made by hand.
+ * Lets a bad import be found, and removed, with one query.
+ */
+export interface ILegacyImport {
+  source: LegacySource;
+  legacyId: number;
+  importedAt: Date;
 }
 
 /**

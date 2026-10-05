@@ -238,6 +238,29 @@ describe('collection-level access', () => {
   });
 });
 
+describe('field-level access', () => {
+  it('refuses a content import from anyone but an admin (ADR-059)', async () => {
+    const editor = await createTestUser({ roles: ['editor'] });
+
+    const res = await request(app)
+      .post('/api/v1/admin/content/insights')
+      .set('Authorization', `Bearer ${editor.token}`)
+      .send({
+        title: 'Backdated',
+        format: 'article',
+        categories: ['articles'],
+        legacyImport: {
+          source: 'wordpress',
+          legacyId: 1,
+          publishedAt: '2015-01-01T09:00:00+01:00',
+        },
+      });
+
+    expect(res.status).toBe(403);
+    expect(res.body.error.details[0].path).toBe('legacyImport');
+  });
+});
+
 describe('admin responses are never cacheable', () => {
   // Seeded, so the singleton routes answer 200 rather than 404 — the whole
   // point of the assertion below is that it runs against a real payload.

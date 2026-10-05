@@ -3,6 +3,7 @@ import type { Model } from 'mongoose';
 import type { IInsight } from '../interfaces/insight.interface.js';
 import { INSIGHT_CATEGORIES, INSIGHT_FORMATS } from '../constants/enums.js';
 import { contentPlugin } from './plugins/content.plugin.js';
+import { legacyImportSchema } from './schemas/common.schemas.js';
 
 const insightSchema = new Schema<IInsight>(
   {
@@ -54,6 +55,7 @@ const insightSchema = new Schema<IInsight>(
     author: { type: Schema.Types.ObjectId, ref: 'Person', default: null },
     coverImage: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
     featured: { type: Boolean, default: false },
+    legacy: { type: legacyImportSchema, default: null },
   },
   { timestamps: true, strict: 'throw' }
 );
@@ -67,5 +69,7 @@ insightSchema.index({ status: 1, featured: 1, publishedAt: -1 });
 // The practice-area filter and a practice area's related insights.
 insightSchema.index({ status: 1, practiceAreas: 1, publishedAt: -1 });
 insightSchema.index({ title: 'text', excerpt: 'text', body: 'text' });
+// Finds, or rolls back, an import (ADR-059).
+insightSchema.index({ 'legacy.source': 1, 'legacy.legacyId': 1 }, { sparse: true });
 
 export const Insight: Model<IInsight> = model<IInsight>('Insight', insightSchema);

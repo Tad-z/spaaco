@@ -1,8 +1,9 @@
 import { Schema } from 'mongoose';
-import { LINK_KINDS, STAT_SOURCES } from '../../constants/enums.js';
+import { LEGACY_SOURCES, LINK_KINDS, STAT_SOURCES } from '../../constants/enums.js';
 import type {
   IHero,
   IIconItem,
+  ILegacyImport,
   ILink,
   IPendingLink,
   ISectionHeader,
@@ -105,6 +106,16 @@ export const titledBodySchema = new Schema<ITitledBody>(
     title: { type: String, required: true, trim: true, maxlength: 160 },
     // Sanitised HTML since v2: "Our Asset" has bold phrases.
     body: { type: String, required: true, maxlength: 8000 },
+  },
+  subSchema
+);
+
+/** Provenance of an imported record (ADR-059). */
+export const legacyImportSchema = new Schema<ILegacyImport>(
+  {
+    source: { type: String, required: true, enum: LEGACY_SOURCES.values },
+    legacyId: { type: Number, required: true, min: 1 },
+    importedAt: { type: Date, required: true },
   },
   subSchema
 );

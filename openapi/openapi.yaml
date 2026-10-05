@@ -7599,6 +7599,46 @@ components:
           - $ref: '#/components/schemas/ExpandedMedia'
           - $ref: '#/components/schemas/ExpandedPerson'
 
+    LegacyImport:
+      type: object
+      additionalProperties: false
+      required: [source, legacyId, importedAt]
+      description: |
+        Where an imported record came from, so a bad import can be found and
+        removed with one query (ADR-059). Read-only: it is set through
+        `legacyImport` on a write, by an admin only.
+      properties:
+        source: { type: string, enum: [wordpress] }
+        legacyId:
+          type: integer
+          description: The record's ID in the source system.
+        importedAt: { type: string, format: date-time }
+
+    LegacyImportWrite:
+      type: object
+      additionalProperties: false
+      required: [source, legacyId]
+      description: |
+        Marks a write as part of a one-off content import (ADR-059). Accepted
+        from the `admin` role only; anyone else gets 403. Never returned: a read
+        shows the stored `legacy` instead.
+      properties:
+        source: { type: string, enum: [wordpress] }
+        legacyId: { type: integer, minimum: 1 }
+
+    InsightLegacyImportWrite:
+      type: object
+      additionalProperties: false
+      required: [source, legacyId]
+      description: |
+        `LegacyImportWrite` for an insight, which may also carry the date it was
+        first published in the source system. That date becomes `publishedAt`,
+        and publishing later keeps it (ADR-059).
+      properties:
+        source: { type: string, enum: [wordpress] }
+        legacyId: { type: integer, minimum: 1 }
+        publishedAt: { type: string, format: date-time }
+
     SeoWrite:
       type: object
       additionalProperties: false
@@ -7719,6 +7759,7 @@ components:
         - memberships
         - office
         - featuredInLeadership
+        - legacy
         - _expanded
       properties:
         id: { $ref: '#/components/schemas/ObjectId' }
@@ -7762,6 +7803,11 @@ components:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
         featuredInLeadership: { type: boolean }
+        legacy:
+          oneOf:
+            - $ref: '#/components/schemas/LegacyImport'
+            - type: 'null'
+          description: Set when the record came from a content import. Null for hand-made content.
         _expanded: { $ref: '#/components/schemas/Expanded' }
 
     InsightAdmin:
@@ -7788,6 +7834,7 @@ components:
         - externalUrl
         - document
         - featured
+        - legacy
         - _expanded
       properties:
         id: { $ref: '#/components/schemas/ObjectId' }
@@ -7828,6 +7875,11 @@ components:
             - type: 'null'
           description: An uploaded PDF (a document in the media library) that "Read Article" opens.
         featured: { type: boolean }
+        legacy:
+          oneOf:
+            - $ref: '#/components/schemas/LegacyImport'
+            - type: 'null'
+          description: Set when the record came from a content import. Null for hand-made content.
         _expanded: { $ref: '#/components/schemas/Expanded' }
 
     OfficeAdmin:
@@ -8220,6 +8272,8 @@ components:
             - type: 'null'
         featuredInLeadership:
           type: boolean
+        legacyImport:
+          $ref: '#/components/schemas/LegacyImportWrite'
     PersonUpdate:
       type: object
       additionalProperties: false
@@ -8283,6 +8337,8 @@ components:
           description: An uploaded PDF (a document in the media library) that "Read Article" opens.
         featured:
           type: boolean
+        legacyImport:
+          $ref: '#/components/schemas/InsightLegacyImportWrite'
     InsightUpdate:
       type: object
       additionalProperties: false

@@ -3186,6 +3186,41 @@ export interface components {
         Expanded: {
             [key: string]: components["schemas"]["ExpandedMedia"] | components["schemas"]["ExpandedPerson"];
         };
+        /**
+         * @description Where an imported record came from, so a bad import can be found and
+         *     removed with one query (ADR-059). Read-only: it is set through
+         *     `legacyImport` on a write, by an admin only.
+         */
+        LegacyImport: {
+            /** @enum {string} */
+            source: "wordpress";
+            /** @description The record's ID in the source system. */
+            legacyId: number;
+            /** Format: date-time */
+            importedAt: string;
+        };
+        /**
+         * @description Marks a write as part of a one-off content import (ADR-059). Accepted
+         *     from the `admin` role only; anyone else gets 403. Never returned: a read
+         *     shows the stored `legacy` instead.
+         */
+        LegacyImportWrite: {
+            /** @enum {string} */
+            source: "wordpress";
+            legacyId: number;
+        };
+        /**
+         * @description `LegacyImportWrite` for an insight, which may also carry the date it was
+         *     first published in the source system. That date becomes `publishedAt`,
+         *     and publishing later keeps it (ADR-059).
+         */
+        InsightLegacyImportWrite: {
+            /** @enum {string} */
+            source: "wordpress";
+            legacyId: number;
+            /** Format: date-time */
+            publishedAt?: string;
+        };
         SeoWrite: {
             title: string | null;
             description: string | null;
@@ -3257,6 +3292,8 @@ export interface components {
             memberships: string[];
             office: components["schemas"]["ObjectId"] | null;
             featuredInLeadership: boolean;
+            /** @description Set when the record came from a content import. Null for hand-made content. */
+            legacy: components["schemas"]["LegacyImport"] | null;
             _expanded: components["schemas"]["Expanded"];
         };
         InsightAdmin: {
@@ -3287,6 +3324,8 @@ export interface components {
             /** @description An uploaded PDF (a document in the media library) that "Read Article" opens. */
             document: components["schemas"]["ObjectId"] | null;
             featured: boolean;
+            /** @description Set when the record came from a content import. Null for hand-made content. */
+            legacy: components["schemas"]["LegacyImport"] | null;
             _expanded: components["schemas"]["Expanded"];
         };
         OfficeAdmin: {
@@ -3489,6 +3528,7 @@ export interface components {
             memberships?: string[];
             office?: components["schemas"]["ObjectId"] | null;
             featuredInLeadership?: boolean;
+            legacyImport?: components["schemas"]["LegacyImportWrite"];
         };
         /** @description Any subset of the attorney fields. Requires `If-Match`. */
         PersonUpdate: {
@@ -3512,6 +3552,7 @@ export interface components {
             memberships?: string[];
             office?: components["schemas"]["ObjectId"] | null;
             featuredInLeadership?: boolean;
+            legacyImport?: components["schemas"]["LegacyImportWrite"];
         };
         /** @description Creates a insight. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
         InsightCreate: {
@@ -3531,6 +3572,7 @@ export interface components {
             /** @description An uploaded PDF (a document in the media library) that "Read Article" opens. */
             document?: components["schemas"]["ObjectId"] | null;
             featured?: boolean;
+            legacyImport?: components["schemas"]["InsightLegacyImportWrite"];
         };
         /** @description Any subset of the insight fields. Requires `If-Match`. */
         InsightUpdate: {
@@ -3550,6 +3592,7 @@ export interface components {
             /** @description An uploaded PDF (a document in the media library) that "Read Article" opens. */
             document?: components["schemas"]["ObjectId"] | null;
             featured?: boolean;
+            legacyImport?: components["schemas"]["InsightLegacyImportWrite"];
         };
         /** @description Creates a office. This is the editable shape without the server-owned fields, so what a GET returns can be sent straight back. */
         OfficeCreate: {

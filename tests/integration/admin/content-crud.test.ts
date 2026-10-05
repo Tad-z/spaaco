@@ -391,6 +391,55 @@ describe('publish and unpublish', () => {
   });
 });
 
+describe('content imports (ADR-059)', () => {
+  const wordpressDate = '2019-05-12T09:00:00+01:00';
+
+  it('keeps the source publish date through publishing, and never shows provenance publicly', async () => {
+    const created = await request(app)
+      .post(`${base}/insights`)
+      .set('Authorization', auth())
+      .send({
+        slug: 'old-wordpress-article',
+        title: 'An Article From The Old Site',
+        format: 'article',
+        categories: ['articles'],
+        body: '<p>Imported.</p>',
+        legacyImport: { source: 'wordpress', legacyId: 5521, publishedAt: wordpressDate },
+      });
+
+    expect(created.status).toBe(201);
+    expectToMatchContract(created, 'post', '/api/v1/admin/content/insights');
+    expect(created.body.data.legacy).toMatchObject({ source: 'wordpress', legacyId: 5521 });
+
+    const published = await request(app)
+      .post(`${base}/insights/${created.body.data.id as string}/publish`)
+      .set('Authorization', auth());
+    expect(published.body.data.publishedAt).toBe(new Date(wordpressDate).toISOString());
+
+    const audit = await AuditLog.findOne({ action: 'insights.create' }).lean();
+    expect(audit?.meta).toMatchObject({ legacyImport: { legacyId: 5521 } });
+
+    const pub = await request(app).get('/api/v1/insights/old-wordpress-article');
+    expect(pub.status).toBe(200);
+    expect(pub.body.data.publishedAt).toBe(new Date(wordpressDate).toISOString());
+    expect(JSON.stringify(pub.body)).not.toContain('legacy');
+  });
+
+  it('rejects a publish date on an attorney import, which has none to keep', async () => {
+    const res = await request(app)
+      .post(`${base}/people`)
+      .set('Authorization', auth())
+      .send({
+        firstName: 'Ada',
+        lastName: 'Imported',
+        role: 'associate',
+        legacyImport: { source: 'wordpress', legacyId: 1873, publishedAt: wordpressDate },
+      });
+
+    expect(res.status).toBe(400);
+  });
+});
+
 describe('delete', () => {
   it('refuses when something still references the record, listing what', async () => {
     const area = await PracticeArea.findOne({ slug: 'energy-natural-resources' }).lean();

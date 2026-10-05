@@ -30,6 +30,7 @@
       "memberships": ["Nigerian Bar Association (NBA)"],
       "office": null,
       "featuredInLeadership": true,
+      "legacy": null,
       "_expanded": {
         "665f00000000000000000101": {
           "kind": "media",

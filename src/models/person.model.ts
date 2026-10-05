@@ -3,6 +3,7 @@ import type { Model } from 'mongoose';
 import type { IEducation, IEducationEntry, IPerson } from '../interfaces/person.interface.js';
 import { PERSON_ROLES } from '../constants/enums.js';
 import { contentPlugin } from './plugins/content.plugin.js';
+import { legacyImportSchema } from './schemas/common.schemas.js';
 
 const subSchema = { _id: false, versionKey: false } as const;
 
@@ -43,6 +44,7 @@ const personSchema = new Schema<IPerson>(
     memberships: { type: [String], default: [] },
     office: { type: Schema.Types.ObjectId, ref: 'Office', default: null },
     featuredInLeadership: { type: Boolean, default: false },
+    legacy: { type: legacyImportSchema, default: null },
   },
   { timestamps: true, strict: 'throw' }
 );
@@ -61,5 +63,7 @@ personSchema.index({ status: 1, role: 1, order: 1 });
 personSchema.index({ status: 1, practiceAreas: 1 });
 personSchema.index({ status: 1, primaryPracticeArea: 1 });
 personSchema.index({ firstName: 'text', lastName: 'text', bio: 'text' });
+// Finds, or rolls back, an import (ADR-059).
+personSchema.index({ 'legacy.source': 1, 'legacy.legacyId': 1 }, { sparse: true });
 
 export const Person: Model<IPerson> = model<IPerson>('Person', personSchema);

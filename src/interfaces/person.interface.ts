@@ -1,5 +1,5 @@
 import type { Types } from 'mongoose';
-import type { IContentFields } from './common.interface.js';
+import type { IContentFields, ILegacyImport } from './common.interface.js';
 import type { PersonRole } from '../types/api.js';
 
 /** One line in a profile's Education list. */
@@ -44,4 +44,6 @@ export interface IPerson extends IContentFields {
   memberships: string[];
   office?: Types.ObjectId | null;
   featuredInLeadership: boolean;
+  /** Set when the record came from a content import (ADR-059). */
+  legacy?: ILegacyImport | null;
 }
