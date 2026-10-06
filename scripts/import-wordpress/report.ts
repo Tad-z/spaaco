@@ -65,7 +65,11 @@ export function writeReport(dir: string, report: Report, redirects: readonly Red
   const stamp = report.run.at.replace(/[:.]/g, '-');
   const path = join(dir, `import-report-${stamp}.json`);
   writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
-  writeFileSync(join(dir, 'redirects.json'), `${JSON.stringify(redirects, null, 2)}\n`, 'utf8');
+  // An --authors-only run sees no article paths, so it must not replace the
+  // full redirect list a whole run wrote.
+  if (!report.run.authorsOnly) {
+    writeFileSync(join(dir, 'redirects.json'), `${JSON.stringify(redirects, null, 2)}\n`, 'utf8');
+  }
   return path;
 }
 
