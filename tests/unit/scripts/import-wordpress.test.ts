@@ -9,6 +9,7 @@ import {
 import { roleFor, practiceAreaSlugFor } from '../../../scripts/import-wordpress/maps.js';
 import {
   educationFrom,
+  isEmpty,
   linkedinFrom,
   membershipsFrom,
   reviewStatus,
@@ -126,6 +127,13 @@ describe('people', () => {
 
   it('reads memberships from a serialized list, trimming stray commas', () => {
     expect(membershipsFrom('a:2:{i:0;s:5:"NBA ,";i:1;s:5:"ICSAN";}')).toEqual(['NBA', 'ICSAN']);
+  });
+
+  it('treats the launch placeholder as empty when merging, and real copy as set', () => {
+    expect(isEmpty('<p>[PENDING FROM FIRM]</p>')).toBe(true);
+    expect(isEmpty({ intro: '[PENDING FROM FIRM]', entries: [] })).toBe(true);
+    expect(isEmpty('<p>A partner since 2010.</p>')).toBe(false);
+    expect(isEmpty({ intro: null, entries: [{ qualification: 'LL.B', year: null }] })).toBe(false);
   });
 
   it('keeps only https LinkedIn links', () => {

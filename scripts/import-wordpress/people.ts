@@ -176,8 +176,13 @@ export interface ImportContext {
   readonly publishPeople: boolean;
 }
 
-const isEmpty = (value: unknown): boolean => {
+/**
+ * Empty, for the merge: nothing set, or only the launch loader's
+ * `[PENDING FROM FIRM]` placeholder, which the real copy should replace.
+ */
+export const isEmpty = (value: unknown): boolean => {
   if (value === null || value === undefined || value === '') return true;
+  if (typeof value === 'string') return /^(\[PENDING FROM FIRM\]\s*)*$/i.test(plainText(value));
   if (Array.isArray(value)) return value.length === 0;
   if (typeof value === 'object' && 'entries' in value) {
     const education = value as { intro?: unknown; entries?: unknown[] };
