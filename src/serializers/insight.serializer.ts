@@ -36,6 +36,8 @@ export interface InsightCardSource {
   practiceAreas?: PracticeAreaRefSource[];
   /** Null means the firm is the author, not that the field is unset. */
   author?: PersonSummarySource | null;
+  /** A writer with no attorney profile, shown when `author` is null (ADR-060). */
+  authorName?: string | null;
   coverImage?: IMedia | null;
 }
 
@@ -47,19 +49,33 @@ export interface InsightDetailSource extends InsightCardSource {
   document?: IMedia | null;
 }
 
+const FIRM_NAME = 'SPA AJIBADE & Co.';
+
 /** The firm as author. The frontend supplies the logo mark; it is its asset. */
 export const FIRM_AUTHOR: InsightAuthor = {
   type: 'firm',
-  name: 'SPA AJIBADE & Co.',
+  name: FIRM_NAME,
   label: 'Law Firm',
 };
 
-/** A null author means the firm wrote it, not that the field is unset. */
-export function toAuthor(author: PersonSummarySource | null | undefined): InsightAuthor {
-  if (author === null || author === undefined || typeof author.firstName !== 'string') {
-    return FIRM_AUTHOR;
+/**
+ * An attorney, a named writer without a profile, or the firm.
+ *
+ * A named writer (former staff, a guest) travels in the firm shape, with the
+ * firm as its label, so it renders without a new author type (ADR-060). A null
+ * author, or one filtered out as a draft, falls back to the firm.
+ */
+export function toAuthor(
+  author: PersonSummarySource | null | undefined,
+  authorName?: string | null
+): InsightAuthor {
+  if (author !== null && author !== undefined && typeof author.firstName === 'string') {
+    return { type: 'person', person: personSummary(author) };
   }
-  return { type: 'person', person: personSummary(author) };
+  if (typeof authorName === 'string' && authorName.trim() !== '') {
+    return { type: 'firm', name: authorName.trim(), label: FIRM_NAME };
+  }
+  return FIRM_AUTHOR;
 }
 
 /** Article cards read "Read More"; video cards read "Watch Video". */
@@ -100,7 +116,7 @@ export function toCard(insight: InsightCardSource): InsightCard {
     categoryLabels: insight.categories.map((category) => INSIGHT_CATEGORIES.labels[category]),
     practiceAreas: (insight.practiceAreas ?? []).map(practiceAreaRef),
     chips: toChips(insight),
-    author: toAuthor(insight.author),
+    author: toAuthor(insight.author, insight.authorName),
     coverImage: toNullableImage(insight.coverImage),
     publishedAt: insight.publishedAt?.toISOString() ?? null,
     featured: insight.featured,

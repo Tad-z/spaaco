@@ -53,6 +53,8 @@ const insightSchema = new Schema<IInsight>(
     practiceAreas: [{ type: Schema.Types.ObjectId, ref: 'PracticeArea' }],
     // Null means the firm is the author, not that the field is unset.
     author: { type: Schema.Types.ObjectId, ref: 'Person', default: null },
+    // A writer with no attorney profile, such as former staff (ADR-060).
+    authorName: { type: String, default: null, trim: true, maxlength: 120 },
     coverImage: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
     featured: { type: Boolean, default: false },
     legacy: { type: legacyImportSchema, default: null },

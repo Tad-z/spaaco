@@ -440,6 +440,57 @@ describe('content imports (ADR-059)', () => {
   });
 });
 
+describe('named writers without a profile (ADR-060)', () => {
+  it('shows the writer in the firm-author shape, with the firm as the label', async () => {
+    const created = await request(app)
+      .post(`${base}/insights`)
+      .set('Authorization', auth())
+      .send({
+        slug: 'by-a-former-associate',
+        title: 'By A Former Associate',
+        format: 'article',
+        categories: ['articles'],
+        authorName: 'Justina Olayinka',
+      });
+    expect(created.status).toBe(201);
+    expect(created.body.data.authorName).toBe('Justina Olayinka');
+
+    await request(app)
+      .post(`${base}/insights/${created.body.data.id as string}/publish`)
+      .set('Authorization', auth());
+    const pub = await request(app).get('/api/v1/insights/by-a-former-associate');
+
+    expectToMatchContract(pub, 'get', '/api/v1/insights/{slug}');
+    expect(pub.body.data.author).toEqual({
+      type: 'firm',
+      name: 'Justina Olayinka',
+      label: 'SPA AJIBADE & Co.',
+    });
+  });
+
+  it('refuses a writer name on an article that already credits an attorney', async () => {
+    const person = await Person.findOne({ slug: 'john-onyido' }).lean();
+    const created = await request(app)
+      .post(`${base}/insights`)
+      .set('Authorization', auth())
+      .send({
+        title: 'By An Attorney',
+        format: 'article',
+        categories: ['articles'],
+        author: person?._id.toString(),
+      });
+
+    const res = await request(app)
+      .patch(`${base}/insights/${created.body.data.id as string}`)
+      .set('Authorization', auth())
+      .set('If-Match', String(created.body.data.revision))
+      .send({ authorName: 'Someone Else' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details[0].path).toBe('authorName');
+  });
+});
+
 describe('delete', () => {
   it('refuses when something still references the record, listing what', async () => {
     const area = await PracticeArea.findOne({ slug: 'energy-natural-resources' }).lean();

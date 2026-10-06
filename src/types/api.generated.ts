@@ -900,7 +900,7 @@ export interface paths {
          * List insights
          * @description Every status, not just published.
          *
-         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
          */
         get: operations["listInsightAdmin"];
         put?: never;
@@ -908,7 +908,7 @@ export interface paths {
          * Create a insight
          * @description A slug is generated when none is given.
          *
-         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
          */
         post: operations["createInsight"];
         delete?: never;
@@ -951,7 +951,7 @@ export interface paths {
          * Get one insight in its editable shape
          * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
          *
-         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
          */
         get: operations["getInsightAdmin"];
         put?: never;
@@ -3316,8 +3316,14 @@ export interface components {
             videoUrl: string | null;
             categories: components["schemas"]["InsightCategory"][];
             practiceAreas: components["schemas"]["ObjectId"][];
-            /** @description Null means the firm is the author. */
+            /** @description Null means the firm is the author, unless `authorName` names a writer. */
             author: components["schemas"]["ObjectId"] | null;
+            /**
+             * @description A writer with no attorney profile, such as former staff or a guest
+             *     (ADR-060). Shown as the public author's `name`, with the firm as its
+             *     `label`, when `author` is null. At most one of `author` and `authorName`.
+             */
+            authorName: string | null;
             coverImage: components["schemas"]["ObjectId"] | null;
             /** @description Where "Read Article" goes. At most one of `externalUrl` and `document`. */
             externalUrl: string | null;
@@ -3564,8 +3570,14 @@ export interface components {
             videoUrl?: string | null;
             categories: components["schemas"]["InsightCategory"][];
             practiceAreas?: components["schemas"]["ObjectId"][];
-            /** @description Null means the firm is the author. */
+            /** @description Null means the firm is the author, unless `authorName` names a writer. */
             author?: components["schemas"]["ObjectId"] | null;
+            /**
+             * @description A writer with no attorney profile, such as former staff or a guest
+             *     (ADR-060). Shown as the public author's `name`, with the firm as its
+             *     `label`, when `author` is null. At most one of `author` and `authorName`.
+             */
+            authorName?: string | null;
             coverImage?: components["schemas"]["ObjectId"] | null;
             /** @description Where "Read Article" goes. At most one of `externalUrl` and `document`. */
             externalUrl?: string | null;
@@ -3584,8 +3596,14 @@ export interface components {
             videoUrl?: string | null;
             categories?: components["schemas"]["InsightCategory"][];
             practiceAreas?: components["schemas"]["ObjectId"][];
-            /** @description Null means the firm is the author. */
+            /** @description Null means the firm is the author, unless `authorName` names a writer. */
             author?: components["schemas"]["ObjectId"] | null;
+            /**
+             * @description A writer with no attorney profile, such as former staff or a guest
+             *     (ADR-060). Shown as the public author's `name`, with the firm as its
+             *     `label`, when `author` is null. At most one of `author` and `authorName`.
+             */
+            authorName?: string | null;
             coverImage?: components["schemas"]["ObjectId"] | null;
             /** @description Where "Read Article" goes. At most one of `externalUrl` and `document`. */
             externalUrl?: string | null;

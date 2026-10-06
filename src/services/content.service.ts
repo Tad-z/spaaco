@@ -166,7 +166,7 @@ export async function updateContent(
 ): Promise<ContentDoc> {
   const model = modelFor(collection);
   await assertMediaKinds(config(collection).model, input);
-  if (collection === 'insights') await assertOneArticleTarget(model, id, input);
+  if (collection === 'insights') await assertInsightExclusives(model, id, input);
   const { input: data, legacy } = applyLegacyImport(input, context);
 
   const updated = await model
@@ -203,29 +203,43 @@ export async function updateContent(
   );
 }
 
+/** Insight fields of which at most one may be set, with the error each pair gives. */
+const INSIGHT_EXCLUSIVES = [
+  {
+    // "Read Article" goes to one place (ADR-051).
+    fields: ['externalUrl', 'document'],
+    message: 'An article links to an external URL or a document, not both',
+    detail: { path: 'document', message: 'set either externalUrl or document, not both' },
+  },
+  {
+    // An attorney's profile or a named writer, not both (ADR-060).
+    fields: ['author', 'authorName'],
+    message: 'An article credits an attorney or names a writer, not both',
+    detail: { path: 'authorName', message: 'set either author or authorName, not both' },
+  },
+] as const;
+
 /**
- * An article's "Read Article" link goes to one place (ADR-051). The request
- * schema catches both in one body; this catches a patch that sets one while
- * the stored record already has the other.
+ * The request schema catches both halves of a pair in one body; this catches a
+ * patch that sets one while the stored record already has the other.
  */
-async function assertOneArticleTarget(
+async function assertInsightExclusives(
   model: Model<unknown>,
   id: string,
   input: Record<string, unknown>
 ): Promise<void> {
-  if (!input.externalUrl && !input.document) return;
+  const touched = INSIGHT_EXCLUSIVES.filter(({ fields }) => fields.some((field) => input[field]));
+  if (touched.length === 0) return;
 
   const current = await model
     .findById(id)
-    .select('externalUrl document')
-    .lean<{ externalUrl?: unknown; document?: unknown } | null>();
+    .select(touched.flatMap(({ fields }) => fields).join(' '))
+    .lean<Record<string, unknown> | null>();
   if (!current) return;
 
   const merged = { ...current, ...input };
-  if (merged.externalUrl && merged.document) {
-    throw new ValidationError('An article links to an external URL or a document, not both', [
-      { path: 'document', message: 'set either externalUrl or document, not both' },
-    ]);
+  for (const { fields, message, detail } of touched) {
+    if (fields.every((field) => merged[field])) throw new ValidationError(message, [detail]);
   }
 }
 

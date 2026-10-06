@@ -200,6 +200,7 @@ const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknow
     categories: doc.categories ?? [],
     practiceAreas: idList(doc.practiceAreas),
     author: idOrNull(doc.author),
+    authorName: typeof doc.authorName === 'string' ? doc.authorName : null,
     coverImage: idOrNull(doc.coverImage),
     externalUrl: doc.externalUrl ?? null,
     document: idOrNull(doc.document),

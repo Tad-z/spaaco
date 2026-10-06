@@ -139,6 +139,7 @@ const insightBase = z
     categories: z.array(z.enum(INSIGHT_CATEGORIES.values)).min(1).max(7),
     practiceAreas: z.array(objectId).max(30).optional(),
     author: objectIdRef.optional(),
+    authorName: optionalText(120).optional(),
     coverImage: objectIdRef.optional(),
     featured: z.boolean().optional(),
     // No `publishedAt`: it is stamped by POST /publish and is read-only in the
@@ -166,9 +167,16 @@ const ONE_TARGET_ISSUE: z.CustomErrorParams = {
   message: 'set either externalUrl or document, not both',
 };
 
+/** An insight credits an attorney's profile or names a writer, not both (ADR-060). */
+const ONE_AUTHOR_ISSUE: z.CustomErrorParams = {
+  path: ['authorName'],
+  message: 'set either author or authorName, not both',
+};
+
 const insightCreate = insightBase
   .refine((value) => value.format !== 'video' || Boolean(value.videoUrl), VIDEO_URL_ISSUE)
-  .refine((value) => !(value.externalUrl && value.document), ONE_TARGET_ISSUE);
+  .refine((value) => !(value.externalUrl && value.document), ONE_TARGET_ISSUE)
+  .refine((value) => !(value.author && value.authorName), ONE_AUTHOR_ISSUE);
 
 const officeCreate = z
   .object({
@@ -247,7 +255,8 @@ const insightUpdate = insightBase
   .partial()
   .strict()
   .refine((value) => value.format !== 'video' || Boolean(value.videoUrl), VIDEO_URL_ISSUE)
-  .refine((value) => !(value.externalUrl && value.document), ONE_TARGET_ISSUE);
+  .refine((value) => !(value.externalUrl && value.document), ONE_TARGET_ISSUE)
+  .refine((value) => !(value.author && value.authorName), ONE_AUTHOR_ISSUE);
 
 export const CONTENT_CREATE_SCHEMAS: Record<AdminCollection, ZodTypeAny> = {
   'practice-areas': practiceAreaCreate,

@@ -26,7 +26,7 @@ export interface ListInsightsOptions extends PreviewOptions {
 
 /** What a card renders. Notably not `body`: a card never shows one. */
 const CARD_FIELDS =
-  'slug title excerpt format videoUrl categories practiceAreas author coverImage featured publishedAt order';
+  'slug title excerpt format videoUrl categories practiceAreas author authorName coverImage featured publishedAt order';
 
 /**
  * The condition every listing applies unless it asks for an excluded category

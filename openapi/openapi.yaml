@@ -1947,7 +1947,7 @@ paths:
       description: |-
         Every status, not just published.
 
-        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
       security: &a5
         - bearerAuth: []
       parameters:
@@ -1993,7 +1993,7 @@ paths:
       description: |-
         A slug is generated when none is given.
 
-        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
       security: *a5
       requestBody:
         required: true
@@ -2065,7 +2065,7 @@ paths:
       description: |-
         References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
 
-        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set.
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
       security: *a5
       responses:
         '200':
@@ -7830,6 +7830,7 @@ components:
         - categories
         - practiceAreas
         - author
+        - authorName
         - coverImage
         - externalUrl
         - document
@@ -7861,7 +7862,14 @@ components:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
-          description: Null means the firm is the author.
+          description: Null means the firm is the author, unless `authorName` names a writer.
+        authorName:
+          type: [string, 'null']
+          maxLength: 120
+          description: |
+            A writer with no attorney profile, such as former staff or a guest
+            (ADR-060). Shown as the public author's `name`, with the firm as its
+            `label`, when `author` is null. At most one of `author` and `authorName`.
         coverImage:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
@@ -8320,7 +8328,16 @@ components:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
-          description: Null means the firm is the author.
+          description: Null means the firm is the author, unless `authorName` names a writer.
+        authorName:
+          type:
+            - string
+            - 'null'
+          maxLength: 120
+          description: |
+            A writer with no attorney profile, such as former staff or a guest
+            (ADR-060). Shown as the public author's `name`, with the firm as its
+            `label`, when `author` is null. At most one of `author` and `authorName`.
         coverImage:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'

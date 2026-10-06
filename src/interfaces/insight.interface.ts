@@ -19,6 +19,8 @@ export interface IInsight extends IContentFields {
   practiceAreas: Types.ObjectId[];
   /** Null means the firm itself is the author, not a missing value. */
   author?: Types.ObjectId | null;
+  /** A writer with no attorney profile (ADR-060). At most one of this and `author`. */
+  authorName?: string | null;
   coverImage?: Types.ObjectId | null;
   featured: boolean;
   /** Set when the record came from a content import (ADR-059). */
