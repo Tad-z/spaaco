@@ -172,6 +172,8 @@ export interface ImportContext {
   readonly report: Report;
   readonly practiceAreaIds: ReadonlyMap<string, string>;
   readonly overwriteEdited: boolean;
+  /** Publish newly created people instead of leaving them as drafts. */
+  readonly publishPeople: boolean;
 }
 
 const isEmpty = (value: unknown): boolean => {
@@ -352,10 +354,11 @@ async function importPerson(
   if (current === undefined) {
     report.counts.people.create += 1;
     if (!ctx.commit) return;
-    // Drafts: the firm approves each bio before it goes live.
+    // Drafts by default: the firm approves each bio before it goes live.
     const created = await ctx.api.create('people', { slug: target, ...body });
-    existing.set(target, created);
-    ctx.state.records[key] = created.revision;
+    const saved = ctx.publishPeople ? await ctx.api.publish('people', created.id) : created;
+    existing.set(target, saved);
+    ctx.state.records[key] = saved.revision;
     return;
   }
 

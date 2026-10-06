@@ -37,6 +37,7 @@ const { values: args } = parseArgs({
     limit: { type: 'string' },
     commit: { type: 'boolean', default: false },
     'overwrite-edited': { type: 'boolean', default: false },
+    'publish-people': { type: 'boolean', default: false },
   },
 });
 
@@ -102,6 +103,7 @@ async function main(): Promise<void> {
     report,
     practiceAreaIds,
     overwriteEdited: args['overwrite-edited'],
+    publishPeople: args['publish-people'],
   };
 
   const redirects: Redirect[] = [...practiceAreaRedirects()];
