@@ -112,6 +112,12 @@ async function main(): Promise<void> {
   }
 
   let authors = new Map<string, string>();
+  // A killed process never reaches `finally`, so progress is also saved as it goes.
+  const checkpoint = commit
+    ? setInterval(() => {
+        saveState(statePath, state);
+      }, 30_000)
+    : undefined;
   try {
     if (only.has('people')) {
       console.log(
@@ -128,6 +134,7 @@ async function main(): Promise<void> {
       );
     }
   } finally {
+    clearInterval(checkpoint);
     // Saved even after a crash, so the next run knows what was uploaded.
     if (commit) saveState(statePath, state);
   }
