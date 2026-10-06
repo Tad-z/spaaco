@@ -148,6 +148,7 @@ async function importInsight(
   if (
     current !== undefined &&
     !ctx.overwriteEdited &&
+    ctx.state.records[key] !== undefined &&
     ctx.state.records[key] !== current.revision
   ) {
     report.existing.editedSinceImport.push({ collection: 'insights', slug });
@@ -269,8 +270,13 @@ async function importInsight(
 
   report.counts.insights.update += 1;
   if (!ctx.commit) return true;
-  // An update never republishes: an article the firm took down stays down.
-  const updated = await ctx.api.update('insights', current, payload);
+  // An update never republishes an article the firm took down. One the run
+  // state has never seen was created by a run that broke off before it was
+  // published, so it is finished now.
+  const unfinished = ctx.state.records[key] === undefined;
+  let updated = await ctx.api.update('insights', current, payload);
+  if (unfinished && updated.status === 'draft')
+    updated = await ctx.api.publish('insights', updated.id);
   existing.set(slug, updated);
   ctx.state.records[key] = updated.revision;
   return true;

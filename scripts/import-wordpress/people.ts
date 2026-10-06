@@ -367,7 +367,9 @@ async function importPerson(
     return;
   }
 
-  if (!ctx.overwriteEdited && ctx.state.records[key] !== current.revision) {
+  // No run-state entry: created by a run that broke off, so not an edit.
+  const unfinished = ctx.state.records[key] === undefined;
+  if (!ctx.overwriteEdited && !unfinished && ctx.state.records[key] !== current.revision) {
     report.existing.editedSinceImport.push({ collection: 'people', slug: target });
     report.counts.people.skip += 1;
     return;
@@ -375,7 +377,10 @@ async function importPerson(
 
   report.counts.people.update += 1;
   if (!ctx.commit) return;
-  const updated = await ctx.api.update('people', current, body);
+  let updated = await ctx.api.update('people', current, body);
+  if (unfinished && ctx.publishPeople && updated.status === 'draft') {
+    updated = await ctx.api.publish('people', updated.id);
+  }
   existing.set(target, updated);
   ctx.state.records[key] = updated.revision;
 }

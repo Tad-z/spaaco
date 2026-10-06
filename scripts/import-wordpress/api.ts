@@ -94,11 +94,23 @@ export class AdminApi {
       // than letting two writers overwrite each other.
       if (init.ifMatch !== undefined) headers['If-Match'] = String(init.ifMatch);
 
-      const response = await fetch(`${this.base}${path}`, {
-        method: init.method,
-        headers,
-        body: init.form ?? (init.json === undefined ? undefined : JSON.stringify(init.json)),
-      });
+      let response: Response;
+      try {
+        response = await fetch(`${this.base}${path}`, {
+          method: init.method,
+          headers,
+          body: init.form ?? (init.json === undefined ? undefined : JSON.stringify(init.json)),
+        });
+      } catch (error) {
+        // A dropped connection (Render restarts, flaky networks): wait and retry.
+        // If a create did land before the drop, the retry is refused on its
+        // slug, and the next run finishes the record.
+        if (attempt < MAX_RETRIES) {
+          await sleep(5000 * (attempt + 1));
+          continue;
+        }
+        throw error;
+      }
 
       if (response.status === 429 && attempt < MAX_RETRIES) {
         const reset = Number(/reset=(\d+)/.exec(response.headers.get('ratelimit') ?? '')?.[1]);
