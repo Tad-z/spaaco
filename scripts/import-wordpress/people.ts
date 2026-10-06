@@ -174,6 +174,8 @@ export interface ImportContext {
   readonly overwriteEdited: boolean;
   /** Publish newly created people instead of leaving them as drafts. */
   readonly publishPeople: boolean;
+  /** Only set the author fields on imported articles (ADR-060). */
+  readonly authorsOnly: boolean;
 }
 
 /**
@@ -202,7 +204,7 @@ export async function importPeople(
   rows: readonly PersonRow[],
   review: readonly ReviewRow[],
   ctx: ImportContext
-): Promise<Map<string, string>> {
+): Promise<void> {
   const { report } = ctx;
   const existing = new Map((await ctx.api.listAll('people')).map((item) => [item.slug, item]));
 
@@ -252,12 +254,6 @@ export async function importPeople(
       report.counts.people.failed += 1;
     }
   }
-
-  const byName = new Map<string, string>();
-  for (const item of existing.values()) {
-    byName.set(normaliseKey(`${String(item.firstName)} ${String(item.lastName)}`), item.id);
-  }
-  return byName;
 }
 
 async function importPerson(

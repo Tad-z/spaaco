@@ -23,10 +23,12 @@ import {
   prepareHtml,
 } from '../../../scripts/import-wordpress/html.js';
 import {
+  authorFields,
   backendSlug,
   categoryTargets,
   classify,
 } from '../../../scripts/import-wordpress/insights.js';
+import { creditFor, leadingByline } from '../../../scripts/import-wordpress/bylines.js';
 import { articleSource } from '../../../scripts/import-wordpress/redirects.js';
 import { parseCsv } from '../../../scripts/import-wordpress/load.js';
 import type { PersonRow } from '../../../scripts/import-wordpress/load.js';
@@ -259,5 +261,82 @@ describe('CSV', () => {
       ['name', 'status'],
       ['Doe, "J"', 'current'],
     ]);
+  });
+});
+
+describe('bylines (ADR-060)', () => {
+  const people = [
+    { id: 'p1', slug: 'peter-olalere', firstName: 'Peter', lastName: 'Olalere' },
+    { id: 'p2', slug: 'john-onyido', firstName: 'John', lastName: 'Onyido' },
+    { id: 'p3', slug: 'frederick-adefarati', firstName: 'Frederick', lastName: 'Adefarati' },
+  ];
+
+  it("credits the profile a byline links to, through the old slug's mapping", () => {
+    const html =
+      '<div><a href="https://spaajibade.com/people/peter-olalere-mciarb/"><strong>By Peter Olaoye Olalere</strong></a>\r\n<img src="x.jpg">';
+    expect(creditFor(html, 'an-article', people)).toEqual({
+      kind: 'person',
+      id: 'p1',
+      name: 'Peter Olalere',
+    });
+  });
+
+  it('reads a byline split across tags, and names a writer who is not on the site', () => {
+    const html =
+      '<p><span>By</span> <span>Patricia</span> <span>Magaji</span></p><h2>CONFIDENTIALITY ROLE</h2>';
+    expect(creditFor(html, 'confidentiality-role', people)).toEqual({
+      kind: 'named',
+      name: 'Patricia Magaji',
+    });
+  });
+
+  it('stops a name where the title starts, and credits the first of several writers', () => {
+    expect(leadingByline('<p>By Yakub Hammed CAREER GROWTH IN LAW</p>')).toBe('Yakub Hammed');
+    expect(creditFor('<p>By John C. Onyido | Magnus Ejelonu</p>', 'x', people)).toMatchObject({
+      kind: 'person',
+      id: 'p2',
+    });
+  });
+
+  it('falls back to the PDF line, then to a slug ending in a profile name', () => {
+    const pdf =
+      '<p>Text.</p><p>Download PDF: Who owns Copyright in an AI Invention? - Oluwafunmilayo Mayowa</p>';
+    expect(creditFor(pdf, 'who-owns-copyright', people)).toEqual({
+      kind: 'named',
+      name: 'Oluwafunmilayo Mayowa',
+    });
+    expect(
+      creditFor('<p>Text.</p>', 'opec-extends-exemption-frederick-adefarati', people)
+    ).toMatchObject({
+      kind: 'person',
+      id: 'p3',
+    });
+  });
+
+  it('credits the firm for a department, a public figure, or a "by" deep in the text', () => {
+    expect(creditFor('<p>By CFCM Department Regulatory Update</p>', 'x', people)).toEqual({
+      kind: 'firm',
+    });
+    expect(
+      creditFor(
+        `<p>${'Opening words. '.repeat(20)}signed by President Muhammadu Buhari</p>`,
+        'x',
+        people
+      )
+    ).toEqual({
+      kind: 'firm',
+    });
+  });
+
+  it('maps a credit to the author fields, never both', () => {
+    expect(authorFields({ kind: 'person', id: 'p1', name: 'Peter Olalere' })).toEqual({
+      author: 'p1',
+      authorName: null,
+    });
+    expect(authorFields({ kind: 'named', name: 'Patricia Magaji' })).toEqual({
+      author: null,
+      authorName: 'Patricia Magaji',
+    });
+    expect(authorFields({ kind: 'firm' })).toEqual({ author: null, authorName: null });
   });
 });

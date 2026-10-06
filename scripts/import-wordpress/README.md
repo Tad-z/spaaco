@@ -35,16 +35,17 @@ API_URL=https://staging.example ADMIN_PASSWORD=… \
 … -- --data … --commit
 ```
 
-| Flag                 | Meaning                                                                                            |
-| -------------------- | -------------------------------------------------------------------------------------------------- |
-| `--data`             | The folder with `people.json`, `posts.json`, `categories/`, `people-review/`. Required.            |
-| `--uploads`          | The unzipped uploads. Defaults to `<data>/uploads`.                                                |
-| `--report-dir`       | Where reports, `redirects.json` and run state go. Defaults to `<data>/../import-runs`.             |
-| `--only`             | `people`, `insights` or both (the default). Articles credit authors from the people step.          |
-| `--limit N`          | The first N people and the first N articles.                                                       |
-| `--commit`           | Write. Without it, nothing changes.                                                                |
-| `--publish-people`   | Publish newly created people instead of leaving them as drafts. Existing people keep their status. |
-| `--overwrite-edited` | Also update imported records that someone has edited since the last run. Off by default.           |
+| Flag                 | Meaning                                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `--data`             | The folder with `people.json`, `posts.json`, `categories/`, `people-review/`. Required.                                           |
+| `--uploads`          | The unzipped uploads. Defaults to `<data>/uploads`.                                                                               |
+| `--report-dir`       | Where reports, `redirects.json` and run state go. Defaults to `<data>/../import-runs`.                                            |
+| `--only`             | `people`, `insights` or both (the default). Articles credit authors from the people step.                                         |
+| `--limit N`          | The first N people and the first N articles.                                                                                      |
+| `--commit`           | Write. Without it, nothing changes.                                                                                               |
+| `--publish-people`   | Publish newly created people instead of leaving them as drafts. Existing people keep their status.                                |
+| `--authors-only`     | Only set the author on imported articles, from their bylines (ADR-060). Touches no other field, and keeps any author set by hand. |
+| `--overwrite-edited` | Also update imported records that someone has edited since the last run. Off by default.                                          |
 
 `API_URL` is never defaulted. `ADMIN_USERNAME` defaults to `admin`.
 

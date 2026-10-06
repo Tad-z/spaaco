@@ -13,6 +13,8 @@ import { INSIGHT_CATEGORIES } from '../../src/constants/enums.js';
 import { isSlug, slugify } from '../../src/helpers/slug.helper.js';
 import type { InsightCategory } from '../../src/types/api.js';
 import type { Item } from './api.js';
+import { creditFor } from './bylines.js';
+import type { Credit, KnownPerson } from './bylines.js';
 import { findUploadPaths, finishHtml, isPdfWrapper, prepareHtml } from './html.js';
 import type { CategoryRow, PostRow } from './load.js';
 import { normaliseKey } from './maps.js';
@@ -92,10 +94,24 @@ const fileTitle = (path: string): string =>
 const errorText = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
+/** The author fields for a credit: a profile, a named writer, or neither (ADR-060). */
+export const authorFields = (
+  credit: Credit
+): { author: string | null; authorName: string | null } =>
+  credit.kind === 'person'
+    ? { author: credit.id, authorName: null }
+    : { author: null, authorName: credit.kind === 'named' ? credit.name : null };
+
+const countCredit = (ctx: ImportContext, credit: Credit): void => {
+  const { authors } = ctx.report.insights;
+  authors[credit.kind] += 1;
+  if (credit.kind === 'named')
+    authors.namedWriters[credit.name] = (authors.namedWriters[credit.name] ?? 0) + 1;
+};
+
 export async function importInsights(
   rows: readonly PostRow[],
   categories: readonly CategoryRow[],
-  authors: ReadonlyMap<string, string>,
   ctx: ImportContext
 ): Promise<Redirect[]> {
   const { report } = ctx;
@@ -103,6 +119,26 @@ export async function importInsights(
   report.insights.invalidMapTo.push(...invalid);
 
   const existing = new Map((await ctx.api.listAll('insights')).map((item) => [item.slug, item]));
+  const people: KnownPerson[] = (await ctx.api.listAll('people')).map((item) => ({
+    id: item.id,
+    slug: item.slug,
+    firstName: String(item.firstName),
+    lastName: String(item.lastName),
+  }));
+
+  if (ctx.authorsOnly) {
+    for (const row of rows) {
+      const slug = backendSlug(row.slug);
+      try {
+        await creditAuthor(row, slug, people, existing, ctx);
+      } catch (error) {
+        report.failures.push({ collection: 'insights', slug, error: errorText(error) });
+        report.counts.insights.failed += 1;
+      }
+    }
+    return [];
+  }
+
   const redirects: Redirect[] = [];
   const seen = new Set<string>();
 
@@ -113,7 +149,7 @@ export async function importInsights(
       if (seen.has(slug))
         throw new Error(`slug "${slug}" is already used by another article in this export`);
       seen.add(slug);
-      const imported = await importInsight(row, slug, targets, authors, existing, ctx);
+      const imported = await importInsight(row, slug, targets, people, existing, ctx);
       if (imported)
         redirects.push(redirect(articleSource(row.published, row.slug), `/insights/${slug}`));
     } catch (error) {
@@ -130,7 +166,7 @@ async function importInsight(
   row: PostRow,
   slug: string,
   targets: ReadonlyMap<string, CategoryTarget>,
-  authors: ReadonlyMap<string, string>,
+  people: readonly KnownPerson[],
   existing: Map<string, Item>,
   ctx: ImportContext
 ): Promise<boolean> {
@@ -238,10 +274,10 @@ async function importInsight(
   const { categories, practiceAreas, defaulted } = classify(row.categories, targets);
   if (defaulted) report.insights.defaultedToArticles += 1;
 
-  // Bylines are mostly WordPress admin accounts; anything that is not an
-  // attorney in the backend is credited to the firm (null author).
-  const author = authors.get(normaliseKey(decode(row.author))) ?? null;
-  if (author === null) report.insights.firmAuthored += 1;
+  // WordPress's author was the account that posted it; the writer is in the
+  // article's byline (ADR-060).
+  const credit = creditFor(row.content, row.slug, people);
+  countCredit(ctx, credit);
 
   const payload = {
     title,
@@ -250,7 +286,7 @@ async function importInsight(
     format: 'article',
     categories,
     practiceAreas: practiceAreas.flatMap((areaSlug) => ctx.practiceAreaIds.get(areaSlug) ?? []),
-    author,
+    ...authorFields(credit),
     coverImage,
     document,
     featured: false,
@@ -280,4 +316,48 @@ async function importInsight(
   existing.set(slug, updated);
   ctx.state.records[key] = updated.revision;
   return true;
+}
+
+/**
+ * `--authors-only`: set just the author fields on an imported article, leaving
+ * every other field (and anything the firm has edited) alone. An author or
+ * writer someone has already set by hand is kept.
+ */
+async function creditAuthor(
+  row: PostRow,
+  slug: string,
+  people: readonly KnownPerson[],
+  existing: Map<string, Item>,
+  ctx: ImportContext
+): Promise<void> {
+  const current = existing.get(slug);
+  // Only the import's own articles: hand-made ones are the firm's to credit.
+  if (current?.legacy === undefined || current.legacy === null) return;
+
+  const credit = creditFor(row.content, row.slug, people);
+  countCredit(ctx, credit);
+  const want = authorFields(credit);
+  const has = {
+    author: typeof current.author === 'string' ? current.author : null,
+    authorName: typeof current.authorName === 'string' ? current.authorName : null,
+  };
+
+  const result = ctx.report.insights.authorsOnly;
+  if (has.author === want.author && has.authorName === want.authorName) {
+    result.unchanged += 1;
+    return;
+  }
+  if (has.author !== null || has.authorName !== null) {
+    result.keptByHand.push(slug);
+    return;
+  }
+
+  result.patched += 1;
+  if (!ctx.commit) return;
+  const key = `insights/${slug}`;
+  const ours = ctx.state.records[key] === current.revision;
+  const updated = await ctx.api.update('insights', current, want);
+  existing.set(slug, updated);
+  // Still the import's own record, so a later full run does not take it for an edit.
+  if (ours) ctx.state.records[key] = updated.revision;
 }

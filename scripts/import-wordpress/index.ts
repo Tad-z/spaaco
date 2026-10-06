@@ -38,6 +38,7 @@ const { values: args } = parseArgs({
     commit: { type: 'boolean', default: false },
     'overwrite-edited': { type: 'boolean', default: false },
     'publish-people': { type: 'boolean', default: false },
+    'authors-only': { type: 'boolean', default: false },
   },
 });
 
@@ -48,7 +49,11 @@ async function main(): Promise<void> {
   const uploadsDir = resolve(args.uploads ?? join(dataDir, 'uploads'));
   // Beside the export, never in the repository: the report names staff.
   const reportDir = resolve(args['report-dir'] ?? join(dataDir, '..', 'import-runs'));
-  const only = new Set((args.only ?? 'people,insights').split(',').map((s) => s.trim()));
+  const authorsOnly = args['authors-only'];
+  // Crediting authors touches nothing but the articles' author fields.
+  const only = authorsOnly
+    ? new Set(['insights'])
+    : new Set((args.only ?? 'people,insights').split(',').map((s) => s.trim()));
   const limit = args.limit === undefined ? Infinity : Number(args.limit);
   const commit = args.commit;
 
@@ -68,7 +73,7 @@ async function main(): Promise<void> {
   mkdirSync(reportDir, { recursive: true });
 
   const data = loadExport(dataDir);
-  const report = newReport(commit ? 'commit' : 'dry-run', apiUrl);
+  const report = newReport(commit ? 'commit' : 'dry-run', apiUrl, authorsOnly);
 
   // The firm's decisions gate a commit (TLS, gates O1 and O2).
   report.gates.peoplePendingReview = data.review.filter((row) => row.status === 'pending').length;
@@ -104,6 +109,7 @@ async function main(): Promise<void> {
     practiceAreaIds,
     overwriteEdited: args['overwrite-edited'],
     publishPeople: args['publish-people'],
+    authorsOnly,
   };
 
   const redirects: Redirect[] = [...practiceAreaRedirects()];
@@ -111,7 +117,6 @@ async function main(): Promise<void> {
     redirects.push(redirect(`/people/${oldSlug}`, `/people/${newSlug}`));
   }
 
-  let authors = new Map<string, string>();
   // A killed process never reaches `finally`, so progress is also saved as it goes.
   const checkpoint = commit
     ? setInterval(() => {
@@ -123,15 +128,13 @@ async function main(): Promise<void> {
       console.log(
         `People: ${String(Math.min(limit, data.people.length))} of ${String(data.people.length)}`
       );
-      authors = await importPeople(data.people.slice(0, limit), data.review, ctx);
+      await importPeople(data.people.slice(0, limit), data.review, ctx);
     }
     if (only.has('insights')) {
       console.log(
         `Insights: ${String(Math.min(limit, data.posts.length))} of ${String(data.posts.length)}`
       );
-      redirects.push(
-        ...(await importInsights(data.posts.slice(0, limit), data.categories, authors, ctx))
-      );
+      redirects.push(...(await importInsights(data.posts.slice(0, limit), data.categories, ctx)));
     }
   } finally {
     clearInterval(checkpoint);

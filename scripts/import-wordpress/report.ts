@@ -20,9 +20,9 @@ const counts = (): Record<Outcome, number> => ({
   failed: 0,
 });
 
-export function newReport(mode: 'dry-run' | 'commit', apiUrl: string) {
+export function newReport(mode: 'dry-run' | 'commit', apiUrl: string, authorsOnly = false) {
   return {
-    run: { at: new Date().toISOString(), mode, apiUrl },
+    run: { at: new Date().toISOString(), mode, apiUrl, authorsOnly },
     gates: { peoplePendingReview: 0, categoriesWithoutMapTo: 0 },
     counts: { people: counts(), insights: counts() },
     people: {
@@ -43,7 +43,8 @@ export function newReport(mode: 'dry-run' | 'commit', apiUrl: string) {
       truncated: [] as { slug: string; field: string }[],
       droppedShortcodes: [] as { slug: string; shortcodes: string[] }[],
       embedsAsLinks: [] as string[],
-      firmAuthored: 0,
+      authors: { person: 0, named: 0, firm: 0, namedWriters: {} as Record<string, number> },
+      authorsOnly: { patched: 0, unchanged: 0, keptByHand: [] as string[] },
     },
     existing: {
       skippedHandMade: [] as { collection: string; slug: string }[],
@@ -101,6 +102,15 @@ export function printSummary(report: Report): void {
   line('defaulted to "articles"', insights.defaultedToArticles);
   line('fields truncated', insights.truncated.length);
   line('dropped shortcodes', insights.droppedShortcodes.length);
+  line('credited to a profile', insights.authors.person);
+  line('credited to a named writer', insights.authors.named);
+  line('credited to the firm', insights.authors.firm);
+  if (report.run.authorsOnly) {
+    const a = insights.authorsOnly;
+    line('authors patched', a.patched);
+    line('authors already right', a.unchanged);
+    line('authors set by hand (kept)', a.keptByHand.length);
+  }
 
   console.log('\nMedia');
   line('files to upload / uploaded', media.uploads);
