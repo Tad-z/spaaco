@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 import type { Model } from 'mongoose';
 import type { IPage } from '../interfaces/page.interface.js';
-import { PAGE_KEYS } from '../constants/enums.js';
+import { INSIGHT_CATEGORIES, PAGE_KEYS } from '../constants/enums.js';
 import {
   heroSchema,
   iconItemSchema,
@@ -164,6 +164,18 @@ const directoryPageSchema = new Schema(
   subSchema
 );
 
+// One stand-in cover per insight category, shown on any insight that has no
+// cover of its own (ADR-063).
+const categoryCoversSchema = new Schema(
+  Object.fromEntries(
+    INSIGHT_CATEGORIES.values.map((category) => [
+      category,
+      { type: Schema.Types.ObjectId, ref: 'Media', default: null },
+    ])
+  ),
+  subSchema
+);
+
 const pageSchema = new Schema<IPage>(
   {
     key: { type: String, required: true, unique: true, enum: PAGE_KEYS.values },
@@ -195,6 +207,7 @@ const pageSchema = new Schema<IPage>(
     // people, insights, careers
     directorySection: { type: sectionHeaderSchema, default: null },
     listingSection: { type: sectionHeaderSchema, default: null },
+    categoryCovers: { type: categoryCoversSchema, default: null },
     jobsSection: { type: jobsSectionSchema, default: null },
 
     // recognition

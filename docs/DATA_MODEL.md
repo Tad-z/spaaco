@@ -104,7 +104,7 @@ Indexes: `{status:1, role:1, order:1}`, `{status:1, practiceAreas:1}` and a text
 | videoUrl      | String                              | Required if format = video                                                                          |
 | externalUrl   | String, optional                    | Where the article's "Read Article" link goes                                                        |
 | document      | →Media (`kind: document`), optional | An uploaded PDF the "Read Article" link opens. At most one of `externalUrl`/`document`              |
-| categories    | [enum], min 1                       | `firm_news, articles, insights, regulatory_updates, events, pro_bono`                 |
+| categories    | [enum], min 1                       | `firm_news, articles, insights, regulatory_updates, events, pro_bono`                               |
 | practiceAreas | [→PracticeArea]                     |                                                                                                     |
 | author        | →Person, optional                   | **null means the firm is the author**                                                               |
 | authorName    | String, optional                    | A writer with no profile (former staff, a guest), shown when `author` is null (ADR-060). Never both |
@@ -186,7 +186,7 @@ The keys are `home, about, practice-areas, people, insights, careers, faq, offic
 - **about:** `story` { eyebrow, title, paragraphs[], quote, quotePerson: →Person, profileDownload: { leadText, linkLabel, document: →Media (PDF) } }, `stats` { title, items: Stat[] }, `missionSection` { eyebrow, title, image, items: [{ title, body (html) }] }, `principles` { eyebrow, title, image, items: IconItem[] }, `awardsList` { eyebrow, title, image } (the rows are the recognition directories)
 - **practice-areas:** `gridSection` { eyebrow, title }, `csrBanner` { title, text, images: [→Media], cta }
 - **people:** `directorySection` { eyebrow, title }
-- **insights:** `listingSection` { title }
+- **insights:** `listingSection` { title }, `categoryCovers` { one image Media ref per insight category, each nullable; the section itself nullable } — the stand-in cover for an insight without one (ADR-063)
 - **careers:** `jobsSection` { eyebrow, title, cta, emptyState: { title, body (html), ctaLabel } }
 - **faq**, **offices:** hero only
 - **recognition:** `directoryPage` { awardsEyebrow, primaryCta, secondaryCta } — the labels every directory page shares

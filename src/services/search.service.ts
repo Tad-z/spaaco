@@ -1,4 +1,5 @@
 import { Insight, Person, PracticeArea } from '../models/index.js';
+import { withCategoryCovers } from './insight.service.js';
 import { SEARCH } from '../config/constants.js';
 import {
   personCardFields,
@@ -60,5 +61,5 @@ export async function search(query: string): Promise<SearchResultSources> {
       .lean<IInsightDoc[]>(),
   ]);
 
-  return { practiceAreas, people, insights };
+  return { practiceAreas, people, insights: await withCategoryCovers(insights) };
 }

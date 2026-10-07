@@ -126,8 +126,18 @@ export function tagsFor(entity: CacheEntity, slugOrKey?: string): string[] {
     case 'page':
       if (slugOrKey === undefined) return [];
       // The recognition page holds the labels every directory page embeds.
-      return slugOrKey === 'recognition'
-        ? [TAGS.page(slugOrKey), TAGS.recognitions]
-        : [TAGS.page(slugOrKey)];
+      if (slugOrKey === 'recognition') return [TAGS.page(slugOrKey), TAGS.recognitions];
+      // The insights page holds the category covers, which stand in on every
+      // insight card without one of its own (ADR-063).
+      if (slugOrKey === 'insights') {
+        return [
+          TAGS.page(slugOrKey),
+          TAGS.insights,
+          TAGS.practiceAreas,
+          TAGS.people,
+          TAGS.page('home'),
+        ];
+      }
+      return [TAGS.page(slugOrKey)];
   }
 }

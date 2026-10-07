@@ -2515,6 +2515,7 @@ export interface components {
              */
             chips: string[];
             author: components["schemas"]["InsightAuthor"];
+            /** @description The insight's own cover or, when it has none, its first category's card from the Insights page's `categoryCovers` (ADR-063). Null only when neither exists. */
             coverImage: components["schemas"]["NullableImage"];
             /** Format: date-time */
             publishedAt: string | null;
@@ -2532,6 +2533,7 @@ export interface components {
             practiceAreas: components["schemas"]["PracticeAreaRef"][];
             chips: string[];
             author: components["schemas"]["InsightAuthor"];
+            /** @description The insight's own cover or, when it has none, its first category's card from the Insights page's `categoryCovers` (ADR-063). Null only when neither exists. */
             coverImage: components["schemas"]["NullableImage"];
             /** Format: date-time */
             publishedAt: string | null;

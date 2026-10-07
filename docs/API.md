@@ -104,7 +104,7 @@ The codes are `VALIDATION_ERROR` (400), `UNAUTHENTICATED` (401), `FORBIDDEN` (40
 - **about:** hero, story (with quotePerson as PersonSummary, and `profileDownload` with the firm profile PDF), stats (computed values resolved), missionSection (bodies are HTML), principles, awardsList (rows are the recognition directories: `{ name, slug }`).
 - **practice-areas:** hero, gridSection, `practiceAreas` (all), csrBanner (3 slides; its CTA goes to `/responsible-business`).
 - **people:** hero, directorySection, `roleFilters` ([{ value, label }], including "Our Attorneys" = all, ending with "Trainee Associates"), `practiceAreaFilters` ([{ value: slug, label: title }]). Grid data comes from `/people`.
-- **insights:** hero (null by design), `featured` (≤ 3 insight cards with excerpt, never pro bono), `categoryFilters` (the public categories), `practiceAreaFilters`, listingSection. Grid data comes from `/insights`.
+- **insights:** hero (null by design), `featured` (≤ 3 insight cards with excerpt, never pro bono), `categoryFilters` (the public categories), `practiceAreaFilters`, listingSection. Grid data comes from `/insights`. The admin document also holds `categoryCovers` (an image id per category), which the public side never shows as such: an insight card or detail with no cover of its own carries its first category's card as `coverImage` (ADR-063).
 - **careers:** hero, jobsSection (with `emptyState` only when no job is open), `jobs` (all open jobs).
 - **faq:** hero.
 - **offices:** hero, `offices` (all).

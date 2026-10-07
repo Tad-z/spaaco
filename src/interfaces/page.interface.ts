@@ -9,7 +9,7 @@ import type {
   IStat,
   ITitledBody,
 } from './common.interface.js';
-import type { PageKey } from '../types/api.js';
+import type { InsightCategory, PageKey } from '../types/api.js';
 
 /**
  * Page documents: one per key, each with its own fixed set of sections.
@@ -154,6 +154,8 @@ export interface IPage {
   // people, insights, careers
   directorySection?: ISectionHeader | null;
   listingSection?: ISectionHeader | null;
+  /** insights: each category's stand-in cover, a Media id (ADR-063). */
+  categoryCovers?: Partial<Record<InsightCategory, Types.ObjectId | null>> | null;
   jobsSection?: ICareersJobsSection | null;
 
   // recognition

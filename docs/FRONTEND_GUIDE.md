@@ -395,6 +395,10 @@ Creating something does not make it public. It starts as a draft, and stays invi
 
 Settings, pages and legal pages use `If-Match` too. A legal page is published or withdrawn by the `status` in its PUT body, since it has no publish button of its own.
 
+### Category cover cards
+
+The Insights page's admin document has a `categoryCovers` section: one image id per category (`firm_news`, `articles`, `insights`, `regulatory_updates`, `events`, `pro_bono`), each nullable. An insight without its own cover shows its first category's card as its `coverImage`, everywhere a card or detail appears. Its own cover always wins. The public response never says which it is, so the site needs no change. In the dashboard, show these as six image pickers on the Insights page editor.
+
 ### The media library holds PDFs too
 
 Upload with `kind=document` and a `title` (the link text) to add a PDF, such as the firm profile or an article's PDF; images need `alt` instead. The API checks the real file type, scans PDFs, and allows up to 20 MB for a PDF and 10 MB for an image. Filter the library with `?kind=image` or `?kind=document`. Putting a PDF into an image field, or an image into a document field, is refused with a 400.

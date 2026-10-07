@@ -6181,6 +6181,9 @@ components:
           $ref: '#/components/schemas/InsightAuthor'
         coverImage:
           $ref: '#/components/schemas/NullableImage'
+          description: >-
+            The insight's own cover or, when it has none, its first category's card from the
+            Insights page's `categoryCovers` (ADR-063). Null only when neither exists.
         publishedAt:
           type: [string, 'null']
           format: date-time
@@ -6245,6 +6248,9 @@ components:
           $ref: '#/components/schemas/InsightAuthor'
         coverImage:
           $ref: '#/components/schemas/NullableImage'
+          description: >-
+            The insight's own cover or, when it has none, its first category's card from the
+            Insights page's `categoryCovers` (ADR-063). Null only when neither exists.
         publishedAt:
           type: [string, 'null']
           format: date-time

@@ -5,7 +5,8 @@ import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { runSeed } from '../../../scripts/seed.js';
 import { Insight, Media, Person, PracticeArea } from '../../../src/models/index.js';
-import { makeDocumentMedia } from '../../support/factories.js';
+import { makeDocumentMedia, makeMedia } from '../../support/factories.js';
+import { createTestUser } from '../../support/auth.js';
 import { normalise, readFixture } from '../../support/fixtures.js';
 
 /**
@@ -220,6 +221,48 @@ describe('GET /api/v1/insights', () => {
     expect(res.body.meta.total).toBe(4);
     expect(res.body.data[0].publishedAt).toBe('2026-07-01T00:00:00.000Z');
     expect(normalise(res.body)).toEqual(normalise(readFixture('insights.list.json')));
+  });
+
+  it('shows the category cover on an insight without its own, set on the Insights page (ADR-063)', async () => {
+    const card = await Media.create(
+      makeMedia({ alt: 'Articles', url: 'https://example.com/articles.png' })
+    );
+    const own = await Media.create(
+      makeMedia({ alt: 'Own cover', url: 'https://example.com/own.png' })
+    );
+    await Insight.updateMany({}, { categories: ['articles'], coverImage: null });
+    const kept = await Insight.findOneAndUpdate(
+      {},
+      { coverImage: own._id },
+      { sort: { publishedAt: -1 } }
+    );
+
+    const { token } = await createTestUser({ roles: ['editor'] });
+    const page = await request(app)
+      .get('/api/v1/admin/pages/insights')
+      .set('Authorization', `Bearer ${token}`);
+    const patched = await request(app)
+      .patch('/api/v1/admin/pages/insights')
+      .set('Authorization', `Bearer ${token}`)
+      .set('If-Match', String(page.body.data.revision))
+      .send({ categoryCovers: { articles: card._id.toString() } });
+    expect(patched.status, JSON.stringify(patched.body)).toBe(200);
+
+    const res = await request(app).get('/api/v1/insights');
+
+    expectToMatchContract(res, 'get', '/api/v1/insights');
+    const covers = res.body.data.map(
+      (insight: { slug: string; coverImage: { url: string } | null }) => [
+        insight.slug === kept?.slug,
+        insight.coverImage?.url,
+      ]
+    );
+    expect(covers).toEqual(
+      covers.map(([isKept]: [boolean]) => [
+        isKept,
+        isKept ? 'https://example.com/own.png' : 'https://example.com/articles.png',
+      ])
+    );
   });
 
   describe('pro bono stories (ADR-049)', () => {

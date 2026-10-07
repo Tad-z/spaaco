@@ -1,4 +1,5 @@
 import type { MediaKind } from '../types/api.js';
+import { INSIGHT_CATEGORIES } from './enums.js';
 
 /**
  * Every field in the database that can hold a Media id.
@@ -130,6 +131,8 @@ export const MEDIA_REFS: readonly MediaRef[] = [
   page('awardsList.image'),
   page('csrBanner.images'),
   page('images'),
+  // The Insights page's stand-in cover per category (ADR-063).
+  ...INSIGHT_CATEGORIES.values.map((category) => page(`categoryCovers.${category}`)),
 ] as const;
 
 /** Media paths grouped by model, for building a `$or` query per collection. */

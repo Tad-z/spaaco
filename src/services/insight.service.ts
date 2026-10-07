@@ -1,5 +1,5 @@
 import type { Types } from 'mongoose';
-import { Insight } from '../models/index.js';
+import { Insight, Page } from '../models/index.js';
 import { findPracticeAreaId } from './practice-area-lookup.service.js';
 import { NotFoundError } from '../core/errors.js';
 import {
@@ -10,7 +10,9 @@ import {
 import type { PreviewOptions } from '../helpers/published-filter.helper.js';
 import { toSkip } from '../helpers/pagination.helper.js';
 import { CONTENT_LIMITS } from '../config/constants.js';
-import { EXCLUDED_FROM_MAIN_LISTING } from '../constants/enums.js';
+import { EXCLUDED_FROM_MAIN_LISTING, INSIGHT_CATEGORIES } from '../constants/enums.js';
+import { pickCategoryCover } from '../helpers/category-cover.helper.js';
+import type { IMedia } from '../interfaces/media.interface.js';
 import type { IInsightDoc } from '../interfaces/populated.interface.js';
 import type { InsightCategory } from '../types/api.js';
 
@@ -48,6 +50,34 @@ export function mainListingFilter(category?: InsightCategory): Record<string, un
     : { $and: [{ categories: category }, { categories: excluded }] };
 }
 
+type CategoryCovers = Partial<Record<InsightCategory, IMedia | null>>;
+
+/** The Insights page's stand-in cover per category, populated (ADR-063). */
+async function loadCategoryCovers(): Promise<CategoryCovers> {
+  const page = await Page.findOne({ key: 'insights' })
+    .select('categoryCovers')
+    .populate(INSIGHT_CATEGORIES.values.map((category) => `categoryCovers.${category}`))
+    .lean<{ categoryCovers?: CategoryCovers | null } | null>();
+
+  return page?.categoryCovers ?? {};
+}
+
+/**
+ * Give every insight without a cover its category's card (ADR-063). A cover of
+ * its own always wins. One read of the Insights page however many insights.
+ */
+export async function withCategoryCovers<T extends IInsightDoc>(insights: T[]): Promise<T[]> {
+  if (insights.every((insight) => insight.coverImage)) return insights;
+
+  const covers = await loadCategoryCovers();
+
+  return insights.map((insight) =>
+    insight.coverImage
+      ? insight
+      : { ...insight, coverImage: pickCategoryCover(insight.categories, covers) }
+  );
+}
+
 /**
  * Every card renders the cover image, its practice areas and its author.
  *
@@ -55,27 +85,27 @@ export function mainListingFilter(category?: InsightCategory): Record<string, un
  * `publishedFilter` constrains only the root query, so without this a
  * published insight would expose a draft attorney or a draft practice area.
  */
-function findCards(
+async function findCards(
   filter: Record<string, unknown>,
   sort: 1 | -1,
   skip: number,
   limit: number,
   options: PreviewOptions = {}
 ): Promise<IInsightDoc[]> {
-  return (
-    Insight.find(filter)
-      .select(CARD_FIELDS)
-      .populate('coverImage')
-      .populate(publishedPopulate('practiceAreas', options))
-      .populate(personCardPopulate('author', options))
-      // Several insights share a publish month, so the sort needs a tiebreaker or
-      // the order varies between identical requests. `order` lets the firm
-      // decide; `_id` makes it total.
-      .sort({ publishedAt: sort, order: 1, _id: 1 })
-      .skip(skip)
-      .limit(limit)
-      .lean<IInsightDoc[]>()
-  );
+  const cards = await Insight.find(filter)
+    .select(CARD_FIELDS)
+    .populate('coverImage')
+    .populate(publishedPopulate('practiceAreas', options))
+    .populate(personCardPopulate('author', options))
+    // Several insights share a publish month, so the sort needs a tiebreaker or
+    // the order varies between identical requests. `order` lets the firm
+    // decide; `_id` makes it total.
+    .sort({ publishedAt: sort, order: 1, _id: 1 })
+    .skip(skip)
+    .limit(limit)
+    .lean<IInsightDoc[]>();
+
+  return withCategoryCovers(cards);
 }
 
 export async function listInsights(
@@ -121,6 +151,7 @@ export async function getInsightBySlug(
     .lean<IInsightDoc | null>();
 
   if (!insight) throw new NotFoundError('Insight');
+  const [shown] = await withCategoryCovers([insight]);
 
   // A pro bono story's neighbours are other pro bono stories; everything
   // else never shows one (ADR-049).
@@ -147,7 +178,7 @@ export async function getInsightBySlug(
 
   const related = await findCards(relatedFilter, -1, 0, CONTENT_LIMITS.relatedInsights, options);
 
-  return { insight, related };
+  return { insight: shown ?? insight, related };
 }
 
 export const listLatestInsights = (
