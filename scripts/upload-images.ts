@@ -64,6 +64,7 @@ const slotValue = (current: unknown, mediaId: string): string | string[] =>
 
 interface Slot {
   readonly file: string;
+  /** An image's alt text, or a PDF's title: its link text (ADR-053). */
   readonly alt: string;
   readonly field?: string;
   /**
@@ -96,6 +97,7 @@ const MIME: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.pdf': 'application/pdf',
 };
 
 let token = '';
@@ -133,12 +135,18 @@ async function upload(file: string, alt: string): Promise<string> {
 
   const bytes = readFileSync(join(IMAGE_DIR, file));
   const type = MIME[extname(file).toLowerCase()];
-  if (type === undefined) throw new Error(`${file}: not an image this API accepts`);
+  if (type === undefined) throw new Error(`${file}: not a file type this API accepts`);
 
   const form = new FormData();
   // The original name is only a label; the driver stores under a random key.
   form.append('file', new Blob([new Uint8Array(bytes)], { type }), basename(file));
-  form.append('alt', alt);
+  // A PDF is a library document: it takes a title, its link text, and no alt.
+  if (type === 'application/pdf') {
+    form.append('kind', 'document');
+    form.append('title', alt);
+  } else {
+    form.append('alt', alt);
+  }
 
   const response = await fetch(`${BASE}/admin/media`, {
     method: 'POST',
