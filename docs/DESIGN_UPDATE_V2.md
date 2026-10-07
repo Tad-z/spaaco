@@ -198,7 +198,7 @@ The media library accepts **`kind: "document"`**: PDF only, checked by magic byt
 ## 14. Not built now (keep out of the spec)
 
 - The chat assistant
-- Newsletter subscribe
+- ~~Newsletter subscribe~~ (built since: ADR-065)
 - Behaviour of "Discuss a Mandate" on attorney cards
 - The "View Our Recognitions" destination
 - General CV submissions with no job

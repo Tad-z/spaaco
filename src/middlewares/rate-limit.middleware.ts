@@ -42,6 +42,10 @@ export const searchLimiter = build(RATE_LIMITS.search);
 export const enquiryLimiter = build(RATE_LIMITS.forms);
 export const messageLimiter = build(RATE_LIMITS.forms);
 export const applicationLimiter = build(RATE_LIMITS.forms);
+export const newsletterLimiter = build(RATE_LIMITS.forms);
+
+/** 20 per 10 minutes, shared by confirming and unsubscribing (ADR-065). */
+export const newsletterTokenLimiter = build(RATE_LIMITS.newsletterToken);
 
 /** 5 per 15 minutes, to slow credential stuffing against the admin login. */
 export const loginLimiter = build(RATE_LIMITS.login);

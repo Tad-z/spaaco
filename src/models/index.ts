@@ -25,3 +25,4 @@ export { AuditLog } from './audit-log.model.js';
 export { Enquiry } from './enquiry.model.js';
 export { Message } from './message.model.js';
 export { Application } from './application.model.js';
+export { NewsletterSubscriber } from './newsletter-subscriber.model.js';

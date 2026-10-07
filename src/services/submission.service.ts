@@ -57,10 +57,10 @@ export interface SubmissionResult {
 }
 
 /** The column width in every submission model. */
-const USER_AGENT_MAX = 400;
+export const USER_AGENT_MAX = 400;
 
 /** A bot filled the hidden field. */
-const isBot = (website: string | undefined): boolean =>
+export const isBot = (website: string | undefined): boolean =>
   website !== undefined && website.trim() !== '';
 
 /**
@@ -70,7 +70,7 @@ const isBot = (website: string | undefined): boolean =>
  * an email signed with a stale name is exactly the sort of small wrongness
  * nobody notices until a client does.
  */
-async function firmName(): Promise<string> {
+export async function firmName(): Promise<string> {
   const settings = await Settings.findOne({ key: 'site' })
     .select('firmName')
     .lean<{ firmName: string } | null>();
@@ -87,7 +87,7 @@ const firstNameOf = (fullName: string): string => fullName.trim().split(/\s+/)[0
  * frontend's point of view the token it sent was not acceptable, and the form
  * should re-challenge and resubmit.
  */
-async function requireHuman(token: string, ip: string): Promise<void> {
+export async function requireHuman(token: string, ip: string): Promise<void> {
   if (await verifyCaptcha(token, ip)) return;
 
   throw new ValidationError('The bot check did not pass. Please try again.', [

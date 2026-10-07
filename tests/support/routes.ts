@@ -4,6 +4,7 @@ import { adminContentRoutes } from '../../src/routes/admin/content.routes.js';
 import { adminSingletonRoutes } from '../../src/routes/admin/singleton.routes.js';
 import { adminMediaRoutes } from '../../src/routes/admin/media.routes.js';
 import { adminSubmissionRoutes } from '../../src/routes/admin/submission.routes.js';
+import { adminNewsletterRoutes } from '../../src/routes/admin/newsletter.routes.js';
 import { healthRoutes } from '../../src/routes/public/health.routes.js';
 import { siteRoutes } from '../../src/routes/public/site.routes.js';
 import { contentRoutes } from '../../src/routes/public/content.routes.js';
@@ -14,6 +15,7 @@ import { recognitionRoutes } from '../../src/routes/public/recognition.routes.js
 import { legalPageRoutes } from '../../src/routes/public/legal-page.routes.js';
 import { searchRoutes } from '../../src/routes/public/search.routes.js';
 import { submissionRoutes } from '../../src/routes/public/submission.routes.js';
+import { newsletterRoutes } from '../../src/routes/public/newsletter.routes.js';
 import { fileRoutes } from '../../src/routes/public/file.routes.js';
 import { API_PREFIX } from '../../src/routes/index.js';
 
@@ -70,6 +72,7 @@ export function registeredAdminRoutes(): RegisteredRoute[] {
     adminSingletonRoutes,
     adminMediaRoutes,
     adminSubmissionRoutes,
+    adminNewsletterRoutes,
   ]) {
     collect((router as unknown as { stack: RouteLayer[] }).stack, `${API_PREFIX}/admin`, routes);
   }
@@ -100,6 +103,7 @@ export function registeredPublicRoutes(): RegisteredRoute[] {
     legalPageRoutes,
     searchRoutes,
     submissionRoutes,
+    newsletterRoutes,
     fileRoutes,
   ]) {
     collect((router as unknown as { stack: RouteLayer[] }).stack, API_PREFIX, routes);

@@ -16,7 +16,7 @@ export interface IStillHaveQuestions {
   actions: ILink[];
 }
 
-/** The footer newsletter block's copy. No subscribe endpoint exists (DESIGN_UPDATE_V2 §14). */
+/** The footer newsletter block's copy, and whether its form is open (ADR-065). */
 export interface INewsletter {
   title: string;
   note: string;

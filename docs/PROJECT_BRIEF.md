@@ -22,7 +22,7 @@ The shell is served by `GET /api/v1/site`:
 - **Main nav:** Home, About Us ▾, Practice Areas, Our People, Insights & News ▾, Careers, plus a search icon and a "Discuss a Mandate" button. The About Us dropdown lists anchors into the About page (Our Story, Mission, Vision & Values, Our Principles, Recognition), edited in settings. The Insights & News dropdown lists the public insight categories, each linking to `/insights?category=<value>`.
 - **FAQ section:** "Answers Before You Reach Out." It has 5 accordion items and a "Still have questions?" card with three actions: Chat with us, Message the firm, Call the firm. The FAQ items come from the FAQ collection; the card copy comes from settings.
 - **Contact callout:** "Start With A Conversation, Not A Form." with the buttons Explore Our Practice Areas and Discuss a Mandate.
-- **Footer:** logo (a frontend asset), tagline and socials; a **Quick Links** column (Home, About Us, Practice Areas, Our People, Insights & News, Careers, FAQ's — edited in settings); a Practice Areas column (all nine); an Offices column with each office's name, address, email and phone (falling back to the site-wide values); Terms of Service and Privacy Policy links; a newsletter block ("Subscribe for legal insights"), whose copy is served but which has **no subscribe endpoint yet**; and a copyright line.
+- **Footer:** logo (a frontend asset), tagline and socials; a **Quick Links** column (Home, About Us, Practice Areas, Our People, Insights & News, Careers, FAQ's — edited in settings); a Practice Areas column (all nine); an Offices column with each office's name, address, email and phone (falling back to the site-wide values); Terms of Service and Privacy Policy links; a newsletter block ("Subscribe for legal insights"), which subscribes by double opt-in once the firm switches it on (ADR-065); and a copyright line.
 - **"Chat with SPAACO AI".** In scope later; nothing is built for it now (DESIGN_UPDATE_V2 §14).
 
 ## Pages → sections → data
@@ -126,7 +126,7 @@ A hero ("Frequently Asked Questions", with CTAs Discuss a Mandate / View our off
 ## Screens not yet designed, or not built yet
 
 - The Discuss a Mandate flow, and "Discuss a Mandate" on an attorney card (frontend only, does nothing yet).
-- The chat assistant and the newsletter subscription (not built now).
+- The chat assistant (not built now).
 - Where "View Our Recognitions" on Home goes, and what "Send your CV" does when no job is open.
 - The search results UI and all mobile layouts.
 

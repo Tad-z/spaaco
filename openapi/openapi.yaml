@@ -60,6 +60,10 @@ tags:
     description: Header search across the main collections.
   - name: Forms
     description: Public form submissions. All are rate limited and captcha protected.
+  - name: Newsletter
+    description: |
+      The footer's "Subscribe for legal insights" block. Double opt-in: subscribing sends a
+      confirmation link, and only confirmed addresses are on the list (ADR-065).
   - name: Admin auth
     description: Sign-in, token rotation and two-factor enrolment for the admin dashboard.
   - name: Admin users
@@ -72,6 +76,8 @@ tags:
     description: Site settings, the ten page documents and the two legal pages.
   - name: Admin media
     description: The media library the firm uploads through — images, and PDF documents.
+  - name: Admin newsletter
+    description: The newsletter mailing list. Business development and administrators.
 
 paths:
   /api/v1/health:
@@ -906,6 +912,148 @@ paths:
           $ref: '#/components/responses/UnsupportedMediaType'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/newsletter/subscriptions:
+    post:
+      tags: [Newsletter]
+      operationId: subscribeToNewsletter
+      summary: Subscribe an email address
+      description: |
+        Backs the footer's newsletter form. Rate limited to 5 requests per 10 minutes per IP.
+
+        Double opt-in: nothing is added to the mailing list here. The address is sent a link to
+        `{PUBLIC_SITE_URL}/newsletter/confirm?token=…`. The frontend's page at that path posts
+        the token to `POST /newsletter/confirm`. An unconfirmed address is deleted after 7 days.
+
+        The response is the same whether the address is new, awaiting confirmation, already
+        subscribed or previously unsubscribed, so this endpoint cannot be used to discover who
+        is on the list. An address that is already subscribed is sent a reminder with its
+        unsubscribe link instead of a confirmation.
+
+        Returns 404 while the newsletter is switched off in settings (`newsletter.enabled`). A
+        non-empty `website` honeypot receives a 202, and nothing is stored or sent.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsletterSubscribeRequest'
+            example:
+              email: adaeze.nwosu@example.com
+              consent: true
+              consentTextVersion: '2026-10'
+              turnstileToken: test
+              website: ''
+      responses:
+        '202':
+          description: Accepted. The address will receive an email if it can.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/NewsletterSubscribeReceipt' }
+              examples:
+                accepted:
+                  value:
+                    $ref: '../fixtures/responses/newsletter.subscribe.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/newsletter/confirm:
+    post:
+      tags: [Newsletter]
+      operationId: confirmNewsletterSubscription
+      summary: Confirm a subscription from the emailed link
+      description: |
+        The frontend's `/newsletter/confirm` page posts the `token` from its query string here.
+        It is a POST rather than a link straight to the API, because mail scanners follow
+        links in emails and a GET would let them confirm on the reader's behalf.
+
+        404 when the link has expired (after 7 days), was already used, or was never issued. The
+        page should then invite the visitor to subscribe again.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsletterTokenRequest'
+            example:
+              token: 3q2-7wbHQyWm1Nn8oVq1x0bP1dS2fY6Hk9uLz4T0aBc
+      responses:
+        '200':
+          description: The address is now on the mailing list.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/NewsletterTokenResult' }
+              examples:
+                confirmed:
+                  value:
+                    $ref: '../fixtures/responses/newsletter.confirm.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/newsletter/unsubscribe:
+    post:
+      tags: [Newsletter]
+      operationId: unsubscribeFromNewsletter
+      summary: Unsubscribe with the token from an email
+      description: |
+        Every newsletter email links to `{PUBLIC_SITE_URL}/newsletter/unsubscribe?token=…`. The
+        frontend's page at that path posts the token here. The admin export carries each
+        subscriber's link, so newsletters sent from another tool can include it too.
+
+        Always a 200 for a well-formed token, including one already used or one whose record
+        has since been deleted. Either way the address is not on the list, which is all the
+        visitor needs to know.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsletterTokenRequest'
+            example:
+              token: Vb7nC0x9mQ2rT4yU6iO8pA1sD3fG5hJ7kL9zX2cV4bN
+      responses:
+        '200':
+          description: The address is off the mailing list.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/NewsletterTokenResult' }
+              examples:
+                unsubscribed:
+                  value:
+                    $ref: '../fixtures/responses/newsletter.unsubscribe.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/RateLimited'
         '500':
@@ -4929,6 +5077,123 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/v1/admin/newsletter/subscribers:
+    get:
+      tags: [Admin newsletter]
+      operationId: listNewsletterSubscribers
+      summary: The mailing list
+      description: |
+        Every address in the list, newest first: confirmed subscribers, addresses still
+        awaiting confirmation, and recent unsubscribes. Unconfirmed addresses are deleted after
+        7 days and unsubscribed ones 30 days after they leave. Personal data, so each read is
+        audit-logged (the page and filter only, never the addresses).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by status. Omit for every status.
+          schema: { $ref: '#/components/schemas/NewsletterSubscriptionStatus' }
+        - name: q
+          in: query
+          required: false
+          description: Part of an email address, case-insensitive.
+          schema:
+            type: string
+            maxLength: 254
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: A page of subscribers, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/NewsletterSubscriberAdmin' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+              examples:
+                subscribers:
+                  value:
+                    $ref: '../fixtures/responses/admin.newsletter-subscribers.list.json'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/newsletter/subscribers/export:
+    get:
+      tags: [Admin newsletter]
+      operationId: exportNewsletterSubscribers
+      summary: Download the confirmed subscribers as CSV
+      description: |
+        The list to send a newsletter to: confirmed subscribers only, oldest first. The columns
+        are `email`, `subscribedAt` (ISO 8601) and `unsubscribeUrl`. Include each subscriber's
+        `unsubscribeUrl` in every email sent to them, whatever tool sends it, so that unsubscribing
+        removes them here.
+
+        Every export is audit-logged with the number of rows. If the audit entry cannot be
+        written, the export is refused.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A UTF-8 CSV file with a header row.
+          headers:
+            Content-Disposition:
+              description: '`attachment; filename="newsletter-subscribers-YYYY-MM-DD.csv"`'
+              schema: { type: string }
+          content:
+            text/csv:
+              schema:
+                type: string
+              example: |
+                email,subscribedAt,unsubscribeUrl
+                adaeze.nwosu@example.com,2026-10-01T09:30:00.000Z,https://spaajibade.com/newsletter/unsubscribe?token=Vb7nC0x9mQ2rT4yU6iO8pA1sD3fG5hJ7kL9zX2cV4bN
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/admin/newsletter/subscribers/{id}:
+    delete:
+      tags: [Admin newsletter]
+      operationId: deleteNewsletterSubscriber
+      summary: Erase a subscriber
+      description: |
+        Removes the address and its consent record entirely. Use this for an erasure request
+        under the NDPA. To stop sending to someone who asked by other means, this is also the
+        simplest route, since they can always subscribe again. Audit-logged.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '204':
+          description: Erased.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -6635,8 +6900,8 @@ components:
       additionalProperties: false
       required: [title, note, enabled]
       description: |
-        The footer newsletter block's copy. There is no subscribe endpoint: while `enabled` is
-        false the frontend shows no form.
+        The footer newsletter block's copy. While `enabled` is false the frontend shows no form,
+        and `POST /newsletter/subscriptions` answers 404.
       properties:
         title:
           type: string
@@ -8865,6 +9130,88 @@ components:
         given: { const: true }
         textVersion: { type: string }
         at: { type: string, format: date-time }
+    NewsletterSubscriptionStatus:
+      type: string
+      enum: [pending, subscribed, unsubscribed]
+      description: |
+        `pending` until the emailed link is followed, then `subscribed`. Only `subscribed`
+        addresses are exported.
+    NewsletterSubscribeRequest:
+      type: object
+      additionalProperties: false
+      required: [email, consent, consentTextVersion, turnstileToken]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        consent:
+          const: true
+        consentTextVersion:
+          type: string
+          maxLength: 40
+        turnstileToken:
+          type: string
+          maxLength: 2048
+        website:
+          type: string
+          maxLength: 200
+          description: Honeypot; leave empty.
+    NewsletterSubscribeReceipt:
+      type: object
+      additionalProperties: false
+      required: [status]
+      description: |
+        Identical for every address, so it says nothing about who is subscribed. Show "check your
+        inbox to confirm".
+      properties:
+        status:
+          type: string
+          enum: [confirmation_sent]
+    NewsletterTokenRequest:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: The `token` query parameter from the emailed link, unchanged.
+          pattern: '^[A-Za-z0-9_-]{43}$'
+    NewsletterTokenResult:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [subscribed, unsubscribed]
+    NewsletterSubscriberAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - email
+        - status
+        - consent
+        - subscribedAt
+        - unsubscribedAt
+        - createdAt
+      description: |
+        One address on the list. Tokens and the IP hash are never returned.
+      properties:
+        id: { $ref: '#/components/schemas/ObjectId' }
+        email: { type: string }
+        status: { $ref: '#/components/schemas/NewsletterSubscriptionStatus' }
+        consent: { $ref: '#/components/schemas/SubmissionConsent' }
+        subscribedAt:
+          type: [string, 'null']
+          format: date-time
+          description: When the address was confirmed. Null while pending.
+        unsubscribedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Null unless the status is `unsubscribed`.
+        createdAt: { type: string, format: date-time }
     SubmissionActor:
       type: object
       additionalProperties: false

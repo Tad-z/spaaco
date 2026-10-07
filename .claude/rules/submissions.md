@@ -3,6 +3,7 @@ paths:
   - 'src/**/enquiry*.ts'
   - 'src/**/message*.ts'
   - 'src/**/application*.ts'
+  - 'src/**/newsletter*.ts'
   - 'src/integrations/storage/**'
   - 'src/integrations/mailer/**'
   - 'src/templates/emails/**'
@@ -10,7 +11,7 @@ paths:
 
 # Personal data rules (NDPA 2023)
 
-These files handle personal data from prospective clients and job applicants. A leak here is a legal and reputational problem for a law firm, so these rules are strict.
+These files handle personal data from prospective clients, job applicants and newsletter subscribers. A leak here is a legal and reputational problem for a law firm, so these rules are strict.
 
 - **Never log** request bodies, names, emails, phone numbers, matter summaries, or file names from these routes. Log only the reference, the form type, and outcome codes.
 - **Consent is required:** `consent: true` plus `consentTextVersion`, stored with a timestamp. Reject the request without them.

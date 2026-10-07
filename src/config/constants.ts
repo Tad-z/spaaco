@@ -64,6 +64,12 @@ export const RATE_LIMITS = {
   forms: { windowMs: 10 * 60 * 1000, max: 5 },
   search: { windowMs: 60 * 1000, max: 60 },
   publicRead: { windowMs: 60 * 1000, max: 300 },
+  /**
+   * Confirming and unsubscribing (ADR-065). Looser than the forms: the tokens
+   * are unguessable, so this only stops a flood, and somebody tidying up a
+   * mailbox may click several unsubscribe links in a row.
+   */
+  newsletterToken: { windowMs: 10 * 60 * 1000, max: 20 },
   /** Per IP + email, to slow credential stuffing without locking out a shared NAT. */
   login: { windowMs: 15 * 60 * 1000, max: 5 },
 } as const;
@@ -106,4 +112,20 @@ export const REFERENCE_PREFIXES = {
   enquiry: 'ENQ',
   message: 'MSG',
   application: 'APP',
+} as const;
+
+/**
+ * The newsletter's double opt-in (ADR-065).
+ *
+ * An unconfirmed address is kept only long enough for its owner to follow the
+ * link, and an unsubscribed one only long enough for the dashboard to show who
+ * left recently. After that both are deleted by a TTL index, because an
+ * address nobody may write to is personal data with no purpose.
+ */
+export const NEWSLETTER = {
+  confirmWindowDays: 7,
+  unsubscribedRetentionDays: 30,
+  /** Frontend pages the emailed links open; each posts the token to the API. */
+  confirmPath: '/newsletter/confirm',
+  unsubscribePath: '/newsletter/unsubscribe',
 } as const;

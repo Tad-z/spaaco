@@ -58,6 +58,12 @@ const MATRIX: Record<string, readonly UserRole[]> = {
   '/api/v1/admin/applications': ['hr'],
   '/api/v1/admin/applications/:id': ['hr'],
   '/api/v1/admin/applications/:id/cv': ['hr'],
+
+  // The mailing list is business development's, like the firm's other
+  // outward contact (ADR-065).
+  '/api/v1/admin/newsletter/subscribers': ['business_dev'],
+  '/api/v1/admin/newsletter/subscribers/export': ['business_dev'],
+  '/api/v1/admin/newsletter/subscribers/:id': ['business_dev'],
 };
 
 /** Auth routes are about having a session, not a role; auth.test.ts covers them. */

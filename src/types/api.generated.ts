@@ -458,6 +458,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/newsletter/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Subscribe an email address
+         * @description Backs the footer's newsletter form. Rate limited to 5 requests per 10 minutes per IP.
+         *
+         *     Double opt-in: nothing is added to the mailing list here. The address is sent a link to
+         *     `{PUBLIC_SITE_URL}/newsletter/confirm?token=…`. The frontend's page at that path posts
+         *     the token to `POST /newsletter/confirm`. An unconfirmed address is deleted after 7 days.
+         *
+         *     The response is the same whether the address is new, awaiting confirmation, already
+         *     subscribed or previously unsubscribed, so this endpoint cannot be used to discover who
+         *     is on the list. An address that is already subscribed is sent a reminder with its
+         *     unsubscribe link instead of a confirmation.
+         *
+         *     Returns 404 while the newsletter is switched off in settings (`newsletter.enabled`). A
+         *     non-empty `website` honeypot receives a 202, and nothing is stored or sent.
+         */
+        post: operations["subscribeToNewsletter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/newsletter/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm a subscription from the emailed link
+         * @description The frontend's `/newsletter/confirm` page posts the `token` from its query string here.
+         *     It is a POST rather than a link straight to the API, because mail scanners follow
+         *     links in emails and a GET would let them confirm on the reader's behalf.
+         *
+         *     404 when the link has expired (after 7 days), was already used, or was never issued. The
+         *     page should then invite the visitor to subscribe again.
+         */
+        post: operations["confirmNewsletterSubscription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/newsletter/unsubscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unsubscribe with the token from an email
+         * @description Every newsletter email links to `{PUBLIC_SITE_URL}/newsletter/unsubscribe?token=…`. The
+         *     frontend's page at that path posts the token here. The admin export carries each
+         *     subscriber's link, so newsletters sent from another tool can include it too.
+         *
+         *     Always a 200 for a well-formed token, including one already used or one whose record
+         *     has since been deleted. Either way the address is not on the list, which is all the
+         *     visitor needs to know.
+         */
+        post: operations["unsubscribeFromNewsletter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/auth/login": {
         parameters: {
             query?: never;
@@ -2143,6 +2226,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/newsletter/subscribers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The mailing list
+         * @description Every address in the list, newest first: confirmed subscribers, addresses still
+         *     awaiting confirmation, and recent unsubscribes. Unconfirmed addresses are deleted after
+         *     7 days and unsubscribed ones 30 days after they leave. Personal data, so each read is
+         *     audit-logged (the page and filter only, never the addresses).
+         */
+        get: operations["listNewsletterSubscribers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/newsletter/subscribers/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the confirmed subscribers as CSV
+         * @description The list to send a newsletter to: confirmed subscribers only, oldest first. The columns
+         *     are `email`, `subscribedAt` (ISO 8601) and `unsubscribeUrl`. Include each subscriber's
+         *     `unsubscribeUrl` in every email sent to them, whatever tool sends it, so that unsubscribing
+         *     removes them here.
+         *
+         *     Every export is audit-logged with the number of rows. If the audit entry cannot be
+         *     written, the export is refused.
+         */
+        get: operations["exportNewsletterSubscribers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/newsletter/subscribers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Erase a subscriber
+         * @description Removes the address and its consent record entirely. Use this for an erasure request
+         *     under the NDPA. To stop sending to someone who asked by other means, this is also the
+         *     simplest route, since they can always subscribe again. Audit-logged.
+         */
+        delete: operations["deleteNewsletterSubscriber"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2721,8 +2875,8 @@ export interface components {
             email: string | null;
         };
         /**
-         * @description The footer newsletter block's copy. There is no subscribe endpoint: while `enabled` is
-         *     false the frontend shows no form.
+         * @description The footer newsletter block's copy. While `enabled` is false the frontend shows no form,
+         *     and `POST /newsletter/subscriptions` answers 404.
          */
         SiteNewsletter: {
             title: string;
@@ -3935,6 +4089,57 @@ export interface components {
             /** Format: date-time */
             at: string;
         };
+        /**
+         * @description `pending` until the emailed link is followed, then `subscribed`. Only `subscribed`
+         *     addresses are exported.
+         * @enum {string}
+         */
+        NewsletterSubscriptionStatus: "pending" | "subscribed" | "unsubscribed";
+        NewsletterSubscribeRequest: {
+            /** Format: email */
+            email: string;
+            /** @constant */
+            consent: true;
+            consentTextVersion: string;
+            turnstileToken: string;
+            /** @description Honeypot; leave empty. */
+            website?: string;
+        };
+        /**
+         * @description Identical for every address, so it says nothing about who is subscribed. Show "check your
+         *     inbox to confirm".
+         */
+        NewsletterSubscribeReceipt: {
+            /** @enum {string} */
+            status: "confirmation_sent";
+        };
+        NewsletterTokenRequest: {
+            /** @description The `token` query parameter from the emailed link, unchanged. */
+            token: string;
+        };
+        NewsletterTokenResult: {
+            /** @enum {string} */
+            status: "subscribed" | "unsubscribed";
+        };
+        /** @description One address on the list. Tokens and the IP hash are never returned. */
+        NewsletterSubscriberAdmin: {
+            id: components["schemas"]["ObjectId"];
+            email: string;
+            status: components["schemas"]["NewsletterSubscriptionStatus"];
+            consent: components["schemas"]["SubmissionConsent"];
+            /**
+             * Format: date-time
+             * @description When the address was confirmed. Null while pending.
+             */
+            subscribedAt: string | null;
+            /**
+             * Format: date-time
+             * @description Null unless the status is `unsubscribed`.
+             */
+            unsubscribedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
         /** @description The admin user a submission is assigned to. */
         SubmissionActor: {
             id: components["schemas"]["ObjectId"];
@@ -5116,6 +5321,114 @@ export interface operations {
             413: components["responses"]["PayloadTooLarge"];
             415: components["responses"]["UnsupportedMediaType"];
             422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    subscribeToNewsletter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "email": "adaeze.nwosu@example.com",
+                 *       "consent": true,
+                 *       "consentTextVersion": "2026-10",
+                 *       "turnstileToken": "test",
+                 *       "website": ""
+                 *     }
+                 */
+                "application/json": components["schemas"]["NewsletterSubscribeRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted. The address will receive an email if it can. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NewsletterSubscribeReceipt"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    confirmNewsletterSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "token": "3q2-7wbHQyWm1Nn8oVq1x0bP1dS2fY6Hk9uLz4T0aBc"
+                 *     }
+                 */
+                "application/json": components["schemas"]["NewsletterTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description The address is now on the mailing list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NewsletterTokenResult"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unsubscribeFromNewsletter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "token": "Vb7nC0x9mQ2rT4yU6iO8pA1sD3fG5hJ7kL9zX2cV4bN"
+                 *     }
+                 */
+                "application/json": components["schemas"]["NewsletterTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description The address is off the mailing list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NewsletterTokenResult"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
         };
@@ -8663,6 +8976,97 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Every session ended. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listNewsletterSubscribers: {
+        parameters: {
+            query?: {
+                /** @description Filter by status. Omit for every status. */
+                status?: components["schemas"]["NewsletterSubscriptionStatus"];
+                /** @description Part of an email address, case-insensitive. */
+                q?: string;
+                /** @description 1-based page number. Out-of-range pages return an empty list, not a 404. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of subscribers, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NewsletterSubscriberAdmin"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    exportNewsletterSubscribers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A UTF-8 CSV file with a header row. */
+            200: {
+                headers: {
+                    /** @description `attachment; filename="newsletter-subscribers-YYYY-MM-DD.csv"` */
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example email,subscribedAt,unsubscribeUrl
+                     *     adaeze.nwosu@example.com,2026-10-01T09:30:00.000Z,https://spaajibade.com/newsletter/unsubscribe?token=Vb7nC0x9mQ2rT4yU6iO8pA1sD3fG5hJ7kL9zX2cV4bN
+                     */
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteNewsletterSubscriber: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A 24-character hexadecimal identifier. */
+                id: components["parameters"]["ObjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Erased. */
             204: {
                 headers: {
                     [name: string]: unknown;

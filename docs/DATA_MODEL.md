@@ -178,7 +178,7 @@ Plus `slug`, `order` and `status`. A directory page lists its published awards b
 
 `firmName`, `legalDescriptor` ("Legal Practitioners, Arbitrators and Notaries Public"), `tagline`, `foundedYear` (1967), `phone`, `email`, `socials` { instagram, facebook, x, linkedin, youtube }, `copyright`, `stillHaveQuestions` { title, text }, `contactCallout` { title, text, primaryCta, secondaryCta }, `faqSection` { eyebrow, title }, `aboutAnchors` [Link] (the About Us nav dropdown), `footerLinks` [Link] (the footer's Quick Links), `legalLinks` [Link], `newsletter` { title, note, enabled }, `revision` (Number, incremented on every save).
 
-The top-level nav entries are fixed by the design (`constants/navigation.ts`); settings holds the parts of the nav and footer whose labels the firm edits (ADR-050). There is no `chat` setting and no newsletter endpoint (DESIGN_UPDATE_V2 §14).
+The top-level nav entries are fixed by the design (`constants/navigation.ts`); settings holds the parts of the nav and footer whose labels the firm edits (ADR-050). There is no `chat` setting. `newsletter.enabled` opens and closes the subscribe endpoint (ADR-065).
 
 ### `pages` (one document per `key`)
 
@@ -231,6 +231,11 @@ Images and documents the firm edits (heroes, practice area photos, portraits, in
 
 `job` → Job, `fullName`, `email`, `phone`, `coverNote?`, `cv` { storageKey, originalName, mimeType, bytes, scanStatus: `pending|clean|infected` }, `consent`, `status` (`new|shortlisted|rejected|hired`), `createdAt`.
 **TTL index** using `RETENTION_APPLICATION_DAYS`. A TTL deletion must also delete the stored CV file, via a scheduled cleanup job that removes orphaned files.
+
+### `newsletterSubscribers` (ADR-065)
+
+`email` (unique, lowercase), `status` (`pending|subscribed|unsubscribed`), `consent` (as above, from the latest subscribe), `confirmTokenHash?` (sha256, single use; partial index), `unsubscribeToken` (unique, stored as issued), `subscribedAt?`, `unsubscribedAt?`, `expiresAt?`, `ipHash`, `userAgent`, timestamps.
+**TTL index** on `expiresAt` (expires at that date): 7 days ahead while pending, 30 days after unsubscribing, and null while subscribed.
 
 ## System collections
 
