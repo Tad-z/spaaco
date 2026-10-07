@@ -88,11 +88,6 @@
             "kind": "internal"
           },
           {
-            "label": "News Updates",
-            "href": "/insights?category=news_updates",
-            "kind": "internal"
-          },
-          {
             "label": "Events",
             "href": "/insights?category=events",
             "kind": "internal"

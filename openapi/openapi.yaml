@@ -5685,7 +5685,6 @@ components:
         - articles
         - insights
         - regulatory_updates
-        - news_updates
         - events
         - pro_bono
       description: |

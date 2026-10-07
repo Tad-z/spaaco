@@ -2305,7 +2305,7 @@ export interface components {
          *     `category=pro_bono` is asked for explicitly.
          * @enum {string}
          */
-        InsightCategory: "firm_news" | "articles" | "insights" | "regulatory_updates" | "news_updates" | "events" | "pro_bono";
+        InsightCategory: "firm_news" | "articles" | "insights" | "regulatory_updates" | "events" | "pro_bono";
         /**
          * @description Controls whether the card reads "Read More" or "Watch Video".
          * @enum {string}

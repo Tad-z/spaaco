@@ -40,7 +40,7 @@ There is no production data yet, so schema changes may be destructive. Update th
   - About Us ▾, with anchors into `/about`: Our Story (`#story`), Mission, Vision & Values (`#mission`), Our Principles (`#principles`), Recognition (`#recognition`)
   - Practice Areas (no dropdown)
   - Our People (no dropdown)
-  - Insights & News ▾, whose items are the **public insight categories** (Firm News, Articles, Insights, Regulatory Updates, News Updates, Events), each linking to `/insights?category=<value>`
+  - Insights & News ▾, whose items are the **public insight categories** (Firm News, Articles, Insights, Regulatory Updates, Events), each linking to `/insights?category=<value>`
   - Careers
 - **Footer:**
   - **Quick Links:** Home, About Us, Practice Areas, Our People, Insights & News, Careers, FAQ's.
@@ -158,11 +158,11 @@ Remove `body`, `keyServices` and `contacts`; the new fields replace them.
 
 ## 8. Insights
 
-- **Categories:** `firm_news, articles, insights, regulatory_updates, news_updates, events, pro_bono`.
+- **Categories:** `firm_news, articles, insights, regulatory_updates, events, pro_bono`.
   - Remove `media_coverage` and `webinar_resources`.
   - Relabel the luncheon video as `events` + `firm_news`.
   - `pro_bono` is labelled "Pro Bono & Community Commitment".
-- **Public tabs:** All insights & news, Firm News, Articles, Insights, Regulatory Updates, News Updates, Events. `pro_bono` is not a tab.
+- **Public tabs:** All insights & news, Firm News, Articles, Insights, Regulatory Updates, Events. `pro_bono` is not a tab.
 - **`GET /insights`:** the `practiceArea=<slug>` filter already exists. `GET /pages/insights` also returns `practiceAreaFilters` for the "Sort By" dropdown.
 - **Detail (`GET /insights/:slug`):**
   - category chip(s), date, title, `coverImage`, `body` (HTML), and the author block;

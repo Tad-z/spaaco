@@ -211,10 +211,6 @@
         "label": "Regulatory Updates"
       },
       {
-        "value": "news_updates",
-        "label": "News Updates"
-      },
-      {
         "value": "events",
         "label": "Events"
       }

@@ -89,7 +89,7 @@ Terms of Service and Privacy Policy, linked from the footer. Editable pages; the
 ### Insights & News — `GET /pages/insights` + `GET /insights`
 
 1. **Featured carousel:** up to 3 featured insights, each with date, tags, title, excerpt, author, Read More and image. It shows numbered dots and appears to autoplay.
-2. **Listing:** category tabs (All insights & news, Firm News, Articles, Insights, Regulatory Updates, News Updates, Events), a "Sort By" dropdown that filters by practice area and combines with the tabs, and a 3×3 grid paginated 9 per page. Pro bono stories never appear here; they live on the Responsible Business page.
+2. **Listing:** category tabs (All insights & news, Firm News, Articles, Insights, Regulatory Updates, Events), a "Sort By" dropdown that filters by practice area and combines with the tabs, and a 3×3 grid paginated 9 per page. Pro bono stories never appear here; they live on the Responsible Business page.
 3. The shared sections.
 
 Each card shows a category chip, a practice-area chip, a date, a title and an author. The author is either an attorney (photo, name, role) or the firm itself (the frontend's logo mark, "SPA AJIBADE & Co.", "Law Firm"). The button reads **"Read More"** for articles and **"Watch Video"** for video content.

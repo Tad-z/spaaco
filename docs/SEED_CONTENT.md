@@ -95,7 +95,7 @@ Directories, in order: IFLR 1000, Chambers Global, Legal 500, Who's Who Legal. T
 | Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy                              | video   | events, firm_news  | —                                | firm          | 2026-06 ⚠   | true     |
 | Regulatory Update On The 2026 Supreme Court Practice Directions                                                                 | article | regulatory_updates | Dispute Resolution & Arbitration | firm          | 2026-05     | false    |
 
-The categories (v2) are `firm_news, articles, insights, regulatory_updates, news_updates, events, pro_bono`; `media_coverage` and `webinar_resources` are gone. Article #1's author is John Onyido, as on the card, and its body is in SEED_CONTENT_V2. The pro bono story ("SPA AJIBADE & Co. Sponsors Team Titans, an American Flag Football Team", `pro_bono`, by the firm, 16 September 2025 ⚠) is in SEED_CONTENT_V2; its demo repeats (`-2`…`-12`) live in `fixtures/seed/insights.demo.json`, which only the dev seed reads. Both video insights are seeded as articles until the firm supplies the links (ADR-042).
+The categories (v2) are `firm_news, articles, insights, regulatory_updates, events, pro_bono`; `media_coverage` and `webinar_resources` are gone. Article #1's author is John Onyido, as on the card, and its body is in SEED_CONTENT_V2. The pro bono story ("SPA AJIBADE & Co. Sponsors Team Titans, an American Flag Football Team", `pro_bono`, by the firm, 16 September 2025 ⚠) is in SEED_CONTENT_V2; its demo repeats (`-2`…`-12`) live in `fixtures/seed/insights.demo.json`, which only the dev seed reads. Both video insights are seeded as articles until the firm supplies the links (ADR-042).
 
 Excerpt for #1: "The focus of this brief is specifically on a bilateral energy investment relationship between Nigeria and South Africa: two nations that represent, by any objective commercial assessment, the most logical and most strategically significant energy partnership on the African continent…". The other excerpts, all bodies, and the video URL are `[PENDING FROM FIRM]`. For listing fixtures that need 9+ cards, repeat these with `-2`, `-3` slug suffixes, marked in the fixture filename as demo data.
 
@@ -185,7 +185,7 @@ Description (both):
 
 - **hero:** none in the design (the page opens with the featured carousel), so seed `null`.
 - **listingSection.title:** "Insights & News"
-- **categoryFilters:** All insights & news, Firm News, Articles, Insights, Regulatory Updates, News Updates, Events (v2; `pro_bono` is not a tab)
+- **categoryFilters:** All insights & news, Firm News, Articles, Insights, Regulatory Updates, Events (v2; `pro_bono` is not a tab)
 
 ### careers
 

@@ -104,7 +104,7 @@ Indexes: `{status:1, role:1, order:1}`, `{status:1, practiceAreas:1}` and a text
 | videoUrl      | String                              | Required if format = video                                                                          |
 | externalUrl   | String, optional                    | Where the article's "Read Article" link goes                                                        |
 | document      | →Media (`kind: document`), optional | An uploaded PDF the "Read Article" link opens. At most one of `externalUrl`/`document`              |
-| categories    | [enum], min 1                       | `firm_news, articles, insights, regulatory_updates, news_updates, events, pro_bono`                 |
+| categories    | [enum], min 1                       | `firm_news, articles, insights, regulatory_updates, events, pro_bono`                 |
 | practiceAreas | [→PracticeArea]                     |                                                                                                     |
 | author        | →Person, optional                   | **null means the firm is the author**                                                               |
 | authorName    | String, optional                    | A writer with no profile (former staff, a guest), shown when `author` is null (ADR-060). Never both |

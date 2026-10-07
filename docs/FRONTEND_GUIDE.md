@@ -138,7 +138,7 @@ One thing to know: asking for `role=partner` also returns the Managing Partner. 
 GET /api/v1/insights?category=articles&practiceArea=tax&sort=oldest
 ```
 
-`category` is one of: `firm_news`, `articles`, `insights`, `regulatory_updates`, `news_updates`, `events`, `pro_bono`.
+`category` is one of: `firm_news`, `articles`, `insights`, `regulatory_updates`, `events`, `pro_bono`.
 
 **`pro_bono` is special.** Those are the Responsible Business stories, and they appear only when you ask for `category=pro_bono` — never in "All insights & news", another tab, the featured carousel, Home, or a practice area's or attorney's publications. It is not a tab; `/pages/insights` gives you the real tabs as `categoryFilters`.
 
