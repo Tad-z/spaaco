@@ -934,8 +934,7 @@ paths:
         is on the list. An address that is already subscribed is sent a reminder with its
         unsubscribe link instead of a confirmation.
 
-        Returns 404 while the newsletter is switched off in settings (`newsletter.enabled`). A
-        non-empty `website` honeypot receives a 202, and nothing is stored or sent.
+        A non-empty `website` honeypot receives a 202, and nothing is stored or sent.
       requestBody:
         required: true
         content:
@@ -965,8 +964,6 @@ paths:
                     $ref: '../fixtures/responses/newsletter.subscribe.json'
         '400':
           $ref: '#/components/responses/ValidationError'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/RateLimited'
         '500':
@@ -6898,17 +6895,15 @@ components:
     SiteNewsletter:
       type: object
       additionalProperties: false
-      required: [title, note, enabled]
+      required: [title, note]
       description: |
-        The footer newsletter block's copy. While `enabled` is false the frontend shows no form,
-        and `POST /newsletter/subscriptions` answers 404.
+        The footer newsletter block's copy. The form always shows and posts to
+        `POST /newsletter/subscriptions` (ADR-066).
       properties:
         title:
           type: string
         note:
           type: string
-        enabled:
-          type: boolean
 
     StillHaveQuestions:
       type: object

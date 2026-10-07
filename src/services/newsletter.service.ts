@@ -5,7 +5,7 @@ import { NotFoundError } from '../core/errors.js';
 import { logger } from '../core/logger.js';
 import { hashIp, randomToken, sha256 } from '../helpers/hash.helper.js';
 import { toSkip } from '../helpers/pagination.helper.js';
-import { NewsletterSubscriber, Settings } from '../models/index.js';
+import { NewsletterSubscriber } from '../models/index.js';
 import { record, recordOrThrow } from './audit.service.js';
 import { sendMail } from './notify.service.js';
 import { firmName, isBot, requireHuman, USER_AGENT_MAX } from './submission.service.js';
@@ -48,21 +48,6 @@ const isDuplicateKey = (error: unknown): boolean =>
   error instanceof Error && 'code' in error && (error as { code: unknown }).code === 11000;
 
 /**
- * Whether the footer form is switched on.
- *
- * The setting predates the endpoint (ADR-050), and the firm turns it on when
- * it is ready to send something. Until then the endpoint is a 404, as a closed
- * vacancy is: the form does not exist, so there is nothing to submit to.
- */
-async function requireOpen(): Promise<void> {
-  const settings = await Settings.findOne({ key: 'site' })
-    .select('newsletter.enabled')
-    .lean<{ newsletter?: { enabled?: boolean } } | null>();
-
-  if (settings?.newsletter?.enabled !== true) throw new NotFoundError('Newsletter signup');
-}
-
-/**
  * Ask an address to confirm.
  *
  * Every path ends in the same response, so the caller learns nothing about
@@ -78,7 +63,6 @@ export async function subscribe(
     return;
   }
 
-  await requireOpen();
   await requireHuman(body.turnstileToken, context.ip);
 
   const existing = await NewsletterSubscriber.findOne({ email: body.email })

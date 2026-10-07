@@ -23,7 +23,7 @@ This is the only source for real copy. It's used for fixtures, the dev/staging s
 - **aboutAnchors (v2):** Our Story (`/about#story`), Mission, Vision & Values (`/about#mission`), Our Principles (`/about#principles`), Recognition (`/about#recognition`)
 - **footerLinks (v2, "Quick Links"):** Home, About Us, Practice Areas, Our People, Insights & News, Careers, FAQ's
 - **legalLinks (v2):** Terms of Service → `/legal/terms`, Privacy Policy → `/legal/privacy`
-- **newsletter (v2):** title "Subscribe for legal insights", note "Your information is kept confidential", enabled `false` (no subscribe endpoint)
+- **newsletter (v2):** title "Subscribe for legal insights", note "Your information is kept confidential"
 
 ## Practice areas (order as on the Practice Areas page)
 

@@ -41,7 +41,7 @@ The second design drop changed the contract. `openapi/openapi.yaml` and the fixt
 - Every `PersonSummary` carries its card back (`cardBio`, practice-area chips), so cards flip without another request.
 - `?practiceArea=<slug>` on `/people`, combinable with `role`; `practiceAreaFilters` on the People and Insights pages for the "Sort By" dropdown (ADR-054).
 - Pro bono stories appear only with `?category=pro_bono` — the Responsible Business grid (ADR-049).
-- `footer.legalLinks`, `footer.newsletter` (copy, plus `enabled`, which now also opens the subscribe endpoint: ADR-065), and the About dropdown in `nav`.
+- `footer.legalLinks`, `footer.newsletter` (its copy; `enabled` was removed by ADR-066 and subscribe is always open), and the About dropdown in `nav`.
 
 **Not built, on purpose:** the chat assistant, what "Discuss a Mandate" does on an attorney card, where "View Our Recognitions" goes, and CV submissions with no open job.
 

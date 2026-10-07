@@ -5,7 +5,7 @@ This file adds to and overrides `SEED_CONTENT.md`. Keep wording exact. `[PENDING
 ## Settings changes
 
 - **contactCallout.secondaryCta:** "Explore Our Practice Areas" → `/practice-areas`.
-- **newsletter:** title "Subscribe for legal insights", note "Your information is kept confidential", enabled `false`.
+- **newsletter:** title "Subscribe for legal insights", note "Your information is kept confidential".
 - **legalLinks:** "Terms of Service" → `/legal/terms`, "Privacy Policy" → `/legal/privacy`.
 - **footer quickLinks:** Home, About Us, Practice Areas, Our People, Insights & News, Careers, FAQ's.
 - **aboutAnchors:** Our Story, Mission, Vision & Values, Our Principles, Recognition.

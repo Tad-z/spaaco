@@ -47,7 +47,7 @@ There is no production data yet, so schema changes may be destructive. Update th
   - **Practice Areas column:** all 9 areas (`showInFooter: true` for all).
   - **Offices column:** each office's name, address, **email and phone**, so `offices.email` and `offices.phone` are now shown publicly. Fall back to the site-wide values when empty.
   - **Legal links:** Terms of Service → `/legal/terms`, Privacy Policy → `/legal/privacy`.
-  - **Newsletter block:** `newsletter` { title: "Subscribe for legal insights", note: "Your information is kept confidential", enabled: false }. The copy is editable; there is **no subscribe endpoint** yet.
+  - **Newsletter block:** `newsletter` { title: "Subscribe for legal insights", note: "Your information is kept confidential", enabled: false }. The copy is editable. _(Since built: subscribe is ADR-065, and ADR-066 removed `enabled`.)_
 - **Contact callout:** the secondary CTA is now "Explore Our Practice Areas" → `/practice-areas` (it was View our offices).
 - **Chat:** settings may hold `chat` { enabled: false } only. Don't build any chat endpoints.
 

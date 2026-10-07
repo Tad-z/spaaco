@@ -128,8 +128,7 @@
     ],
     "newsletter": {
       "title": "Subscribe for legal insights",
-      "note": "Your information is kept confidential",
-      "enabled": false
+      "note": "Your information is kept confidential"
     }
   }
 }

@@ -43,7 +43,6 @@ const settingsSchema = new Schema<ISettings>(
     newsletter: {
       title: { type: String, required: true, trim: true, maxlength: 200 },
       note: { type: String, required: true, trim: true, maxlength: 300 },
-      enabled: { type: Boolean, default: false },
     },
     revision: { type: Number, default: 0 },
   },

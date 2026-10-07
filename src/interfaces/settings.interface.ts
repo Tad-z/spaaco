@@ -16,11 +16,10 @@ export interface IStillHaveQuestions {
   actions: ILink[];
 }
 
-/** The footer newsletter block's copy, and whether its form is open (ADR-065). */
+/** The footer newsletter block's copy (ADR-066). */
 export interface INewsletter {
   title: string;
   note: string;
-  enabled: boolean;
 }
 
 export interface IContactCallout {

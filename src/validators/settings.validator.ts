@@ -59,7 +59,6 @@ export const settingsWriteSchema = z
       .object({
         title: z.string().trim().min(1).max(200),
         note: z.string().trim().min(1).max(300),
-        enabled: z.boolean(),
       })
       .strict(),
   })

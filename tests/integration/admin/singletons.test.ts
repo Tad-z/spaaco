@@ -258,6 +258,18 @@ describe('settings', () => {
     expect(res.body.data.firmName).toBe('SPA Ajibade & Co.');
   });
 
+  it('drops the newsletter switch that settings saved before ADR-066 still hold', async () => {
+    // Written past the model, which no longer knows the field.
+    await mongoose.connection
+      .collection('settings')
+      .updateOne({ key: 'site' }, { $set: { 'newsletter.enabled': false } });
+
+    const res = await request(app).get('/api/v1/admin/settings').set('Authorization', auth());
+
+    expectToMatchContract(res, 'get', '/api/v1/admin/settings');
+    expect(res.body.data.newsletter).not.toHaveProperty('enabled');
+  });
+
   it('round-trips GET then PUT', async () => {
     const { body, revision } = await getSettings();
 

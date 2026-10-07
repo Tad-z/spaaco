@@ -87,6 +87,11 @@ export function toAdminPage(doc: StoredSingleton, expanded: Expanded): PageAdmin
   return shaped as unknown as PageAdmin;
 }
 
+function pickNewsletter(value: unknown): { title: unknown; note: unknown } {
+  const stored = (value ?? {}) as { title?: unknown; note?: unknown };
+  return { title: stored.title, note: stored.note };
+}
+
 /**
  * Settings, which unlike a page has one fixed shape — so the contract closes
  * it, and this lists the fields rather than spreading the document.
@@ -109,7 +114,9 @@ export function toAdminSettings(doc: StoredSingleton): SettingsAdmin {
     aboutAnchors: plain(doc.aboutAnchors ?? []),
     footerLinks: plain(doc.footerLinks ?? []),
     legalLinks: plain(doc.legalLinks ?? []),
-    newsletter: plain(doc.newsletter),
+    // Picked rather than copied: documents saved before ADR-066 still hold
+    // `enabled`, which the contract no longer has.
+    newsletter: pickNewsletter(doc.newsletter),
   };
 
   return shaped as unknown as SettingsAdmin;

@@ -480,8 +480,7 @@ export interface paths {
          *     is on the list. An address that is already subscribed is sent a reminder with its
          *     unsubscribe link instead of a confirmation.
          *
-         *     Returns 404 while the newsletter is switched off in settings (`newsletter.enabled`). A
-         *     non-empty `website` honeypot receives a 202, and nothing is stored or sent.
+         *     A non-empty `website` honeypot receives a 202, and nothing is stored or sent.
          */
         post: operations["subscribeToNewsletter"];
         delete?: never;
@@ -2875,13 +2874,12 @@ export interface components {
             email: string | null;
         };
         /**
-         * @description The footer newsletter block's copy. While `enabled` is false the frontend shows no form,
-         *     and `POST /newsletter/subscriptions` answers 404.
+         * @description The footer newsletter block's copy. The form always shows and posts to
+         *     `POST /newsletter/subscriptions` (ADR-066).
          */
         SiteNewsletter: {
             title: string;
             note: string;
-            enabled: boolean;
         };
         StillHaveQuestions: {
             title: string;
@@ -5359,7 +5357,6 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
         };

@@ -6,7 +6,7 @@ import { setupTestDb } from '../../support/setup-db.js';
 import { expectToMatchContract } from '../../support/contract.js';
 import { captureLogs } from '../../support/logs.js';
 import { runSeed } from '../../../scripts/seed.js';
-import { NewsletterSubscriber, Settings } from '../../../src/models/index.js';
+import { NewsletterSubscriber } from '../../../src/models/index.js';
 import { setMailer } from '../../../src/services/notify.service.js';
 import { setCaptcha } from '../../../src/services/captcha.service.js';
 import type { SentMail } from '../../../src/interfaces/integrations/mailer.interface.js';
@@ -33,7 +33,6 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await runSeed();
-  await Settings.updateOne({ key: 'site' }, { $set: { 'newsletter.enabled': true } });
 
   sent.length = 0;
   setMailer({
@@ -96,15 +95,6 @@ describe('subscribing', () => {
 
     expect(res.status).toBe(400);
     expect(await NewsletterSubscriber.countDocuments()).toBe(0);
-  });
-
-  it('is a 404 while the newsletter is switched off in settings', async () => {
-    await Settings.updateOne({ key: 'site' }, { $set: { 'newsletter.enabled': false } });
-
-    const res = await request(app).post('/api/v1/newsletter/subscriptions').send(body());
-
-    expect(res.status).toBe(404);
-    expectToMatchContract(res, 'post', '/api/v1/newsletter/subscriptions');
   });
 
   it('accepts a bot that filled the honeypot and stores and sends nothing', async () => {

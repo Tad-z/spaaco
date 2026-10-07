@@ -176,9 +176,9 @@ Plus `slug`, `order` and `status`. A directory page lists its published awards b
 
 ### `settings` (exactly one document, `key: 'site'`)
 
-`firmName`, `legalDescriptor` ("Legal Practitioners, Arbitrators and Notaries Public"), `tagline`, `foundedYear` (1967), `phone`, `email`, `socials` { instagram, facebook, x, linkedin, youtube }, `copyright`, `stillHaveQuestions` { title, text }, `contactCallout` { title, text, primaryCta, secondaryCta }, `faqSection` { eyebrow, title }, `aboutAnchors` [Link] (the About Us nav dropdown), `footerLinks` [Link] (the footer's Quick Links), `legalLinks` [Link], `newsletter` { title, note, enabled }, `revision` (Number, incremented on every save).
+`firmName`, `legalDescriptor` ("Legal Practitioners, Arbitrators and Notaries Public"), `tagline`, `foundedYear` (1967), `phone`, `email`, `socials` { instagram, facebook, x, linkedin, youtube }, `copyright`, `stillHaveQuestions` { title, text }, `contactCallout` { title, text, primaryCta, secondaryCta }, `faqSection` { eyebrow, title }, `aboutAnchors` [Link] (the About Us nav dropdown), `footerLinks` [Link] (the footer's Quick Links), `legalLinks` [Link], `newsletter` { title, note }, `revision` (Number, incremented on every save).
 
-The top-level nav entries are fixed by the design (`constants/navigation.ts`); settings holds the parts of the nav and footer whose labels the firm edits (ADR-050). There is no `chat` setting. `newsletter.enabled` opens and closes the subscribe endpoint (ADR-065).
+The top-level nav entries are fixed by the design (`constants/navigation.ts`); settings holds the parts of the nav and footer whose labels the firm edits (ADR-050). There is no `chat` setting, and the newsletter has no on/off switch (ADR-066).
 
 ### `pages` (one document per `key`)
 

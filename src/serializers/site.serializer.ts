@@ -81,11 +81,9 @@ function toFooter(sources: ISiteSources): SiteFooter {
     practiceAreas: practiceAreas.filter((area) => area.showInFooter).map(practiceAreaRef),
     offices: offices.map((office) => toFooterOffice(office, settings)),
     legalLinks: toLinks(settings.legalLinks),
-    // Copy only: there is no subscribe endpoint (DESIGN_UPDATE_V2 §14).
     newsletter: {
       title: settings.newsletter.title,
       note: settings.newsletter.note,
-      enabled: settings.newsletter.enabled,
     },
     socials: toSocials(settings.socials),
     copyright: settings.copyright,
