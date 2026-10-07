@@ -54,6 +54,17 @@ describe('GET /api/v1/people', () => {
     ]);
   });
 
+  it('puts people the firm has not ordered by hand in first-name order', async () => {
+    const base = { role: 'associate', status: 'published', order: 7 } as const;
+    // Surnames would put Zulu last; first names put Ada first.
+    await Person.create({ ...base, firstName: 'Zainab', lastName: 'Adams' });
+    await Person.create({ ...base, firstName: 'Ada', lastName: 'Zulu' });
+
+    const res = await request(app).get('/api/v1/people?role=associate');
+
+    expect(names(res.body)).toEqual(['Ada Zulu', 'Zainab Adams']);
+  });
+
   it('includes the managing partner in the Partners tab', async () => {
     const res = await request(app).get('/api/v1/people?role=partner');
 

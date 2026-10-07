@@ -86,7 +86,7 @@ Indexes: `{status:1, order:1}` and a text index on `title, summary, overview`.
 | featuredInLeadership | Boolean                                       | The Home leadership row                                                                                                               |
 | legacy               | `{ source, legacyId, importedAt }`, nullable  | Set only on imported records (ADR-059). Admin read-only; never public                                                                 |
 
-**Seniority sort** is role rank (managing_partner = 0 … trainee_associate = 5), then `order`, then `lastName`.
+**Seniority sort** is role rank (managing_partner = 0 … trainee_associate = 5), then `order`, then `firstName`, then `lastName`. People the firm has not placed by hand share an `order`, so they fall into first-name order.
 **Role filtering** treats `partner` as a group that also matches `managing_partner`, because the directory has a "Partners" tab and no Managing Partner tab (DECISIONS Q3).
 **Practice-area filtering** (`?practiceArea=<slug>`) matches `practiceAreas` or `primaryPracticeArea`, and combines with `role`.
 People carry no `seo` fields, so `/people/:slug` returns none.

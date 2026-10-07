@@ -123,7 +123,7 @@ export interface paths {
         /**
          * Attorney directory
          * @description Paginated attorney directory. The default sort is `seniority`: role rank first
-         *     (managing partner through trainee associate), then the manual order, then last name.
+         *     (managing partner through trainee associate), then the manual order, then first name and last name.
          *
          *     `role` and `practiceArea` combine: the designs' role tabs sit alongside a "Practice Area"
          *     dropdown (labelled "Sort By" on screen), and both apply at once.

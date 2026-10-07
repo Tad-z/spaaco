@@ -65,7 +65,9 @@ async function practiceAreaFilter(
 }
 
 /**
- * Seniority sorts by role rank, then manual order, then last name.
+ * Seniority sorts by role rank, then manual order, then first name, then last
+ * name: the firm orders its partners and seniors by hand, and everyone it has
+ * not placed falls into first-name order on their own.
  *
  * Mongo has no notion of our enum ordering, so the rank is derived in an
  * aggregation rather than stored on the document: storing it would need a
@@ -83,7 +85,7 @@ export async function listPeople(
     $and: [publishedFilter(options), roleFilter(options.role), areaFilter ?? {}],
   };
 
-  let sortStage: PipelineStage.Sort['$sort'] = { roleRank: 1, order: 1, lastName: 1 };
+  let sortStage: PipelineStage.Sort['$sort'] = { roleRank: 1, order: 1, firstName: 1, lastName: 1 };
   if (options.sort === 'name_asc') sortStage = { lastName: 1, firstName: 1 };
   if (options.sort === 'name_desc') sortStage = { lastName: -1, firstName: -1 };
 
