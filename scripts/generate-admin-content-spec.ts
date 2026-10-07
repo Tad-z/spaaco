@@ -181,7 +181,7 @@ const COLLECTIONS: readonly CollectionSpec[] = [
     note:
       'A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. ' +
       'At most one of `externalUrl` and `document` may be set, and at most one of `author` and ' +
-      '`authorName`.',
+      '`authorName`. `authorPhoto` is set only with `authorName`.',
     sample: {
       title: 'Regulatory Update On The 2026 Supreme Court Practice Directions',
       excerpt: null,
@@ -192,6 +192,8 @@ const COLLECTIONS: readonly CollectionSpec[] = [
       practiceAreas: [],
       author: null,
       authorName: null,
+      authorPhoto: null,
+      coAuthors: [],
       coverImage: MEDIA_ID,
       externalUrl: null,
       document: null,

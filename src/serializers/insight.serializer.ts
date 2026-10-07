@@ -1,5 +1,6 @@
 import type {
   InsightAuthor,
+  InsightAuthorWriter,
   InsightCard,
   InsightCta,
   InsightDetail,
@@ -38,7 +39,16 @@ export interface InsightCardSource {
   author?: PersonSummarySource | null;
   /** A writer with no attorney profile, shown when `author` is null (ADR-060). */
   authorName?: string | null;
+  /** That writer's photo (ADR-064). */
+  authorPhoto?: IMedia | null;
   coverImage?: IMedia | null;
+}
+
+/** A co-author: an attorney, populated, or anyone else by name (ADR-064). */
+export interface InsightCoAuthorSource {
+  person?: PersonSummarySource | null;
+  name?: string | null;
+  photo?: IMedia | null;
 }
 
 export interface InsightDetailSource extends InsightCardSource {
@@ -47,6 +57,7 @@ export interface InsightDetailSource extends InsightCardSource {
   externalUrl?: string | null;
   /** The populated PDF, when the article's link is an uploaded document. */
   document?: IMedia | null;
+  coAuthors?: InsightCoAuthorSource[];
 }
 
 const FIRM_NAME = 'SPA AJIBADE & Co.';
@@ -58,24 +69,56 @@ export const FIRM_AUTHOR: InsightAuthor = {
   label: 'Law Firm',
 };
 
+const isPopulatedPerson = (
+  person: PersonSummarySource | null | undefined
+): person is PersonSummarySource =>
+  person !== null && person !== undefined && typeof person.firstName === 'string';
+
+const isName = (name: string | null | undefined): name is string =>
+  typeof name === 'string' && name.trim() !== '';
+
+/** A writer with no profile: their name and photo, labelled by their part (ADR-064). */
+const toWriter = (
+  name: string,
+  photo: IMedia | null | undefined,
+  label: 'Author' | 'Co-author'
+): InsightAuthorWriter => ({
+  type: 'writer',
+  name: name.trim(),
+  label,
+  photo: toNullableImage(photo),
+});
+
 /**
  * An attorney, a named writer without a profile, or the firm.
  *
- * A named writer (former staff, a guest) travels in the firm shape, with the
- * firm as its label, so it renders without a new author type (ADR-060). A null
- * author, or one filtered out as a draft, falls back to the firm.
+ * A named writer (former staff, a guest) is a `writer`, with their photo and
+ * "Author" as the label (ADR-064). A null author, or one filtered out as a
+ * draft, falls back to the firm.
  */
 export function toAuthor(
   author: PersonSummarySource | null | undefined,
-  authorName?: string | null
+  authorName?: string | null,
+  authorPhoto?: IMedia | null
 ): InsightAuthor {
-  if (author !== null && author !== undefined && typeof author.firstName === 'string') {
-    return { type: 'person', person: personSummary(author) };
-  }
-  if (typeof authorName === 'string' && authorName.trim() !== '') {
-    return { type: 'firm', name: authorName.trim(), label: FIRM_NAME };
-  }
+  if (isPopulatedPerson(author)) return { type: 'person', person: personSummary(author) };
+  if (isName(authorName)) return toWriter(authorName, authorPhoto, 'Author');
   return FIRM_AUTHOR;
+}
+
+/**
+ * The co-authors after the author, in order (ADR-064). An attorney whose
+ * profile is a draft, or a reference that did not populate, is left out
+ * rather than shown as the firm.
+ */
+export function toCoAuthors(coAuthors: readonly InsightCoAuthorSource[] = []): InsightAuthor[] {
+  return coAuthors.flatMap((coAuthor): InsightAuthor[] => {
+    if (isPopulatedPerson(coAuthor.person)) {
+      return [{ type: 'person', person: personSummary(coAuthor.person) }];
+    }
+    // A draft attorney populates to null and has no name, so drops out here.
+    return isName(coAuthor.name) ? [toWriter(coAuthor.name, coAuthor.photo, 'Co-author')] : [];
+  });
 }
 
 /** Article cards read "Read More"; video cards read "Watch Video". */
@@ -116,7 +159,7 @@ export function toCard(insight: InsightCardSource): InsightCard {
     categoryLabels: insight.categories.map((category) => INSIGHT_CATEGORIES.labels[category]),
     practiceAreas: (insight.practiceAreas ?? []).map(practiceAreaRef),
     chips: toChips(insight),
-    author: toAuthor(insight.author, insight.authorName),
+    author: toAuthor(insight.author, insight.authorName, insight.authorPhoto),
     coverImage: toNullableImage(insight.coverImage),
     publishedAt: insight.publishedAt?.toISOString() ?? null,
     featured: insight.featured,
@@ -159,5 +202,6 @@ export function toDetail(insight: InsightDetailSource, related: InsightCard[] = 
     body: insight.body ?? null,
     videoUrl: insight.videoUrl ?? null,
     related,
+    coAuthors: toCoAuthors(insight.coAuthors),
   };
 }

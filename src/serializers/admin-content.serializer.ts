@@ -14,6 +14,7 @@ import type {
 import type { AdminCollection } from '../constants/content-collections.js';
 import { CONTENT_COLLECTIONS } from '../constants/content-collections.js';
 import { LEGACY_SOURCES } from '../constants/enums.js';
+import { valuesAt } from '../helpers/path.helper.js';
 
 /**
  * The editable shape: references stay as ids, exactly as the dashboard must
@@ -93,19 +94,16 @@ export function collectExpandTargets(
   const mediaIds = new Set<string>();
   const personIds = new Set<string>();
 
-  // A path may hold one id or an array of them (a carousel's slides).
-  const idsAt = (value: unknown): string[] => {
-    if (Array.isArray(value)) return idList(value);
-    const id = idOrNull(value);
-    return id === null ? [] : [id];
-  };
+  // A path may hold one id, an array of them (a carousel's slides), or reach
+  // into an array of sub-documents (`coAuthors.photo`).
+  const idsAt = (doc: StoredDoc, path: string): string[] => idList(valuesAt(doc, path));
 
   for (const doc of docs) {
     for (const path of config.mediaPaths) {
-      for (const id of idsAt(doc[path])) mediaIds.add(id);
+      for (const id of idsAt(doc, path)) mediaIds.add(id);
     }
     for (const path of config.personPaths) {
-      for (const id of idsAt(doc[path])) personIds.add(id);
+      for (const id of idsAt(doc, path)) personIds.add(id);
     }
   }
 
@@ -202,6 +200,12 @@ const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknow
     practiceAreas: idList(doc.practiceAreas),
     author: idOrNull(doc.author),
     authorName: typeof doc.authorName === 'string' ? doc.authorName : null,
+    authorPhoto: idOrNull(doc.authorPhoto),
+    coAuthors: plainList(doc.coAuthors, (coAuthor) => ({
+      person: idOrNull(coAuthor.person),
+      name: typeof coAuthor.name === 'string' ? coAuthor.name : null,
+      photo: idOrNull(coAuthor.photo),
+    })),
     coverImage: idOrNull(doc.coverImage),
     externalUrl: doc.externalUrl ?? null,
     document: idOrNull(doc.document),

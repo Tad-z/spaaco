@@ -54,6 +54,7 @@ export async function search(query: string): Promise<SearchResultSources> {
       .lean<IPersonWithPhoto[]>(),
     Insight.find({ ...PUBLISHED, ...text }, scoreProjection)
       .populate('coverImage')
+      .populate('authorPhoto')
       .populate(publishedPopulate('practiceAreas'))
       .populate(personCardPopulate('author'))
       .sort(byScore)

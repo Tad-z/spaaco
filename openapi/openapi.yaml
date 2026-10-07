@@ -1947,7 +1947,7 @@ paths:
       description: |-
         Every status, not just published.
 
-        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`. `authorPhoto` is set only with `authorName`.
       security: &a5
         - bearerAuth: []
       parameters:
@@ -1993,7 +1993,7 @@ paths:
       description: |-
         A slug is generated when none is given.
 
-        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`. `authorPhoto` is set only with `authorName`.
       security: *a5
       requestBody:
         required: true
@@ -2065,7 +2065,7 @@ paths:
       description: |-
         References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
 
-        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
+        A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`. `authorPhoto` is set only with `authorName`.
       security: *a5
       responses:
         '200':
@@ -6065,13 +6065,17 @@ components:
     InsightAuthor:
       oneOf:
         - $ref: '#/components/schemas/InsightAuthorPerson'
+        - $ref: '#/components/schemas/InsightAuthorWriter'
         - $ref: '#/components/schemas/InsightAuthorFirm'
       discriminator:
         propertyName: type
         mapping:
           person: '#/components/schemas/InsightAuthorPerson'
+          writer: '#/components/schemas/InsightAuthorWriter'
           firm: '#/components/schemas/InsightAuthorFirm'
-      description: An insight is written either by an attorney or by the firm itself.
+      description: |
+        An insight is written by an attorney on the site (`person`), by a writer with no
+        profile such as former staff or a guest (`writer`), or by the firm itself (`firm`).
 
     InsightAuthorPerson:
       type: object
@@ -6083,6 +6087,27 @@ components:
           enum: [person]
         person:
           $ref: '#/components/schemas/PersonSummary'
+
+    InsightAuthorWriter:
+      type: object
+      additionalProperties: false
+      required: [type, name, label, photo]
+      description: |
+        A writer with no attorney profile (ADR-064). Rendered like a person, with their photo
+        when there is one, but without a link to a profile.
+      properties:
+        type:
+          type: string
+          enum: [writer]
+        name:
+          type: string
+          examples: ['Sandra Eke']
+        label:
+          type: string
+          description: '"Author" for the author, "Co-author" for a co-author.'
+          examples: ['Author', 'Co-author']
+        photo:
+          $ref: '#/components/schemas/NullableImage'
 
     InsightAuthorFirm:
       type: object
@@ -6214,6 +6239,7 @@ components:
         - body
         - videoUrl
         - related
+        - coAuthors
       properties:
         id:
           $ref: '#/components/schemas/ObjectId'
@@ -6276,6 +6302,14 @@ components:
           maxItems: 3
           items:
             $ref: '#/components/schemas/InsightCard'
+        coAuthors:
+          type: array
+          maxItems: 8
+          description: |
+            Shown after `author`, in order (ADR-064). An attorney on the site is a `person`;
+            anyone else is a `writer` labelled "Co-author". Empty when there are none.
+          items:
+            $ref: '#/components/schemas/InsightAuthor'
 
     Coordinates:
       type: object
@@ -7845,6 +7879,8 @@ components:
         - practiceAreas
         - author
         - authorName
+        - authorPhoto
+        - coAuthors
         - coverImage
         - externalUrl
         - document
@@ -7882,8 +7918,21 @@ components:
           maxLength: 120
           description: |
             A writer with no attorney profile, such as former staff or a guest
-            (ADR-060). Shown as the public author's `name`, with the firm as its
-            `label`, when `author` is null. At most one of `author` and `authorName`.
+            (ADR-060). Shown as a `writer` author labelled "Author" when `author` is
+            null (ADR-064). At most one of `author` and `authorName`.
+        authorPhoto:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: The writer's photo, an image from the media library. Only with `authorName`.
+        coAuthors:
+          type: array
+          maxItems: 8
+          description: |
+            Shown after the author, in order (ADR-064). Each names exactly one of `person`
+            (an attorney on the site) or `name` (anyone else); `photo` goes with `name` only.
+          items:
+            $ref: '#/components/schemas/InsightCoAuthor'
         coverImage:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
@@ -7903,6 +7952,23 @@ components:
             - type: 'null'
           description: Set when the record came from a content import. Null for hand-made content.
         _expanded: { $ref: '#/components/schemas/Expanded' }
+
+    InsightCoAuthor:
+      type: object
+      additionalProperties: false
+      required: [person, name, photo]
+      properties:
+        person:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+        name:
+          type: [string, 'null']
+          maxLength: 120
+        photo:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
 
     OfficeAdmin:
       type: object
@@ -8359,8 +8425,21 @@ components:
           maxLength: 120
           description: |
             A writer with no attorney profile, such as former staff or a guest
-            (ADR-060). Shown as the public author's `name`, with the firm as its
-            `label`, when `author` is null. At most one of `author` and `authorName`.
+            (ADR-060). Shown as a `writer` author labelled "Author" when `author` is
+            null (ADR-064). At most one of `author` and `authorName`.
+        authorPhoto:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: The writer's photo, an image from the media library. Only with `authorName`.
+        coAuthors:
+          type: array
+          maxItems: 8
+          description: |
+            Shown after the author, in order (ADR-064). Each names exactly one of `person`
+            (an attorney on the site) or `name` (anyone else); `photo` goes with `name` only.
+          items:
+            $ref: '#/components/schemas/InsightCoAuthor'
         coverImage:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'

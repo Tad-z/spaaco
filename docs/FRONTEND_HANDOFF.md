@@ -10,6 +10,15 @@ What _is_ provisional is some of the content, which is flagged under
 
 ---
 
+## What changed: insight authors and co-authors (8 Oct 2026)
+
+**Breaking: ship support before the API is deployed.** Each item has an ADR in `docs/DECISIONS.md`.
+
+- `InsightAuthor` has a third variant, `{ type: "writer", name, label, photo }`, for writers with no attorney profile (former staff, guests). Render it like a person: `photo` (a nullable `Image`, so fall back to a default avatar), then `name`, then `label`. There is no profile to link to. About 156 imported articles use it. Until now these came as `type: "firm"` with "SPA AJIBADE & Co." as the label; that is gone, and `firm` now means only the firm itself (ADR-064).
+- `InsightDetail.coAuthors` is a new array, shown after the author in the same style. An attorney on the site is `{ type: "person" }`; anyone else is `{ type: "writer", label: "Co-author" }`. It is usually empty. Cards have no co-authors.
+- Category cover cards (ADR-063) and the removal of "News Updates" (ADR-062) need nothing from you, beyond dropping any hard-coded News Updates tab.
+- Admin: insights gain `authorPhoto` (an image id, only with `authorName`) and `coAuthors: [{ person, name, photo }]` (exactly one of `person` or `name`; `photo` only with `name`).
+
 ## What changed in the design update (29 Sep 2026)
 
 The second design drop changed the contract. `openapi/openapi.yaml` and the fixtures are current; this list is what to change on your side. Each item has an ADR in `docs/DECISIONS.md`.
@@ -224,9 +233,12 @@ sent.
 ### Insight cards
 
 - `author` is a discriminated union on `type`:
-  `{ type: "person", person: PersonSummary }` or
+  `{ type: "person", person: PersonSummary }`,
+  `{ type: "writer", name, label: "Author", photo }` for a writer with no profile (ADR-064), or
   `{ type: "firm", name: "SPA AJIBADE & Co.", label: "Law Firm" }`. For the firm, render your
   own logo mark — the API sends no firm logo, because the logo is a frontend asset.
+- The detail adds `coAuthors`, the same union, shown after the author; a writer there is
+  labelled "Co-author".
 - `chips` is precomputed for you: the first category label, then the first practice area
   title, or the second category label when there is no practice area.
 - `cta` tells you which button to draw: `{ label: "Read More", kind: "read_more" }` or

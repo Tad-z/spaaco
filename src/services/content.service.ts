@@ -217,6 +217,15 @@ const INSIGHT_EXCLUSIVES = [
     message: 'An article credits an attorney or names a writer, not both',
     detail: { path: 'authorName', message: 'set either author or authorName, not both' },
   },
+  {
+    // The writer's photo, which an attorney never has: theirs is on the profile (ADR-064).
+    fields: ['author', 'authorPhoto'],
+    message: "authorPhoto is a named writer's photo, not an attorney's",
+    detail: {
+      path: 'authorPhoto',
+      message: "authorPhoto is the named writer's photo; an attorney uses their profile photo",
+    },
+  },
 ] as const;
 
 /**

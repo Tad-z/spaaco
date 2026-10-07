@@ -56,9 +56,19 @@ export type IPersonDetailDoc = Omit<IPersonWithPhoto, 'primaryPracticeArea' | 'o
   office: (IOffice & { _id: Types.ObjectId }) | null;
 };
 
-export type IInsightDoc = Omit<IInsight, 'coverImage' | 'document' | 'practiceAreas' | 'author'> & {
+export type IInsightDoc = Omit<
+  IInsight,
+  'coverImage' | 'document' | 'practiceAreas' | 'author' | 'authorPhoto' | 'coAuthors'
+> & {
   _id: Types.ObjectId;
   coverImage: IMedia | null;
+  /** The named writer's photo (ADR-064). */
+  authorPhoto?: IMedia | null;
+  /**
+   * Populated only on the detail read. A draft attorney's reference populates
+   * to null and is dropped by the serializer.
+   */
+  coAuthors?: { person?: IPersonWithPhoto | null; name?: string | null; photo?: IMedia | null }[];
   /** Populated only on the detail read, where the "Read Article" link needs it. */
   document?: IMedia | null;
   practiceAreas: (IPracticeArea & { _id: Types.ObjectId })[];

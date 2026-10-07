@@ -78,6 +78,7 @@ export const CONTENT_COLLECTIONS: Record<AdminCollection, ContentCollectionConfi
     personPaths: [],
     referencedBy: [
       { model: 'Insight', path: 'author', label: 'title' },
+      { model: 'Insight', path: 'coAuthors.person', label: 'title' },
       { model: 'PracticeArea', path: 'lead', label: 'title' },
       { model: 'Page', path: 'story.quotePerson', label: 'key' },
     ],
@@ -88,8 +89,8 @@ export const CONTENT_COLLECTIONS: Record<AdminCollection, ContentCollectionConfi
     slugSource: 'title',
     cacheEntity: 'insight',
     searchFields: ['title', 'excerpt'],
-    mediaPaths: ['coverImage', 'document'],
-    personPaths: ['author'],
+    mediaPaths: ['coverImage', 'document', 'authorPhoto', 'coAuthors.photo'],
+    personPaths: ['author', 'coAuthors.person'],
     referencedBy: [],
     label: 'Insight',
   },

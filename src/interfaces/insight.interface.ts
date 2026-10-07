@@ -2,6 +2,13 @@ import type { Types } from 'mongoose';
 import type { IContentFields, ILegacyImport } from './common.interface.js';
 import type { InsightCategory, InsightFormat } from '../types/api.js';
 
+/** An attorney on the site (`person`), or anyone else by `name` with an optional `photo`. */
+export interface IInsightCoAuthor {
+  person?: Types.ObjectId | null;
+  name?: string | null;
+  photo?: Types.ObjectId | null;
+}
+
 /** An article, news item, video or pro bono story. */
 export interface IInsight extends IContentFields {
   title: string;
@@ -21,6 +28,10 @@ export interface IInsight extends IContentFields {
   author?: Types.ObjectId | null;
   /** A writer with no attorney profile (ADR-060). At most one of this and `author`. */
   authorName?: string | null;
+  /** The named writer's photo (ADR-064). Not set alongside `author`. */
+  authorPhoto?: Types.ObjectId | null;
+  /** Shown after the author, in order (ADR-064). */
+  coAuthors?: IInsightCoAuthor[];
   coverImage?: Types.ObjectId | null;
   featured: boolean;
   /** Set when the record came from a content import (ADR-059). */

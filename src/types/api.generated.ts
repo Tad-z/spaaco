@@ -900,7 +900,7 @@ export interface paths {
          * List insights
          * @description Every status, not just published.
          *
-         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`. `authorPhoto` is set only with `authorName`.
          */
         get: operations["listInsightAdmin"];
         put?: never;
@@ -908,7 +908,7 @@ export interface paths {
          * Create a insight
          * @description A slug is generated when none is given.
          *
-         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`. `authorPhoto` is set only with `authorName`.
          */
         post: operations["createInsight"];
         delete?: never;
@@ -951,7 +951,7 @@ export interface paths {
          * Get one insight in its editable shape
          * @description References stay as ids, exactly as they must be sent back. `_expanded` previews each one so the dashboard can render thumbnails without extra calls; it is rejected on write (ADR-014).
          *
-         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`.
+         *     A null `author` means the firm wrote it. `videoUrl` is required when `format` is `video`. At most one of `externalUrl` and `document` may be set, and at most one of `author` and `authorName`. `authorPhoto` is set only with `authorName`.
          */
         get: operations["getInsightAdmin"];
         put?: never;
@@ -2460,8 +2460,11 @@ export interface components {
             /** @description The latest insights they wrote, never pro bono stories. */
             recentPublications: components["schemas"]["InsightCard"][];
         };
-        /** @description An insight is written either by an attorney or by the firm itself. */
-        InsightAuthor: components["schemas"]["InsightAuthorPerson"] | components["schemas"]["InsightAuthorFirm"];
+        /**
+         * @description An insight is written by an attorney on the site (`person`), by a writer with no
+         *     profile such as former staff or a guest (`writer`), or by the firm itself (`firm`).
+         */
+        InsightAuthor: components["schemas"]["InsightAuthorPerson"] | components["schemas"]["InsightAuthorWriter"] | components["schemas"]["InsightAuthorFirm"];
         InsightAuthorPerson: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -2469,6 +2472,26 @@ export interface components {
              */
             type: "person";
             person: components["schemas"]["PersonSummary"];
+        };
+        /**
+         * @description A writer with no attorney profile (ADR-064). Rendered like a person, with their photo
+         *     when there is one, but without a link to a profile.
+         */
+        InsightAuthorWriter: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "writer";
+            /** @example Sandra Eke */
+            name: string;
+            /**
+             * @description "Author" for the author, "Co-author" for a co-author.
+             * @example Author
+             * @example Co-author
+             */
+            label: string;
+            photo: components["schemas"]["NullableImage"];
         };
         /** @description The frontend renders its own logo mark alongside these strings. */
         InsightAuthorFirm: {
@@ -2549,6 +2572,11 @@ export interface components {
             /** @description Set when `format` is `video`. */
             videoUrl: string | null;
             related: components["schemas"]["InsightCard"][];
+            /**
+             * @description Shown after `author`, in order (ADR-064). An attorney on the site is a `person`;
+             *     anyone else is a `writer` labelled "Co-author". Empty when there are none.
+             */
+            coAuthors: components["schemas"]["InsightAuthor"][];
         };
         Coordinates: {
             lat: number;
@@ -3331,10 +3359,17 @@ export interface components {
             author: components["schemas"]["ObjectId"] | null;
             /**
              * @description A writer with no attorney profile, such as former staff or a guest
-             *     (ADR-060). Shown as the public author's `name`, with the firm as its
-             *     `label`, when `author` is null. At most one of `author` and `authorName`.
+             *     (ADR-060). Shown as a `writer` author labelled "Author" when `author` is
+             *     null (ADR-064). At most one of `author` and `authorName`.
              */
             authorName: string | null;
+            /** @description The writer's photo, an image from the media library. Only with `authorName`. */
+            authorPhoto: components["schemas"]["ObjectId"] | null;
+            /**
+             * @description Shown after the author, in order (ADR-064). Each names exactly one of `person`
+             *     (an attorney on the site) or `name` (anyone else); `photo` goes with `name` only.
+             */
+            coAuthors: components["schemas"]["InsightCoAuthor"][];
             coverImage: components["schemas"]["ObjectId"] | null;
             /** @description Where "Read Article" goes. At most one of `externalUrl` and `document`. */
             externalUrl: string | null;
@@ -3344,6 +3379,11 @@ export interface components {
             /** @description Set when the record came from a content import. Null for hand-made content. */
             legacy: components["schemas"]["LegacyImport"] | null;
             _expanded: components["schemas"]["Expanded"];
+        };
+        InsightCoAuthor: {
+            person: components["schemas"]["ObjectId"] | null;
+            name: string | null;
+            photo: components["schemas"]["ObjectId"] | null;
         };
         OfficeAdmin: {
             id: components["schemas"]["ObjectId"];
@@ -3597,10 +3637,17 @@ export interface components {
             author?: components["schemas"]["ObjectId"] | null;
             /**
              * @description A writer with no attorney profile, such as former staff or a guest
-             *     (ADR-060). Shown as the public author's `name`, with the firm as its
-             *     `label`, when `author` is null. At most one of `author` and `authorName`.
+             *     (ADR-060). Shown as a `writer` author labelled "Author" when `author` is
+             *     null (ADR-064). At most one of `author` and `authorName`.
              */
             authorName?: string | null;
+            /** @description The writer's photo, an image from the media library. Only with `authorName`. */
+            authorPhoto?: components["schemas"]["ObjectId"] | null;
+            /**
+             * @description Shown after the author, in order (ADR-064). Each names exactly one of `person`
+             *     (an attorney on the site) or `name` (anyone else); `photo` goes with `name` only.
+             */
+            coAuthors?: components["schemas"]["InsightCoAuthor"][];
             coverImage?: components["schemas"]["ObjectId"] | null;
             /** @description Where "Read Article" goes. At most one of `externalUrl` and `document`. */
             externalUrl?: string | null;
@@ -3623,10 +3670,17 @@ export interface components {
             author?: components["schemas"]["ObjectId"] | null;
             /**
              * @description A writer with no attorney profile, such as former staff or a guest
-             *     (ADR-060). Shown as the public author's `name`, with the firm as its
-             *     `label`, when `author` is null. At most one of `author` and `authorName`.
+             *     (ADR-060). Shown as a `writer` author labelled "Author" when `author` is
+             *     null (ADR-064). At most one of `author` and `authorName`.
              */
             authorName?: string | null;
+            /** @description The writer's photo, an image from the media library. Only with `authorName`. */
+            authorPhoto?: components["schemas"]["ObjectId"] | null;
+            /**
+             * @description Shown after the author, in order (ADR-064). Each names exactly one of `person`
+             *     (an attorney on the site) or `name` (anyone else); `photo` goes with `name` only.
+             */
+            coAuthors?: components["schemas"]["InsightCoAuthor"][];
             coverImage?: components["schemas"]["ObjectId"] | null;
             /** @description Where "Read Article" goes. At most one of `externalUrl` and `document`. */
             externalUrl?: string | null;

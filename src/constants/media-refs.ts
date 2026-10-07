@@ -94,6 +94,23 @@ export const MEDIA_REFS: readonly MediaRef[] = [
     kind: 'document',
   },
   {
+    model: 'Insight',
+    collection: 'insights',
+    path: 'authorPhoto',
+    label: 'title',
+    tagField: 'slug',
+    kind: 'image',
+  },
+  {
+    // Inside the co-author list, an array of sub-documents (ADR-064).
+    model: 'Insight',
+    collection: 'insights',
+    path: 'coAuthors.photo',
+    label: 'title',
+    tagField: 'slug',
+    kind: 'image',
+  },
+  {
     model: 'RecognitionDirectory',
     collection: 'recognitionDirectories',
     path: 'logo',

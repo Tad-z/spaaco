@@ -95,23 +95,25 @@ Indexes: `{status:1, role:1, order:1}`, `{status:1, practiceAreas:1}` and a text
 
 ### `insights`
 
-| Field         | Type                                | Notes                                                                                               |
-| ------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------- |
-| title         | String, required                    |                                                                                                     |
-| excerpt       | String                              | Featured carousel text                                                                              |
-| body          | String (html)                       | Articles                                                                                            |
-| format        | enum `article` / `video`, required  | Controls "Read More" vs "Watch Video"                                                               |
-| videoUrl      | String                              | Required if format = video                                                                          |
-| externalUrl   | String, optional                    | Where the article's "Read Article" link goes                                                        |
-| document      | →Media (`kind: document`), optional | An uploaded PDF the "Read Article" link opens. At most one of `externalUrl`/`document`              |
-| categories    | [enum], min 1                       | `firm_news, articles, insights, regulatory_updates, events, pro_bono`                               |
-| practiceAreas | [→PracticeArea]                     |                                                                                                     |
-| author        | →Person, optional                   | **null means the firm is the author**                                                               |
-| authorName    | String, optional                    | A writer with no profile (former staff, a guest), shown when `author` is null (ADR-060). Never both |
-| coverImage    | →Media                              |                                                                                                     |
-| featured      | Boolean                             | Top carousel (max 3 shown)                                                                          |
-| publishedAt   | Date                                | Displayed as "June, 2026." by the frontend                                                          |
-| legacy        | `{ source, legacyId, importedAt }`  | Set only on imported records (ADR-059). Admin read-only; never public                               |
+| Field         | Type                                | Notes                                                                                                             |
+| ------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| title         | String, required                    |                                                                                                                   |
+| excerpt       | String                              | Featured carousel text                                                                                            |
+| body          | String (html)                       | Articles                                                                                                          |
+| format        | enum `article` / `video`, required  | Controls "Read More" vs "Watch Video"                                                                             |
+| videoUrl      | String                              | Required if format = video                                                                                        |
+| externalUrl   | String, optional                    | Where the article's "Read Article" link goes                                                                      |
+| document      | →Media (`kind: document`), optional | An uploaded PDF the "Read Article" link opens. At most one of `externalUrl`/`document`                            |
+| categories    | [enum], min 1                       | `firm_news, articles, insights, regulatory_updates, events, pro_bono`                                             |
+| practiceAreas | [→PracticeArea]                     |                                                                                                                   |
+| author        | →Person, optional                   | **null means the firm is the author**                                                                             |
+| authorName    | String, optional                    | A writer with no profile (former staff, a guest), shown when `author` is null (ADR-060). Never both               |
+| authorPhoto   | →Media (image), optional            | That writer's photo (ADR-064). Never with `author`                                                                |
+| coAuthors     | [`{ person, name, photo }`], max 8  | Shown after the author (ADR-064). Exactly one of `person` (→Person) and `name`; `photo` (→Media) only with `name` |
+| coverImage    | →Media                              |                                                                                                                   |
+| featured      | Boolean                             | Top carousel (max 3 shown)                                                                                        |
+| publishedAt   | Date                                | Displayed as "June, 2026." by the frontend                                                                        |
+| legacy        | `{ source, legacyId, importedAt }`  | Set only on imported records (ADR-059). Admin read-only; never public                                             |
 
 Card chips = the first category label, then the first practice area title. If there's no practice area, show the second category.
 **`pro_bono` ("Pro Bono & Community Commitment") is excluded from every listing unless it is asked for by name** — the main listing, the featured carousel, Home's Recent Publications, and practice-area and person publications. The rule lives in one constant, `EXCLUDED_FROM_MAIN_LISTING` (ADR-049).

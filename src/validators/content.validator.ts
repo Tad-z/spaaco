@@ -127,6 +127,23 @@ const personCreate = z
   })
   .strict();
 
+/** Exactly one of `person` and `name`; a photo only goes with a name (ADR-064). */
+const coAuthor = z
+  .object({
+    person: objectIdRef.optional(),
+    name: optionalText(120).optional(),
+    photo: objectIdRef.optional(),
+  })
+  .strict()
+  .refine((value) => Boolean(value.person) !== Boolean(value.name), {
+    path: ['name'],
+    message: 'a co-author names exactly one of person and name',
+  })
+  .refine((value) => !(value.photo && value.person), {
+    path: ['photo'],
+    message: 'a photo goes with a name; an attorney uses their profile photo',
+  });
+
 const insightBase = z
   .object({
     slug: slug.optional(),
@@ -141,6 +158,8 @@ const insightBase = z
     practiceAreas: z.array(objectId).max(30).optional(),
     author: objectIdRef.optional(),
     authorName: optionalText(120).optional(),
+    authorPhoto: objectIdRef.optional(),
+    coAuthors: z.array(coAuthor).max(8).optional(),
     coverImage: objectIdRef.optional(),
     featured: z.boolean().optional(),
     // No `publishedAt`: it is stamped by POST /publish and is read-only in the
@@ -174,10 +193,17 @@ const ONE_AUTHOR_ISSUE: z.CustomErrorParams = {
   message: 'set either author or authorName, not both',
 };
 
+/** An attorney shows their profile photo; `authorPhoto` is the named writer's (ADR-064). */
+const AUTHOR_PHOTO_ISSUE: z.CustomErrorParams = {
+  path: ['authorPhoto'],
+  message: "authorPhoto is the named writer's photo; an attorney uses their profile photo",
+};
+
 const insightCreate = insightBase
   .refine((value) => value.format !== 'video' || Boolean(value.videoUrl), VIDEO_URL_ISSUE)
   .refine((value) => !(value.externalUrl && value.document), ONE_TARGET_ISSUE)
-  .refine((value) => !(value.author && value.authorName), ONE_AUTHOR_ISSUE);
+  .refine((value) => !(value.author && value.authorName), ONE_AUTHOR_ISSUE)
+  .refine((value) => !(value.author && value.authorPhoto), AUTHOR_PHOTO_ISSUE);
 
 const officeCreate = z
   .object({
@@ -257,7 +283,8 @@ const insightUpdate = insightBase
   .strict()
   .refine((value) => value.format !== 'video' || Boolean(value.videoUrl), VIDEO_URL_ISSUE)
   .refine((value) => !(value.externalUrl && value.document), ONE_TARGET_ISSUE)
-  .refine((value) => !(value.author && value.authorName), ONE_AUTHOR_ISSUE);
+  .refine((value) => !(value.author && value.authorName), ONE_AUTHOR_ISSUE)
+  .refine((value) => !(value.author && value.authorPhoto), AUTHOR_PHOTO_ISSUE);
 
 export const CONTENT_CREATE_SCHEMAS: Record<AdminCollection, ZodTypeAny> = {
   'practice-areas': practiceAreaCreate,

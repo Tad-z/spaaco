@@ -28,7 +28,7 @@ export interface ListInsightsOptions extends PreviewOptions {
 
 /** What a card renders. Notably not `body`: a card never shows one. */
 const CARD_FIELDS =
-  'slug title excerpt format videoUrl categories practiceAreas author authorName coverImage featured publishedAt order';
+  'slug title excerpt format videoUrl categories practiceAreas author authorName authorPhoto coverImage featured publishedAt order';
 
 /**
  * The condition every listing applies unless it asks for an excluded category
@@ -95,6 +95,7 @@ async function findCards(
   const cards = await Insight.find(filter)
     .select(CARD_FIELDS)
     .populate('coverImage')
+    .populate('authorPhoto')
     .populate(publishedPopulate('practiceAreas', options))
     .populate(personCardPopulate('author', options))
     // Several insights share a publish month, so the sort needs a tiebreaker or
@@ -144,6 +145,10 @@ export async function getInsightBySlug(
 ): Promise<{ insight: IInsightDoc; related: IInsightDoc[] }> {
   const insight = await Insight.findOne({ slug, ...publishedFilter(options) })
     .populate('coverImage')
+    .populate('authorPhoto')
+    // Co-authors after the author (ADR-064); a draft attorney populates to null.
+    .populate(personCardPopulate('coAuthors.person', options))
+    .populate('coAuthors.photo')
     // The "Read Article" link, when it points at an uploaded PDF (ADR-051).
     .populate('document')
     .populate(publishedPopulate('practiceAreas', options))

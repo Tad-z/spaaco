@@ -69,6 +69,7 @@ export type PersonEducation = Schemas['PersonEducation'];
 export type InsightAuthor = Schemas['InsightAuthor'];
 export type InsightAuthorPerson = Schemas['InsightAuthorPerson'];
 export type InsightAuthorFirm = Schemas['InsightAuthorFirm'];
+export type InsightAuthorWriter = Schemas['InsightAuthorWriter'];
 export type InsightCta = Schemas['InsightCta'];
 export type InsightCard = Schemas['InsightCard'];
 export type InsightDetail = Schemas['InsightDetail'];

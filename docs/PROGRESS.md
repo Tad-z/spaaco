@@ -98,3 +98,4 @@ never silently lost.
 
 - 2026-10-07 fix(insights): "News Updates" removed from the insight categories (ADR-062); no live insight used it.
 - 2026-10-07 feat(insights): category cover cards (ADR-063). `categoryCovers` on the Insights page; insights without a cover show their first category's card on every public surface. Cards from `images/5–9.png` are attached by `upload-images` once deployed.
+- 2026-10-08 feat(insights): writer author type with photo, and co-authors (ADR-064). Breaking: deploy with the frontend.

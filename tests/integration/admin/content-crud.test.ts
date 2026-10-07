@@ -16,7 +16,7 @@ import {
 } from '../../../src/models/index.js';
 import * as cache from '../../../src/core/cache.js';
 import { ADMIN_COLLECTIONS } from '../../../src/constants/content-collections.js';
-import { makeDocumentMedia } from '../../support/factories.js';
+import { makeDocumentMedia, makeMedia } from '../../support/factories.js';
 
 /**
  * The generic CRUD factory, tested thoroughly once (ADR-029).
@@ -440,8 +440,11 @@ describe('content imports (ADR-059)', () => {
   });
 });
 
-describe('named writers without a profile (ADR-060)', () => {
-  it('shows the writer in the firm-author shape, with the firm as the label', async () => {
+describe('named writers and co-authors (ADR-060, ADR-064)', () => {
+  it('shows a named writer with their photo as "Author", then the co-authors in order', async () => {
+    const photo = await Media.create(makeMedia({ alt: 'Justina Olayinka' }));
+    const coPhoto = await Media.create(makeMedia({ alt: 'Kenechukwu Chibueze' }));
+    const person = await Person.findOne({ slug: 'john-onyido' }).lean();
     const created = await request(app)
       .post(`${base}/insights`)
       .set('Authorization', auth())
@@ -451,9 +454,14 @@ describe('named writers without a profile (ADR-060)', () => {
         format: 'article',
         categories: ['articles'],
         authorName: 'Justina Olayinka',
+        authorPhoto: photo._id.toString(),
+        coAuthors: [
+          { person: person?._id.toString(), name: null, photo: null },
+          { person: null, name: 'Kenechukwu Chibueze', photo: coPhoto._id.toString() },
+        ],
       });
-    expect(created.status).toBe(201);
-    expect(created.body.data.authorName).toBe('Justina Olayinka');
+    expect(created.status, JSON.stringify(created.body)).toBe(201);
+    expect(created.body.data._expanded).toHaveProperty(coPhoto._id.toString());
 
     await request(app)
       .post(`${base}/insights/${created.body.data.id as string}/publish`)
@@ -461,11 +469,44 @@ describe('named writers without a profile (ADR-060)', () => {
     const pub = await request(app).get('/api/v1/insights/by-a-former-associate');
 
     expectToMatchContract(pub, 'get', '/api/v1/insights/{slug}');
-    expect(pub.body.data.author).toEqual({
-      type: 'firm',
+    expect(pub.body.data.author).toMatchObject({
+      type: 'writer',
       name: 'Justina Olayinka',
-      label: 'SPA AJIBADE & Co.',
+      label: 'Author',
+      photo: { alt: 'Justina Olayinka' },
     });
+    expect(pub.body.data.coAuthors).toMatchObject([
+      { type: 'person', person: { slug: 'john-onyido' } },
+      {
+        type: 'writer',
+        name: 'Kenechukwu Chibueze',
+        label: 'Co-author',
+        photo: { alt: 'Kenechukwu Chibueze' },
+      },
+    ]);
+  });
+
+  it('refuses a writer photo on an article that credits an attorney', async () => {
+    const person = await Person.findOne({ slug: 'john-onyido' }).lean();
+    const photo = await Media.create(makeMedia());
+    const created = await request(app)
+      .post(`${base}/insights`)
+      .set('Authorization', auth())
+      .send({
+        title: 'By An Attorney With A Photo',
+        format: 'article',
+        categories: ['articles'],
+        author: person?._id.toString(),
+      });
+
+    const res = await request(app)
+      .patch(`${base}/insights/${created.body.data.id as string}`)
+      .set('Authorization', auth())
+      .set('If-Match', String(created.body.data.revision))
+      .send({ authorPhoto: photo._id.toString() });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details[0].path).toBe('authorPhoto');
   });
 
   it('refuses a writer name on an article that already credits an attorney', async () => {

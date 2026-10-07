@@ -12,6 +12,7 @@ import {
 } from '../../../src/serializers/person.serializer.js';
 import {
   FIRM_AUTHOR,
+  toCoAuthors,
   toBackLink,
   toCard,
   toChips,
@@ -218,6 +219,23 @@ describe('insight serializer', () => {
     const unpopulated = { _id: 'x' } as unknown as ReturnType<typeof makePerson>;
 
     expect(toCard(makeInsight({ author: unpopulated })).author).toEqual(FIRM_AUTHOR);
+  });
+
+  it('leaves out a co-author whose attorney profile is a draft, keeping the order', () => {
+    // A draft attorney populates to null: no name, so nothing to show.
+    const coAuthors = toCoAuthors([
+      { person: makePerson() },
+      { person: null, name: null },
+      { person: null, name: 'Kenechukwu Chibueze', photo: null },
+    ]);
+
+    expect(coAuthors.map((coAuthor) => coAuthor.type)).toEqual(['person', 'writer']);
+    expect(coAuthors[1]).toEqual({
+      type: 'writer',
+      name: 'Kenechukwu Chibueze',
+      label: 'Co-author',
+      photo: null,
+    });
   });
 
   it('gives a video insight the Watch Video call to action', () => {

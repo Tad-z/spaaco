@@ -5,6 +5,16 @@ import { INSIGHT_CATEGORIES, INSIGHT_FORMATS } from '../constants/enums.js';
 import { contentPlugin } from './plugins/content.plugin.js';
 import { legacyImportSchema } from './schemas/common.schemas.js';
 
+/** An attorney on the site, or anyone else by name with an optional photo (ADR-064). */
+const coAuthorSchema = new Schema(
+  {
+    person: { type: Schema.Types.ObjectId, ref: 'Person', default: null },
+    name: { type: String, default: null, trim: true, maxlength: 120 },
+    photo: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
+  },
+  { _id: false, versionKey: false }
+);
+
 const insightSchema = new Schema<IInsight>(
   {
     title: { type: String, required: true, trim: true, maxlength: 300 },
@@ -55,6 +65,10 @@ const insightSchema = new Schema<IInsight>(
     author: { type: Schema.Types.ObjectId, ref: 'Person', default: null },
     // A writer with no attorney profile, such as former staff (ADR-060).
     authorName: { type: String, default: null, trim: true, maxlength: 120 },
+    // The named writer's photo (ADR-064).
+    authorPhoto: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
+    // Shown after the author, in order (ADR-064).
+    coAuthors: { type: [coAuthorSchema], default: [] },
     coverImage: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
     featured: { type: Boolean, default: false },
     legacy: { type: legacyImportSchema, default: null },

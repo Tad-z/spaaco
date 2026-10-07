@@ -20,6 +20,7 @@ import { publicStorage } from '../integrations/storage/public/index.js';
 import { invalidate } from './cache.service.js';
 import { scanFile } from './virus-scan.service.js';
 import { record } from './audit.service.js';
+import { valuesAt } from '../helpers/path.helper.js';
 import { tagsFor } from '../constants/cache-tags.js';
 import type { CacheEntity } from '../constants/cache-tags.js';
 import type { IMedia } from '../interfaces/media.interface.js';
@@ -517,24 +518,13 @@ const idOf = (value: unknown): string => {
 
 /** Every id a path holds: none, one, or a carousel's worth. */
 function idsAt(doc: Record<string, unknown>, path: string): string[] {
-  const value = atPath(doc, path);
-  return (Array.isArray(value) ? value : [value]).map(idOf).filter((item) => item !== '');
+  return valuesAt(doc, path)
+    .map(idOf)
+    .filter((item) => item !== '');
 }
 
 /** A label is shown to a person, so anything but a string is not one. */
 const labelOf = (value: unknown): string => (typeof value === 'string' ? value : '');
-
-/** Follow a dotted path into a lean document. */
-function atPath(doc: Record<string, unknown>, path: string): unknown {
-  let current: unknown = doc;
-
-  for (const segment of path.split('.')) {
-    if (typeof current !== 'object' || current === null) return undefined;
-    current = (current as Record<string, unknown>)[segment];
-  }
-
-  return current;
-}
 
 /** Ids referenced anywhere, for the `unused=true` filter. */
 async function usedMediaIds(): Promise<Types.ObjectId[]> {
@@ -547,17 +537,16 @@ async function usedMediaIds(): Promise<Types.ObjectId[]> {
         // `$exists` rather than `$ne: null` alone, so an empty carousel is not
         // fetched for nothing; an array field matches when non-empty.
         .find({
-          $or: refs.map((ref) => ({ [ref.path]: { $exists: true, $nin: [null, []] } })),
+          // `$type` matches when any value at the path is an id, which also holds
+          // inside an array of sub-documents where some entries are null.
+          $or: refs.map((ref) => ({ [ref.path]: { $type: 'objectId' } })),
         })
         .select(refs.map((ref) => ref.path).join(' '))
         .lean<Record<string, unknown>[]>();
 
       return docs.flatMap((doc) =>
         refs
-          .flatMap((ref) => {
-            const value = atPath(doc, ref.path);
-            return Array.isArray(value) ? (value as unknown[]) : [value];
-          })
+          .flatMap((ref) => valuesAt(doc, ref.path))
           .filter((value): value is Types.ObjectId => value instanceof mongoose.Types.ObjectId)
       );
     })
