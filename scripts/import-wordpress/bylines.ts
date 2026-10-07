@@ -31,7 +31,7 @@ const HONORIFIC = /^(?:dr|mr|mrs|ms|miss|prof|chief|barr|engr)\.?\s+/i;
 
 /** Words that mean the "name" is really a heading, a unit or a public figure. */
 const NOT_A_NAME =
-  /\b(?:the|department|unit|team|market|markets|capital|nigeria|nigerian|law|firm|practice|group|desk|partners|associates|editor|review|update|president|governor|minister|honourable|justice|senator)\b/i;
+  /\b(?:the|department|unit|team|market|markets|capital|nigeria|nigerian|law|firm|practice|group|desk|partners|associates|editor|review|update|president|governor|minister|honourable|justice|senator|state)\b/i;
 
 /** Where a name ends when a byline runs straight into the title. */
 const NAME_STOP = /^(?:[A-Z]{3,}[A-Z:,.]*|Is|Are|From|The|A|An|Of|In|On|For|To|With|At)$/;
@@ -147,4 +147,195 @@ export function creditFor(
   return bySlug === undefined
     ? { kind: 'firm' }
     : { kind: 'person', id: bySlug.id, name: fullName(bySlug) };
+}
+
+/** Same person: the first and last words of `name` both appear in `other`. */
+export function sameWriter(name: string, other: string): boolean {
+  const mine = words(name.replace(HONORIFIC, ''));
+  const theirs = new Set(words(other));
+  const first = mine[0];
+  const last = mine.at(-1);
+  return first !== undefined && last !== undefined && theirs.has(first) && theirs.has(last);
+}
+
+/** A writer named in an article's byline, with the photo shown beside them there. */
+export interface BylineWriter {
+  readonly name: string;
+  /** Their old profile slug, when the byline linked to it. */
+  readonly slug?: string;
+  /** The photo's path inside the old uploads folder. */
+  readonly photo?: string;
+}
+
+/** A former profile in the export: its slug, name and photo. */
+export interface ExportProfile {
+  readonly slug: string;
+  readonly name: string;
+  readonly photo: string | null;
+}
+
+/**
+ * Where the byline sits: the start of the post, up to the title or the first
+ * list or heading, whichever comes first.
+ */
+const bylineHead = (html: string): string => {
+  const head = html.slice(0, 2500);
+  const end = head.search(/<p[^>]*text-align:\s*center|<ol\b|<ul\b|<h[1-6]\b/i);
+  return end < 0 ? head : head.slice(0, end);
+};
+
+const UPLOAD_PATH = /\/wp-content\/uploads\/([^"'\s<>?#]+)/i;
+
+/** The words of a photo's file name and alt text, to tell whose face it is. */
+const photoWords = (src: string, alt: string): string =>
+  `${decodeURIComponent(src.split('/').pop() ?? '').replace(/[-_.]+/g, ' ')} ${alt}`;
+
+/**
+ * Everyone named at the top of an article, in byline order, each with the
+ * photo beside them there (ADR-064). The names come from the "By …" line;
+ * a byline that is only a row of linked photos gives its people's names from
+ * their old profiles. A photo is matched to a writer by its file name or alt
+ * text, or by position when the byline has one photo per writer.
+ */
+export function bylineWriters(
+  html: string | null | undefined,
+  profiles: readonly ExportProfile[]
+): BylineWriter[] {
+  const head = bylineHead(html ?? '');
+
+  const photos = [...head.matchAll(/<img\b([^>]*)>/gi)].flatMap((match) => {
+    const attrs = match[1] ?? '';
+    const src = /\bsrc="([^"]+)"/i.exec(attrs)?.[1] ?? '';
+    const path = UPLOAD_PATH.exec(src)?.[1];
+    if (path === undefined) return [];
+    const alt = decode(/\balt="([^"]*)"/i.exec(attrs)?.[1] ?? '');
+    return [{ path: decodeURI(path), words: photoWords(src, alt) }];
+  });
+  const slugs = [
+    ...new Set(
+      [...head.matchAll(/spaajibade\.com\/people\/([a-z0-9-]+)/gi)].map((m) => m[1] ?? '')
+    ),
+  ];
+
+  const byline =
+    /(?:^|>|\s)By\s*:?\s*([\s\S]{2,300}?)(?:<\/(?:p|h[1-6]|div|li)>|<br\s*\/?>|<img\b|\r?\n)/i.exec(
+      head
+    );
+  const names = byline
+    ? blockText(byline[1] ?? '')
+        .split(/\s+(?:and|&)\s+|\s*[,;|]\s*/)
+        .map((part) => cleanName(part))
+        .filter((name): name is string => name !== null)
+    : slugs.flatMap((slug) => {
+        const profile = profiles.find((p) => p.slug === slug);
+        if (profile === undefined) return [];
+        // "Peter Olalere, MCIArb" → "Peter Olalere"; capitals fixed as for a byline.
+        const bare = profile.name.split(',')[0] ?? profile.name;
+        return [cleanName(bare) ?? bare.trim()];
+      });
+
+  const unclaimed = [...photos];
+  const writers = names.map((name) => {
+    const slug = slugs.find((s) => sameWriter(name, s.replace(/-/g, ' ')));
+    const index = unclaimed.findIndex((photo) => {
+      const tokens = new Set(words(photo.words));
+      return words(name).some((word) => word.length > 2 && tokens.has(word));
+    });
+    const photo = index < 0 ? undefined : unclaimed.splice(index, 1)[0]?.path;
+    return {
+      name,
+      ...(slug === undefined ? {} : { slug }),
+      ...(photo === undefined ? {} : { photo }),
+    };
+  });
+
+  // One photo per writer and none matched by name: they are in byline order.
+  if (photos.length === names.length && writers.every((writer) => writer.photo === undefined)) {
+    return writers.map((writer, index) => ({ ...writer, photo: photos[index]?.path }));
+  }
+  return writers;
+}
+
+/** A former profile's photo, for a writer who is not on the new site. */
+export const profilePhoto = (
+  writer: Pick<BylineWriter, 'name' | 'slug'>,
+  profiles: readonly ExportProfile[]
+): string | null =>
+  profiles.find(
+    (profile) =>
+      profile.photo !== null &&
+      ((writer.slug !== undefined && profile.slug === writer.slug) ||
+        sameWriter(writer.name, profile.name))
+  )?.photo ?? null;
+
+/** A link an image became: an image file, or "View image". */
+const IMAGE_LINK =
+  /<a\b[^>]*href="[^"]*(?:\.(?:png|jpe?g|gif|webp)|\/image\/upload\/[^"]*)"[^>]*>[\s\S]*?<\/a>|<a\b[^>]*>\s*View image\s*<\/a>/gi;
+/** An old article header banner, such as `Article-header-SPA.png`. */
+const BANNER_LINK =
+  /<a\b[^>]*href="[^"]*header[^"/]*\.(?:png|jpe?g|gif|webp)"[^>]*>[\s\S]*?<\/a>/gi;
+/** A link to an old attorney profile, which in a byline is a face or a name. */
+const PROFILE_LINK = /<a\b[^>]*href="[^"]*\/people\/[^"]*"[^>]*>[\s\S]*?<\/a>/gi;
+const LEADING_BLOCK = /^\s*<(p|h[1-6]|ol|ul)\b[^>]*>([\s\S]*?)<\/\1>\s*/i;
+/** What is left of a block once its photos are gone: no letter or digit, only separators. */
+const NOTHING_LEFT = /^[^\p{L}\p{N}]*$/u;
+
+const isBylineText = (text: string): boolean => {
+  const match = /^by\s*:?\s*(.+)$/i.exec(text);
+  if (!match || text.length > 160) return false;
+  const first = (match[1] ?? '').split(/\s+(?:and|&)\s+|\s*[,;|(]\s*/)[0] ?? '';
+  return cleanName(first) !== null || /\b(?:department|unit|team|group|desk)\b/i.test(first);
+};
+
+/**
+ * Take the old site's byline off the top of an article (ADR-064): the "By …"
+ * line, the writers' photos (which the import turned into "View image"
+ * links), and old header banners. The page shows the author block instead.
+ *
+ * Only the first three blocks are looked at, since a byline can follow a date
+ * line or the title, and "by" deeper in the text is ordinary prose. A block
+ * that is only author photos, or only a short "By <name>" line, goes; any
+ * other block stays, without them.
+ *
+ * A picture is taken as an author's only when it links to their old profile,
+ * or sits at the top of an article that has a byline. Otherwise an image at
+ * the top is content, like a group photo of new associates, and stays.
+ */
+export function stripLeadingByline(html: string): string {
+  const blocks: { whole: string; inner: string }[] = [];
+  let rest = html;
+  while (blocks.length < 3) {
+    const match = LEADING_BLOCK.exec(rest);
+    if (!match) break;
+    blocks.push({ whole: match[0], inner: match[2] ?? '' });
+    rest = rest.slice(match[0].length);
+  }
+
+  const hasByline = blocks.some(({ inner }) =>
+    isBylineText(blockText(inner.replace(IMAGE_LINK, '')))
+  );
+  const withoutPhotos = (inner: string): string => {
+    const once = inner
+      .replace(BANNER_LINK, '')
+      .replace(/<a\b[^>]*href="[^"]*\/people\/[^"]*"[^>]*>\s*View image\s*<\/a>/gi, '');
+    return hasByline ? once.replace(IMAGE_LINK, '') : once;
+  };
+
+  let kept = '';
+  for (const { whole, inner } of blocks) {
+    const remaining = withoutPhotos(inner);
+    const onlyPhotos = NOTHING_LEFT.test(blockText(remaining.replace(PROFILE_LINK, '')));
+    if (onlyPhotos || isBylineText(blockText(remaining))) continue;
+
+    kept +=
+      remaining === inner
+        ? whole
+        : // A banner in front of "Introduction": the text stays, the space goes.
+          whole.replace(
+            inner,
+            remaining.replace(/^((?:\s*<(?:strong|b|em|u|li)\b[^>]*>)*)\s*/i, '$1')
+          );
+  }
+
+  return (kept + rest).trim();
 }

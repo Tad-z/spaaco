@@ -6,6 +6,7 @@
  * created as drafts for the firm to approve; the people already in the backend
  * are merged by filling only their empty fields, never overwriting.
  */
+import type { ExportProfile } from './bylines.js';
 import { isSlug, slugify } from '../../src/helpers/slug.helper.js';
 import type { AdminApi, Item } from './api.js';
 import { finishHtml, prepareHtml } from './html.js';
@@ -176,6 +177,10 @@ export interface ImportContext {
   readonly publishPeople: boolean;
   /** Only set the author fields on imported articles (ADR-060). */
   readonly authorsOnly: boolean;
+  /** Only remove old bylines and set writer photos and co-authors (ADR-064). */
+  readonly bylinesOnly: boolean;
+  /** The export's attorney profiles, for former writers' photos (ADR-064). */
+  readonly profiles: readonly ExportProfile[];
 }
 
 /**

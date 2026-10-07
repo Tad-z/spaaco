@@ -13,8 +13,15 @@ import { INSIGHT_CATEGORIES } from '../../src/constants/enums.js';
 import { isSlug, slugify } from '../../src/helpers/slug.helper.js';
 import type { InsightCategory } from '../../src/types/api.js';
 import type { Item } from './api.js';
-import { creditFor } from './bylines.js';
-import type { Credit, KnownPerson } from './bylines.js';
+import {
+  bylineWriters,
+  creditFor,
+  profilePhoto,
+  sameWriter,
+  stripLeadingByline,
+} from './bylines.js';
+import type { BylineWriter, Credit, KnownPerson } from './bylines.js';
+import { PEOPLE_SLUG_MAP } from './maps.js';
 import { findUploadPaths, finishHtml, isPdfWrapper, prepareHtml } from './html.js';
 import type { CategoryRow, PostRow } from './load.js';
 import { normaliseKey } from './maps.js';
@@ -102,6 +109,92 @@ export const authorFields = (
     ? { author: credit.id, authorName: null }
     : { author: null, authorName: credit.kind === 'named' ? credit.name : null };
 
+/** An article's co-author, as the API takes it (ADR-064). */
+interface CoAuthorField {
+  readonly person: string | null;
+  readonly name: string | null;
+  readonly photo: string | null;
+}
+
+/** At most this many co-authors, as the API allows. */
+const MAX_CO_AUTHORS = 8;
+
+/**
+ * A writer's photo: their old profile's, else the one beside them in the
+ * byline, uploaded once however many articles show it.
+ */
+async function writerPhoto(
+  writer: Pick<BylineWriter, 'name' | 'slug' | 'photo'>,
+  record: string,
+  ctx: ImportContext
+): Promise<string | null> {
+  const path = profilePhoto(writer, ctx.profiles) ?? writer.photo;
+  const counts = ctx.report.insights.bylines.writersWithoutPhoto;
+  if (path === undefined) {
+    counts[writer.name] = (counts[writer.name] ?? 0) + 1;
+    return null;
+  }
+
+  const result = await ctx.media.get(path, `Portrait of ${writer.name}`);
+  if (result.ok && result.kind === 'image') return result.id;
+  ctx.report.media.problems.push({
+    record,
+    path,
+    problem: result.ok ? 'unsupported type' : result.problem,
+    ...(!result.ok && result.problem === 'upload failed' ? { detail: result.detail } : {}),
+  });
+  return null;
+}
+
+/**
+ * The named writer's photo and the co-authors, from the article's byline
+ * (ADR-064). Whoever the article already credits is not listed again as a
+ * co-author.
+ */
+async function writerFields(
+  row: PostRow,
+  credit: Credit,
+  people: readonly KnownPerson[],
+  record: string,
+  ctx: ImportContext
+): Promise<{ authorPhoto: string | null; coAuthors: CoAuthorField[] }> {
+  const writers = bylineWriters(row.content, ctx.profiles);
+  const creditedName = credit.kind === 'firm' ? null : credit.name;
+
+  const authorPhoto =
+    credit.kind === 'named'
+      ? await writerPhoto(
+          writers.find((writer) => sameWriter(credit.name, writer.name)) ?? { name: credit.name },
+          record,
+          ctx
+        )
+      : null;
+
+  const coAuthors: CoAuthorField[] = [];
+  const listed = new Set<string>();
+  for (const writer of writers) {
+    if (coAuthors.length >= MAX_CO_AUTHORS) break;
+    if (creditedName !== null && sameWriter(writer.name, creditedName)) continue;
+
+    const linked =
+      writer.slug === undefined ? undefined : (PEOPLE_SLUG_MAP[writer.slug] ?? writer.slug);
+    const person = people.find(
+      (p) => p.slug === linked || sameWriter(writer.name, `${p.firstName} ${p.lastName}`)
+    );
+    const key = person?.id ?? writer.name.toLowerCase();
+    if (listed.has(key)) continue;
+    listed.add(key);
+
+    coAuthors.push(
+      person === undefined
+        ? { person: null, name: writer.name, photo: await writerPhoto(writer, record, ctx) }
+        : { person: person.id, name: null, photo: null }
+    );
+  }
+
+  return { authorPhoto, coAuthors };
+}
+
 const countCredit = (ctx: ImportContext, credit: Credit): void => {
   const { authors } = ctx.report.insights;
   authors[credit.kind] += 1;
@@ -126,11 +219,12 @@ export async function importInsights(
     lastName: String(item.lastName),
   }));
 
-  if (ctx.authorsOnly) {
+  if (ctx.authorsOnly || ctx.bylinesOnly) {
     for (const row of rows) {
       const slug = backendSlug(row.slug);
       try {
-        await creditAuthor(row, slug, people, existing, ctx);
+        if (ctx.authorsOnly) await creditAuthor(row, slug, people, existing, ctx);
+        else await tidyByline(row, slug, people, existing, ctx);
       } catch (error) {
         report.failures.push({ collection: 'insights', slug, error: errorText(error) });
         report.counts.insights.failed += 1;
@@ -239,7 +333,10 @@ async function importInsight(
     }
   }
 
-  const body = finishHtml(prepared.html, (path) => urls.get(path));
+  // The old byline goes; the page shows the author block instead (ADR-064).
+  const finished = finishHtml(prepared.html, (path) => urls.get(path));
+  const body = finished === null ? null : stripLeadingByline(finished) || null;
+  if (body !== finished) report.insights.bylines.bodiesCleaned += 1;
   if (body !== null && body.length > BODY_LIMIT) {
     throw new Error(
       `body is ${String(body.length)} characters after cleaning; the limit is ${String(BODY_LIMIT)}`
@@ -278,6 +375,8 @@ async function importInsight(
   // article's byline (ADR-060).
   const credit = creditFor(row.content, row.slug, people);
   countCredit(ctx, credit);
+  const writers = await writerFields(row, credit, people, key, ctx);
+  countWriters(ctx, writers);
 
   const payload = {
     title,
@@ -287,6 +386,7 @@ async function importInsight(
     categories,
     practiceAreas: practiceAreas.flatMap((areaSlug) => ctx.practiceAreaIds.get(areaSlug) ?? []),
     ...authorFields(credit),
+    ...writers,
     coverImage,
     document,
     featured: false,
@@ -357,6 +457,84 @@ async function creditAuthor(
   const key = `insights/${slug}`;
   const ours = ctx.state.records[key] === current.revision;
   const updated = await ctx.api.update('insights', current, want);
+  existing.set(slug, updated);
+  // Still the import's own record, so a later full run does not take it for an edit.
+  if (ours) ctx.state.records[key] = updated.revision;
+}
+
+const countWriters = (
+  ctx: ImportContext,
+  writers: { authorPhoto: string | null; coAuthors: readonly CoAuthorField[] }
+): void => {
+  const counts = ctx.report.insights.bylines;
+  if (writers.authorPhoto !== null) counts.authorPhotos += 1;
+  if (writers.coAuthors.length > 0) counts.withCoAuthors += 1;
+  counts.coAuthors += writers.coAuthors.length;
+};
+
+/** What an imported article already credits: an attorney, a named writer, or the firm. */
+function storedCredit(current: Item, people: readonly KnownPerson[]): Credit {
+  const person = people.find((p) => p.id === current.author);
+  if (person !== undefined)
+    return { kind: 'person', id: person.id, name: `${person.firstName} ${person.lastName}` };
+  return typeof current.authorName === 'string' && current.authorName !== ''
+    ? { kind: 'named', name: current.authorName }
+    : { kind: 'firm' };
+}
+
+/**
+ * `--bylines-only` (ADR-064): on an imported article, take the old byline off
+ * the body as it is now (keeping any edit the firm made), and set the writer's
+ * photo and the co-authors from the byline. Each field is left alone once
+ * someone has set it.
+ */
+async function tidyByline(
+  row: PostRow,
+  slug: string,
+  people: readonly KnownPerson[],
+  existing: Map<string, Item>,
+  ctx: ImportContext
+): Promise<void> {
+  const current = existing.get(slug);
+  // Only the import's own articles: hand-made ones are the firm's.
+  if (current?.legacy === undefined || current.legacy === null) return;
+
+  const key = `insights/${slug}`;
+  const counts = ctx.report.insights.bylines;
+  const payload: Record<string, unknown> = {};
+
+  if (typeof current.body === 'string') {
+    const body = stripLeadingByline(current.body);
+    if (body !== current.body && body !== '') {
+      payload.body = body;
+      counts.bodiesCleaned += 1;
+    }
+  }
+
+  const { authorPhoto, coAuthors } = await writerFields(
+    row,
+    storedCredit(current, people),
+    people,
+    key,
+    ctx
+  );
+  const named = typeof current.authorName === 'string' && current.authorName !== '';
+  if (authorPhoto !== null && named && typeof current.authorPhoto !== 'string') {
+    payload.authorPhoto = authorPhoto;
+    counts.authorPhotos += 1;
+  }
+  const hasCoAuthors = Array.isArray(current.coAuthors) && current.coAuthors.length > 0;
+  if (coAuthors.length > 0 && !hasCoAuthors) {
+    payload.coAuthors = coAuthors;
+    counts.withCoAuthors += 1;
+    counts.coAuthors += coAuthors.length;
+  }
+
+  if (Object.keys(payload).length === 0) return;
+  counts.patched += 1;
+  if (!ctx.commit) return;
+  const ours = ctx.state.records[key] === current.revision;
+  const updated = await ctx.api.update('insights', current, payload);
   existing.set(slug, updated);
   // Still the import's own record, so a later full run does not take it for an edit.
   if (ours) ctx.state.records[key] = updated.revision;

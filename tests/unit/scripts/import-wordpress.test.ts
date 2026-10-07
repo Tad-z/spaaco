@@ -28,7 +28,12 @@ import {
   categoryTargets,
   classify,
 } from '../../../scripts/import-wordpress/insights.js';
-import { creditFor, leadingByline } from '../../../scripts/import-wordpress/bylines.js';
+import {
+  bylineWriters,
+  creditFor,
+  leadingByline,
+  stripLeadingByline,
+} from '../../../scripts/import-wordpress/bylines.js';
 import { articleSource } from '../../../scripts/import-wordpress/redirects.js';
 import { parseCsv } from '../../../scripts/import-wordpress/load.js';
 import type { PersonRow } from '../../../scripts/import-wordpress/load.js';
@@ -338,5 +343,105 @@ describe('bylines (ADR-060)', () => {
       authorName: 'Patricia Magaji',
     });
     expect(authorFields({ kind: 'firm' })).toEqual({ author: null, authorName: null });
+  });
+});
+
+describe('old bylines at the top of an article (ADR-064)', () => {
+  const title = '<p><strong>DOUBLE ALLOCATION OF LAND</strong></p>';
+
+  it('removes a "By" line with its photo, which the import had made "View image"', () => {
+    const body =
+      '<p><strong><a href="https://spaajibade.com/people/david-essien/">By David Essien</a></strong>' +
+      '<br /><a href="https://spaajibade.com/people/david-essien/">View image</a></p>' +
+      title;
+
+    expect(stripLeadingByline(body)).toBe(title);
+  });
+
+  it('removes a co-authored byline and its photos, uploaded or not', () => {
+    const body =
+      '<p>By Ufuoma Eferha | Kenechukwu Chibueze<br />' +
+      '<a href="https://spaajibade.com/people/ufuoma-eferha/">View image</a> ' +
+      '<a href="https://res.cloudinary.com/x/image/upload/v1/spa-ajibade/abc.png">View image</a></p>' +
+      title;
+
+    expect(stripLeadingByline(body)).toBe(title);
+  });
+
+  it('removes a row of author photos after a date line, keeping the date', () => {
+    const date = '<p><strong>2nd April 2024</strong></p>';
+    const body =
+      date +
+      '<p><a href="https://spaajibade.com/people/emmanuel-bassey/">View image</a> ' +
+      '<a href="https://spaajibade.com/people/abiodun-ogunnubi/">View image</a></p>' +
+      title;
+
+    expect(stripLeadingByline(body)).toBe(date + title);
+  });
+
+  it('takes an old header banner off the front of "Introduction", keeping the heading', () => {
+    const body =
+      '<p><strong><a href="http://www.spaajibade.com/resources/wp-content/uploads/2021/08/Article-header-SPA.png">View image</a>Introduction</strong></p><p>Text.</p>';
+
+    expect(stripLeadingByline(body)).toBe('<p><strong>Introduction</strong></p><p>Text.</p>');
+  });
+
+  it('keeps a picture at the top of an article with no byline, which is content', () => {
+    const body =
+      '<p>We welcome our new Associates.</p>' +
+      '<p><a href="https://res.cloudinary.com/x/image/upload/v1/spa-ajibade/group.png">View image</a></p>';
+
+    expect(stripLeadingByline(body)).toBe(body);
+  });
+
+  it('leaves "by" in the opening sentence alone', () => {
+    const body = '<p>By virtue of section 5 of the Act, the Minister may revoke a licence.</p>';
+
+    expect(stripLeadingByline(body)).toBe(body);
+  });
+});
+
+describe('writers in a byline (ADR-064)', () => {
+  const profiles = [
+    { slug: 'peter-olalere', name: 'Peter Olalere, MCIArb', photo: '2023/12/Peter.jpg' },
+    { slug: 'kelson-emmanuel', name: 'KELSON EMMANUEL', photo: null },
+  ];
+
+  it('lists every writer in order, matching each photo by its file name', () => {
+    const html =
+      '<div style="margin: 20px;">By Ufuoma Eferha | Kenechukwu Chibueze\n' +
+      '<a href="https://spaajibade.com/people/ufuoma-eferha/"><img src="https://spaajibade.com/wp-content/uploads/2025/01/Eferha-500-300x300.jpg" alt="" /></a> ' +
+      '<img src="https://spaajibade.com/wp-content/uploads/2024/11/Kenechukwu.png" alt="" />\n' +
+      '<p style="text-align: center;"><strong>TITLE</strong></p>';
+
+    expect(bylineWriters(html, profiles)).toEqual([
+      { name: 'Ufuoma Eferha', slug: 'ufuoma-eferha', photo: '2025/01/Eferha-500-300x300.jpg' },
+      { name: 'Kenechukwu Chibueze', photo: '2024/11/Kenechukwu.png' },
+    ]);
+  });
+
+  it('pairs photos by position when no file name says whose they are', () => {
+    const html =
+      '<p>By Yetunde Okojie and Oluwasolape Owoyemi<br />' +
+      '<img src="/wp-content/uploads/a.jpg" alt="" /><img src="/wp-content/uploads/b.jpg" alt="" /></p>';
+
+    expect(bylineWriters(html, profiles).map((writer) => writer.photo)).toEqual(['a.jpg', 'b.jpg']);
+  });
+
+  it('names a row of linked photos with no "By" line from the old profiles, tidied', () => {
+    const html =
+      '<p><a href="https://spaajibade.com/people/peter-olalere/"><img src="/wp-content/uploads/p.jpg" /></a>' +
+      '<a href="https://spaajibade.com/people/kelson-emmanuel/"><img src="/wp-content/uploads/k.jpg" /></a></p>' +
+      '<ol><li>Introduction</li></ol>';
+
+    expect(bylineWriters(html, profiles).map((writer) => writer.name)).toEqual([
+      'Peter Olalere',
+      'Kelson Emmanuel',
+    ]);
+  });
+
+  it('does not take a place for a writer', () => {
+    expect(bylineWriters('<p>Issued by the firm, Ogun State</p>', profiles)).toEqual([]);
+    expect(bylineWriters('<p>By Ogun State Government</p>', profiles)).toEqual([]);
   });
 });

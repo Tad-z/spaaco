@@ -20,9 +20,14 @@ const counts = (): Record<Outcome, number> => ({
   failed: 0,
 });
 
-export function newReport(mode: 'dry-run' | 'commit', apiUrl: string, authorsOnly = false) {
+export function newReport(
+  mode: 'dry-run' | 'commit',
+  apiUrl: string,
+  authorsOnly = false,
+  bylinesOnly = false
+) {
   return {
-    run: { at: new Date().toISOString(), mode, apiUrl, authorsOnly },
+    run: { at: new Date().toISOString(), mode, apiUrl, authorsOnly, bylinesOnly },
     gates: { peoplePendingReview: 0, categoriesWithoutMapTo: 0 },
     counts: { people: counts(), insights: counts() },
     people: {
@@ -45,6 +50,15 @@ export function newReport(mode: 'dry-run' | 'commit', apiUrl: string, authorsOnl
       embedsAsLinks: [] as string[],
       authors: { person: 0, named: 0, firm: 0, namedWriters: {} as Record<string, number> },
       authorsOnly: { patched: 0, unchanged: 0, keptByHand: [] as string[] },
+      // ADR-064: old bylines removed, writer photos and co-authors set.
+      bylines: {
+        bodiesCleaned: 0,
+        authorPhotos: 0,
+        withCoAuthors: 0,
+        coAuthors: 0,
+        patched: 0,
+        writersWithoutPhoto: {} as Record<string, number>,
+      },
     },
     existing: {
       skippedHandMade: [] as { collection: string; slug: string }[],
@@ -67,7 +81,7 @@ export function writeReport(dir: string, report: Report, redirects: readonly Red
   writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
   // An --authors-only run sees no article paths, so it must not replace the
   // full redirect list a whole run wrote.
-  if (!report.run.authorsOnly) {
+  if (!report.run.authorsOnly && !report.run.bylinesOnly) {
     writeFileSync(join(dir, 'redirects.json'), `${JSON.stringify(redirects, null, 2)}\n`, 'utf8');
   }
   return path;
@@ -115,6 +129,15 @@ export function printSummary(report: Report): void {
     line('authors already right', a.unchanged);
     line('authors set by hand (kept)', a.keptByHand.length);
   }
+
+  const b = insights.bylines;
+  line('old bylines removed from bodies', b.bodiesCleaned);
+  line('writer photos set', b.authorPhotos);
+  line('articles given co-authors', `${String(b.withCoAuthors)} (${String(b.coAuthors)} people)`);
+  const noPhoto = Object.entries(b.writersWithoutPhoto);
+  line('writers with no photo found', noPhoto.length);
+  for (const [name, count] of noPhoto.slice(0, 15)) console.log(`    - ${name} (${String(count)})`);
+  if (report.run.bylinesOnly) line('articles patched', b.patched);
 
   console.log('\nMedia');
   line('files to upload / uploaded', media.uploads);

@@ -27,6 +27,7 @@ import type { Redirect } from './redirects.js';
 import { newReport, printSummary, writeReport } from './report.js';
 import { loadState, saveState, stateFileName } from './state.js';
 import { PEOPLE_SLUG_MAP } from './maps.js';
+import { decode } from './text.js';
 
 const { values: args } = parseArgs({
   options: {
@@ -39,6 +40,7 @@ const { values: args } = parseArgs({
     'overwrite-edited': { type: 'boolean', default: false },
     'publish-people': { type: 'boolean', default: false },
     'authors-only': { type: 'boolean', default: false },
+    'bylines-only': { type: 'boolean', default: false },
   },
 });
 
@@ -50,10 +52,14 @@ async function main(): Promise<void> {
   // Beside the export, never in the repository: the report names staff.
   const reportDir = resolve(args['report-dir'] ?? join(dataDir, '..', 'import-runs'));
   const authorsOnly = args['authors-only'];
-  // Crediting authors touches nothing but the articles' author fields.
-  const only = authorsOnly
-    ? new Set(['insights'])
-    : new Set((args.only ?? 'people,insights').split(',').map((s) => s.trim()));
+  const bylinesOnly = args['bylines-only'];
+  if (authorsOnly && bylinesOnly)
+    throw new Error('Pass --authors-only or --bylines-only, not both.');
+  // Crediting authors, or tidying bylines, touches only imported articles.
+  const only =
+    authorsOnly || bylinesOnly
+      ? new Set(['insights'])
+      : new Set((args.only ?? 'people,insights').split(',').map((s) => s.trim()));
   const limit = args.limit === undefined ? Infinity : Number(args.limit);
   const commit = args.commit;
 
@@ -73,7 +79,7 @@ async function main(): Promise<void> {
   mkdirSync(reportDir, { recursive: true });
 
   const data = loadExport(dataDir);
-  const report = newReport(commit ? 'commit' : 'dry-run', apiUrl, authorsOnly);
+  const report = newReport(commit ? 'commit' : 'dry-run', apiUrl, authorsOnly, bylinesOnly);
 
   // The firm's decisions gate a commit (TLS, gates O1 and O2).
   report.gates.peoplePendingReview = data.review.filter((row) => row.status === 'pending').length;
@@ -110,6 +116,12 @@ async function main(): Promise<void> {
     overwriteEdited: args['overwrite-edited'],
     publishPeople: args['publish-people'],
     authorsOnly,
+    bylinesOnly,
+    profiles: data.people.map((row) => ({
+      slug: row.slug,
+      name: decode(row.name ?? row.title),
+      photo: row.photo_file ?? null,
+    })),
   };
 
   const redirects: Redirect[] = [...practiceAreaRedirects()];
