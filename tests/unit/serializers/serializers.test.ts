@@ -113,6 +113,13 @@ describe('person serializer', () => {
     validate('PersonSummary', toSummary(makePerson()));
   });
 
+  it('shows a set job title instead of the role name, and ignores a blank one (ADR-061)', () => {
+    const coo = toSummary(makePerson({ role: 'partner', jobTitle: 'Chief Operating Officer' }));
+    expect(coo.role).toBe('partner');
+    expect(coo.roleLabel).toBe('Chief Operating Officer');
+    expect(toSummary(makePerson({ role: 'partner', jobTitle: '  ' })).roleLabel).toBe('Partner');
+  });
+
   it('carries the card back: the italic line and the practice-area chips', () => {
     const summary = toSummary(
       makePerson({ cardBio: 'A well-regarded authority.', practiceAreas: [makePracticeArea()] })

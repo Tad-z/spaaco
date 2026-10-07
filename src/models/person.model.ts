@@ -30,6 +30,8 @@ const personSchema = new Schema<IPerson>(
     lastName: { type: String, required: true, trim: true, maxlength: 80 },
     postNominals: { type: String, default: null, trim: true, maxlength: 40 },
     role: { type: String, required: true, enum: PERSON_ROLES.values },
+    // A title to show instead of the role name; the role still groups and sorts (ADR-061).
+    jobTitle: { type: String, default: null, trim: true, maxlength: 80 },
     photo: { type: Schema.Types.ObjectId, ref: 'Media', default: null },
     linkedinUrl: { type: String, default: null, trim: true, maxlength: 2048 },
     instagramUrl: { type: String, default: null, trim: true, maxlength: 2048 },

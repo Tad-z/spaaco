@@ -37,6 +37,8 @@ export interface PersonSummarySource {
   lastName: string;
   postNominals?: string | null;
   role: IPerson['role'];
+  /** Shown instead of the role name when set (ADR-061). */
+  jobTitle?: string | null;
   photo?: IMedia | null;
   linkedinUrl?: string | null;
   cardBio?: string | null;
@@ -67,7 +69,11 @@ export function toDisplayName(
   return `${prefix}${person.firstName} ${person.lastName}${suffix}`;
 }
 
-export const toRoleLabel = (role: IPerson['role']): string => PERSON_ROLES.labels[role];
+/** The role's name, or the person's own title when one is set; a blank title counts as unset (ADR-061). */
+export const toRoleLabel = (role: IPerson['role'], jobTitle?: string | null): string => {
+  const title = jobTitle?.trim() ?? '';
+  return title === '' ? PERSON_ROLES.labels[role] : title;
+};
 
 const isAreaLinkSource = (value: unknown): value is PracticeAreaLinkSource =>
   typeof value === 'object' &&
@@ -85,7 +91,7 @@ export function toSummary(person: PersonSummarySource): PersonSummary {
     slug: person.slug,
     displayName: toDisplayName(person),
     role: person.role,
-    roleLabel: toRoleLabel(person.role),
+    roleLabel: toRoleLabel(person.role, person.jobTitle),
     photo: toNullableImage(person.photo),
     linkedinUrl: person.linkedinUrl ?? null,
     cardBio: person.cardBio ?? null,

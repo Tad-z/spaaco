@@ -2412,7 +2412,10 @@ export interface components {
             /** @example Dr. Babatunde Ajibade, SAN */
             displayName: string;
             role: components["schemas"]["PersonRole"];
-            /** @example Managing Partner */
+            /**
+             * @description The role's name, or the person's own title when the firm sets one (ADR-061).
+             * @example Managing Partner
+             */
             roleLabel: string;
             photo: components["schemas"]["NullableImage"];
             linkedinUrl: string | null;
@@ -3278,6 +3281,12 @@ export interface components {
             lastName: string;
             postNominals: string | null;
             role: components["schemas"]["PersonRole"];
+            /**
+             * @description A title to show instead of the role name, such as "Chief Operating
+             *     Officer" (ADR-061). It becomes the public `roleLabel`; `role` still
+             *     decides the directory tab and the seniority order.
+             */
+            jobTitle: string | null;
             photo: components["schemas"]["ObjectId"] | null;
             linkedinUrl: string | null;
             instagramUrl: string | null;
@@ -3520,6 +3529,12 @@ export interface components {
             lastName: string;
             postNominals?: string | null;
             role: components["schemas"]["PersonRole"];
+            /**
+             * @description A title to show instead of the role name, such as "Chief Operating
+             *     Officer" (ADR-061). It becomes the public `roleLabel`; `role` still
+             *     decides the directory tab and the seniority order.
+             */
+            jobTitle?: string | null;
             photo?: components["schemas"]["ObjectId"] | null;
             linkedinUrl?: string | null;
             instagramUrl?: string | null;
@@ -3544,6 +3559,12 @@ export interface components {
             lastName?: string;
             postNominals?: string | null;
             role?: components["schemas"]["PersonRole"];
+            /**
+             * @description A title to show instead of the role name, such as "Chief Operating
+             *     Officer" (ADR-061). It becomes the public `roleLabel`; `role` still
+             *     decides the directory tab and the seniority order.
+             */
+            jobTitle?: string | null;
             photo?: components["schemas"]["ObjectId"] | null;
             linkedinUrl?: string | null;
             instagramUrl?: string | null;

@@ -25,6 +25,8 @@ export interface IPerson extends IContentFields {
   lastName: string;
   postNominals?: string | null;
   role: PersonRole;
+  /** Shown instead of the role name, e.g. "Chief Operating Officer" (ADR-061). */
+  jobTitle?: string | null;
   photo?: Types.ObjectId | null;
   linkedinUrl?: string | null;
   instagramUrl?: string | null;

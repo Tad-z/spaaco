@@ -93,6 +93,7 @@ const personCreate = z
     lastName: text(80),
     postNominals: optionalText(40).optional(),
     role: z.enum(PERSON_ROLES.values),
+    jobTitle: optionalText(80).optional(),
     photo: objectIdRef.optional(),
     linkedinUrl: safeUrl.nullable().optional(),
     instagramUrl: safeUrl.nullable().optional(),

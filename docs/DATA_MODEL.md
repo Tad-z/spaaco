@@ -62,28 +62,29 @@ Indexes: `{status:1, order:1}` and a text index on `title, summary, overview`.
 
 ### `people`
 
-| Field                | Type                                          | Notes                                                                                          |
-| -------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| honorific            | String                                        | "Dr.", "Mrs.", "Mr."                                                                           |
-| firstName, lastName  | String, required                              |                                                                                                |
-| postNominals         | String                                        | "SAN"                                                                                          |
-| displayName          | virtual                                       | e.g. "Dr. Babatunde Ajibade, SAN"                                                              |
-| role                 | enum, required                                | `managing_partner, partner, associate_partner, senior_associate, associate, trainee_associate` |
-| roleLabel            | virtual                                       | "Managing Partner", "Trainee Associate"…                                                       |
-| photo                | →Media                                        |                                                                                                |
-| linkedinUrl          | String                                        |                                                                                                |
-| instagramUrl         | String                                        |                                                                                                |
-| email                | String                                        | **Public** — shown on the profile and the practice-lead card (ADR-052 reverses Q9)             |
-| cardBio              | String                                        | The short italic line on the back of the card                                                  |
-| bio                  | String (html)                                 | Two or more paragraphs                                                                         |
-| quote                | String                                        | Only used for the MP's pull quote on About                                                     |
-| primaryPracticeArea  | →PracticeArea, nullable                       | Shown under the portrait on the profile                                                        |
-| practiceAreas        | [→PracticeArea]                               | The card-back chips                                                                            |
-| education            | { intro, entries: [{ qualification, year }] } |                                                                                                |
-| memberships          | [String]                                      |                                                                                                |
-| office               | →Office                                       |                                                                                                |
-| featuredInLeadership | Boolean                                       | The Home leadership row                                                                        |
-| legacy               | `{ source, legacyId, importedAt }`, nullable  | Set only on imported records (ADR-059). Admin read-only; never public                          |
+| Field                | Type                                          | Notes                                                                                                                                 |
+| -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| honorific            | String                                        | "Dr.", "Mrs.", "Mr."                                                                                                                  |
+| firstName, lastName  | String, required                              |                                                                                                                                       |
+| postNominals         | String                                        | "SAN"                                                                                                                                 |
+| displayName          | virtual                                       | e.g. "Dr. Babatunde Ajibade, SAN"                                                                                                     |
+| role                 | enum, required                                | `managing_partner, partner, associate_partner, senior_associate, associate, trainee_associate`                                        |
+| jobTitle             | String, optional                              | Shown as `roleLabel` instead of the role name, e.g. "Chief Operating Officer" (ADR-061). The role still decides the tab and the order |
+| roleLabel            | virtual                                       | "Managing Partner", "Trainee Associate"…                                                                                              |
+| photo                | →Media                                        |                                                                                                                                       |
+| linkedinUrl          | String                                        |                                                                                                                                       |
+| instagramUrl         | String                                        |                                                                                                                                       |
+| email                | String                                        | **Public** — shown on the profile and the practice-lead card (ADR-052 reverses Q9)                                                    |
+| cardBio              | String                                        | The short italic line on the back of the card                                                                                         |
+| bio                  | String (html)                                 | Two or more paragraphs                                                                                                                |
+| quote                | String                                        | Only used for the MP's pull quote on About                                                                                            |
+| primaryPracticeArea  | →PracticeArea, nullable                       | Shown under the portrait on the profile                                                                                               |
+| practiceAreas        | [→PracticeArea]                               | The card-back chips                                                                                                                   |
+| education            | { intro, entries: [{ qualification, year }] } |                                                                                                                                       |
+| memberships          | [String]                                      |                                                                                                                                       |
+| office               | →Office                                       |                                                                                                                                       |
+| featuredInLeadership | Boolean                                       | The Home leadership row                                                                                                               |
+| legacy               | `{ source, legacyId, importedAt }`, nullable  | Set only on imported records (ADR-059). Admin read-only; never public                                                                 |
 
 **Seniority sort** is role rank (managing_partner = 0 … trainee_associate = 5), then `order`, then `lastName`.
 **Role filtering** treats `partner` as a group that also matches `managing_partner`, because the directory has a "Partners" tab and no Managing Partner tab (DECISIONS Q3).

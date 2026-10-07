@@ -491,6 +491,30 @@ describe('named writers without a profile (ADR-060)', () => {
   });
 });
 
+describe("a person's own title (ADR-061)", () => {
+  it('is the public roleLabel, while the role still decides the tab', async () => {
+    const created = await request(app).post(`${base}/people`).set('Authorization', auth()).send({
+      firstName: 'Olubanke',
+      lastName: 'Afolabi-Johnson',
+      role: 'partner',
+      jobTitle: 'Chief Operating Officer',
+    });
+    expect(created.body.data.jobTitle).toBe('Chief Operating Officer');
+    await request(app)
+      .post(`${base}/people/${created.body.data.id as string}/publish`)
+      .set('Authorization', auth());
+
+    const profile = await request(app).get(`/api/v1/people/${created.body.data.slug as string}`);
+    expectToMatchContract(profile, 'get', '/api/v1/people/{slug}');
+    expect(profile.body.data.roleLabel).toBe('Chief Operating Officer');
+
+    const partners = await request(app).get('/api/v1/people?role=partner&pageSize=50');
+    expect(partners.body.data.map((p: { slug: string }) => p.slug)).toContain(
+      created.body.data.slug
+    );
+  });
+});
+
 describe('delete', () => {
   it('refuses when something still references the record, listing what', async () => {
     const area = await PracticeArea.findOne({ slug: 'energy-natural-resources' }).lean();

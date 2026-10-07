@@ -176,6 +176,7 @@ const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknow
     lastName: doc.lastName,
     postNominals: doc.postNominals ?? null,
     role: doc.role,
+    jobTitle: typeof doc.jobTitle === 'string' ? doc.jobTitle : null,
     photo: idOrNull(doc.photo),
     linkedinUrl: doc.linkedinUrl ?? null,
     instagramUrl: doc.instagramUrl ?? null,

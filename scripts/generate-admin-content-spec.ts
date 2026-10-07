@@ -152,6 +152,7 @@ const COLLECTIONS: readonly CollectionSpec[] = [
       lastName: 'Ajibade',
       postNominals: 'SAN',
       role: 'managing_partner',
+      jobTitle: null,
       photo: MEDIA_ID,
       linkedinUrl: null,
       instagramUrl: null,
