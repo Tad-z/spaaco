@@ -172,6 +172,16 @@ export class AdminApi {
     return body.data;
   }
 
+  /** Back to draft: off the site, kept in the admin. */
+  async unpublish(collection: string, id: string): Promise<Item> {
+    const body = (await this.send(
+      `Unpublishing ${collection}`,
+      `/admin/content/${collection}/${id}/unpublish`,
+      { method: 'POST' }
+    )) as { data: Item };
+    return body.data;
+  }
+
   /** An image needs alt text; a PDF document needs a title, its link text (ADR-053). */
   async upload(
     file: string,
