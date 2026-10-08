@@ -96,9 +96,8 @@ The codes are `VALIDATION_ERROR` (400), `UNAUTHENTICATED` (401), `FORBIDDEN` (40
 | GET `/search?q=`                 | Header search          | `q` is 2–100 chars. Returns `{ practiceAreas: [], people: [], insights: [] }`, max 5 each                                                                                                                                                                                                |
 | POST `/enquiries`                | Discuss a Mandate      | 201 `{ data: { reference: "ENQ-7F3K2A" } }`                                                                                                                                                                                                                                              |
 | POST `/messages`                 | Message the firm       | 201 `{ data: { reference } }`                                                                                                                                                                                                                                                            |
-| POST `/newsletter/subscriptions` | Footer newsletter form | `{ email, consent, consentTextVersion, turnstileToken, website }`. 202 `{ data: { status: 'confirmation_sent' } }` for every address; emails a confirm link (ADR-065)                                                                                                                    |
-| POST `/newsletter/confirm`       | Confirm page           | `{ token }` from the emailed link. 200 `{ data: { status: 'subscribed' } }`; 404 if expired (7 days) or used                                                                                                                                                                             |
-| POST `/newsletter/unsubscribe`   | Unsubscribe page       | `{ token }` from any newsletter email. Always 200 `{ data: { status: 'unsubscribed' } }` for a well-formed token                                                                                                                                                                         |
+| POST `/newsletter/subscriptions` | Footer newsletter form | `{ email, consent, consentTextVersion, turnstileToken, website }`. 201 `{ data: { status: 'subscribed' } }` for every address; nothing is emailed (ADR-067)                                                                                                                              |
+| POST `/newsletter/unsubscribe`   | Unsubscribe form       | `{ email }`. Deletes it from the list. Always 200 `{ data: { status: 'unsubscribed' } }`                                                                                                                                                                                                 |
 | POST `/jobs/:id/applications`    | Send your CV           | multipart: `cv` file + fields. 201 `{ data: { reference } }`                                                                                                                                                                                                                             |
 
 ### What each `/pages/:key` embeds
@@ -124,7 +123,7 @@ Every form includes `consent: true` (required, literal true), `consentTextVersio
 - **Message:** `fullName`, `email`, `phone?`, `subject?` (≤ 160), `message` (10–2000)
 - **Application (multipart):** `fullName`, `email`, `phone`, `coverNote?` (≤ 2000), `cv` (PDF or DOCX, ≤ 5 MB, checked by magic bytes and not just by extension)
 
-Rate limits per IP: 5 per 10 minutes on each form (newsletter subscribe included), 20 per 10 minutes on newsletter confirm and unsubscribe together, 60 per minute on search, and 300 per minute on other public GETs.
+Rate limits per IP: 5 per 10 minutes on each form (newsletter subscribe and unsubscribe included), 60 per minute on search, and 300 per minute on other public GETs.
 
 ## Admin endpoints (`/api/v1/admin`, all require auth)
 
@@ -177,7 +176,7 @@ Rule of thumb: whatever an admin GET returns, minus the fields the server owns, 
 
 **Submissions:** `GET /enquiries`, `GET /enquiries/:id`, `PATCH /enquiries/:id` (status, assignedTo). The same for `/messages` and `/applications`, plus `GET /applications/:id/cv`, which returns `{ url, expiresAt }` (a signed URL with a 5-minute TTL; this access is audited).
 
-**Newsletter (ADR-065):** `GET /newsletter/subscribers` (`?status=pending|subscribed|unsubscribed&q=&page=&pageSize=`, audited), `GET /newsletter/subscribers/export` (CSV of confirmed subscribers: `email,subscribedAt,unsubscribeUrl`; audited, and refused if the audit write fails), `DELETE /newsletter/subscribers/:id` (erasure, 204). There is no admin create: an address must come with its owner's consent.
+**Newsletter (ADR-067):** `GET /newsletter/subscribers` (`?q=&page=&pageSize=`, audited), `GET /newsletter/subscribers/export` (CSV: `email,subscribedAt`; audited, and refused if the audit write fails), `DELETE /newsletter/subscribers/:id` (204). There is no admin create: an address must come with its owner's consent.
 
 **Users & audit (admin role):** `GET|POST /users`, `PATCH /users/:id`, `POST /users/:id/revoke-sessions`, `GET /audit-logs`.
 

@@ -3,28 +3,22 @@
     {
       "id": "665f1a2b3c4d5e6f70819401",
       "email": "ibrahim.danladi@example.com",
-      "status": "pending",
       "consent": {
         "given": true,
         "textVersion": "2026-10",
         "at": "2026-10-06T14:12:00.000Z"
       },
-      "subscribedAt": null,
-      "unsubscribedAt": null,
-      "createdAt": "2026-10-06T14:12:00.000Z"
+      "subscribedAt": "2026-10-06T14:12:00.000Z"
     },
     {
       "id": "665f1a2b3c4d5e6f70819400",
       "email": "adaeze.nwosu@example.com",
-      "status": "subscribed",
       "consent": {
         "given": true,
         "textVersion": "2026-10",
-        "at": "2026-10-01T09:28:00.000Z"
+        "at": "2026-10-01T09:30:00.000Z"
       },
-      "subscribedAt": "2026-10-01T09:30:00.000Z",
-      "unsubscribedAt": null,
-      "createdAt": "2026-10-01T09:28:00.000Z"
+      "subscribedAt": "2026-10-01T09:30:00.000Z"
     }
   ],
   "meta": {

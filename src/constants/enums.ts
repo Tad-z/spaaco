@@ -6,7 +6,6 @@ import type {
   LegalPageKey,
   LinkKind,
   MediaKind,
-  NewsletterSubscriptionStatus,
   PageKey,
   PersonRole,
   WorkMode,
@@ -203,20 +202,6 @@ export const SUBMISSION_STATUSES = {
   values: ['new', 'in_review', 'closed'],
   labels: { new: 'New', in_review: 'In review', closed: 'Closed' },
 } as const satisfies { values: readonly string[]; labels: Record<string, string> };
-
-/** Where an address stands on the newsletter list (ADR-065). */
-export const NEWSLETTER_STATUSES = {
-  values: [
-    'pending',
-    'subscribed',
-    'unsubscribed',
-  ] as const satisfies readonly NewsletterSubscriptionStatus[],
-  labels: {
-    pending: 'Awaiting confirmation',
-    subscribed: 'Subscribed',
-    unsubscribed: 'Unsubscribed',
-  } satisfies Record<NewsletterSubscriptionStatus, string>,
-} as const;
 
 export const APPLICATION_STATUSES = {
   values: ['new', 'shortlisted', 'rejected', 'hired'],

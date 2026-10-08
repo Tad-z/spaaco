@@ -137,12 +137,10 @@ export type EnquiryRequest = Schemas['EnquiryRequest'];
 export type MessageRequest = Schemas['MessageRequest'];
 export type ApplicationRequest = Schemas['ApplicationRequest'];
 
-// --- newsletter (ADR-065) ---
-export type NewsletterSubscriptionStatus = Schemas['NewsletterSubscriptionStatus'];
+// --- newsletter (ADR-067) ---
 export type NewsletterSubscribeRequest = Schemas['NewsletterSubscribeRequest'];
-export type NewsletterSubscribeReceipt = Schemas['NewsletterSubscribeReceipt'];
-export type NewsletterTokenRequest = Schemas['NewsletterTokenRequest'];
-export type NewsletterTokenResult = Schemas['NewsletterTokenResult'];
+export type NewsletterUnsubscribeRequest = Schemas['NewsletterUnsubscribeRequest'];
+export type NewsletterResult = Schemas['NewsletterResult'];
 export type NewsletterSubscriberAdmin = Schemas['NewsletterSubscriberAdmin'];
 
 // --- admin auth and users (Phase 4) ---

@@ -70,7 +70,7 @@ export const isBot = (website: string | undefined): boolean =>
  * an email signed with a stale name is exactly the sort of small wrongness
  * nobody notices until a client does.
  */
-export async function firmName(): Promise<string> {
+async function firmName(): Promise<string> {
   const settings = await Settings.findOne({ key: 'site' })
     .select('firmName')
     .lean<{ firmName: string } | null>();

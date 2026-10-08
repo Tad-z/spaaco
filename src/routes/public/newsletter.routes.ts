@@ -1,24 +1,19 @@
 import { Router } from 'express';
 import {
-  confirmHandler,
   subscribeHandler,
   unsubscribeHandler,
 } from '../../controllers/public/newsletter.controller.js';
 import { validate } from '../../middlewares/validate.middleware.js';
-import {
-  newsletterLimiter,
-  newsletterTokenLimiter,
-} from '../../middlewares/rate-limit.middleware.js';
+import { newsletterLimiter, unsubscribeLimiter } from '../../middlewares/rate-limit.middleware.js';
 import { noStore } from '../../middlewares/cache-headers.middleware.js';
 import {
   newsletterSubscribeBody,
-  newsletterTokenBody,
+  newsletterUnsubscribeBody,
 } from '../../validators/newsletter.validator.js';
 
 /**
- * The newsletter (ADR-065). Subscribing is a form like the others and limited
- * like one; confirming and unsubscribing carry an unguessable token, so their
- * limit only stops a flood.
+ * The newsletter (ADR-067). Each form has its own per-IP budget, as the other
+ * forms do, so subscribing does not use up a visitor's unsubscribe attempts.
  */
 export const newsletterRoutes: Router = Router();
 
@@ -31,17 +26,9 @@ newsletterRoutes.post(
 );
 
 newsletterRoutes.post(
-  '/newsletter/confirm',
-  noStore,
-  newsletterTokenLimiter,
-  validate({ body: newsletterTokenBody }),
-  confirmHandler
-);
-
-newsletterRoutes.post(
   '/newsletter/unsubscribe',
   noStore,
-  newsletterTokenLimiter,
-  validate({ body: newsletterTokenBody }),
+  unsubscribeLimiter,
+  validate({ body: newsletterUnsubscribeBody }),
   unsubscribeHandler
 );

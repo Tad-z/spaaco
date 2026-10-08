@@ -260,7 +260,7 @@ Five submissions per form, per visitor, per ten minutes. If someone hits it they
 
 **Some buttons have nowhere to go yet.** "View Our Recognitions" on Home comes back with `href: null`, and the careers empty state gives you only the "Send your CV" label. Render them however the design wants a pending button to look; the destinations will arrive as data, not code.
 
-**The newsletter needs three pieces, and the chat assistant none.** The footer form posts to `POST /newsletter/subscriptions` and shows "check your inbox" whatever the address. The emails link to two pages you build, `/newsletter/confirm?token=…` and `/newsletter/unsubscribe?token=…`, and each posts its `token` to the API endpoint of the same name (ADR-065). The chat assistant is not built; do not wire it to anything.
+**The newsletter is two small forms, and the chat assistant none.** The footer form posts `{ email, consent: true, consentTextVersion, turnstileToken, website: '' }` to `POST /newsletter/subscriptions` and shows "You're subscribed". An unsubscribe form, wherever the design puts it, posts `{ email }` to `POST /newsletter/unsubscribe` and shows "You've been unsubscribed". Both answers are the same for every address. Nothing is emailed (ADR-067). The chat assistant is not built; do not wire it to anything.
 
 **Unpublished content does not exist as far as you are concerned.** The firm works on things as drafts. A draft attorney is not in the list and their URL returns 404. You will never accidentally show work in progress.
 

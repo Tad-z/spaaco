@@ -131,11 +131,6 @@ const envSchema = z.object({
   // No NOTIFY_* addresses: a form's notification goes to the inbox of the role
   // that handles it, read from that account's profile (ADR-043).
   ADMIN_DASHBOARD_URL: z.string().url().default('http://localhost:3001'),
-  /**
-   * The public website. Newsletter confirmation and unsubscribe links point at
-   * its pages, which post the token back to this API (ADR-065).
-   */
-  PUBLIC_SITE_URL: z.string().url().default('http://localhost:3000'),
   RETENTION_ENQUIRY_DAYS: z.coerce.number().int().positive().max(3650).default(730),
   RETENTION_APPLICATION_DAYS: z.coerce.number().int().positive().max(3650).default(365),
 

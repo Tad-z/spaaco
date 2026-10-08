@@ -232,10 +232,9 @@ Images and documents the firm edits (heroes, practice area photos, portraits, in
 `job` → Job, `fullName`, `email`, `phone`, `coverNote?`, `cv` { storageKey, originalName, mimeType, bytes, scanStatus: `pending|clean|infected` }, `consent`, `status` (`new|shortlisted|rejected|hired`), `createdAt`.
 **TTL index** using `RETENTION_APPLICATION_DAYS`. A TTL deletion must also delete the stored CV file, via a scheduled cleanup job that removes orphaned files.
 
-### `newsletterSubscribers` (ADR-065)
+### `newsletterSubscribers` (ADR-067)
 
-`email` (unique, lowercase), `status` (`pending|subscribed|unsubscribed`), `consent` (as above, from the latest subscribe), `confirmTokenHash?` (sha256, single use; partial index), `unsubscribeToken` (unique, stored as issued), `subscribedAt?`, `unsubscribedAt?`, `expiresAt?`, `ipHash`, `userAgent`, timestamps.
-**TTL index** on `expiresAt` (expires at that date): 7 days ahead while pending, 30 days after unsubscribing, and null while subscribed.
+`email` (unique, lowercase), `consent` (as above, from the latest subscribe), `ipHash`, `userAgent`, timestamps (`createdAt` is the subscription date). A record exists only while subscribed: unsubscribing deletes it. No TTL.
 
 ## System collections
 
