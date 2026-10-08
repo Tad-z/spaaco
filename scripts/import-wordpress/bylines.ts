@@ -20,6 +20,8 @@ export interface KnownPerson {
   readonly slug: string;
   readonly firstName: string;
   readonly lastName: string;
+  /** False for a draft profile, which the public site does not show. */
+  readonly published?: boolean;
 }
 
 export type Credit =

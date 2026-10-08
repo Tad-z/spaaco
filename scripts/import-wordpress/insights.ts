@@ -178,8 +178,12 @@ async function writerFields(
 
     const linked =
       writer.slug === undefined ? undefined : (PEOPLE_SLUG_MAP[writer.slug] ?? writer.slug);
+    // A draft profile is hidden on the site, so that writer is listed by name
+    // and photo instead, or they would vanish from the page.
     const person = people.find(
-      (p) => p.slug === linked || sameWriter(writer.name, `${p.firstName} ${p.lastName}`)
+      (p) =>
+        p.published !== false &&
+        (p.slug === linked || sameWriter(writer.name, `${p.firstName} ${p.lastName}`))
     );
     const key = person?.id ?? writer.name.toLowerCase();
     if (listed.has(key)) continue;
@@ -217,6 +221,7 @@ export async function importInsights(
     slug: item.slug,
     firstName: String(item.firstName),
     lastName: String(item.lastName),
+    published: item.status === 'published',
   }));
 
   if (ctx.authorsOnly || ctx.bylinesOnly) {
@@ -523,8 +528,16 @@ async function tidyByline(
     payload.authorPhoto = authorPhoto;
     counts.authorPhotos += 1;
   }
-  const hasCoAuthors = Array.isArray(current.coAuthors) && current.coAuthors.length > 0;
-  if (coAuthors.length > 0 && !hasCoAuthors) {
+  const stored: unknown[] = Array.isArray(current.coAuthors) ? current.coAuthors : [];
+  // A list naming a draft attorney shows them nowhere, so it is redone.
+  const drafts = new Set(people.filter((p) => p.published === false).map((p) => p.id));
+  const hidesSomeone = stored.some(
+    (entry) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      drafts.has(String((entry as { person?: unknown }).person))
+  );
+  if (coAuthors.length > 0 && (stored.length === 0 || hidesSomeone)) {
     payload.coAuthors = coAuthors;
     counts.withCoAuthors += 1;
     counts.coAuthors += coAuthors.length;
