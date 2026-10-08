@@ -53,8 +53,10 @@ export function newReport(
       // ADR-064: old bylines removed, writer photos and co-authors set.
       bylines: {
         bodiesCleaned: 0,
+        excerptsRemade: 0,
         authorPhotos: 0,
         withCoAuthors: 0,
+        recredited: [] as { slug: string; from: string; to: string }[],
         coAuthors: 0,
         patched: 0,
         writersWithoutPhoto: {} as Record<string, number>,
@@ -132,7 +134,10 @@ export function printSummary(report: Report): void {
 
   const b = insights.bylines;
   line('old bylines removed from bodies', b.bodiesCleaned);
+  line('excerpts remade from the clean body', b.excerptsRemade);
   line('writer photos set', b.authorPhotos);
+  line('author credit corrected', b.recredited.length);
+  for (const r of b.recredited.slice(0, 20)) console.log(`    - ${r.slug}: ${r.from} → ${r.to}`);
   line('articles given co-authors', `${String(b.withCoAuthors)} (${String(b.coAuthors)} people)`);
   const noPhoto = Object.entries(b.writersWithoutPhoto);
   line('writers with no photo found', noPhoto.length);

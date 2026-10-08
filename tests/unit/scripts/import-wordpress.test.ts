@@ -24,6 +24,7 @@ import {
 } from '../../../scripts/import-wordpress/html.js';
 import {
   authorFields,
+  creditWithWriters,
   backendSlug,
   categoryTargets,
   classify,
@@ -32,6 +33,7 @@ import {
   bylineWriters,
   creditFor,
   leadingByline,
+  sameWriter,
   stripLeadingByline,
 } from '../../../scripts/import-wordpress/bylines.js';
 import { articleSource } from '../../../scripts/import-wordpress/redirects.js';
@@ -443,5 +445,96 @@ describe('writers in a byline (ADR-064)', () => {
   it('does not take a place for a writer', () => {
     expect(bylineWriters('<p>Issued by the firm, Ogun State</p>', profiles)).toEqual([]);
     expect(bylineWriters('<p>By Ogun State Government</p>', profiles)).toEqual([]);
+  });
+});
+
+describe('photo-captioned bylines (ADR-064)', () => {
+  const title = '<p><strong>JUSTICE DELAYED</strong></p>';
+  const photo =
+    '<a href="https://res.cloudinary.com/x/image/upload/v1/spa-ajibade/h.jpg">View image</a>';
+
+  it('removes a photo captioned with a name alone, in its block or the next', () => {
+    expect(
+      stripLeadingByline(`<p>${photo}<br /><strong>Hilda Omono Okoduwa</strong></p>${title}`)
+    ).toBe(title);
+    expect(stripLeadingByline(`<p>${photo}</p><p><strong>Sandra Eke</strong></p>${title}`)).toBe(
+      title
+    );
+  });
+
+  it('keeps a title that follows a photo, which is not a name', () => {
+    const body = `<p>${photo}</p><p><strong>DOUBLE ALLOCATION OF LAND</strong></p>`;
+
+    expect(stripLeadingByline(body)).toBe(body);
+  });
+
+  it("removes a byline run into a date, a department byline, and a byline sharing the title's paragraph", () => {
+    expect(
+      stripLeadingByline(`<p>2nd May 2024<br /> By <strong>Christian Oyewale</strong></p>${title}`)
+    ).toBe(title);
+    expect(
+      stripLeadingByline(
+        `<p>By <strong>Capital Market and Corporate Finance Department</strong></p>${title}`
+      )
+    ).toBe(title);
+    expect(
+      stripLeadingByline(
+        '<p><a href="https://spaajibade.com/people/john-onyido/">By Dr. John Onyido</a><br /><strong>TITLE</strong></p>'
+      )
+    ).toBe('<p><strong>TITLE</strong></p>');
+  });
+
+  it('reads the writers from a caption, only when the photo is named after them', () => {
+    const head = (file: string, caption: string): string =>
+      `<img src="https://spaajibade.com/wp-content/uploads/2026/04/${file}" alt="" /> <strong>${caption}</strong><p style="text-align: center;">T</p>`;
+
+    expect(bylineWriters(head('Hilda-223x300.jpg', 'Hilda Omono Okoduwa'), [])).toEqual([
+      { name: 'Hilda Omono Okoduwa', photo: '2026/04/Hilda-223x300.jpg' },
+    ]);
+    expect(bylineWriters(head('Header-sandra.png', 'Intellectual Property'), [])).toEqual([]);
+  });
+
+  it('splits two names under two photos', () => {
+    const html =
+      '<img src="/wp-content/uploads/Omoniyi.jpg" /> <img src="/wp-content/uploads/patricia.jpg" />Sunday Omoniyi Patricia Magaji <p style="text-align: center;">T</p>';
+
+    expect(bylineWriters(html, []).map((writer) => writer.name)).toEqual([
+      'Sunday Omoniyi',
+      'Patricia Magaji',
+    ]);
+  });
+
+  it('ignores "by" in the opening sentence', () => {
+    const html =
+      '<p>The deadline has been extended by Mr. Kashif Inuwa, Director General of NITDA.</p>'.padStart(
+        400,
+        ' '
+      );
+
+    expect(bylineWriters(`<p>${'Some opening text. '.repeat(15)}</p>${html}`, [])).toEqual([]);
+  });
+
+  it('credits a writer named under a photo instead of the firm, and a named writer to their profile', () => {
+    const people = [
+      { id: 'h1', slug: 'hilda-okoduwa', firstName: 'Hilda', lastName: 'Okoduwa', published: true },
+    ];
+
+    expect(sameWriter('Hilda Omono Okoduwa', 'Hilda Okoduwa')).toBe(true);
+    expect(creditWithWriters({ kind: 'firm' }, [{ name: 'Hilda Omono Okoduwa' }], people)).toEqual({
+      kind: 'person',
+      id: 'h1',
+      name: 'Hilda Okoduwa',
+    });
+    expect(creditWithWriters({ kind: 'firm' }, [{ name: 'Blessing Nwankwo' }], people)).toEqual({
+      kind: 'named',
+      name: 'Blessing Nwankwo',
+    });
+    expect(
+      creditWithWriters(
+        { kind: 'firm' },
+        [{ name: 'Hilda Okoduwa' }],
+        [{ ...people[0]!, published: false }]
+      )
+    ).toEqual({ kind: 'named', name: 'Hilda Okoduwa' });
   });
 });

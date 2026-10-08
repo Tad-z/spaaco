@@ -151,14 +151,28 @@ export function creditFor(
     : { kind: 'person', id: bySlug.id, name: fullName(bySlug) };
 }
 
-/** Same person: the first and last words of `name` both appear in `other`. */
-export function sameWriter(name: string, other: string): boolean {
+/** The first and last words of `name` both appear in `other`. */
+function namedIn(name: string, other: string): boolean {
   const mine = words(name.replace(HONORIFIC, ''));
-  const theirs = new Set(words(other));
+  const theirs = words(other);
   const first = mine[0];
   const last = mine.at(-1);
-  return first !== undefined && last !== undefined && theirs.has(first) && theirs.has(last);
+  // A clipped surname is still theirs: "Olayink" is "Olayinka".
+  const has = (word: string): boolean =>
+    theirs.some(
+      (t) =>
+        t === word ||
+        (Math.min(t.length, word.length) >= 6 && (t.startsWith(word) || word.startsWith(t)))
+    );
+  return first !== undefined && last !== undefined && has(first) && has(last);
 }
+
+/**
+ * Same person, whichever of the two carries a middle name: "Hilda Omono
+ * Okoduwa" is "Hilda Okoduwa", and the other way round.
+ */
+export const sameWriter = (name: string, other: string): boolean =>
+  namedIn(name, other) || namedIn(other, name);
 
 /** A writer named in an article's byline, with the photo shown beside them there. */
 export interface BylineWriter {
@@ -192,6 +206,65 @@ const UPLOAD_PATH = /\/wp-content\/uploads\/([^"'\s<>?#]+)/i;
 const photoWords = (src: string, alt: string): string =>
   `${decodeURIComponent(src.split('/').pop() ?? '').replace(/[-_.]+/g, ' ')} ${alt}`;
 
+/** "Peter Olalere, MCIArb" → "Peter Olalere"; capitals fixed as for a byline. */
+const profileName = (profile: ExportProfile): string => {
+  const bare = profile.name.split(',')[0] ?? profile.name;
+  return cleanName(bare) ?? bare.trim();
+};
+
+/**
+ * A run of names that is two writers' names side by side, one per photo:
+ * "Sunday Omoniyi Patricia Magaji" under two photos.
+ */
+function nameLine(text: string, photos = 1): string[] {
+  const parts = text.split(/\s+/).filter(Boolean);
+  // A title, "Double Allocation Of Land", not a name.
+  if (parts.some((part) => /^(?:of|the|and|in|on|for|to|a|an|with|at|from|is|are|by)$/i.test(part)))
+    return [];
+  if (photos > 1 && parts.length === photos * 2) {
+    const pairs = Array.from({ length: photos }, (_, index) =>
+      cleanName(parts.slice(index * 2, index * 2 + 2).join(' '))
+    );
+    if (pairs.every((name) => name !== null)) return pairs;
+  }
+  const single = cleanName(text);
+  return single === null ? [] : [single];
+}
+
+/**
+ * Writers shown as a photo with a caption and no "By": the caption is their
+ * name (ADR-064). With no caption at all, a photo whose file is named after
+ * someone in the export is theirs, "Abiodun-Ogunnubi340.jpg".
+ */
+function photoCaptionNames(
+  head: string,
+  photos: readonly { words: string }[],
+  profiles: readonly ExportProfile[]
+): string[] {
+  if (photos.length === 0) return [];
+
+  const caption = head
+    .replace(/<img\b[^>]*>/gi, '\n')
+    .split(/<\/?(?:p|div|strong|b|br|h[1-6]|span|a|em|u)\b[^>]*>|\n/i)
+    .map((segment) => blockText(segment))
+    .find((segment) => !NOTHING_LEFT.test(segment));
+  // A caption counts only when a photo is named after the person in it
+  // ("Hilda-223x300.jpg" under "Hilda Omono Okoduwa"), so a heading such as
+  // "Intellectual Property" under a banner is never taken for a writer.
+  const named = caption === undefined ? [] : nameLine(caption, photos.length);
+  const pictured = (name: string): boolean =>
+    photos.some((photo) => {
+      const tokens = new Set(words(photo.words));
+      return words(name).some((word) => word.length > 2 && tokens.has(word));
+    });
+  if (named.length > 0 && named.every(pictured)) return named;
+
+  return photos.flatMap((photo) => {
+    const profile = profiles.find((p) => namedIn(profileName(p), photo.words));
+    return profile === undefined ? [] : [profileName(profile)];
+  });
+}
+
 /**
  * Everyone named at the top of an article, in byline order, each with the
  * photo beside them there (ADR-064). The names come from the "By …" line;
@@ -219,22 +292,26 @@ export function bylineWriters(
     ),
   ];
 
-  const byline =
+  const found =
     /(?:^|>|\s)By\s*:?\s*([\s\S]{2,300}?)(?:<\/(?:p|h[1-6]|div|li)>|<br\s*\/?>|<img\b|\r?\n)/i.exec(
       head
     );
+  // Only a byline near the top counts, not "extended by Mr. Kashif Inuwa" in
+  // the opening sentence (as `leadingByline`).
+  const byline =
+    found !== null && blockText(head.slice(0, found.index)).length <= 200 ? found : null;
   const names = byline
     ? blockText(byline[1] ?? '')
         .split(/\s+(?:and|&)\s+|\s*[,;|]\s*/)
         .map((part) => cleanName(part))
         .filter((name): name is string => name !== null)
-    : slugs.flatMap((slug) => {
-        const profile = profiles.find((p) => p.slug === slug);
-        if (profile === undefined) return [];
-        // "Peter Olalere, MCIArb" → "Peter Olalere"; capitals fixed as for a byline.
-        const bare = profile.name.split(',')[0] ?? profile.name;
-        return [cleanName(bare) ?? bare.trim()];
-      });
+    : slugs.length > 0
+      ? slugs.flatMap((slug) => {
+          const profile = profiles.find((p) => p.slug === slug);
+          if (profile === undefined) return [];
+          return [profileName(profile)];
+        })
+      : photoCaptionNames(head, photos, profiles);
 
   const unclaimed = [...photos];
   const writers = names.map((name) => {
@@ -283,10 +360,14 @@ const LEADING_BLOCK = /^\s*<(p|h[1-6]|ol|ul)\b[^>]*>([\s\S]*?)<\/\1>\s*/i;
 const NOTHING_LEFT = /^[^\p{L}\p{N}]*$/u;
 
 const isBylineText = (text: string): boolean => {
-  const match = /^by\s*:?\s*(.+)$/i.exec(text);
+  // "2nd May 2024 By Christian Oyewale": a date line run into the byline.
+  const undated = text.replace(/^\d{1,2}(?:st|nd|rd|th)?\s+[A-Z][a-z]+,?\s+\d{4}\s+/, '');
+  const match = /^by\s*:?\s*(.+)$/i.exec(undated);
   if (!match || text.length > 160) return false;
-  const first = (match[1] ?? '').split(/\s+(?:and|&)\s+|\s*[,;|(]\s*/)[0] ?? '';
-  return cleanName(first) !== null || /\b(?:department|unit|team|group|desk)\b/i.test(first);
+  const writers = match[1] ?? '';
+  const first = writers.split(/\s+(?:and|&)\s+|\s*[,;|(]\s*/)[0] ?? '';
+  // "By Capital Market and Corporate Finance Department": the "and" is in the name.
+  return cleanName(first) !== null || /\b(?:department|unit|team|group|desk)\b/i.test(writers);
 };
 
 /**
@@ -300,22 +381,62 @@ const isBylineText = (text: string): boolean => {
  * other block stays, without them.
  *
  * A picture is taken as an author's only when it links to their old profile,
- * or sits at the top of an article that has a byline. Otherwise an image at
- * the top is content, like a group photo of new associates, and stays.
+ * sits at the top of an article that has a byline, or is captioned with a
+ * name alone ("Hilda Omono Okoduwa"), in its block or the next. Otherwise an
+ * image at the top is content, like a group photo of new associates, and
+ * stays. `leadingPhotoIsAuthor` says an uncaptioned first picture is the
+ * writer's, when the caller knows it from the photo's file name.
  */
-export function stripLeadingByline(html: string): string {
-  const blocks: { whole: string; inner: string }[] = [];
+export function stripLeadingByline(
+  html: string,
+  options: {
+    readonly leadingPhotoIsAuthor?: boolean;
+    /** The article's writers: a leading line that is only one of their names goes. */
+    readonly writerNames?: readonly string[];
+  } = {}
+): string {
+  const isWriterLine = (text: string): boolean => {
+    const names = nameLine(text);
+    return (
+      names.length > 0 &&
+      names.every((name) => (options.writerNames ?? []).some((writer) => sameWriter(name, writer)))
+    );
+  };
+  const blocks: { whole: string; inner: string; hasImage: boolean; text: string }[] = [];
   let rest = html;
   while (blocks.length < 3) {
     const match = LEADING_BLOCK.exec(rest);
     if (!match) break;
-    blocks.push({ whole: match[0], inner: match[2] ?? '' });
+    const inner = match[2] ?? '';
+    const withoutImages = inner.replace(IMAGE_LINK, '');
+    blocks.push({
+      whole: match[0],
+      inner,
+      hasImage: withoutImages !== inner,
+      text: blockText(withoutImages),
+    });
     rest = rest.slice(match[0].length);
   }
 
-  const hasByline = blocks.some(({ inner }) =>
-    isBylineText(blockText(inner.replace(IMAGE_LINK, '')))
-  );
+  // A photo captioned with a name alone, in the same block or the next.
+  const dropped = new Set<number>();
+  blocks.forEach((block, index) => {
+    if (!block.hasImage) return;
+    const photos = (block.inner.match(IMAGE_LINK) ?? []).length;
+    if (nameLine(block.text, photos).length > 0) {
+      dropped.add(index);
+      return;
+    }
+    if (!NOTHING_LEFT.test(block.text)) return;
+    const next = blocks[index + 1];
+    if (next !== undefined && !next.hasImage && nameLine(next.text).length > 0) {
+      dropped.add(index).add(index + 1);
+    } else if (index === 0 && options.leadingPhotoIsAuthor === true) {
+      dropped.add(index);
+    }
+  });
+
+  const hasByline = dropped.size > 0 || blocks.some(({ text }) => isBylineText(text));
   const withoutPhotos = (inner: string): string => {
     const once = inner
       .replace(BANNER_LINK, '')
@@ -324,10 +445,20 @@ export function stripLeadingByline(html: string): string {
   };
 
   let kept = '';
-  for (const { whole, inner } of blocks) {
-    const remaining = withoutPhotos(inner);
+  for (const [index, { whole, inner }] of blocks.entries()) {
+    if (dropped.has(index)) continue;
+    let remaining = withoutPhotos(inner);
+
+    // "By Dr. John Onyido<br /><strong>TITLE</strong>": the byline and the
+    // title share a paragraph, so only the line before the break goes.
+    const lineBreak = /<br\s*\/?>/i.exec(remaining);
+    if (lineBreak !== null && isBylineText(blockText(remaining.slice(0, lineBreak.index)))) {
+      remaining = remaining.slice(lineBreak.index + lineBreak[0].length);
+    }
+
     const onlyPhotos = NOTHING_LEFT.test(blockText(remaining.replace(PROFILE_LINK, '')));
-    if (onlyPhotos || isBylineText(blockText(remaining))) continue;
+    const text = blockText(remaining);
+    if (onlyPhotos || isBylineText(text) || isWriterLine(text)) continue;
 
     kept +=
       remaining === inner

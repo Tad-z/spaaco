@@ -199,6 +199,44 @@ async function writerFields(
   return { authorPhoto, coAuthors };
 }
 
+/**
+ * An excerpt for an article WordPress gave none: the start of its text,
+ * without the "View image" an inline picture became (ADR-064).
+ */
+export const autoExcerpt = (body: string | null): string | null =>
+  cutAtWord(
+    plainText((body ?? '').replace(/<a\b[^>]*>\s*View image\s*<\/a>/gi, ' ')).trim(),
+    160
+  ) || null;
+
+/** The excerpt an earlier run made from the body as first imported, byline and all. */
+const firstAutoExcerpt = (row: PostRow): string | null =>
+  cutAtWord(plainText(finishHtml(prepareHtml(row.content).html, () => undefined)), 160) || null;
+
+/** A published profile for this name; a draft one is hidden on the site. */
+const publishedProfile = (name: string, people: readonly KnownPerson[]): KnownPerson | undefined =>
+  people.find((p) => p.published !== false && sameWriter(name, `${p.firstName} ${p.lastName}`));
+
+/**
+ * The credit once the byline's writers are known (ADR-064). The firm stood in
+ * for a writer named only under their photo, so the first such writer takes
+ * its place; and a named writer who does have a published profile is credited
+ * to it, "Hilda Omono Okoduwa" to Hilda Okoduwa.
+ */
+export function creditWithWriters(
+  credit: Credit,
+  writers: readonly BylineWriter[],
+  people: readonly KnownPerson[]
+): Credit {
+  const name =
+    credit.kind === 'named' ? credit.name : credit.kind === 'firm' ? writers[0]?.name : undefined;
+  if (name === undefined) return credit;
+  const person = publishedProfile(name, people);
+  return person === undefined
+    ? { kind: 'named', name }
+    : { kind: 'person', id: person.id, name: `${person.firstName} ${person.lastName}` };
+}
+
 const countCredit = (ctx: ImportContext, credit: Credit): void => {
   const { authors } = ctx.report.insights;
   authors[credit.kind] += 1;
@@ -340,7 +378,12 @@ async function importInsight(
 
   // The old byline goes; the page shows the author block instead (ADR-064).
   const finished = finishHtml(prepared.html, (path) => urls.get(path));
-  const body = finished === null ? null : stripLeadingByline(finished) || null;
+  const body =
+    finished === null
+      ? null
+      : stripLeadingByline(finished, {
+          leadingPhotoIsAuthor: bylineWriters(row.content, ctx.profiles).length > 0,
+        }) || null;
   if (body !== finished) report.insights.bylines.bodiesCleaned += 1;
   if (body !== null && body.length > BODY_LIMIT) {
     throw new Error(
@@ -356,8 +399,7 @@ async function importInsight(
   if (document !== null) report.insights.pdfWrappers.push(slug);
 
   const ownExcerpt = plainText(row.excerpt);
-  const excerpt =
-    ownExcerpt === '' ? cutAtWord(plainText(body), 160) || null : cutAtWord(ownExcerpt, 1000);
+  const excerpt = ownExcerpt === '' ? autoExcerpt(body) : cutAtWord(ownExcerpt, 1000);
   if (ownExcerpt.length > 1000) report.insights.truncated.push({ slug, field: 'excerpt' });
 
   let coverImage: string | null = null;
@@ -378,7 +420,11 @@ async function importInsight(
 
   // WordPress's author was the account that posted it; the writer is in the
   // article's byline (ADR-060).
-  const credit = creditFor(row.content, row.slug, people);
+  const credit = creditWithWriters(
+    creditFor(row.content, row.slug, people),
+    bylineWriters(row.content, ctx.profiles),
+    people
+  );
   countCredit(ctx, credit);
   const writers = await writerFields(row, credit, people, key, ctx);
   countWriters(ctx, writers);
@@ -507,37 +553,80 @@ async function tidyByline(
   const key = `insights/${slug}`;
   const counts = ctx.report.insights.bylines;
   const payload: Record<string, unknown> = {};
+  const writers = bylineWriters(row.content, ctx.profiles);
+  const stored = storedCredit(current, people);
+  const credit = creditWithWriters(stored, writers, people);
 
-  if (typeof current.body === 'string') {
-    const body = stripLeadingByline(current.body);
-    if (body !== current.body && body !== '') {
-      payload.body = body;
+  const before = typeof current.body === 'string' ? current.body : null;
+  let body = before;
+  if (body !== null) {
+    const cleaned = stripLeadingByline(body, {
+      leadingPhotoIsAuthor: writers.length > 0,
+      writerNames: [
+        ...writers.map((writer) => writer.name),
+        ...(stored.kind === 'firm' ? [] : [stored.name]),
+        ...(credit.kind === 'firm' ? [] : [credit.name]),
+      ],
+    });
+    if (cleaned !== body && cleaned !== '') {
+      payload.body = cleaned;
+      body = cleaned;
       counts.bodiesCleaned += 1;
     }
   }
 
-  const { authorPhoto, coAuthors } = await writerFields(
-    row,
-    storedCredit(current, people),
-    people,
-    key,
-    ctx
-  );
-  const named = typeof current.authorName === 'string' && current.authorName !== '';
-  if (authorPhoto !== null && named && typeof current.authorPhoto !== 'string') {
+  // The excerpt the import made from the body started with the byline too
+  // ("View image Hilda Omono Okoduwa …"). Remade from the clean body, but
+  // only while it is still the import's own (made by the first import or by
+  // an earlier run of this): one the firm wrote is kept. A photo gallery with
+  // no text is left with no excerpt rather than "View image View image".
+  const currentExcerpt = typeof current.excerpt === 'string' ? current.excerpt : null;
+  if (plainText(row.excerpt) === '' && currentExcerpt !== null) {
+    const ours =
+      currentExcerpt === firstAutoExcerpt(row) ||
+      currentExcerpt === autoExcerpt(before) ||
+      /View image|^\s*By\s+[A-Z]|^\s*\d{1,2}(?:st|nd|rd|th)?\s+[A-Z][a-z]+,?\s+\d{4}/.test(
+        currentExcerpt
+      );
+    const remade = autoExcerpt(body);
+    if (ours && remade !== currentExcerpt) {
+      payload.excerpt = remade;
+      counts.excerptsRemade += 1;
+    }
+  }
+  const recredited = JSON.stringify(credit) !== JSON.stringify(stored);
+  if (recredited) {
+    Object.assign(payload, authorFields(credit), { authorPhoto: null });
+    counts.recredited.push({
+      slug,
+      from: stored.kind === 'firm' ? 'the firm' : stored.name,
+      to: credit.kind === 'firm' ? 'the firm' : credit.name,
+    });
+  }
+
+  const { authorPhoto, coAuthors } = await writerFields(row, credit, people, key, ctx);
+  const hasPhoto = typeof current.authorPhoto === 'string' && !recredited;
+  if (authorPhoto !== null && credit.kind === 'named' && !hasPhoto) {
     payload.authorPhoto = authorPhoto;
     counts.authorPhotos += 1;
   }
-  const stored: unknown[] = Array.isArray(current.coAuthors) ? current.coAuthors : [];
-  // A list naming a draft attorney shows them nowhere, so it is redone.
+
+  const storedList: unknown[] = Array.isArray(current.coAuthors) ? current.coAuthors : [];
+  // A list that names a draft attorney (shown nowhere), or names by hand
+  // someone who has a published profile, is redone.
   const drafts = new Set(people.filter((p) => p.published === false).map((p) => p.id));
-  const hidesSomeone = stored.some(
-    (entry) =>
-      typeof entry === 'object' &&
-      entry !== null &&
-      drafts.has(String((entry as { person?: unknown }).person))
-  );
-  if (coAuthors.length > 0 && (stored.length === 0 || hidesSomeone)) {
+  const stale = storedList.some((entry) => {
+    if (typeof entry !== 'object' || entry === null) return false;
+    const { person, name } = entry as { person?: unknown; name?: unknown };
+    return (
+      drafts.has(String(person)) ||
+      (typeof name === 'string' && publishedProfile(name, people) !== undefined)
+    );
+  });
+  if (
+    JSON.stringify(coAuthors) !== JSON.stringify(storedList) &&
+    (storedList.length === 0 || stale || recredited)
+  ) {
     payload.coAuthors = coAuthors;
     counts.withCoAuthors += 1;
     counts.coAuthors += coAuthors.length;
