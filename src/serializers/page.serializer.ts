@@ -1,7 +1,16 @@
-import type { FilterOption, Hero, IconItem, Link, SectionHeader, Seo, Stat } from '../types/api.js';
+import type {
+  FilterOption,
+  Hero,
+  IconItem,
+  Link,
+  PersonRoleFilter,
+  SectionHeader,
+  Seo,
+  Stat,
+} from '../types/api.js';
 import type { IIconItem, ILink } from '../interfaces/common.interface.js';
 import type { IMedia } from '../interfaces/media.interface.js';
-import { INSIGHT_CATEGORIES, PERSON_ROLES, PUBLIC_INSIGHT_CATEGORIES } from '../constants/enums.js';
+import { INSIGHT_CATEGORIES, PUBLIC_INSIGHT_CATEGORIES } from '../constants/enums.js';
 import { resolveStatValue } from '../helpers/computed-stats.helper.js';
 import type { StatCounts } from '../helpers/computed-stats.helper.js';
 import { toImages, toNullableImage } from './image.serializer.js';
@@ -83,15 +92,14 @@ export const toStat = (stat: StatSource, counts: StatCounts): Stat => ({
 
 /**
  * Filter tabs. An empty `value` means "no filter", which is how the designs'
- * "Our Attorneys" and "All insights & news" tabs behave.
+ * "All insights & news" tab behaves. The People page has no such tab: its
+ * first tab, Management, is the default (ADR-068).
  */
-export const ROLE_FILTERS: readonly FilterOption[] = [
-  { value: '', label: 'Our Attorneys' },
+export const ROLE_FILTERS: readonly (FilterOption & { value: PersonRoleFilter })[] = [
+  { value: 'management', label: 'Management' },
   { value: 'partner', label: 'Partners' },
-  { value: 'associate_partner', label: PERSON_ROLES.labels.associate_partner + 's' },
-  { value: 'senior_associate', label: PERSON_ROLES.labels.senior_associate + 's' },
-  { value: 'associate', label: PERSON_ROLES.labels.associate + 's' },
-  { value: 'trainee_associate', label: PERSON_ROLES.labels.trainee_associate + 's' },
+  { value: 'associate', label: 'Associates' },
+  { value: 'consultant', label: 'Consultants' },
 ];
 
 /** The public tabs: `pro_bono` is the Responsible Business grid, not a tab (ADR-049). */

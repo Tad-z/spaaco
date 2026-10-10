@@ -221,14 +221,20 @@ Every hero's pictures are `images`, an array (three slides on Home, one elsewher
   `GET /insights?category=pro_bono`.
 
 Filter tabs (`roleFilters`, `categoryFilters`) are `{ value, label }`. An **empty `value`**
-means "no filter" — that's the "Our Attorneys" and "All insights & news" tab. Pass a non-empty
-`value` straight through as the `role` or `category` query parameter.
+means "no filter" — that's the "All insights & news" tab. Pass a non-empty `value` straight
+through as the `role` or `category` query parameter.
 
-One thing to know about `role`: these are **tab groups, not strictly the stored role**.
-`role=partner` also returns the managing partner, because the designs have a "Partners" tab
-and no Managing Partner tab. So a result returned under the Partners tab can come back with
-`role: "managing_partner"` — render `roleLabel` and don't assume it equals the filter you
-sent.
+The People tabs are Management, Partners, Associates and Consultants (ADR-068). There is no
+"all" tab, so open on the first one. These are **tab groups, not stored roles**: Management is
+whoever the firm ticks (`featuredInLeadership`, the same list as the Home leadership row),
+Partners is managing partner to associate partner, and Associates is senior associate to
+trainee associate. A result can come back with a different `role` from the tab you sent, so
+render `roleLabel`.
+
+**Two new roles, `executive` and `consultant` (ADR-068).** Accept them wherever you validate
+`role`, and add them to the dashboard's role dropdown. An `executive` is management who isn't
+a lawyer (the COO); they appear only under Management, titled by their `jobTitle`. Label the
+`featuredInLeadership` checkbox "Management".
 
 ### Insight cards
 

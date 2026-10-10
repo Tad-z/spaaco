@@ -17,12 +17,12 @@ import type { PreviewOptions } from '../helpers/published-filter.helper.js';
 import { toSkip } from '../helpers/pagination.helper.js';
 import { PERSON_ROLES } from '../constants/enums.js';
 import { ROLE_RANK } from '../config/constants.js';
-import type { PersonRole } from '../types/api.js';
+import type { PersonRole, PersonRoleFilter } from '../types/api.js';
 
 export type PersonWithPhoto = IPersonWithPhoto;
 
 export interface ListPeopleOptions extends PreviewOptions {
-  readonly role?: PersonRole;
+  readonly role?: PersonRoleFilter;
   /** A practice area slug: the directory's "Practice Area" dropdown (ADR-054). */
   readonly practiceArea?: string;
   readonly sort: 'seniority' | 'name_asc' | 'name_desc';
@@ -36,14 +36,25 @@ const ROLE_ORDER: readonly string[] = [...PERSON_ROLES.values].sort(
 );
 
 /**
- * The directory tabs are groups, not stored roles: the Partners tab includes
- * the managing partner, because the designs have no separate tab for them
- * (ADR-024).
+ * The directory tabs that span several roles (ADR-068). An `executive` is in
+ * none of them: they are management, not lawyers, so they show only on the
+ * Management tab. Any other value matches its own role exactly.
  */
-function roleFilter(role: PersonRole | undefined): Record<string, unknown> {
+const ROLE_GROUPS: Partial<Record<PersonRoleFilter, readonly PersonRole[]>> = {
+  partner: ['managing_partner', 'partner', 'associate_partner'],
+  associate: ['senior_associate', 'associate', 'trainee_associate'],
+};
+
+/**
+ * Management is a checkbox, not a rank: whoever the firm ticks, whatever their
+ * role. It is the same list as the Home leadership row (ADR-068).
+ */
+function roleFilter(role: PersonRoleFilter | undefined): Record<string, unknown> {
   if (role === undefined) return {};
-  if (role === 'partner') return { role: { $in: ['managing_partner', 'partner'] } };
-  return { role };
+  if (role === 'management') return { featuredInLeadership: true };
+
+  const group = ROLE_GROUPS[role];
+  return group ? { role: { $in: group } } : { role };
 }
 
 /**
@@ -86,6 +97,10 @@ export async function listPeople(
   };
 
   let sortStage: PipelineStage.Sort['$sort'] = { roleRank: 1, order: 1, firstName: 1, lastName: 1 };
+  // The firm orders management by hand, and the tab must match the Home row.
+  if (options.sort === 'seniority' && options.role === 'management') {
+    sortStage = { order: 1, firstName: 1, lastName: 1 };
+  }
   if (options.sort === 'name_asc') sortStage = { lastName: 1, firstName: 1 };
   if (options.sort === 'name_desc') sortStage = { lastName: -1, firstName: -1 };
 

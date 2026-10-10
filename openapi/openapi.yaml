@@ -320,7 +320,9 @@ paths:
       summary: Attorney directory
       description: |
         Paginated attorney directory. The default sort is `seniority`: role rank first
-        (managing partner through trainee associate), then the manual order, then first name and last name.
+        (managing partner through consultant), then the manual order, then first name and last name.
+        The Management tab (`role=management`) instead sorts by the manual order alone, exactly
+        like the Home leadership row, because both show the same people (ADR-068).
 
         `role` and `practiceArea` combine: the designs' role tabs sit alongside a "Practice Area"
         dropdown (labelled "Sort By" on screen), and both apply at once.
@@ -5195,14 +5197,19 @@ components:
       in: query
       required: false
       description: |
-        Filter the directory by role. Omit for every attorney.
+        Filter the directory by tab. Omit for every person.
 
-        These are the directory's **tab groups**, not strictly the stored role:
-        `partner` also returns the managing partner, because the designs have a
-        "Partners" tab and no separate Managing Partner tab. Every other value
-        matches its role exactly. The `role` field on each result is always the
-        attorney's own role, so a person returned under `partner` may come back
-        with `role: "managing_partner"`.
+        These are the directory's **tab groups**, not strictly the stored role (ADR-068):
+        - `management`: everyone the firm has marked as management (`featuredInLeadership`),
+          whatever their role. Sorted by the manual order, like the Home leadership row.
+        - `partner`: managing partner, partners and associate partners.
+        - `associate`: senior associates, associates and trainee associates.
+        - `consultant`: consultants.
+
+        Every other value matches its role exactly. An `executive` is in no group, so they
+        appear only under `management`. The `role` field on each result is always the
+        person's own role, so a person returned under `partner` may come back with
+        `role: "associate_partner"`.
       schema:
         $ref: '#/components/schemas/PersonRoleFilter'
     PersonSort:
@@ -5844,7 +5851,7 @@ components:
       type: object
       additionalProperties: false
       required: [value, label]
-      description: A filter tab. An empty `value` means "no filter", such as "Our Attorneys".
+      description: A filter tab. An empty `value` means "no filter", such as "All insights & news".
       properties:
         value:
           type: string
@@ -5853,28 +5860,36 @@ components:
 
     PersonRole:
       type: string
+      description: |
+        A person's rank, in seniority order. `executive` is for management who are not lawyers,
+        such as the Chief Operating Officer: their `jobTitle` is shown as `roleLabel`, and they
+        appear in no rank tab, only under Management (ADR-068).
       enum:
         - managing_partner
         - partner
+        - executive
         - associate_partner
         - senior_associate
         - associate
         - trainee_associate
+        - consultant
 
     PersonRoleFilter:
       type: string
       enum:
+        - management
         - managing_partner
         - partner
+        - executive
         - associate_partner
         - senior_associate
         - associate
         - trainee_associate
+        - consultant
       description: |
-        The accepted values of the `role` query parameter. Same values as `PersonRole`, but
-        `partner` behaves as a group and also matches `managing_partner`, mirroring the
-        "Partners" tab in the designs. `managing_partner` is accepted for an exact match even
-        though the directory shows no tab for it.
+        The accepted values of the `role` query parameter: `management` plus every `PersonRole`.
+        `management`, `partner` and `associate` are the directory's tab groups (ADR-068); every
+        other value matches its role exactly and has no tab of its own.
 
     InsightCategory:
       type: string
@@ -7241,6 +7256,9 @@ components:
           $ref: '#/components/schemas/SectionHeader'
         roleFilters:
           type: array
+          description: |
+            The directory tabs, in order: Management, Partners, Associates, Consultants. There is
+            no "all" tab, so the first tab is the default. Pass `value` as `?role=` (ADR-068).
           items:
             $ref: '#/components/schemas/FilterOption'
         practiceAreaFilters:
@@ -8046,7 +8064,11 @@ components:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
             - type: 'null'
-        featuredInLeadership: { type: boolean }
+        featuredInLeadership:
+          type: boolean
+          description: |
+            Management. Shown in the Home leadership row and the People page's Management tab,
+            both in `order` (ADR-068).
         legacy:
           oneOf:
             - $ref: '#/components/schemas/LegacyImport'
@@ -8565,6 +8587,9 @@ components:
             - type: 'null'
         featuredInLeadership:
           type: boolean
+          description: |
+            Management. Shown in the Home leadership row and the People page's Management tab,
+            both in `order` (ADR-068).
         legacyImport:
           $ref: '#/components/schemas/LegacyImportWrite'
     PersonUpdate:

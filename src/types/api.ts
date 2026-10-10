@@ -42,6 +42,7 @@ export type Coordinates = Schemas['Coordinates'];
 
 // --- enums ---
 export type PersonRole = Schemas['PersonRole'];
+export type PersonRoleFilter = Schemas['PersonRoleFilter'];
 export type InsightCategory = Schemas['InsightCategory'];
 export type InsightFormat = Schemas['InsightFormat'];
 export type EmploymentType = Schemas['EmploymentType'];

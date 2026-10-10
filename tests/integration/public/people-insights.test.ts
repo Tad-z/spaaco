@@ -55,23 +55,79 @@ describe('GET /api/v1/people', () => {
   });
 
   it('puts people the firm has not ordered by hand in first-name order', async () => {
-    const base = { role: 'associate', status: 'published', order: 7 } as const;
+    const base = { role: 'trainee_associate', status: 'published', order: 7 } as const;
     // Surnames would put Zulu last; first names put Ada first.
     await Person.create({ ...base, firstName: 'Zainab', lastName: 'Adams' });
     await Person.create({ ...base, firstName: 'Ada', lastName: 'Zulu' });
 
-    const res = await request(app).get('/api/v1/people?role=associate');
+    const res = await request(app).get('/api/v1/people?role=trainee_associate');
 
     expect(names(res.body)).toEqual(['Ada Zulu', 'Zainab Adams']);
   });
 
-  it('includes the managing partner in the Partners tab', async () => {
-    const res = await request(app).get('/api/v1/people?role=partner');
+  describe('the tabs (ADR-068)', () => {
+    // A non-lawyer in management, ordered by hand between the two partners.
+    const addExecutive = (): Promise<unknown> =>
+      Person.create({
+        firstName: 'Olubanke',
+        lastName: 'Afolabi-Johnson',
+        role: 'executive',
+        jobTitle: 'Chief Operating Officer',
+        featuredInLeadership: true,
+        status: 'published',
+        order: 1.5,
+      });
 
-    // Two partners plus the managing partner: the designs have no separate
-    // Managing Partner tab, so filtering him out would hide him entirely.
-    expect(res.body.data).toHaveLength(3);
-    expect(names(res.body)).toContain('Dr. Babatunde Ajibade, SAN');
+    it('Management is everyone ticked as management, in the manual order', async () => {
+      await addExecutive();
+
+      const res = await request(app).get('/api/v1/people?role=management');
+
+      expectToMatchContract(res, 'get', '/api/v1/people');
+      expect(names(res.body)).toEqual([
+        'Dr. Babatunde Ajibade, SAN',
+        'Dr. John Onyido',
+        'Olubanke Afolabi-Johnson',
+        'Dr. Kolawole Mayomi',
+      ]);
+      expect(res.body.data[2].roleLabel).toBe('Chief Operating Officer');
+    });
+
+    it('Partners spans managing partner to associate partners, and leaves executives out', async () => {
+      await addExecutive();
+
+      const res = await request(app).get('/api/v1/people?role=partner');
+
+      expect(res.body.data.map((p: { role: string }) => p.role)).toEqual([
+        'managing_partner',
+        'partner',
+        'partner',
+        'associate_partner',
+        'associate_partner',
+        'associate_partner',
+        'associate_partner',
+      ]);
+    });
+
+    it('Associates spans senior associates to trainee associates', async () => {
+      await Person.updateOne({ slug: 'david-essien' }, { role: 'trainee_associate' });
+
+      const res = await request(app).get('/api/v1/people?role=associate');
+
+      expect(res.body.data.map((p: { role: string }) => p.role)).toEqual([
+        'senior_associate',
+        'trainee_associate',
+      ]);
+    });
+
+    it('Consultants matches the consultant role', async () => {
+      await Person.updateOne({ slug: 'david-essien' }, { role: 'consultant' });
+
+      const res = await request(app).get('/api/v1/people?role=consultant');
+
+      expect(names(res.body)).toEqual(['David Essien']);
+      expect(res.body.data[0].roleLabel).toBe('Consultant');
+    });
   });
 
   it('filters other roles exactly', async () => {

@@ -92,10 +92,13 @@ export const CACHE = {
 export const ROLE_RANK = {
   managing_partner: 0,
   partner: 1,
-  associate_partner: 2,
-  senior_associate: 3,
-  associate: 4,
-  trainee_associate: 5,
+  executive: 2,
+  associate_partner: 3,
+  senior_associate: 4,
+  associate: 5,
+  trainee_associate: 6,
+  // Last until the firm says where consultants sit (ADR-068).
+  consultant: 7,
 } as const;
 
 /** The firm's founding year, used by the computed "years since founding" stat. */

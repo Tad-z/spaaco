@@ -39,28 +39,20 @@
     },
     "roleFilters": [
       {
-        "value": "",
-        "label": "Our Attorneys"
+        "value": "management",
+        "label": "Management"
       },
       {
         "value": "partner",
         "label": "Partners"
       },
       {
-        "value": "associate_partner",
-        "label": "Associate Partners"
-      },
-      {
-        "value": "senior_associate",
-        "label": "Senior Associates"
-      },
-      {
         "value": "associate",
         "label": "Associates"
       },
       {
-        "value": "trainee_associate",
-        "label": "Trainee Associates"
+        "value": "consultant",
+        "label": "Consultants"
       }
     ],
     "practiceAreaFilters": [

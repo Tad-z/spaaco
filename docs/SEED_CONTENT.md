@@ -178,7 +178,7 @@ Description (both):
   - subtitle: "Meet the attorneys behind our firm's trusted reputation for strong counsel, thoughtful representation, strategic advocacy, and unwavering commitment to every client we serve." (the design's typo "forstrong" is fixed here)
   - CTAs: Discuss a Mandate / About Us (`/about`)
 - **directorySection:** eyebrow "Our People", title "Behind Every Victory Is A Leadership You Can Trust"
-- **roleFilters:** Our Attorneys (all), Partners, Associate Partners, Senior Associates, Associates, Trainee Associates (v2). The "Partners" filter includes managing_partner.
+- **roleFilters:** Management, Partners, Associates, Consultants (ADR-068, from the firm on 10 Oct 2026). Management: Dr Ajibade, John Onyido, Kola Mayomi, Olubanke Afolabi-Johnson. Consultants: [PENDING FROM FIRM].
 - **practiceAreaFilters (v2):** every published practice area, under a dropdown headed "Practice Area".
 
 ### insights

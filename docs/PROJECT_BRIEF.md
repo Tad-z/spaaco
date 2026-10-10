@@ -81,7 +81,7 @@ Terms of Service and Privacy Policy, linked from the footer. Editable pages; the
 ### Our People — `GET /pages/people` + `GET /people`
 
 1. **Hero:** "Get To Know Our Attorneys" with CTAs Discuss a Mandate / About Us.
-2. **Directory:** role filter tabs (Our Attorneys = all, Partners (including the Managing Partner), Associate Partners, Senior Associates, Associates, Trainee Associates), a "Sort By" dropdown that is really a **practice-area filter** (headed "Practice Area") and combines with the tabs, and a 3-column grid of flip cards paginated 9 per page ("Page 1 of N", with Previous and Next disabled on a single page).
+2. **Directory:** role filter tabs (Management, Partners (managing partner to associate partners), Associates (senior to trainee associates), Consultants; no "all" tab; ADR-068), a "Sort By" dropdown that is really a **practice-area filter** (headed "Practice Area") and combines with the tabs, and a 3-column grid of flip cards paginated 9 per page ("Page 1 of N", with Previous and Next disabled on a single page).
 3. The shared sections.
 
 **Attorney profile — `GET /people/:slug`:** photo with the primary practice area beneath, name, role, LinkedIn, Instagram and email, a bio of two or more paragraphs, Education (an intro and a list of qualifications with years), Memberships, and the six latest publications they wrote.

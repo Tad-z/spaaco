@@ -124,11 +124,22 @@ Every list takes `?page=` and `?pageSize=`. The default page size is 9 (that is 
 GET /api/v1/people?role=partner&practiceArea=tax&page=2
 ```
 
-`role` is one of: `managing_partner`, `partner`, `associate_partner`, `senior_associate`, `associate`, `trainee_associate`.
+The directory has four tabs, and `/pages/people` gives them to you as `roleFilters`: **Management**, **Partners**, **Associates** and **Consultants**. There is no "all" tab, so open on the first one. Pass the tab's `value` as `role`:
+
+| `role`       | Who                                                                |
+| ------------ | ------------------------------------------------------------------ |
+| `management` | Everyone ticked as management, in the firm's own order (see below) |
+| `partner`    | Managing partner, partners and associate partners                  |
+| `associate`  | Senior associates, associates and trainee associates               |
+| `consultant` | Consultants                                                        |
+
+`role` also takes any single role for an exact match. A person's own `role` is one of: `managing_partner`, `partner`, `executive`, `associate_partner`, `senior_associate`, `associate`, `trainee_associate`, `consultant`. An `executive` is management who isn't a lawyer, such as the Chief Operating Officer; show their `roleLabel` (their job title), and expect them only under Management.
+
+**Management is a checkbox, not a rank.** On the person form it is `featuredInLeadership`; label it "Management". It puts the person in the Home leadership row and the Management tab, both in the person's `order`. Ticking or unticking it is how the firm changes its management.
 
 `practiceArea` takes a practice area's slug — it is the "Sort By" dropdown in the design, which is really a filter, headed "Practice Area". It combines with the role tab. `/pages/people` gives you the options as `practiceAreaFilters`. Every card in the list already carries its back face (`cardBio` and the practice-area chips), so flipping a card needs no request.
 
-One thing to know: asking for `role=partner` also returns the Managing Partner. That is deliberate — the directory design has a "Partners" tab and no separate "Managing Partner" tab, so the filter matches the tab rather than the exact job title.
+Because the tabs are groups, a result's `role` won't always equal the `role` you asked for: Partners returns associate partners, and Management returns whoever the firm has ticked. Render `roleLabel`.
 
 `sort` is `seniority` (the default), `name_asc`, or `name_desc`.
 

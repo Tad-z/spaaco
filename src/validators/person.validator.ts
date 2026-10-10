@@ -1,14 +1,13 @@
 import { z } from 'zod';
-import { PERSON_ROLES } from '../constants/enums.js';
+import { PERSON_ROLE_FILTERS } from '../constants/enums.js';
 import { pagination, slug } from './common.validator.js';
 
 /**
- * `role` is a tab group, not strictly the stored role: `partner` also matches
- * the managing partner, because the directory has a Partners tab and no
- * Managing Partner tab (ADR-024).
+ * `role` is a tab, not strictly the stored role: `management`, `partner` and
+ * `associate` are groups (ADR-068).
  */
 export const listPeopleQuery = pagination.extend({
-  role: z.enum(PERSON_ROLES.values).optional(),
+  role: z.enum(PERSON_ROLE_FILTERS).optional(),
   // The "Practice Area" dropdown; combines with `role` (ADR-054).
   practiceArea: slug.optional(),
   sort: z.enum(['seniority', 'name_asc', 'name_desc']).default('seniority'),

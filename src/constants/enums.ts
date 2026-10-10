@@ -8,6 +8,7 @@ import type {
   MediaKind,
   PageKey,
   PersonRole,
+  PersonRoleFilter,
   WorkMode,
 } from '../types/api.js';
 
@@ -32,20 +33,31 @@ export const PERSON_ROLES = {
   values: [
     'managing_partner',
     'partner',
+    'executive',
     'associate_partner',
     'senior_associate',
     'associate',
     'trainee_associate',
+    'consultant',
   ] as const satisfies readonly PersonRole[],
   labels: {
     managing_partner: 'Managing Partner',
     partner: 'Partner',
+    // Management who are not lawyers; their jobTitle is normally shown instead (ADR-068).
+    executive: 'Executive',
     associate_partner: 'Associate Partner',
     senior_associate: 'Senior Associate',
     associate: 'Associate',
     trainee_associate: 'Trainee Associate',
+    consultant: 'Consultant',
   } satisfies Record<PersonRole, string>,
 } as const;
+
+/** What `?role=` accepts on the directory: the Management tab plus every role (ADR-068). */
+export const PERSON_ROLE_FILTERS = [
+  'management',
+  ...PERSON_ROLES.values,
+] as const satisfies readonly PersonRoleFilter[];
 
 export const INSIGHT_CATEGORIES = {
   values: [

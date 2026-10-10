@@ -7,6 +7,7 @@ import {
   LINK_KINDS,
   MEDIA_KINDS,
   PAGE_KEYS,
+  PERSON_ROLE_FILTERS,
   PERSON_ROLES,
   PUBLIC_INSIGHT_CATEGORIES,
   WORK_MODES,
@@ -55,6 +56,12 @@ describe('enums match the contract', () => {
       expect(labels[value], `missing label for "${value}"`).toBeTruthy();
     }
     expect(Object.keys(labels)).toHaveLength(constant.values.length);
+  });
+});
+
+describe('the directory tabs (ADR-068)', () => {
+  it('accepts on ?role= exactly the values PersonRoleFilter declares', () => {
+    expect([...PERSON_ROLE_FILTERS].sort()).toEqual(specEnum('PersonRoleFilter').sort());
   });
 });
 

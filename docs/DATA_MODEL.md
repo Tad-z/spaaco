@@ -68,7 +68,7 @@ Indexes: `{status:1, order:1}` and a text index on `title, summary, overview`.
 | firstName, lastName  | String, required                              |                                                                                                                                       |
 | postNominals         | String                                        | "SAN"                                                                                                                                 |
 | displayName          | virtual                                       | e.g. "Dr. Babatunde Ajibade, SAN"                                                                                                     |
-| role                 | enum, required                                | `managing_partner, partner, associate_partner, senior_associate, associate, trainee_associate`                                        |
+| role                 | enum, required                                | `managing_partner, partner, executive, associate_partner, senior_associate, associate, trainee_associate, consultant` (ADR-068)       |
 | jobTitle             | String, optional                              | Shown as `roleLabel` instead of the role name, e.g. "Chief Operating Officer" (ADR-061). The role still decides the tab and the order |
 | roleLabel            | virtual                                       | "Managing Partner", "Trainee Associate"…                                                                                              |
 | photo                | →Media                                        |                                                                                                                                       |
@@ -83,11 +83,11 @@ Indexes: `{status:1, order:1}` and a text index on `title, summary, overview`.
 | education            | { intro, entries: [{ qualification, year }] } |                                                                                                                                       |
 | memberships          | [String]                                      |                                                                                                                                       |
 | office               | →Office                                       |                                                                                                                                       |
-| featuredInLeadership | Boolean                                       | The Home leadership row                                                                                                               |
+| featuredInLeadership | Boolean                                       | Management: the Home leadership row and the People page's Management tab (ADR-068)                                                    |
 | legacy               | `{ source, legacyId, importedAt }`, nullable  | Set only on imported records (ADR-059). Admin read-only; never public                                                                 |
 
-**Seniority sort** is role rank (managing_partner = 0 … trainee_associate = 5), then `order`, then `firstName`, then `lastName`. People the firm has not placed by hand share an `order`, so they fall into first-name order.
-**Role filtering** treats `partner` as a group that also matches `managing_partner`, because the directory has a "Partners" tab and no Managing Partner tab (DECISIONS Q3).
+**Seniority sort** is role rank (managing_partner = 0, partner, executive, associate_partner, senior_associate, associate, trainee_associate, consultant = 7), then `order`, then `firstName`, then `lastName`. People the firm has not placed by hand share an `order`, so they fall into first-name order.
+**Role filtering** follows the directory tabs (ADR-068): `management` matches `featuredInLeadership: true` and sorts by `order` alone, like the Home row; `partner` matches managing_partner, partner and associate_partner; `associate` matches senior_associate, associate and trainee_associate; any other value matches its role exactly. An `executive` is in no group.
 **Practice-area filtering** (`?practiceArea=<slug>`) matches `practiceAreas` or `primaryPracticeArea`, and combines with `role`.
 People carry no `seo` fields, so `/people/:slug` returns none.
 People and insights both index `{ 'legacy.source': 1, 'legacy.legacyId': 1 }` (sparse), so an import can be found or rolled back with one query.
