@@ -149,6 +149,8 @@ Because the tabs are groups, a result's `role` won't always equal the `role` you
 GET /api/v1/insights?category=articles&practiceArea=tax&sort=oldest
 ```
 
+Each insight has exactly one category, so it shows in exactly one tab (ADR-069). In the dashboard, make the category picker single-select: the API refuses a second category with a 400.
+
 `category` is one of: `firm_news`, `articles`, `insights`, `regulatory_updates`, `events`, `pro_bono`.
 
 **`pro_bono` is special.** Those are the Responsible Business stories, and they appear only when you ask for `category=pro_bono` — never in "All insights & news", another tab, the featured carousel, Home, or a practice area's or attorney's publications. It is not a tab; `/pages/insights` gives you the real tabs as `categoryFilters`.

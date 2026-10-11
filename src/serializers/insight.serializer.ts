@@ -129,23 +129,17 @@ export function toCta(format: IInsight['format']): InsightCta {
 }
 
 /**
- * The two labels a card shows: the first category, then the first practice
- * area. With no practice area, the second category is used instead.
+ * The labels a card shows: its category, then its first practice area. With
+ * no practice area there is one label, never a second category (ADR-069).
  */
 export function toChips(insight: InsightCardSource): string[] {
-  const [firstCategory, secondCategory] = insight.categories;
-  if (firstCategory === undefined) return [];
+  const [category] = insight.categories;
+  if (category === undefined) return [];
 
-  const chips = [INSIGHT_CATEGORIES.labels[firstCategory]];
   const firstArea = insight.practiceAreas?.[0];
-
-  if (firstArea) {
-    chips.push(firstArea.title);
-  } else if (secondCategory !== undefined) {
-    chips.push(INSIGHT_CATEGORIES.labels[secondCategory]);
-  }
-
-  return chips;
+  return firstArea
+    ? [INSIGHT_CATEGORIES.labels[category], firstArea.title]
+    : [INSIGHT_CATEGORIES.labels[category]];
 }
 
 export function toCard(insight: InsightCardSource): InsightCard {

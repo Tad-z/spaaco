@@ -154,7 +154,8 @@ const insightBase = z
     videoUrl: safeUrl.nullable().optional(),
     externalUrl: safeUrl.nullable().optional(),
     document: objectIdRef.optional(),
-    categories: z.array(z.enum(INSIGHT_CATEGORIES.values)).min(1).max(7),
+    // One category: an insight sits in one tab (ADR-069).
+    categories: z.array(z.enum(INSIGHT_CATEGORIES.values)).length(1),
     practiceAreas: z.array(objectId).max(30).optional(),
     author: objectIdRef.optional(),
     authorName: optionalText(120).optional(),

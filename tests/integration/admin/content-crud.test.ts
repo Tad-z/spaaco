@@ -308,6 +308,16 @@ describe('create', () => {
     expect(res.status).toBe(400);
     expect(res.body.error.details[0].path).toBe('videoUrl');
   });
+
+  it('refuses a second category: an insight sits in one tab (ADR-069)', async () => {
+    const res = await request(app)
+      .post(`${base}/insights`)
+      .set('Authorization', auth())
+      .send({ title: 'Two tabs', format: 'article', categories: ['insights', 'articles'] });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details[0].path).toBe('categories');
+  });
 });
 
 describe("an article's link (ADR-051)", () => {

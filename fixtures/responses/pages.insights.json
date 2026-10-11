@@ -157,10 +157,10 @@
         "title": "Inside the 2025 Annual Business Luncheon: What Industry Leaders Are Saying About Nigeria's Economy",
         "excerpt": null,
         "format": "article",
-        "categories": ["events", "firm_news"],
-        "categoryLabels": ["Events", "Firm News"],
+        "categories": ["events"],
+        "categoryLabels": ["Events"],
         "practiceAreas": [],
-        "chips": ["Events", "Firm News"],
+        "chips": ["Events"],
         "author": {
           "type": "firm",
           "name": "SPA AJIBADE & Co.",

@@ -3479,6 +3479,10 @@ export interface components {
             body: string | null;
             format: components["schemas"]["InsightFormat"];
             videoUrl: string | null;
+            /**
+             * @description Exactly one category: an insight sits in one tab (ADR-069). Still a list, so the
+             *     response shape is unchanged.
+             */
             categories: components["schemas"]["InsightCategory"][];
             practiceAreas: components["schemas"]["ObjectId"][];
             /** @description Null means the firm is the author, unless `authorName` names a writer. */
@@ -3765,6 +3769,10 @@ export interface components {
             body?: string | null;
             format: components["schemas"]["InsightFormat"];
             videoUrl?: string | null;
+            /**
+             * @description Exactly one category: an insight sits in one tab (ADR-069). Still a list, so the
+             *     response shape is unchanged.
+             */
             categories: components["schemas"]["InsightCategory"][];
             practiceAreas?: components["schemas"]["ObjectId"][];
             /** @description Null means the firm is the author, unless `authorName` names a writer. */
@@ -3798,6 +3806,10 @@ export interface components {
             body?: string | null;
             format?: components["schemas"]["InsightFormat"];
             videoUrl?: string | null;
+            /**
+             * @description Exactly one category: an insight sits in one tab (ADR-069). Still a list, so the
+             *     response shape is unchanged.
+             */
             categories?: components["schemas"]["InsightCategory"][];
             practiceAreas?: components["schemas"]["ObjectId"][];
             /** @description Null means the firm is the author, unless `authorName` names a writer. */

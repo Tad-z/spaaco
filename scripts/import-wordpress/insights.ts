@@ -69,7 +69,10 @@ export function categoryTargets(
   return { targets, invalid };
 }
 
-/** An article's categories and practice-area slugs, defaulting to `articles`. */
+/**
+ * An article's category and practice-area slugs, defaulting to `articles`.
+ * Only the first category is kept: an insight sits in one tab (ADR-069).
+ */
 export function classify(
   names: string | null | undefined,
   targets: ReadonlyMap<string, CategoryTarget>
@@ -86,9 +89,12 @@ export function classify(
     target?.practiceAreas.forEach((p) => practiceAreas.add(p));
   }
 
-  const defaulted = categories.size === 0;
-  if (defaulted) categories.add('articles');
-  return { categories: [...categories], practiceAreas: [...practiceAreas], defaulted };
+  const [first] = categories;
+  return {
+    categories: [first ?? 'articles'],
+    practiceAreas: [...practiceAreas],
+    defaulted: first === undefined,
+  };
 }
 
 /** The slug to store: the WordPress one when the backend accepts it. */

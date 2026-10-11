@@ -79,8 +79,9 @@ export const PEOPLE_SLUG_MAP: Readonly<Record<string, string>> = {
 
 /**
  * The free-text WordPress position → a role, or null when it is outside the
- * ladder (Consultant, Head of Chambers, HR, COO). Order matters: the more
- * specific titles are checked before the words they contain.
+ * ladder (Head of Chambers, HR, COO). Order matters: the more specific titles
+ * are checked before the words they contain. Consultants have a role since
+ * ADR-068.
  */
 export function roleFor(position: string | null | undefined): PersonRole | null {
   // "Assocate" is a typo on one profile (agreed with TLS).
@@ -92,6 +93,7 @@ export function roleFor(position: string | null | undefined): PersonRole | null 
   if (text.includes(' senior associate ')) return 'senior_associate';
   if (/ (nysc|corps|corper|trainee) /.test(text)) return 'trainee_associate';
   if (text.includes(' associate ')) return 'associate';
+  if (text.includes(' consultant ')) return 'consultant';
 
   return null;
 }

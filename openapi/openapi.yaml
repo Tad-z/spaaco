@@ -8122,6 +8122,10 @@ components:
         categories:
           type: array
           minItems: 1
+          maxItems: 1
+          description: |
+            Exactly one category: an insight sits in one tab (ADR-069). Still a list, so the
+            response shape is unchanged.
           items: { $ref: '#/components/schemas/InsightCategory' }
         practiceAreas:
           type: array
@@ -8628,6 +8632,10 @@ components:
         categories:
           type: array
           minItems: 1
+          maxItems: 1
+          description: |
+            Exactly one category: an insight sits in one tab (ADR-069). Still a list, so the
+            response shape is unchanged.
           items:
             $ref: '#/components/schemas/InsightCategory'
         practiceAreas:

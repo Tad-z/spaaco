@@ -102,7 +102,7 @@ describe('people', () => {
     expect(roleFor('Senior Associate')).toBe('senior_associate');
     expect(roleFor('NYSC Associate')).toBe('trainee_associate');
     expect(roleFor('Assocate')).toBe('associate');
-    expect(roleFor('Consultant to the Firm')).toBeNull();
+    expect(roleFor('Consultant to the Firm')).toBe('consultant');
     expect(roleFor('Head of Chambers')).toBeNull();
   });
 
@@ -235,6 +235,7 @@ describe('articles', () => {
     { term_id: 1, name: 'News &amp; Events', slug: 'n', posts: 3, map_to: 'firm_news, tax' },
     { term_id: 2, name: 'Uncategorized', slug: 'u', posts: 1, map_to: 'skip' },
     { term_id: 3, name: 'Old', slug: 'o', posts: 1, map_to: 'media_coverage' },
+    { term_id: 4, name: 'Insights', slug: 'i', posts: 1, map_to: 'insights' },
   ];
 
   it("applies the firm's map_to, reporting values that are neither category nor area", () => {
@@ -249,6 +250,15 @@ describe('articles', () => {
       defaulted: true,
     });
     expect(invalid).toEqual([{ category: 'Old', value: 'media_coverage' }]);
+  });
+
+  it('keeps only the first category, so an article sits in one tab (ADR-069)', () => {
+    const { targets } = categoryTargets(rows, new Set(['tax']));
+    expect(classify('Insights | News & Events', targets)).toEqual({
+      categories: ['insights'],
+      practiceAreas: ['tax'],
+      defaulted: false,
+    });
   });
 
   it('keeps a valid WordPress slug and shortens one the backend refuses', () => {

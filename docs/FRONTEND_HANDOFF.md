@@ -245,8 +245,11 @@ a lawyer (the COO); they appear only under Management, titled by their `jobTitle
   own logo mark — the API sends no firm logo, because the logo is a frontend asset.
 - The detail adds `coAuthors`, the same union, shown after the author; a writer there is
   labelled "Co-author".
-- `chips` is precomputed for you: the first category label, then the first practice area
-  title, or the second category label when there is no practice area.
+- `chips` is precomputed for you: the category label, then the first practice area title.
+  With no practice area there is only one chip (ADR-069).
+- An insight has **exactly one category**, so it appears in one tab. `categories` is still
+  a list in every response, always of length 1. The dashboard's category picker must be
+  single-select; sending two is a 400 (ADR-069).
 - `cta` tells you which button to draw: `{ label: "Read More", kind: "read_more" }` or
   `{ label: "Watch Video", kind: "watch_video" }`.
 - On the **detail** endpoint `cta` is different: the link after the body,

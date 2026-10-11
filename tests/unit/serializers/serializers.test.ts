@@ -252,18 +252,12 @@ describe('insight serializer', () => {
       expect(chips).toEqual(['Articles', 'Dispute Resolution & Arbitration']);
     });
 
-    it('falls back to the second category when there is no practice area', () => {
+    it('shows one chip without a practice area, never a second category (ADR-069)', () => {
       const chips = toChips(
         makeInsight({ categories: ['events', 'firm_news'], practiceAreas: [] })
       );
 
-      expect(chips).toEqual(['Events', 'Firm News']);
-    });
-
-    it('shows one chip when there is neither a practice area nor a second category', () => {
-      expect(toChips(makeInsight({ categories: ['articles'], practiceAreas: [] }))).toEqual([
-        'Articles',
-      ]);
+      expect(chips).toEqual(['Events']);
     });
 
     it('never exceeds the two chips the card has room for', () => {
