@@ -78,6 +78,26 @@
       "slug": "lagos",
       "name": "Lagos"
     },
+    "publications": [
+      {
+        "title": "Practical Perspectives on the Use of AI by the Nigerian Judiciary",
+        "date": "September 2025",
+        "label": "Dispute Resolution & Arbitration",
+        "insightSlug": null
+      },
+      {
+        "title": "Do Legal Practitioners in Nigeria Have a Duty to Confirm a Client’s Source of Funds?",
+        "date": "July 2025",
+        "label": "Insights",
+        "insightSlug": null
+      },
+      {
+        "title": "The Supreme Court of Nigeria Delivers a Landmark Judgment in Relation to the Damages Recoverable in Fatal Aviation Accident Claims",
+        "date": "February 2025",
+        "label": "Insights and Articles",
+        "insightSlug": null
+      }
+    ],
     "recentPublications": []
   }
 }

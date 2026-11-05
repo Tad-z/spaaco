@@ -121,6 +121,19 @@ const personCreate = z
       .strict()
       .optional(),
     memberships: z.array(text(200)).max(30).optional(),
+    publications: z
+      .array(
+        z
+          .object({
+            title: text(300),
+            date: optionalText(40),
+            label: optionalText(120),
+            insight: objectIdRef,
+          })
+          .strict()
+      )
+      .max(50)
+      .optional(),
     office: objectIdRef.optional(),
     featuredInLeadership: z.boolean().optional(),
     legacyImport: legacyImport.optional(),

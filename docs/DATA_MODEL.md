@@ -82,6 +82,7 @@ Indexes: `{status:1, order:1}` and a text index on `title, summary, overview`.
 | practiceAreas        | [→PracticeArea]                               | The card-back chips                                                                                                                   |
 | education            | { intro, entries: [{ qualification, year }] } |                                                                                                                                       |
 | memberships          | [String]                                      |                                                                                                                                       |
+| publications         | [{ title, date, label, insight → Insight }]   | The firm's list, in display order. Empty means their latest insights show instead (ADR-070)                                           |
 | office               | →Office                                       |                                                                                                                                       |
 | featuredInLeadership | Boolean                                       | Management: the Home leadership row and the People page's Management tab (ADR-068)                                                    |
 | legacy               | `{ source, legacyId, importedAt }`, nullable  | Set only on imported records (ADR-059). Admin read-only; never public                                                                 |

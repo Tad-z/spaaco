@@ -1,6 +1,11 @@
 import { Schema, model } from 'mongoose';
 import type { Model } from 'mongoose';
-import type { IEducation, IEducationEntry, IPerson } from '../interfaces/person.interface.js';
+import type {
+  IEducation,
+  IEducationEntry,
+  IPerson,
+  IPersonPublication,
+} from '../interfaces/person.interface.js';
 import { PERSON_ROLES } from '../constants/enums.js';
 import { contentPlugin } from './plugins/content.plugin.js';
 import { legacyImportSchema } from './schemas/common.schemas.js';
@@ -19,6 +24,16 @@ const educationSchema = new Schema<IEducation>(
   {
     intro: { type: String, default: null, trim: true, maxlength: 2000 },
     entries: { type: [educationEntrySchema], default: [] },
+  },
+  subSchema
+);
+
+const publicationSchema = new Schema<IPersonPublication>(
+  {
+    title: { type: String, required: true, trim: true, maxlength: 300 },
+    date: { type: String, default: null, trim: true, maxlength: 40 },
+    label: { type: String, default: null, trim: true, maxlength: 120 },
+    insight: { type: Schema.Types.ObjectId, ref: 'Insight', default: null },
   },
   subSchema
 );
@@ -44,6 +59,8 @@ const personSchema = new Schema<IPerson>(
     practiceAreas: [{ type: Schema.Types.ObjectId, ref: 'PracticeArea' }],
     education: { type: educationSchema, default: () => ({ intro: null, entries: [] }) },
     memberships: { type: [String], default: [] },
+    // The firm's own list; empty means the profile shows their latest insights (ADR-070).
+    publications: { type: [publicationSchema], default: [] },
     office: { type: Schema.Types.ObjectId, ref: 'Office', default: null },
     featuredInLeadership: { type: Boolean, default: false },
     legacy: { type: legacyImportSchema, default: null },

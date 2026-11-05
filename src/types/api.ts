@@ -65,6 +65,7 @@ export type PracticeAreaApproach = Schemas['PracticeAreaApproach'];
 export type PersonSummary = Schemas['PersonSummary'];
 export type PersonDetail = Schemas['PersonDetail'];
 export type PersonEducation = Schemas['PersonEducation'];
+export type PersonPublication = Schemas['PersonPublication'];
 
 // --- insights ---
 export type InsightAuthor = Schemas['InsightAuthor'];

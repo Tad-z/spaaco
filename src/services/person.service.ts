@@ -130,6 +130,7 @@ export async function getPersonBySlug(
       select: 'slug title shortLabel',
     })
     .populate(publishedPopulate('office', options))
+    .populate({ ...publishedPopulate('publications.insight', options), select: 'slug' })
     .lean<IPersonDetailDoc | null>();
 
   if (!person) throw new NotFoundError('Attorney');

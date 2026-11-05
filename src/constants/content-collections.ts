@@ -91,7 +91,7 @@ export const CONTENT_COLLECTIONS: Record<AdminCollection, ContentCollectionConfi
     searchFields: ['title', 'excerpt'],
     mediaPaths: ['coverImage', 'document', 'authorPhoto', 'coAuthors.photo'],
     personPaths: ['author', 'coAuthors.person'],
-    referencedBy: [],
+    referencedBy: [{ model: 'Person', path: 'publications.insight', label: 'lastName' }],
     label: 'Insight',
   },
   offices: {

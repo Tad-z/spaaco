@@ -211,7 +211,11 @@ export const listInsightsByAuthor = (
   limit: number = CONTENT_LIMITS.recentPublications
 ): Promise<IInsightDoc[]> =>
   findCards(
-    { ...publishedFilter(options), ...mainListingFilter(), author: authorId },
+    {
+      ...publishedFilter(options),
+      ...mainListingFilter(),
+      $or: [{ author: authorId }, { 'coAuthors.person': authorId }],
+    },
     -1,
     0,
     limit,

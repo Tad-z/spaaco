@@ -165,6 +165,7 @@ const COLLECTIONS: readonly CollectionSpec[] = [
       practiceAreas: [],
       education: { intro: null, entries: [] },
       memberships: ['Nigerian Bar Association (NBA)'],
+      publications: [],
       office: null,
       featuredInLeadership: true,
       legacy: null,

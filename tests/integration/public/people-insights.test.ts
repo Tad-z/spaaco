@@ -271,6 +271,48 @@ describe('GET /api/v1/people/{slug}', () => {
     expect(res.body.data.recentPublications).toHaveLength(1);
   });
 
+  it('lists the firm’s publications when the profile has them, linking only published insights', async () => {
+    const [published, draft] = await Promise.all([
+      Insight.findOne({ status: 'published' }).lean(),
+      Insight.create({ title: 'Unpublished', format: 'article', categories: ['insights'] }),
+    ]);
+    await Person.updateOne(
+      { slug: 'john-onyido' },
+      {
+        publications: [
+          { title: 'Linked', date: 'May 2026', label: 'Tax', insight: published?._id },
+          { title: 'Hidden link', date: null, label: null, insight: draft._id },
+          { title: 'No page here', date: null, label: null, insight: null },
+        ],
+      }
+    );
+
+    const res = await request(app).get('/api/v1/people/john-onyido');
+
+    expectToMatchContract(res, 'get', '/api/v1/people/{slug}');
+    expect(res.body.data.publications).toEqual([
+      { title: 'Linked', date: 'May 2026', label: 'Tax', insightSlug: published?.slug },
+      { title: 'Hidden link', date: null, label: null, insightSlug: null },
+      { title: 'No page here', date: null, label: null, insightSlug: null },
+    ]);
+  });
+
+  it('fills the section from their latest insights, co-written ones included', async () => {
+    const john = await Person.findOne({ slug: 'john-onyido' }).lean();
+    const insight = await Insight.findOneAndUpdate(
+      { status: 'published', categories: { $ne: 'pro_bono' } },
+      { publishedAt: new Date('2026-03-31T23:30:00Z'), coAuthors: [{ person: john?._id }] },
+      { new: true }
+    ).lean();
+
+    const res = await request(app).get('/api/v1/people/john-onyido');
+
+    expectToMatchContract(res, 'get', '/api/v1/people/{slug}');
+    expect(res.body.data.publications).toContainEqual(
+      expect.objectContaining({ date: 'March 2026', insightSlug: insight?.slug })
+    );
+  });
+
   it('returns 404 for an unknown attorney', async () => {
     const res = await request(app).get('/api/v1/people/nobody-here');
 

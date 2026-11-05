@@ -370,8 +370,9 @@ paths:
       summary: Attorney profile
       description: |
         The full profile: bio, education, memberships, contact links (email is public), the
-        primary practice area shown under the portrait, and the six latest insights they wrote.
-        Pro bono insights are never among them.
+        primary practice area shown under the portrait, and their publications. Render the Recent
+        Publications section from `publications`. Pro bono insights are never among those it
+        fills in from their latest insights.
       security:
         - {}
         - bearerAuth: []
@@ -6188,6 +6189,45 @@ components:
               year:
                 type: [integer, 'null']
 
+    PersonPublication:
+      type: object
+      additionalProperties: false
+      required: [title, date, label, insightSlug]
+      description: One line in a profile's Recent Publications section (ADR-070).
+      properties:
+        title:
+          type: string
+          examples: ['Practical Perspectives on the Use of AI by the Nigerian Judiciary']
+        date:
+          type: [string, 'null']
+          description: Display text, not a timestamp.
+          examples: ['September 2025']
+        label:
+          type: [string, 'null']
+          description: The practice area or category shown beside the date.
+          examples: ['Dispute Resolution & Arbitration']
+        insightSlug:
+          type: [string, 'null']
+          description: The insight to link to. Null means the title has no page on this site, so render it as plain text.
+
+    PersonPublicationAdmin:
+      type: object
+      additionalProperties: false
+      required: [title, date, label, insight]
+      description: A publication the firm lists on a profile, shown in the stored order (ADR-070).
+      properties:
+        title:
+          type: string
+        date:
+          type: [string, 'null']
+        label:
+          type: [string, 'null']
+        insight:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectId'
+            - type: 'null'
+          description: The insight this title links to. Null when it has no page on this site.
+
     PersonDetail:
       type: object
       additionalProperties: false
@@ -6213,6 +6253,7 @@ components:
         - education
         - memberships
         - office
+        - publications
         - recentPublications
       description: The attorney profile. Email is public, shown on the profile.
       properties:
@@ -6268,10 +6309,17 @@ components:
           oneOf:
             - $ref: '#/components/schemas/OfficeRef'
             - type: 'null'
+        publications:
+          type: array
+          description: |
+            The Recent Publications section, ready to render in this order (ADR-070): the list the
+            firm keeps on the profile when it has one, otherwise their latest insights (at most six).
+          items:
+            $ref: '#/components/schemas/PersonPublication'
         recentPublications:
           type: array
           maxItems: 6
-          description: The latest insights they wrote, never pro bono stories.
+          description: The latest insights they wrote or co-wrote, never pro bono stories.
           items:
             $ref: '#/components/schemas/InsightCard'
 
@@ -8012,6 +8060,7 @@ components:
         - practiceAreas
         - education
         - memberships
+        - publications
         - office
         - featuredInLeadership
         - legacy
@@ -8060,6 +8109,10 @@ components:
         memberships:
           type: array
           items: { type: string }
+        publications:
+          type: array
+          description: Leave empty to show their latest insights on the profile instead.
+          items: { $ref: '#/components/schemas/PersonPublicationAdmin' }
         office:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'
@@ -8585,6 +8638,11 @@ components:
           type: array
           items:
             type: string
+        publications:
+          type: array
+          description: Leave empty to show their latest insights on the profile instead.
+          items:
+            $ref: '#/components/schemas/PersonPublicationAdmin'
         office:
           oneOf:
             - $ref: '#/components/schemas/ObjectId'

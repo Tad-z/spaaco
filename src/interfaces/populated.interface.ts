@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 import type { IMedia } from './media.interface.js';
-import type { IPerson } from './person.interface.js';
+import type { IPerson, IPersonPublication } from './person.interface.js';
 import type { IPracticeArea } from './practice-area.interface.js';
 import type { IInsight } from './insight.interface.js';
 import type { IOffice } from './office.interface.js';
@@ -51,9 +51,14 @@ export type IPracticeAreaDetailDoc = Omit<
   lead: IPersonWithPhoto | null;
 };
 
-export type IPersonDetailDoc = Omit<IPersonWithPhoto, 'primaryPracticeArea' | 'office'> & {
+export type IPersonDetailDoc = Omit<
+  IPersonWithPhoto,
+  'primaryPracticeArea' | 'office' | 'publications'
+> & {
   primaryPracticeArea: IPracticeAreaRefDoc | null;
   office: (IOffice & { _id: Types.ObjectId }) | null;
+  /** A link to a draft insight populates as null, so the title shows unlinked. */
+  publications: (Omit<IPersonPublication, 'insight'> & { insight?: { slug: string } | null })[];
 };
 
 export type IInsightDoc = Omit<

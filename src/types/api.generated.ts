@@ -149,8 +149,9 @@ export interface paths {
         /**
          * Attorney profile
          * @description The full profile: bio, education, memberships, contact links (email is public), the
-         *     primary practice area shown under the portrait, and the six latest insights they wrote.
-         *     Pro bono insights are never among them.
+         *     primary practice area shown under the portrait, and their publications. Render the Recent
+         *     Publications section from `publications`. Pro bono insights are never among those it
+         *     fills in from their latest insights.
          */
         get: operations["getPerson"];
         put?: never;
@@ -2551,6 +2552,31 @@ export interface components {
                 year: number | null;
             }[];
         };
+        /** @description One line in a profile's Recent Publications section (ADR-070). */
+        PersonPublication: {
+            /** @example Practical Perspectives on the Use of AI by the Nigerian Judiciary */
+            title: string;
+            /**
+             * @description Display text, not a timestamp.
+             * @example September 2025
+             */
+            date: string | null;
+            /**
+             * @description The practice area or category shown beside the date.
+             * @example Dispute Resolution & Arbitration
+             */
+            label: string | null;
+            /** @description The insight to link to. Null means the title has no page on this site, so render it as plain text. */
+            insightSlug: string | null;
+        };
+        /** @description A publication the firm lists on a profile, shown in the stored order (ADR-070). */
+        PersonPublicationAdmin: {
+            title: string;
+            date: string | null;
+            label: string | null;
+            /** @description The insight this title links to. Null when it has no page on this site. */
+            insight: components["schemas"]["ObjectId"] | null;
+        };
         /** @description The attorney profile. Email is public, shown on the profile. */
         PersonDetail: {
             id: components["schemas"]["ObjectId"];
@@ -2576,7 +2602,12 @@ export interface components {
             education: components["schemas"]["PersonEducation"];
             memberships: string[];
             office: components["schemas"]["OfficeRef"] | null;
-            /** @description The latest insights they wrote, never pro bono stories. */
+            /**
+             * @description The Recent Publications section, ready to render in this order (ADR-070): the list the
+             *     firm keeps on the profile when it has one, otherwise their latest insights (at most six).
+             */
+            publications: components["schemas"]["PersonPublication"][];
+            /** @description The latest insights they wrote or co-wrote, never pro bono stories. */
             recentPublications: components["schemas"]["InsightCard"][];
         };
         /**
@@ -3451,6 +3482,8 @@ export interface components {
             practiceAreas: components["schemas"]["ObjectId"][];
             education: components["schemas"]["PersonEducation"];
             memberships: string[];
+            /** @description Leave empty to show their latest insights on the profile instead. */
+            publications: components["schemas"]["PersonPublicationAdmin"][];
             office: components["schemas"]["ObjectId"] | null;
             /**
              * @description Management. Shown in the Home leadership row and the People page's Management tab,
@@ -3719,6 +3752,8 @@ export interface components {
             practiceAreas?: components["schemas"]["ObjectId"][];
             education?: components["schemas"]["PersonEducation"];
             memberships?: string[];
+            /** @description Leave empty to show their latest insights on the profile instead. */
+            publications?: components["schemas"]["PersonPublicationAdmin"][];
             office?: components["schemas"]["ObjectId"] | null;
             /**
              * @description Management. Shown in the Home leadership row and the People page's Management tab,
@@ -3753,6 +3788,8 @@ export interface components {
             practiceAreas?: components["schemas"]["ObjectId"][];
             education?: components["schemas"]["PersonEducation"];
             memberships?: string[];
+            /** @description Leave empty to show their latest insights on the profile instead. */
+            publications?: components["schemas"]["PersonPublicationAdmin"][];
             office?: components["schemas"]["ObjectId"] | null;
             /**
              * @description Management. Shown in the Home leadership row and the People page's Management tab,

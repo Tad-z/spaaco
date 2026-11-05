@@ -1,6 +1,7 @@
 import type {
   InsightCard,
   PersonDetail,
+  PersonPublication,
   PersonSummary,
   PracticeAreaLead,
   PracticeAreaLink,
@@ -54,6 +55,13 @@ export interface PersonDetailSource extends PersonSummarySource {
   primaryPracticeArea?: PracticeAreaLinkSource | null;
   education?: IEducation | null;
   memberships?: string[];
+  /** Populated: a link to a draft insight reads as null. */
+  publications?: readonly {
+    title: string;
+    date?: string | null;
+    label?: string | null;
+    insight?: { slug: string } | null;
+  }[];
   office?: OfficeRefSource | null;
 }
 
@@ -104,6 +112,34 @@ export function toLead(person: PersonSummarySource & { email?: string | null }):
   return { ...toSummary(person), email: person.email ?? null };
 }
 
+const MONTH_YEAR = new Intl.DateTimeFormat('en-GB', {
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+/** An insight as a line in the Recent Publications section. */
+const cardToPublication = (card: InsightCard): PersonPublication => ({
+  title: card.title,
+  date: card.publishedAt ? MONTH_YEAR.format(new Date(card.publishedAt)) : null,
+  label: card.practiceAreas[0]?.title ?? card.categoryLabels[0] ?? null,
+  insightSlug: card.slug,
+});
+
+/** The firm's list when the profile has one, otherwise their latest insights (ADR-070). */
+const toPublications = (
+  listed: PersonDetailSource['publications'],
+  recentPublications: InsightCard[]
+): PersonPublication[] =>
+  listed && listed.length > 0
+    ? listed.map((publication) => ({
+        title: publication.title,
+        date: publication.date ?? null,
+        label: publication.label ?? null,
+        insightSlug: publication.insight?.slug ?? null,
+      }))
+    : recentPublications.map(cardToPublication);
+
 export function toDetail(
   person: PersonDetailSource,
   recentPublications: InsightCard[] = []
@@ -131,6 +167,7 @@ export function toDetail(
     },
     memberships: person.memberships ?? [],
     office: person.office ? officeRef(person.office) : null,
+    publications: toPublications(person.publications, recentPublications),
     recentPublications,
   };
 }

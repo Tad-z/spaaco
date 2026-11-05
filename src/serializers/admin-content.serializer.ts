@@ -186,6 +186,12 @@ const shapers: Record<AdminCollection, (doc: StoredDoc) => Record<string, unknow
     practiceAreas: idList(doc.practiceAreas),
     education: educationOf(doc.education),
     memberships: Array.isArray(doc.memberships) ? doc.memberships : [],
+    publications: plainList(doc.publications, (publication) => ({
+      title: publication.title,
+      date: publication.date ?? null,
+      label: publication.label ?? null,
+      insight: idOrNull(publication.insight),
+    })),
     office: idOrNull(doc.office),
     featuredInLeadership: doc.featuredInLeadership ?? false,
     legacy: legacyOf(doc.legacy),

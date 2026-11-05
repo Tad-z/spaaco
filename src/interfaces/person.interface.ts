@@ -13,6 +13,17 @@ export interface IEducation {
   entries: IEducationEntry[];
 }
 
+/** A publication the firm lists on a profile (ADR-070). */
+export interface IPersonPublication {
+  title: string;
+  /** Display text, such as "September 2025". */
+  date?: string | null;
+  /** The practice area or category shown beside the date. */
+  label?: string | null;
+  /** Null when the title has no page on this site. */
+  insight?: Types.ObjectId | null;
+}
+
 /**
  * An attorney.
  *
@@ -44,6 +55,8 @@ export interface IPerson extends IContentFields {
   practiceAreas: Types.ObjectId[];
   education: IEducation;
   memberships: string[];
+  /** Empty means the profile shows their latest insights instead (ADR-070). */
+  publications: IPersonPublication[];
   office?: Types.ObjectId | null;
   featuredInLeadership: boolean;
   /** Set when the record came from a content import (ADR-059). */
