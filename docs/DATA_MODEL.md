@@ -78,7 +78,7 @@ Indexes: `{status:1, order:1}` and a text index on `title, summary, overview`.
 | cardBio              | String                                        | The short italic line on the back of the card                                                                                         |
 | bio                  | String (html)                                 | Two or more paragraphs                                                                                                                |
 | quote                | String                                        | Only used for the MP's pull quote on About                                                                                            |
-| primaryPracticeArea  | →PracticeArea, nullable                       | Shown under the portrait on the profile                                                                                               |
+| primaryPracticeArea  | →PracticeArea, nullable                       | Leads `practiceAreas` in every public response (ADR-071)                                                                              |
 | practiceAreas        | [→PracticeArea]                               | The card-back chips                                                                                                                   |
 | education            | { intro, entries: [{ qualification, year }] } |                                                                                                                                       |
 | memberships          | [String]                                      |                                                                                                                                       |

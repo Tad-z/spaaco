@@ -172,7 +172,7 @@ GET /api/v1/legal/{key}
 ```
 
 - A **practice area** comes with its hero text and images, overview, core services, approach, industries, the Practice Lead card (with LinkedIn and email), every area for the sidebar (`siblings`), and six recent publications.
-- An **attorney** comes with their bio, education, memberships, primary practice area, email, Instagram and LinkedIn, and `publications` for the Recent Publications section, which goes under Memberships. Render that list in the order given; it is the firm's own list when the profile has one and otherwise their six latest insights. Each line has `title`, `date` and `label`. Link it to the insight when `insightSlug` is set, and show plain text when it is null.
+- An **attorney** comes with their bio, education, memberships, `practiceAreas` (one list, primary first; head it "Practice Area" or "Practice Areas" by count, with no primary or secondary split), email, Instagram and LinkedIn, and `publications` for the Recent Publications section, which goes under Memberships. Render that list in the order given; it is the firm's own list when the profile has one and otherwise their six latest insights. Each line has `title`, `date` and `label`. Link it to the insight when `insightSlug` is set, and show plain text when it is null.
 - An **insight** ends with `cta`: "Read Article" (to the external article or a PDF) or "Watch Video", or `null` when there is nothing to link to. `backLink` says where "Back to…" goes — Responsible Business for a pro bono story, Insights & News for everything else.
 - A **recognition directory** (`/recognitions/iflr-1000`) is the page behind each "View Awards" row on About.
 - A **legal page** is `terms` or `privacy`, with an `updatedAt` for a "Last updated" line.

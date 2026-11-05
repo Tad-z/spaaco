@@ -133,6 +133,19 @@ describe('person serializer', () => {
     ]);
   });
 
+  it('lists the primary area first, once, adding it if the chips omit it', () => {
+    const area = (slug: string): ReturnType<typeof makePracticeArea> =>
+      makePracticeArea({ slug, title: slug });
+    const slugs = (primary: ReturnType<typeof area> | null): string[] =>
+      toSummary(
+        makePerson({ practiceAreas: [area('a'), area('b')], primaryPracticeArea: primary })
+      ).practiceAreas.map((chip) => chip.slug);
+
+    expect(slugs(area('b'))).toEqual(['b', 'a']);
+    expect(slugs(area('c'))).toEqual(['c', 'a', 'b']);
+    expect(slugs(null)).toEqual(['a', 'b']);
+  });
+
   it('drops a chip whose practice area did not populate (a draft), rather than half-rendering it', () => {
     const unpopulated = { _id: 'x' } as unknown as ReturnType<typeof makePracticeArea>;
 

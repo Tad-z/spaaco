@@ -45,6 +45,8 @@ export interface PersonSummarySource {
   cardBio?: string | null;
   /** Populated chips. An unpopulated id reads as absent. */
   practiceAreas?: readonly unknown[];
+  /** Populated, it leads the chips (ADR-071). */
+  primaryPracticeArea?: unknown;
 }
 
 export interface PersonDetailSource extends PersonSummarySource {
@@ -89,9 +91,17 @@ const isAreaLinkSource = (value: unknown): value is PracticeAreaLinkSource =>
   typeof (value as { slug?: unknown }).slug === 'string' &&
   typeof (value as { title?: unknown }).title === 'string';
 
-/** The chips, from populated areas only: a draft area was already filtered out. */
-const toChips = (areas: readonly unknown[] | undefined): PracticeAreaLink[] =>
-  (areas ?? []).filter(isAreaLinkSource).map(practiceAreaLink);
+/**
+ * One list of a person's areas, with the primary first when there is one
+ * (ADR-071). Populated areas only: a draft area was already filtered out.
+ */
+const toChips = (areas: readonly unknown[] | undefined, primary: unknown): PracticeAreaLink[] => {
+  const chips = (areas ?? []).filter(isAreaLinkSource).map(practiceAreaLink);
+  if (!isAreaLinkSource(primary)) return chips;
+
+  const first = practiceAreaLink(primary);
+  return [first, ...chips.filter((chip) => chip.slug !== first.slug)];
+};
 
 export function toSummary(person: PersonSummarySource): PersonSummary {
   return {
@@ -103,7 +113,7 @@ export function toSummary(person: PersonSummarySource): PersonSummary {
     photo: toNullableImage(person.photo),
     linkedinUrl: person.linkedinUrl ?? null,
     cardBio: person.cardBio ?? null,
-    practiceAreas: toChips(person.practiceAreas),
+    practiceAreas: toChips(person.practiceAreas, person.primaryPracticeArea),
   };
 }
 

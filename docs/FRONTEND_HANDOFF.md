@@ -170,7 +170,7 @@ This is how the admin dashboard will preview unpublished content.
 | `GET /api/v1/practice-areas`          | All published practice areas, in the firm's order                                                                            |
 | `GET /api/v1/practice-areas/{slug}`   | The designed detail page: hero, overview, services, approach, industries, lead, sidebar, 6 publications                      |
 | `GET /api/v1/people`                  | Directory. `?role=`, `?practiceArea=<slug>`, `?sort=seniority\|name_asc\|name_desc`, paginated (default 9)                   |
-| `GET /api/v1/people/{slug}`           | Profile: bio, education, memberships, email, primary area, office, `publications`                                            |
+| `GET /api/v1/people/{slug}`           | Profile: bio, education, memberships, email, practice areas, office, `publications`                                          |
 | `GET /api/v1/insights`                | Listing. `?category=`, `?practiceArea=<slug>`, `?sort=newest\|oldest`, paginated (default 9). `pro_bono` only when asked for |
 | `GET /api/v1/insights/{slug}`         | Full body or video URL, author, 3 related, the after-body `cta` and `backLink`                                               |
 | `GET /api/v1/recognitions`            | Directories (with wordmarks) and the awards featured on Home                                                                 |

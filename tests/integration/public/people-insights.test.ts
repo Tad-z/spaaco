@@ -249,6 +249,27 @@ describe('GET /api/v1/people', () => {
   });
 });
 
+describe('a person with a primary practice area', () => {
+  it('has it first on the directory card and the profile', async () => {
+    const [first, second] = await PracticeArea.find({ status: 'published' }).limit(2).lean();
+    await Person.updateOne(
+      { slug: 'john-onyido' },
+      { practiceAreas: [first?._id, second?._id], primaryPracticeArea: second?._id }
+    );
+    const expected = [second?.slug, first?.slug];
+    const slugs = (areas: { slug: string }[]): string[] => areas.map((area) => area.slug);
+
+    const list = await request(app).get('/api/v1/people?role=partner&pageSize=50');
+    const card = (list.body.data as { slug: string; practiceAreas: { slug: string }[] }[]).find(
+      (person) => person.slug === 'john-onyido'
+    );
+    const profile = await request(app).get('/api/v1/people/john-onyido');
+
+    expect(slugs(card?.practiceAreas ?? [])).toEqual(expected);
+    expect(slugs(profile.body.data.practiceAreas)).toEqual(expected);
+  });
+});
+
 describe('GET /api/v1/people/{slug}', () => {
   it('serves the Managing Partner as the fixture has him', async () => {
     const res = await request(app).get('/api/v1/people/babatunde-ajibade');

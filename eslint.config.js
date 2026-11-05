@@ -173,6 +173,8 @@ export default tseslint.config(
       'src/types/api.generated.ts',
       '.uploads/**',
       '.private-uploads/**',
+      // Local one-off data scripts, gitignored because they hold personal data.
+      'database-extract/**',
       // Claude Code hook scripts: tooling, not part of the API source.
       '.claude/**',
     ],

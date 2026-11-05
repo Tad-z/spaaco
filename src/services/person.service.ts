@@ -125,10 +125,6 @@ export async function getPersonBySlug(
 ): Promise<{ person: IPersonDetailDoc; insights: IInsightDoc[] }> {
   const person = await Person.findOne({ slug, ...publishedFilter(options) })
     .populate(personCardFields(options))
-    .populate({
-      ...publishedPopulate('primaryPracticeArea', options),
-      select: 'slug title shortLabel',
-    })
     .populate(publishedPopulate('office', options))
     .populate({ ...publishedPopulate('publications.insight', options), select: 'slug' })
     .lean<IPersonDetailDoc | null>();

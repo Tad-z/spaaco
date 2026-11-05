@@ -32,10 +32,11 @@ export type IPracticeAreaWithImage = Omit<IPracticeArea, 'image'> & {
  * A person as every card renders them, front and back: the photo, and the
  * practice-area chips (ADR-052). Drafts are already filtered out of both.
  */
-export type IPersonWithPhoto = Omit<IPerson, 'photo' | 'practiceAreas'> & {
+export type IPersonWithPhoto = Omit<IPerson, 'photo' | 'practiceAreas' | 'primaryPracticeArea'> & {
   _id: Types.ObjectId;
   photo: IMedia | null;
   practiceAreas: IPracticeAreaRefDoc[];
+  primaryPracticeArea: IPracticeAreaRefDoc | null;
 };
 
 export type IIndustryDoc = IIndustry & { _id: Types.ObjectId };
@@ -51,11 +52,7 @@ export type IPracticeAreaDetailDoc = Omit<
   lead: IPersonWithPhoto | null;
 };
 
-export type IPersonDetailDoc = Omit<
-  IPersonWithPhoto,
-  'primaryPracticeArea' | 'office' | 'publications'
-> & {
-  primaryPracticeArea: IPracticeAreaRefDoc | null;
+export type IPersonDetailDoc = Omit<IPersonWithPhoto, 'office' | 'publications'> & {
   office: (IOffice & { _id: Types.ObjectId }) | null;
   /** A link to a draft insight populates as null, so the title shows unlinked. */
   publications: (Omit<IPersonPublication, 'insight'> & { insight?: { slug: string } | null })[];

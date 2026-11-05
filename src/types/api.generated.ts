@@ -149,7 +149,7 @@ export interface paths {
         /**
          * Attorney profile
          * @description The full profile: bio, education, memberships, contact links (email is public), the
-         *     primary practice area shown under the portrait, and their publications. Render the Recent
+         *     practice areas with the primary first, and their publications. Render the Recent
          *     Publications section from `publications`. Pro bono insights are never among those it
          *     fills in from their latest insights.
          */
@@ -2541,7 +2541,7 @@ export interface components {
             linkedinUrl: string | null;
             /** @description The short italic line on the back of the card. */
             cardBio: string | null;
-            /** @description The chips on the back of the card. */
+            /** @description The chips on the back of the card, with the primary area first when there is one (ADR-071). */
             practiceAreas: components["schemas"]["PracticeAreaLink"][];
         };
         PersonEducation: {
@@ -2596,8 +2596,9 @@ export interface components {
             /** @description Sanitised HTML, two or more paragraphs. */
             bio: string | null;
             quote: string | null;
-            /** @description Shown under the portrait. */
+            /** @description The primary area when the firm set one. It is also first in `practiceAreas`, so render that list instead (ADR-071). */
             primaryPracticeArea: components["schemas"]["PracticeAreaLink"] | null;
+            /** @description Everything they practise, with the primary area first when there is one. Head it "Practice Area" for one and "Practice Areas" for several (ADR-071). */
             practiceAreas: components["schemas"]["PracticeAreaLink"][];
             education: components["schemas"]["PersonEducation"];
             memberships: string[];

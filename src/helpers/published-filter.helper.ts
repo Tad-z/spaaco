@@ -61,4 +61,5 @@ export const personCardPopulate = (path: string, options: PreviewOptions = {}): 
 export const personCardFields = (options: PreviewOptions = {}): PopulateSpec[] => [
   { path: 'photo' },
   { ...publishedPopulate('practiceAreas', options), select: 'slug title shortLabel' },
+  { ...publishedPopulate('primaryPracticeArea', options), select: 'slug title shortLabel' },
 ];

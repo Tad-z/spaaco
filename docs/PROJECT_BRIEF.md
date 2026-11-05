@@ -84,7 +84,7 @@ Terms of Service and Privacy Policy, linked from the footer. Editable pages; the
 2. **Directory:** role filter tabs (Management, Partners (managing partner to associate partners), Associates (senior to trainee associates), Consultants; no "all" tab; ADR-068), a "Sort By" dropdown that is really a **practice-area filter** (headed "Practice Area") and combines with the tabs, and a 3-column grid of flip cards paginated 9 per page ("Page 1 of N", with Previous and Next disabled on a single page).
 3. The shared sections.
 
-**Attorney profile — `GET /people/:slug`:** photo with the primary practice area beneath, name, role, LinkedIn, Instagram and email, a bio of two or more paragraphs, Education (an intro and a list of qualifications with years), Memberships, and Recent Publications: the firm's list when the profile has one, otherwise the six latest they wrote.
+**Attorney profile — `GET /people/:slug`:** photo with their practice areas beneath, primary first, name, role, LinkedIn, Instagram and email, a bio of two or more paragraphs, Education (an intro and a list of qualifications with years), Memberships, and Recent Publications: the firm's list when the profile has one, otherwise the six latest they wrote.
 
 ### Insights & News — `GET /pages/insights` + `GET /insights`
 
